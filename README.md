@@ -5,7 +5,7 @@ A self-contained web application for searching and viewing Linux manual pages, d
 ## Features
 
 - 🔍 **Fast Search**: Real-time search with suggestions as you type
-- 📚 **Comprehensive Coverage**: 393 man pages from sections 1-8
+- 📚 **Comprehensive Coverage**: 551 man pages from sections 1-8
 - 📋 **TLDR Integration**: Quick practical examples for each command
 - 🌓 **Dark Mode**: Toggle between light and dark themes
 - 🚀 **Lazy Loading**: Man pages load on-demand for optimal performance
@@ -15,6 +15,7 @@ A self-contained web application for searching and viewing Linux manual pages, d
 - ⭐ **Bookmarks**: Save frequently used commands
 - 🕐 **History**: Track recently viewed pages
 - ⌨️ **Keyboard Navigation**: Full keyboard support for power users
+- 🔎 **Full-Text Search**: Search within man page content (optional)
 
 ## Live Demo
 
@@ -75,10 +76,10 @@ python3 -m http.server 8000
 Download the latest release from [GitHub Releases](https://github.com/Real-Fruit-Snacks/Pages/releases):
 
 ```bash
-# Download and extract
-wget https://github.com/Real-Fruit-Snacks/Pages/releases/download/v1.0.0/linux-man-pages-v1.0.0.tar.gz
-tar -xzf linux-man-pages-v1.0.0.tar.gz
-cd linux-man-pages-v1.0.0
+# Download and extract the latest version
+wget https://github.com/Real-Fruit-Snacks/Pages/releases/latest/download/linux-man-pages.tar.gz
+tar -xzf linux-man-pages.tar.gz
+cd linux-man-pages
 
 # Deploy to your server or Git repository
 ```
@@ -119,6 +120,19 @@ cd Pages
 - **Section 5**: File formats (passwd, fstab, etc.)
 - **Section 7**: Miscellaneous (ascii, regex, etc.)
 - **Section 8**: System administration (sudo, mount, etc.)
+
+## Command Categories
+
+The application includes comprehensive coverage of Linux commands:
+
+- **System Administration**: systemctl, journalctl, passwd, visudo, modprobe, systemd-analyze
+- **Text Processing**: grep, sed, awk, tr, paste, join, iconv
+- **Network Tools**: netstat, ss, ip, ethtool, tcpdump, nmap, socat
+- **Development Tools**: gcc, make, git, docker, rustc, cargo, java, python3
+- **Package Management**: apt, dpkg, rpm, pip3, gem, composer
+- **File Management**: ls, find, rsync, tar, zip, chmod, chown, setfacl
+- **System Monitoring**: top, htop, ps, vmstat, iostat, sar, glances, btop
+- **Security Tools**: ssh, gpg, openssl, iptables, semanage, aa-status, pwgen
 
 ## Technical Details
 
