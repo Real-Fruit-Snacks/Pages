@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Man Pages</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .container.search-active {
+            justify-content: flex-start;
+            padding-top: 40px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-active .logo {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-box {
+            display: flex;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .section-select {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            min-width: 140px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-button {
+            padding: 12px 24px;
+            border: none;
+            background: #4285f4;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-button:hover {
+            background: #3367d6;
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            margin-top: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+
+        .suggestion {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .suggestion:hover, .suggestion.selected {
+            background: #f8f9fa;
+        }
+
+        .suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-info {
+            flex: 1;
+        }
+
+        .suggestion-command {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .suggestion-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .section-badge {
+            background: #e8f0fe;
+            color: #1967d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 12px;
+        }
+
+        /* Main content area with navigation */
+        .content-wrapper {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+            margin-top: 20px;
+            flex-direction: row;
+            gap: 20px;
+        }
+
+        /* Section navigation sidebar */
+        .section-nav {
+            width: 250px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .section-nav h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .section-nav ul {
+            list-style: none;
+        }
+
+        .section-nav li {
+            margin-bottom: 8px;
+        }
+
+        .section-nav a {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .section-nav a:hover, .section-nav a.active {
+            background: #e8f0fe;
+            color: #1967d2;
+        }
+
+        .man-page-container {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .man-page-header {
+            background: #f8f9fa;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .man-page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .action-button {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            background: #f8f9fa;
+            border-color: #999;
+            color: #333;
+        }
+
+        .action-button.active {
+            background: #e8f0fe;
+            color: #1967d2;
+            border-color: #1967d2;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 4px 8px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover {
+            color: #333;
+        }
+
+        /* In-page search */
+        .search-in-page {
+            display: none;
+            position: sticky;
+            top: 0;
+            background: #fffbe5;
+            border-bottom: 1px solid #f0dc00;
+            padding: 8px 24px;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .search-in-page input {
+            flex: 1;
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-in-page-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .man-page-content {
+            padding: 24px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #333;
+            position: relative;
+        }
+
+        /* Syntax highlighting */
+        .man-page-content .section-header {
+            font-weight: bold;
+            color: #1967d2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .man-page-content .option {
+            color: #d73a49;
+            font-weight: 600;
+        }
+
+        .man-page-content .command {
+            color: #005cc5;
+            font-weight: 600;
+        }
+
+        .man-page-content .example {
+            background: #f6f8fa;
+            border-left: 4px solid #1967d2;
+            margin: 16px 0;
+            padding: 12px 16px;
+            border-radius: 4px;
+        }
+
+        .man-page-content .highlight {
+            background: #fff3cd;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        .man-page-content .cross-ref {
+            color: #1967d2;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .man-page-content .cross-ref:hover {
+            color: #0056b3;
+        }
+
+        /* History and bookmarks panel */
+        .side-panel {
+            position: fixed;
+            right: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-panel.open {
+            right: 0;
+        }
+
+        .side-panel-header {
+            padding: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .side-panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .side-panel-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .side-panel-tab.active {
+            color: #1967d2;
+            border-bottom-color: #1967d2;
+        }
+
+        .side-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .side-panel-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .side-panel-item:hover {
+            background: #f8f9fa;
+        }
+
+        .side-panel-item-command {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .side-panel-item-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Floating action buttons */
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 12px;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #4285f4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .fab.secondary {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+            background: #666;
+        }
+
+        /* Related commands */
+        .related-commands {
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            padding: 20px 24px;
+        }
+
+        .related-commands h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .related-commands-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .related-command {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #1967d2;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .related-command:hover {
+            background: #e8f0fe;
+            border-color: #1967d2;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #d93025;
+        }
+
+        .no-results {
+            padding: 24px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            z-index: 300;
+        }
+
+        /* Keyboard shortcuts help */
+        .shortcuts-help {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            padding: 24px;
+            z-index: 400;
+            display: none;
+        }
+
+        .shortcuts-help h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .shortcuts-help table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .shortcuts-help td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .shortcuts-help kbd {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 399;
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .section-nav {
+                width: 100%;
+                position: static;
+                max-height: none;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .logo {
+                font-size: 36px;
+            }
+
+            .search-active .logo {
+                font-size: 24px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                border-radius: 12px;
+            }
+
+            .section-select {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+                width: 100%;
+            }
+
+            .search-input {
+                padding: 16px;
+            }
+
+            .search-button {
+                padding: 16px;
+            }
+
+            .man-page-content {
+                font-size: 12px;
+                padding: 16px;
+            }
+
+            .fab-container {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .fab {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+
+            .fab.secondary {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+            }
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        body.dark-mode .content-wrapper,
+        body.dark-mode .section-nav,
+        body.dark-mode .man-page-container,
+        body.dark-mode .side-panel,
+        body.dark-mode .shortcuts-help {
+            background: #1e1e1e;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        body.dark-mode .man-page-header,
+        body.dark-mode .side-panel-header {
+            background: #2d2d2d;
+            border-bottom: 1px solid #444;
+        }
+
+        body.dark-mode .man-page-title,
+        body.dark-mode .section-nav h3,
+        body.dark-mode .shortcuts-help h3,
+        body.dark-mode .related-commands h4 {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .close-button,
+        body.dark-mode .action-button {
+            color: #999;
+            border-color: #555;
+        }
+
+        body.dark-mode .close-button:hover,
+        body.dark-mode .action-button:hover {
+            color: #e0e0e0;
+            background: #3a3a3a;
+            border-color: #666;
+        }
+
+        body.dark-mode .action-button.active {
+            background: #3a3a3a;
+            color: #4a9eff;
+            border-color: #4a9eff;
+        }
+
+        body.dark-mode .man-page-content {
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        body.dark-mode .man-page-content .section-header {
+            color: #4a9eff;
+        }
+
+        body.dark-mode .man-page-content .option {
+            color: #f97583;
+        }
+
+        body.dark-mode .man-page-content .command {
+            color: #79b8ff;
+        }
+
+        body.dark-mode .man-page-content .example {
+            background: #2d2d2d;
+            border-left-color: #4a9eff;
+        }
+
+        body.dark-mode .man-page-content .cross-ref {
+            color: #4a9eff;
+        }
+
+        body.dark-mode .suggestions,
+        body.dark-mode .side-panel-content {
+            background: #2d2d2d;
+            border: 1px solid #444;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        body.dark-mode .suggestion,
+        body.dark-mode .side-panel-item {
+            border-bottom: 1px solid #444;
+            color: #d4d4d4;
+        }
+
+        body.dark-mode .suggestion:hover,
+        body.dark-mode .suggestion.selected,
+        body.dark-mode .side-panel-item:hover {
+            background: #3a3a3a;
+        }
+
+        body.dark-mode .suggestion-command,
+        body.dark-mode .side-panel-item-command {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .suggestion-desc {
+            color: #999;
+        }
+
+        body.dark-mode .section-badge {
+            background: #3a3a3a;
+            color: #4a9eff;
+            border: 1px solid #444;
+        }
+
+        body.dark-mode .section-nav a {
+            color: #999;
+        }
+
+        body.dark-mode .section-nav a:hover,
+        body.dark-mode .section-nav a.active {
+            background: #3a3a3a;
+            color: #4a9eff;
+        }
+
+        body.dark-mode .search-in-page {
+            background: #3a3a3a;
+            border-bottom-color: #666;
+        }
+
+        body.dark-mode .search-in-page input {
+            background: #2d2d2d;
+            border-color: #555;
+            color: #d4d4d4;
+        }
+
+        body.dark-mode .related-commands {
+            background: #2d2d2d;
+            border-top-color: #444;
+        }
+
+        body.dark-mode .related-command {
+            background: #3a3a3a;
+            border-color: #555;
+            color: #4a9eff;
+        }
+
+        body.dark-mode .related-command:hover {
+            background: #444;
+            border-color: #4a9eff;
+        }
+
+        body.dark-mode .side-panel-tab {
+            color: #999;
+        }
+
+        body.dark-mode .side-panel-tab.active {
+            color: #4a9eff;
+            border-bottom-color: #4a9eff;
+        }
+
+        body.dark-mode .side-panel-tabs {
+            border-bottom-color: #444;
+        }
+
+        body.dark-mode .shortcuts-help td {
+            border-bottom-color: #444;
+            color: #d4d4d4;
+        }
+
+        body.dark-mode kbd {
+            background: #3a3a3a;
+            border-color: #555;
+            color: #d4d4d4;
+        }
+
+        body.dark-mode .man-page-content .highlight {
+            background: #524c00;
+        }
+
+        /* TLDR Section Styles */
+        .tldr-section {
+            background: #f0f8ff;
+            border-top: 1px solid #e0e0e0;
+            padding: 20px 24px;
+        }
+
+        .tldr-section h4 {
+            color: #0066cc;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .tldr-content {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        .tldr-description {
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .tldr-examples h5 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .tldr-example {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #0066cc;
+        }
+
+        .example-description {
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .example-code {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .tldr-placeholder {
+            color: #e91e63;
+            font-weight: bold;
+            background: #fce4ec;
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+
+        .tldr-option {
+            color: #ff5722;
+            font-weight: 600;
+        }
+
+        .no-tldr {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .tldr-loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Dark mode TLDR styles */
+        body.dark-mode .tldr-section {
+            background: #1a2332;
+            border-top-color: #444;
+        }
+
+        body.dark-mode .tldr-section h4 {
+            color: #4a9eff;
+        }
+
+        body.dark-mode .tldr-examples h5 {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .tldr-example {
+            background: #2d3748;
+            border-left-color: #4a9eff;
+        }
+
+        body.dark-mode .example-description {
+            color: #999;
+        }
+
+        body.dark-mode .example-code {
+            background: #1a202c;
+            color: #d4d4d4;
+        }
+
+        body.dark-mode .tldr-placeholder {
+            background: #4a1f3a;
+            color: #ff6b9d;
+        }
+
+        body.dark-mode .tldr-option {
+            color: #ff7b57;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <h1 class="logo">Linux Man Pages</h1>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <select class="section-select" id="sectionSelect">
+                    <option value="">All Sections</option>
+                    <option value="1">1 - User Commands</option>
+                    <option value="2">2 - System Calls</option>
+                    <option value="3">3 - Library Functions</option>
+                    <option value="4">4 - Device Files</option>
+                    <option value="5">5 - File Formats</option>
+                    <option value="6">6 - Games</option>
+                    <option value="7">7 - Miscellaneous</option>
+                    <option value="8">8 - System Admin</option>
+                </select>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search for a command..." autocomplete="off">
+                <button class="search-button" id="searchButton">Search</button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 10px;">
+                <input type="checkbox" id="fullTextSearch" style="margin-right: 5px;">
+                <label for="fullTextSearch" style="color: white; font-size: 14px;">Search in content (may be slow)</label>
+                <span style="margin: 0 15px; color: white;">|</span>
+                <input type="checkbox" id="darkMode" style="margin-right: 5px;">
+                <label for="darkMode" style="color: white; font-size: 14px;">Dark mode</label>
+            </div>
+            
+            <div class="suggestions" id="suggestions"></div>
+        </div>
+        
+        <div class="content-wrapper" id="contentWrapper">
+            <nav class="section-nav" id="sectionNav">
+                <h3>Sections</h3>
+                <ul id="sectionNavList"></ul>
+            </nav>
+            
+            <div class="man-page-container" id="manPageContainer">
+                <div class="man-page-header">
+                    <h2 class="man-page-title" id="manPageTitle"></h2>
+                    <div class="header-actions">
+                        <button class="action-button" id="searchInPageBtn" title="Search in page (Ctrl+F)">🔍</button>
+                        <button class="action-button" id="tldrJumpBtn" title="Jump to TLDR">📋</button>
+                        <button class="action-button" id="bookmarkBtn" title="Bookmark this page">⭐</button>
+                        <button class="close-button" id="closeButton">&times;</button>
+                    </div>
+                </div>
+                <div class="search-in-page" id="searchInPage">
+                    <input type="text" id="searchInPageInput" placeholder="Search in this page...">
+                    <span class="search-in-page-info" id="searchInPageInfo"></span>
+                    <button class="action-button" id="searchInPagePrev">↑</button>
+                    <button class="action-button" id="searchInPageNext">↓</button>
+                    <button class="action-button" id="searchInPageClose">✕</button>
+                </div>
+                <div class="man-page-content" id="manPageContent"></div>
+                <div class="related-commands" id="relatedCommands" style="display: none;">
+                    <h4>Related Commands</h4>
+                    <div class="related-commands-list" id="relatedCommandsList"></div>
+                </div>
+                <div class="tldr-section" id="tldrSection" style="display: none;">
+                    <h4>TLDR Summary</h4>
+                    <div class="tldr-content" id="tldrContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-panel" id="sidePanel">
+        <div class="side-panel-header">
+            <h3>History & Bookmarks</h3>
+            <button class="close-button" id="sidePanelClose">&times;</button>
+        </div>
+        <div class="side-panel-tabs">
+            <button class="side-panel-tab active" data-tab="history">History</button>
+            <button class="side-panel-tab" data-tab="bookmarks">Bookmarks</button>
+        </div>
+        <div class="side-panel-content" id="historyContent">
+            <!-- History items will be populated here -->
+        </div>
+        <div class="side-panel-content" id="bookmarksContent" style="display: none;">
+            <!-- Bookmark items will be populated here -->
+        </div>
+    </div>
+
+    <div class="fab-container">
+        <button class="fab secondary" id="historyFab" title="History & Bookmarks">📚</button>
+        <button class="fab secondary" id="helpFab" title="Keyboard shortcuts">?</button>
+    </div>
+
+    <div class="shortcuts-help" id="shortcutsHelp">
+        <h3>Keyboard Shortcuts</h3>
+        <table>
+            <tr>
+                <td><kbd>/</kbd></td>
+                <td>Focus search</td>
+            </tr>
+            <tr>
+                <td><kbd>Ctrl</kbd> + <kbd>F</kbd></td>
+                <td>Search in current page</td>
+            </tr>
+            <tr>
+                <td><kbd>Esc</kbd></td>
+                <td>Close current view</td>
+            </tr>
+            <tr>
+                <td><kbd>↑</kbd> <kbd>↓</kbd></td>
+                <td>Navigate suggestions</td>
+            </tr>
+            <tr>
+                <td><kbd>Enter</kbd></td>
+                <td>Select suggestion</td>
+            </tr>
+            <tr>
+                <td><kbd>Ctrl</kbd> + <kbd>B</kbd></td>
+                <td>Bookmark current page</td>
+            </tr>
+            <tr>
+                <td><kbd>H</kbd></td>
+                <td>Toggle history panel</td>
+            </tr>
+            <tr>
+                <td><kbd>?</kbd></td>
+                <td>Show this help</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="status" id="status"></div>
+
+    <!-- Load manifest and index -->
+    <script src="data/manifest.js"></script>
+    <script src="data/index.js"></script>
+    
+    <script>
+        // Application state
+        let currentState = 'initial';
+        let searchTimeout = null;
+        let loadedDataFiles = {};
+        let currentManPages = {};
+        let currentManPage = null;
+        let history = [];
+        let bookmarks = [];
+        let searchInPageActive = false;
+        let searchInPageResults = [];
+        let searchInPageCurrentIndex = -1;
+
+        // DOM elements
+        const container = document.getElementById('container');
+        const searchInput = document.getElementById('searchInput');
+        const sectionSelect = document.getElementById('sectionSelect');
+        const searchButton = document.getElementById('searchButton');
+        const suggestions = document.getElementById('suggestions');
+        const contentWrapper = document.getElementById('contentWrapper');
+        const manPageContainer = document.getElementById('manPageContainer');
+        const manPageTitle = document.getElementById('manPageTitle');
+        const manPageContent = document.getElementById('manPageContent');
+        const closeButton = document.getElementById('closeButton');
+        const status = document.getElementById('status');
+        const sectionNav = document.getElementById('sectionNav');
+        const sectionNavList = document.getElementById('sectionNavList');
+        const relatedCommands = document.getElementById('relatedCommands');
+        const relatedCommandsList = document.getElementById('relatedCommandsList');
+        const sidePanel = document.getElementById('sidePanel');
+        const historyContent = document.getElementById('historyContent');
+        const bookmarksContent = document.getElementById('bookmarksContent');
+        const bookmarkBtn = document.getElementById('bookmarkBtn');
+        const searchInPageBtn = document.getElementById('searchInPageBtn');
+        const searchInPage = document.getElementById('searchInPage');
+        const searchInPageInput = document.getElementById('searchInPageInput');
+        const searchInPageInfo = document.getElementById('searchInPageInfo');
+        const shortcutsHelp = document.getElementById('shortcutsHelp');
+        const overlay = document.getElementById('overlay');
+        const tldrSection = document.getElementById('tldrSection');
+        const tldrContent = document.getElementById('tldrContent');
+        const tldrJumpBtn = document.getElementById('tldrJumpBtn');
+
+        // Load saved data from localStorage
+        function loadSavedData() {
+            try {
+                const savedHistory = localStorage.getItem('manPageHistory');
+                if (savedHistory) {
+                    history = JSON.parse(savedHistory);
+                }
+                const savedBookmarks = localStorage.getItem('manPageBookmarks');
+                if (savedBookmarks) {
+                    bookmarks = JSON.parse(savedBookmarks);
+                }
+            } catch (e) {
+                console.error('Failed to load saved data:', e);
+            }
+        }
+
+        // Save data to localStorage
+        function saveHistory() {
+            try {
+                localStorage.setItem('manPageHistory', JSON.stringify(history.slice(0, 50))); // Keep last 50
+            } catch (e) {
+                console.error('Failed to save history:', e);
+            }
+        }
+
+        function saveBookmarks() {
+            try {
+                localStorage.setItem('manPageBookmarks', JSON.stringify(bookmarks));
+            } catch (e) {
+                console.error('Failed to save bookmarks:', e);
+            }
+        }
+
+        // Show status message
+        function showStatus(message, duration = 3000) {
+            status.textContent = message;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, duration);
+        }
+
+        // Load a data file dynamically
+        async function loadDataFile(fileNumber) {
+            if (loadedDataFiles[fileNumber]) {
+                return true;
+            }
+
+            try {
+                const script = document.createElement('script');
+                script.src = `data/man_${fileNumber}.js`;
+                
+                return new Promise((resolve, reject) => {
+                    script.onload = () => {
+                        setTimeout(() => {
+                            const dataVarName = `manData_${fileNumber}`;
+                            let data = null;
+                            try {
+                                data = eval(dataVarName);
+                            } catch (e) {
+                                data = window[dataVarName];
+                            }
+                            
+                            if (data) {
+                                Object.assign(currentManPages, data);
+                                loadedDataFiles[fileNumber] = true;
+                                console.log(`Successfully loaded data file ${fileNumber}`);
+                                resolve(true);
+                            } else {
+                                reject(new Error(`Data not found in file ${fileNumber}`));
+                            }
+                        }, 100);
+                    };
+                    
+                    script.onerror = () => {
+                        reject(new Error(`Failed to load data file ${fileNumber}`));
+                    };
+                    
+                    document.head.appendChild(script);
+                });
+            } catch (error) {
+                console.error('Error loading data file:', error);
+                return false;
+            }
+        }
+
+        // Process and enhance man page content
+        function processManPageContent(content) {
+            // First escape HTML to prevent XSS
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            // Now apply formatting - the order is important!
+            // We need to escape HTML first, then add our own HTML tags
+            
+            // Highlight section headers
+            content = content.replace(/^([A-Z][A-Z\s]+)$/gm, '<span class="section-header">$1</span>');
+            
+            // Highlight command options (e.g., -a, --all)
+            content = content.replace(/(\s|^)(-{1,2}[a-zA-Z0-9-]+)/g, '$1<span class="option">$2</span>');
+            
+            // Highlight commands in backticks or quotes
+            content = content.replace(/`([^`]+)`/g, '<span class="command">$1</span>');
+            content = content.replace(/"([^"]+)"/g, function(match, p1) {
+                // Only highlight if it looks like a command
+                if (p1.match(/^[a-z0-9_-]+$/i)) {
+                    return '<span class="command">' + p1 + '</span>';
+                }
+                return match;
+            });
+            
+            // Make cross-references clickable (e.g., ls(1), chmod(2))
+            content = content.replace(/\b([a-z0-9_-]+)\((\d)\)/gi, function(match, cmd, section) {
+                return '<span class="cross-ref" data-command="' + cmd + '" data-section="' + section + '">' + match + '</span>';
+            });
+            
+            // Highlight example blocks
+            content = content.replace(/(EXAMPLES?|Example:?)([\s\S]*?)(?=^[A-Z]|$)/gm, function(match, header, body) {
+                if (body.trim()) {
+                    return header + '\n<div class="example">' + body.trim() + '</div>\n';
+                }
+                return match;
+            });
+            
+            // Convert newlines to <br> tags for proper formatting
+            content = content.replace(/\n/g, '<br>\n');
+            
+            return content;
+        }
+
+        // Extract sections from man page content
+        function extractSections(content) {
+            const sections = [];
+            const lines = content.split('\n');
+            let currentSection = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                // Check if this is a section header (all caps, at start of line)
+                if (/^[A-Z][A-Z\s]+$/.test(line.trim()) && line.trim().length > 2) {
+                    const sectionName = line.trim();
+                    currentSection = {
+                        name: sectionName,
+                        line: i,
+                        id: sectionName.toLowerCase().replace(/\s+/g, '-')
+                    };
+                    sections.push(currentSection);
+                }
+            }
+            
+            return sections;
+        }
+
+        // Build section navigation
+        function buildSectionNav(sections) {
+            sectionNavList.innerHTML = '';
+            
+            sections.forEach(section => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = '#' + section.id;
+                a.textContent = section.name;
+                a.dataset.line = section.line;
+                
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    scrollToSection(section.id);
+                    
+                    // Update active state
+                    document.querySelectorAll('.section-nav a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    a.classList.add('active');
+                });
+                
+                li.appendChild(a);
+                sectionNavList.appendChild(li);
+            });
+        }
+
+        // Scroll to section
+        function scrollToSection(sectionId) {
+            // First try to find section headers with class
+            const sectionHeaders = manPageContent.querySelectorAll('.section-header');
+            for (const header of sectionHeaders) {
+                if (header.textContent.toLowerCase().replace(/\s+/g, '-') === sectionId) {
+                    header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
+            }
+            
+            // Fallback: Search in text content
+            const content = manPageContent.textContent;
+            const lines = content.split('\n');
+            let targetLine = -1;
+            
+            // Find the line containing the section header
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                // Handle both proper headers and malformed ones
+                if (line.toLowerCase().replace(/\s+/g, '-') === sectionId && /^[A-Z][A-Z\s]+$/.test(line)) {
+                    targetLine = i;
+                    break;
+                }
+                // Also check for the malformed section headers (e.g., "section-header>NAME")
+                if (line.includes('section-header>')) {
+                    const headerText = line.replace('section-header>', '').trim();
+                    if (headerText.toLowerCase().replace(/\s+/g, '-') === sectionId) {
+                        targetLine = i;
+                        break;
+                    }
+                }
+            }
+            
+            if (targetLine >= 0) {
+                // Calculate position based on line number
+                const totalLines = lines.length;
+                const percentage = targetLine / totalLines;
+                
+                // Get the content element's position relative to the page
+                const contentRect = manPageContent.getBoundingClientRect();
+                const contentTop = contentRect.top + window.pageYOffset;
+                
+                // Calculate target scroll position
+                const targetScrollPosition = contentTop + (manPageContent.offsetHeight * percentage) - 100;
+                
+                // Scroll the window
+                window.scrollTo({
+                    top: targetScrollPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Find related commands
+        function findRelatedCommands(command, content) {
+            const related = new Set();
+            
+            // Extract from SEE ALSO section
+            const seeAlsoMatch = content.match(/SEE ALSO[\s\S]*?(?=^[A-Z]|\n\n|$)/mi);
+            if (seeAlsoMatch) {
+                const matches = seeAlsoMatch[0].matchAll(/\b([a-z0-9_-]+)\((\d)\)/gi);
+                for (const match of matches) {
+                    if (match[1].toLowerCase() !== command.toLowerCase()) {
+                        related.add({ command: match[1], section: match[2] });
+                    }
+                }
+            }
+            
+            // Extract from cross-references in content
+            const crossRefs = content.matchAll(/\b([a-z0-9_-]+)\((\d)\)/gi);
+            for (const match of crossRefs) {
+                if (match[1].toLowerCase() !== command.toLowerCase() && related.size < 10) {
+                    related.add({ command: match[1], section: match[2] });
+                }
+            }
+            
+            return Array.from(related);
+        }
+
+        // Display related commands
+        function displayRelatedCommands(relatedCmds) {
+            if (relatedCmds.length === 0) {
+                relatedCommands.style.display = 'none';
+                return;
+            }
+            
+            relatedCommandsList.innerHTML = '';
+            relatedCmds.forEach(cmd => {
+                const link = document.createElement('a');
+                link.className = 'related-command';
+                link.textContent = `${cmd.command}(${cmd.section})`;
+                link.href = '#';
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Check if command exists in index
+                    const found = searchIndex.find(item => 
+                        item.command === cmd.command && item.section === parseInt(cmd.section)
+                    );
+                    if (found) {
+                        displayManPage(found.command, found.section, found.file);
+                    } else {
+                        showStatus(`Man page for ${cmd.command}(${cmd.section}) not found`);
+                    }
+                });
+                
+                relatedCommandsList.appendChild(link);
+            });
+            
+            relatedCommands.style.display = 'block';
+        }
+
+        // TLDR Functions
+        async function fetchTLDR(command) {
+            // Check cache first
+            const cacheKey = `tldr_${command}`;
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    // Cache for 7 days
+                    if (Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                        return data.content;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load TLDR from cache:', e);
+            }
+            
+            // Try common and linux platforms
+            const platforms = ['common', 'linux'];
+            
+            for (const platform of platforms) {
+                try {
+                    const url = `https://raw.githubusercontent.com/tldr-pages/tldr/main/pages/${platform}/${command}.md`;
+                    const response = await fetch(url);
+                    
+                    if (response.ok) {
+                        const content = await response.text();
+                        // Cache the content
+                        try {
+                            localStorage.setItem(cacheKey, JSON.stringify({
+                                content,
+                                timestamp: Date.now()
+                            }));
+                        } catch (e) {
+                            console.error('Failed to cache TLDR:', e);
+                        }
+                        return content;
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch TLDR for ${command} from ${platform}:`, error);
+                }
+            }
+            
+            return null;
+        }
+
+        function parseTLDRMarkdown(markdown) {
+            const lines = markdown.split('\n');
+            const tldr = {
+                command: '',
+                description: '',
+                examples: []
+            };
+            
+            let currentExample = null;
+            
+            for (const line of lines) {
+                // Command name
+                if (line.startsWith('# ')) {
+                    tldr.command = line.slice(2).trim();
+                }
+                // Description
+                else if (line.startsWith('> ')) {
+                    tldr.description += line.slice(2).trim() + ' ';
+                }
+                // Example description
+                else if (line.startsWith('- ')) {
+                    if (currentExample) {
+                        tldr.examples.push(currentExample);
+                    }
+                    currentExample = {
+                        description: line.slice(2).trim(),
+                        code: ''
+                    };
+                }
+                // Code block
+                else if (line.startsWith('`') && line.endsWith('`') && line.length > 2) {
+                    if (currentExample) {
+                        currentExample.code = line.slice(1, -1);
+                    }
+                }
+            }
+            
+            if (currentExample) {
+                tldr.examples.push(currentExample);
+            }
+            
+            tldr.description = tldr.description.trim();
+            return tldr;
+        }
+
+        function highlightTLDRCode(code) {
+            // Highlight placeholders {{example}}
+            code = code.replace(/\{\{([^}]+)\}\}/g, '<span class="tldr-placeholder">$1</span>');
+            
+            // Highlight options
+            code = code.replace(/(\s|^)(-{1,2}[a-zA-Z0-9-]+)/g, '$1<span class="tldr-option">$2</span>');
+            
+            return code;
+        }
+
+        function renderTLDR(tldr) {
+            let html = '';
+            
+            if (tldr.description) {
+                html += `<p class="tldr-description">${tldr.description}</p>`;
+            }
+            
+            if (tldr.examples.length > 0) {
+                html += '<div class="tldr-examples">';
+                html += '<h5>Quick Examples:</h5>';
+                
+                for (const example of tldr.examples) {
+                    html += '<div class="tldr-example">';
+                    html += `<p class="example-description">${example.description}</p>`;
+                    html += `<pre class="example-code">${highlightTLDRCode(example.code)}</pre>`;
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        async function displayTLDR(command) {
+            tldrSection.style.display = 'block';
+            tldrContent.innerHTML = '<div class="tldr-loading">Loading TLDR summary...</div>';
+            
+            try {
+                const markdown = await fetchTLDR(command);
+                
+                if (markdown) {
+                    const tldr = parseTLDRMarkdown(markdown);
+                    tldrContent.innerHTML = renderTLDR(tldr);
+                } else {
+                    tldrContent.innerHTML = '<div class="no-tldr">No TLDR summary available for this command.</div>';
+                }
+            } catch (error) {
+                console.error('Error displaying TLDR:', error);
+                tldrContent.innerHTML = '<div class="no-tldr">Failed to load TLDR summary.</div>';
+            }
+        }
+
+        // Add to history
+        function addToHistory(command, section) {
+            const entry = {
+                command,
+                section,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Remove if already exists
+            history = history.filter(h => !(h.command === command && h.section === section));
+            
+            // Add to beginning
+            history.unshift(entry);
+            
+            // Keep only last 50
+            if (history.length > 50) {
+                history = history.slice(0, 50);
+            }
+            
+            saveHistory();
+            updateHistoryPanel();
+        }
+
+        // Update history panel
+        function updateHistoryPanel() {
+            historyContent.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyContent.innerHTML = '<p style="text-align: center; color: #999;">No history yet</p>';
+                return;
+            }
+            
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'side-panel-item';
+                div.innerHTML = `
+                    <div class="side-panel-item-command">${item.command}(${item.section})</div>
+                    <div class="side-panel-item-meta">${new Date(item.timestamp).toLocaleDateString()}</div>
+                `;
+                
+                div.addEventListener('click', () => {
+                    const found = searchIndex.find(cmd => 
+                        cmd.command === item.command && cmd.section === item.section
+                    );
+                    if (found) {
+                        displayManPage(found.command, found.section, found.file);
+                        sidePanel.classList.remove('open');
+                    }
+                });
+                
+                historyContent.appendChild(div);
+            });
+        }
+
+        // Update bookmarks panel
+        function updateBookmarksPanel() {
+            bookmarksContent.innerHTML = '';
+            
+            if (bookmarks.length === 0) {
+                bookmarksContent.innerHTML = '<p style="text-align: center; color: #999;">No bookmarks yet</p>';
+                return;
+            }
+            
+            bookmarks.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'side-panel-item';
+                div.innerHTML = `
+                    <div class="side-panel-item-command">${item.command}(${item.section})</div>
+                    <div class="side-panel-item-meta">
+                        ${item.description}
+                        <button class="action-button" style="float: right; padding: 2px 6px; font-size: 12px;" onclick="removeBookmark(${index})">Remove</button>
+                    </div>
+                `;
+                
+                div.addEventListener('click', (e) => {
+                    if (!e.target.matches('button')) {
+                        const found = searchIndex.find(cmd => 
+                            cmd.command === item.command && cmd.section === item.section
+                        );
+                        if (found) {
+                            displayManPage(found.command, found.section, found.file);
+                            sidePanel.classList.remove('open');
+                        }
+                    }
+                });
+                
+                bookmarksContent.appendChild(div);
+            });
+        }
+
+        // Toggle bookmark
+        function toggleBookmark() {
+            if (!currentManPage) return;
+            
+            const exists = bookmarks.findIndex(b => 
+                b.command === currentManPage.command && b.section === currentManPage.section
+            );
+            
+            if (exists >= 0) {
+                bookmarks.splice(exists, 1);
+                bookmarkBtn.classList.remove('active');
+                showStatus('Bookmark removed');
+            } else {
+                const entry = searchIndex.find(cmd => 
+                    cmd.command === currentManPage.command && cmd.section === currentManPage.section
+                );
+                if (entry) {
+                    bookmarks.unshift({
+                        command: currentManPage.command,
+                        section: currentManPage.section,
+                        description: entry.description
+                    });
+                    bookmarkBtn.classList.add('active');
+                    showStatus('Bookmark added');
+                }
+            }
+            
+            saveBookmarks();
+            updateBookmarksPanel();
+        }
+
+        // Remove bookmark
+        window.removeBookmark = function(index) {
+            bookmarks.splice(index, 1);
+            saveBookmarks();
+            updateBookmarksPanel();
+            
+            // Update bookmark button if current page
+            if (currentManPage) {
+                const exists = bookmarks.find(b => 
+                    b.command === currentManPage.command && b.section === currentManPage.section
+                );
+                bookmarkBtn.classList.toggle('active', !!exists);
+            }
+        };
+
+        // Search in page functionality
+        function toggleSearchInPage() {
+            searchInPageActive = !searchInPageActive;
+            searchInPage.style.display = searchInPageActive ? 'flex' : 'none';
+            
+            if (searchInPageActive) {
+                searchInPageInput.focus();
+                searchInPageInput.select();
+            } else {
+                clearSearchInPage();
+            }
+        }
+
+        function clearSearchInPage() {
+            // Remove all highlights
+            const highlights = manPageContent.querySelectorAll('.highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+            searchInPageResults = [];
+            searchInPageCurrentIndex = -1;
+            updateSearchInPageInfo();
+        }
+
+        function searchInCurrentPage(query) {
+            if (!query) {
+                clearSearchInPage();
+                return;
+            }
+            
+            clearSearchInPage();
+            
+            const walker = document.createTreeWalker(
+                manPageContent,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            let node;
+            const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            
+            while (node = walker.nextNode()) {
+                const matches = [...node.textContent.matchAll(regex)];
+                if (matches.length > 0) {
+                    const parent = node.parentNode;
+                    if (parent.classList && (parent.classList.contains('section-header') || 
+                        parent.classList.contains('option') || 
+                        parent.classList.contains('command'))) {
+                        continue; // Skip already styled elements
+                    }
+                    
+                    let lastIndex = 0;
+                    const fragment = document.createDocumentFragment();
+                    
+                    matches.forEach(match => {
+                        if (match.index > lastIndex) {
+                            fragment.appendChild(
+                                document.createTextNode(node.textContent.slice(lastIndex, match.index))
+                            );
+                        }
+                        
+                        const span = document.createElement('span');
+                        span.className = 'highlight';
+                        span.textContent = match[0];
+                        fragment.appendChild(span);
+                        searchInPageResults.push(span);
+                        
+                        lastIndex = match.index + match[0].length;
+                    });
+                    
+                    if (lastIndex < node.textContent.length) {
+                        fragment.appendChild(
+                            document.createTextNode(node.textContent.slice(lastIndex))
+                        );
+                    }
+                    
+                    parent.replaceChild(fragment, node);
+                }
+            }
+            
+            if (searchInPageResults.length > 0) {
+                searchInPageCurrentIndex = 0;
+                highlightCurrentResult();
+            }
+            
+            updateSearchInPageInfo();
+        }
+
+        function highlightCurrentResult() {
+            searchInPageResults.forEach((el, index) => {
+                el.style.backgroundColor = index === searchInPageCurrentIndex ? '#ff9632' : '#fff3cd';
+                if (document.body.classList.contains('dark-mode')) {
+                    el.style.backgroundColor = index === searchInPageCurrentIndex ? '#ff6b00' : '#524c00';
+                }
+            });
+            
+            if (searchInPageResults[searchInPageCurrentIndex]) {
+                searchInPageResults[searchInPageCurrentIndex].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }
+
+        function updateSearchInPageInfo() {
+            if (searchInPageResults.length === 0) {
+                searchInPageInfo.textContent = 'No results';
+            } else {
+                searchInPageInfo.textContent = `${searchInPageCurrentIndex + 1} of ${searchInPageResults.length}`;
+            }
+        }
+
+        function navigateSearchInPage(direction) {
+            if (searchInPageResults.length === 0) return;
+            
+            if (direction === 'next') {
+                searchInPageCurrentIndex = (searchInPageCurrentIndex + 1) % searchInPageResults.length;
+            } else {
+                searchInPageCurrentIndex = (searchInPageCurrentIndex - 1 + searchInPageResults.length) % searchInPageResults.length;
+            }
+            
+            highlightCurrentResult();
+            updateSearchInPageInfo();
+        }
+
+        // Full-text search in content
+        async function searchInContent(query, section = '') {
+            if (!query || query.length < 2) {
+                return [];
+            }
+
+            const results = [];
+            const lowerQuery = query.toLowerCase();
+            const sectionFilter = section ? parseInt(section) : null;
+
+            showStatus('Searching in all man pages...', 5000);
+
+            // Load all data files if not already loaded
+            if (!loadedDataFiles[1]) {
+                await loadDataFile(1);
+            }
+
+            // Search through all loaded man pages
+            for (const [key, manPage] of Object.entries(currentManPages)) {
+                if (sectionFilter && manPage.section !== sectionFilter) {
+                    continue;
+                }
+
+                if (manPage.content && manPage.content.toLowerCase().includes(lowerQuery)) {
+                    const lines = manPage.content.split('\n');
+                    let contextLine = '';
+                    for (const line of lines) {
+                        if (line.toLowerCase().includes(lowerQuery)) {
+                            contextLine = line.trim().substring(0, 100) + '...';
+                            break;
+                        }
+                    }
+
+                    results.push({
+                        command: manPage.command,
+                        section: manPage.section,
+                        description: contextLine || manPage.description,
+                        file: 1,
+                        isContentMatch: true
+                    });
+                }
+            }
+
+            results.sort((a, b) => a.command.localeCompare(b.command));
+
+            const totalFound = results.length;
+            const limited = results.slice(0, 30);
+            
+            if (totalFound > 30) {
+                showStatus(`Found ${totalFound} matches in content, showing first 30`, 3000);
+            } else {
+                showStatus(`Found ${totalFound} matches in content`, 3000);
+            }
+            
+            return limited;
+        }
+
+        // Search function using the index
+        function searchManPages(query, section = '') {
+            if (!query || query.length < 1) {
+                return [];
+            }
+
+            const results = [];
+            const lowerQuery = query.toLowerCase();
+            const sectionFilter = section ? parseInt(section) : null;
+
+            for (const entry of searchIndex) {
+                if (sectionFilter && entry.section !== sectionFilter) {
+                    continue;
+                }
+
+                if (entry.command.toLowerCase().includes(lowerQuery) || 
+                    entry.description.toLowerCase().includes(lowerQuery)) {
+                    results.push(entry);
+                }
+            }
+
+            results.sort((a, b) => {
+                const aExact = a.command.toLowerCase() === lowerQuery;
+                const bExact = b.command.toLowerCase() === lowerQuery;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                return a.command.localeCompare(b.command);
+            });
+
+            return results.slice(0, 10);
+        }
+
+        // Display suggestions with keyboard navigation
+        let selectedSuggestionIndex = -1;
+        
+        function displaySuggestions(results) {
+            suggestions.innerHTML = '';
+            selectedSuggestionIndex = -1;
+            
+            if (results.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            results.forEach((result, index) => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'suggestion';
+                suggestion.dataset.index = index;
+                
+                const descriptionText = result.description;
+                
+                suggestion.innerHTML = `
+                    <div class="suggestion-info">
+                        <div class="suggestion-command">${result.command}</div>
+                        <div class="suggestion-desc">${descriptionText}</div>
+                    </div>
+                    <span class="section-badge">Section ${result.section}</span>
+                `;
+                
+                suggestion.addEventListener('click', () => {
+                    displayManPage(result.command, result.section, result.file);
+                });
+                
+                suggestions.appendChild(suggestion);
+            });
+            
+            suggestions.style.display = 'block';
+        }
+
+        function updateSelectedSuggestion(newIndex) {
+            const suggestionElements = suggestions.querySelectorAll('.suggestion');
+            
+            suggestionElements.forEach((el, index) => {
+                el.classList.toggle('selected', index === newIndex);
+            });
+            
+            selectedSuggestionIndex = newIndex;
+            
+            if (suggestionElements[newIndex]) {
+                suggestionElements[newIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Display man page
+        async function displayManPage(command, section, fileNumber) {
+            // Update state
+            currentState = 'viewing';
+            container.classList.add('search-active');
+            suggestions.style.display = 'none';
+            contentWrapper.style.display = 'flex';
+            
+            // Show loading state
+            manPageTitle.textContent = `${command}(${section})`;
+            manPageContent.innerHTML = '<div class="loading">Loading man page...</div>';
+            
+            // Store current page info
+            currentManPage = { command, section };
+            
+            // Check if bookmarked
+            const isBookmarked = bookmarks.find(b => 
+                b.command === command && b.section === section
+            );
+            bookmarkBtn.classList.toggle('active', !!isBookmarked);
+            
+            try {
+                // Load the data file if not already loaded
+                if (!loadedDataFiles[fileNumber]) {
+                    showStatus(`Loading data file ${fileNumber}...`);
+                    await loadDataFile(fileNumber);
+                }
+                
+                // Get the man page content
+                const key = `${command}_${section}`;
+                const manPage = currentManPages[key];
+                
+                if (!manPage) {
+                    manPageContent.innerHTML = '<div class="error">Man page not found in loaded data</div>';
+                    return;
+                }
+                
+                // Process and display the content
+                const processedContent = processManPageContent(manPage.content);
+                manPageContent.innerHTML = processedContent;
+                
+                // Extract and build section navigation
+                const sections = extractSections(manPage.content);
+                buildSectionNav(sections);
+                
+                // Find and display related commands
+                const relatedCmds = findRelatedCommands(command, manPage.content);
+                displayRelatedCommands(relatedCmds);
+                
+                // Display TLDR summary
+                displayTLDR(command);
+                
+                // Add cross-reference click handlers
+                manPageContent.querySelectorAll('.cross-ref').forEach(ref => {
+                    ref.addEventListener('click', () => {
+                        const refCommand = ref.dataset.command;
+                        const refSection = ref.dataset.section;
+                        const found = searchIndex.find(item => 
+                            item.command === refCommand && item.section === parseInt(refSection)
+                        );
+                        if (found) {
+                            displayManPage(found.command, found.section, found.file);
+                        } else {
+                            showStatus(`Man page for ${refCommand}(${refSection}) not found`);
+                        }
+                    });
+                });
+                
+                // Add to history
+                addToHistory(command, section);
+                
+                // Update URL hash for direct linking
+                window.location.hash = `${command}_${section}`;
+                
+                // Scroll to top
+                manPageContent.scrollTop = 0;
+                
+            } catch (error) {
+                console.error('Error loading man page:', error);
+                manPageContent.innerHTML = `<div class="error">Error loading man page: ${error.message}</div>`;
+            }
+        }
+
+        // Close man page
+        function closeManPage() {
+            contentWrapper.style.display = 'none';
+            currentState = 'search';
+            currentManPage = null;
+            searchInput.focus();
+            window.location.hash = '';
+            
+            if (searchInPageActive) {
+                toggleSearchInPage();
+            }
+        }
+
+        // Keyboard event handlers
+        document.addEventListener('keydown', (e) => {
+            // Global keyboard shortcuts
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey && 
+                e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+            
+            if (e.key === 'Escape') {
+                if (shortcutsHelp.style.display === 'block') {
+                    shortcutsHelp.style.display = 'none';
+                    overlay.style.display = 'none';
+                } else if (searchInPageActive) {
+                    toggleSearchInPage();
+                } else if (sidePanel.classList.contains('open')) {
+                    sidePanel.classList.remove('open');
+                } else if (currentState === 'viewing') {
+                    closeManPage();
+                } else if (suggestions.style.display === 'block') {
+                    suggestions.style.display = 'none';
+                }
+            }
+            
+            if (e.key === '?' && e.shiftKey && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                shortcutsHelp.style.display = shortcutsHelp.style.display === 'block' ? 'none' : 'block';
+                overlay.style.display = shortcutsHelp.style.display;
+            }
+            
+            if (e.key === 'h' && !e.ctrlKey && !e.metaKey && 
+                e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                sidePanel.classList.toggle('open');
+            }
+            
+            if (e.ctrlKey && e.key === 'f' && currentState === 'viewing') {
+                e.preventDefault();
+                toggleSearchInPage();
+            }
+            
+            if (e.ctrlKey && e.key === 'b' && currentState === 'viewing') {
+                e.preventDefault();
+                toggleBookmark();
+            }
+        });
+
+        // Search input keyboard navigation
+        searchInput.addEventListener('keydown', (e) => {
+            const suggestionElements = suggestions.querySelectorAll('.suggestion');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (suggestionElements.length > 0) {
+                    updateSelectedSuggestion(
+                        Math.min(selectedSuggestionIndex + 1, suggestionElements.length - 1)
+                    );
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (suggestionElements.length > 0) {
+                    updateSelectedSuggestion(Math.max(selectedSuggestionIndex - 1, 0));
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (selectedSuggestionIndex >= 0 && suggestionElements[selectedSuggestionIndex]) {
+                    suggestionElements[selectedSuggestionIndex].click();
+                } else if (suggestionElements.length > 0) {
+                    suggestionElements[0].click();
+                }
+            }
+        });
+
+        // Event listeners
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value;
+            const fullTextSearchEnabled = document.getElementById('fullTextSearch').checked;
+            
+            if (query.length > 0 && currentState === 'initial') {
+                currentState = 'search';
+                container.classList.add('search-active');
+            }
+            
+            clearTimeout(searchTimeout);
+            
+            searchTimeout = setTimeout(async () => {
+                let results;
+                if (fullTextSearchEnabled) {
+                    results = await searchInContent(query, sectionSelect.value);
+                } else {
+                    results = searchManPages(query, sectionSelect.value);
+                }
+                displaySuggestions(results);
+            }, fullTextSearchEnabled ? 500 : 150);
+        });
+
+        searchButton.addEventListener('click', async () => {
+            const query = searchInput.value;
+            const fullTextSearchEnabled = document.getElementById('fullTextSearch').checked;
+            
+            let results;
+            if (fullTextSearchEnabled) {
+                results = await searchInContent(query, sectionSelect.value);
+            } else {
+                results = searchManPages(query, sectionSelect.value);
+            }
+            
+            if (results.length > 0) {
+                displayManPage(results[0].command, results[0].section, results[0].file);
+            }
+        });
+
+        closeButton.addEventListener('click', closeManPage);
+
+        // Search in page event listeners
+        searchInPageBtn.addEventListener('click', toggleSearchInPage);
+        
+        searchInPageInput.addEventListener('input', (e) => {
+            searchInCurrentPage(e.target.value);
+        });
+        
+        searchInPageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                navigateSearchInPage(e.shiftKey ? 'prev' : 'next');
+            } else if (e.key === 'Escape') {
+                toggleSearchInPage();
+            }
+        });
+        
+        document.getElementById('searchInPagePrev').addEventListener('click', () => {
+            navigateSearchInPage('prev');
+        });
+        
+        document.getElementById('searchInPageNext').addEventListener('click', () => {
+            navigateSearchInPage('next');
+        });
+        
+        document.getElementById('searchInPageClose').addEventListener('click', toggleSearchInPage);
+
+        // Bookmark button
+        bookmarkBtn.addEventListener('click', toggleBookmark);
+        
+        // TLDR jump button
+        tldrJumpBtn.addEventListener('click', () => {
+            if (tldrSection && tldrSection.style.display !== 'none') {
+                tldrSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                showStatus('TLDR section is not available for this command');
+            }
+        });
+
+        // Side panel event listeners
+        document.getElementById('historyFab').addEventListener('click', () => {
+            sidePanel.classList.toggle('open');
+            updateHistoryPanel();
+            updateBookmarksPanel();
+        });
+        
+        document.getElementById('sidePanelClose').addEventListener('click', () => {
+            sidePanel.classList.remove('open');
+        });
+        
+        // Tab switching
+        document.querySelectorAll('.side-panel-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                document.querySelectorAll('.side-panel-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                tab.classList.add('active');
+                
+                if (tabName === 'history') {
+                    historyContent.style.display = 'block';
+                    bookmarksContent.style.display = 'none';
+                } else {
+                    historyContent.style.display = 'none';
+                    bookmarksContent.style.display = 'block';
+                }
+            });
+        });
+
+        // Help button
+        document.getElementById('helpFab').addEventListener('click', () => {
+            shortcutsHelp.style.display = shortcutsHelp.style.display === 'block' ? 'none' : 'block';
+            overlay.style.display = shortcutsHelp.style.display;
+        });
+        
+        overlay.addEventListener('click', () => {
+            shortcutsHelp.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                suggestions.style.display = 'none';
+            }
+        });
+
+        // Dark mode handling
+        const darkModeCheckbox = document.getElementById('darkMode');
+        
+        const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (savedDarkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeCheckbox.checked = true;
+        }
+        
+        darkModeCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'false');
+            }
+        });
+
+        // Handle direct linking via hash
+        function handleHashChange() {
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                const match = hash.match(/^([^_]+)_(\d+)$/);
+                if (match) {
+                    const [, command, section] = match;
+                    const found = searchIndex.find(item => 
+                        item.command === command && item.section === parseInt(section)
+                    );
+                    if (found) {
+                        displayManPage(found.command, found.section, found.file);
+                    }
+                }
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', async () => {
+            loadSavedData();
+            
+            if (typeof searchIndex === 'undefined' || typeof manFiles === 'undefined') {
+                showStatus('Warning: Data files not found. Run build_man_pages.sh on a Linux system.', 5000);
+            } else {
+                showStatus(`Ready: ${searchIndex.length} man pages available`);
+                
+                // Pre-load the first data file
+                try {
+                    await loadDataFile(1);
+                    console.log('Pre-loaded data file 1');
+                } catch (error) {
+                    console.error('Failed to pre-load data file 1:', error);
+                }
+                
+                // Check for direct link
+                handleHashChange();
+            }
+            
+            searchInput.focus();
+        });
+        
+        window.addEventListener('hashchange', handleHashChange);
+    </script>
+</body>
+</html>
