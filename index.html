@@ -1407,10 +1407,10 @@
                     e.preventDefault();
                     // Check if command exists in index
                     const found = searchIndex.find(item => 
-                        item.command === cmd.command && item.section === parseInt(cmd.section)
+                        (item.command || item.name) === cmd.command && item.section === parseInt(cmd.section)
                     );
                     if (found) {
-                        displayManPage(found.command, found.section, found.file);
+                        displayManPage(found.command || found.name, found.section, found.file);
                     } else {
                         showStatus(`Man page for ${cmd.command}(${cmd.section}) not found`);
                     }
@@ -1608,10 +1608,10 @@
                 
                 div.addEventListener('click', () => {
                     const found = searchIndex.find(cmd => 
-                        cmd.command === item.command && cmd.section === item.section
+                        (cmd.command || cmd.name) === item.command && cmd.section === item.section
                     );
                     if (found) {
-                        displayManPage(found.command, found.section, found.file);
+                        displayManPage(found.command || found.name, found.section, found.file);
                         sidePanel.classList.remove('open');
                     }
                 });
@@ -1646,7 +1646,7 @@
                             cmd.command === item.command && cmd.section === item.section
                         );
                         if (found) {
-                            displayManPage(found.command, found.section, found.file);
+                            displayManPage(found.command || found.name, found.section, found.file);
                             sidePanel.classList.remove('open');
                         }
                     }
@@ -1893,18 +1893,41 @@
                 return [];
             }
 
+            // Check if searchIndex is loaded
+            if (typeof searchIndex === 'undefined') {
+                console.error('searchIndex is not loaded');
+                return [];
+            }
+
             const results = [];
             const lowerQuery = query.toLowerCase();
             const sectionFilter = section ? parseInt(section) : null;
+
+            console.log(`Searching for: "${query}", searchIndex length: ${searchIndex.length}`);
 
             for (const entry of searchIndex) {
                 if (sectionFilter && entry.section !== sectionFilter) {
                     continue;
                 }
 
-                if (entry.command.toLowerCase().includes(lowerQuery) || 
+                // Handle both 'command' and 'name' properties for backward compatibility
+                const commandName = entry.command || entry.name;
+                if (!commandName || !entry.description) {
+                    continue; // Skip entries with missing data
+                }
+
+                if (commandName.toLowerCase().includes(lowerQuery) || 
                     entry.description.toLowerCase().includes(lowerQuery)) {
-                    results.push(entry);
+                    // Normalize the entry to always have 'command' property
+                    results.push({
+                        ...entry,
+                        command: commandName
+                    });
+                    
+                    // Debug log for specific commands
+                    if (['ls', 'cat', 'chmod'].includes(commandName)) {
+                        console.log(`Found ${commandName} matching query "${query}"`);
+                    }
                 }
             }
 
@@ -1916,6 +1939,7 @@
                 return a.command.localeCompare(b.command);
             });
 
+            console.log(`Found ${results.length} total results for "${query}", returning top 10`);
             return results.slice(0, 10);
         }
 
@@ -1923,11 +1947,13 @@
         let selectedSuggestionIndex = -1;
         
         function displaySuggestions(results) {
+            console.log(`displaySuggestions called with ${results.length} results`);
             suggestions.innerHTML = '';
             selectedSuggestionIndex = -1;
             
             if (results.length === 0) {
                 suggestions.style.display = 'none';
+                console.log('No results to display, hiding suggestions');
                 return;
             }
 
@@ -1979,15 +2005,17 @@
             contentWrapper.style.display = 'flex';
             
             // Show loading state
-            manPageTitle.textContent = `${command}(${section})`;
+            // Ensure section is a number for consistent display
+            const sectionNum = parseInt(section);
+            manPageTitle.textContent = `${command}(${sectionNum})`;
             manPageContent.innerHTML = '<div class="loading">Loading man page...</div>';
             
             // Store current page info
-            currentManPage = { command, section };
+            currentManPage = { command, section: sectionNum };
             
             // Check if bookmarked
             const isBookmarked = bookmarks.find(b => 
-                b.command === command && b.section === section
+                b.command === command && b.section === sectionNum
             );
             bookmarkBtn.classList.toggle('active', !!isBookmarked);
             
@@ -1999,24 +2027,39 @@
                 }
                 
                 // Get the man page content
-                const key = `${command}_${section}`;
+                const key = `${command}_${sectionNum}`;
                 const manPage = currentManPages[key];
                 
                 if (!manPage) {
                     manPageContent.innerHTML = '<div class="error">Man page not found in loaded data</div>';
+                    console.error(`Man page not found for key: ${key}`);
+                    return;
+                }
+                
+                // Handle different data formats
+                let content;
+                if (typeof manPage === 'string') {
+                    // Old format: direct string content with escaped characters
+                    content = manPage.replace(/\\\\n/g, '\n').replace(/\\\\/g, '\\');
+                } else if (manPage.content) {
+                    // New format: object with content property
+                    content = manPage.content;
+                } else {
+                    manPageContent.innerHTML = '<div class="error">Man page found but content is missing</div>';
+                    console.error(`Man page content missing for key: ${key}`, manPage);
                     return;
                 }
                 
                 // Process and display the content
-                const processedContent = processManPageContent(manPage.content);
+                const processedContent = processManPageContent(content);
                 manPageContent.innerHTML = processedContent;
                 
                 // Extract and build section navigation
-                const sections = extractSections(manPage.content);
+                const sections = extractSections(content);
                 buildSectionNav(sections);
                 
                 // Find and display related commands
-                const relatedCmds = findRelatedCommands(command, manPage.content);
+                const relatedCmds = findRelatedCommands(command, content);
                 displayRelatedCommands(relatedCmds);
                 
                 // Display TLDR summary
@@ -2028,10 +2071,10 @@
                         const refCommand = ref.dataset.command;
                         const refSection = ref.dataset.section;
                         const found = searchIndex.find(item => 
-                            item.command === refCommand && item.section === parseInt(refSection)
+                            item.command === refCommand && item.section === refSection
                         );
                         if (found) {
-                            displayManPage(found.command, found.section, found.file);
+                            displayManPage(found.command || found.name, found.section, found.file);
                         } else {
                             showStatus(`Man page for ${refCommand}(${refSection}) not found`);
                         }
@@ -2039,10 +2082,10 @@
                 });
                 
                 // Add to history
-                addToHistory(command, section);
+                addToHistory(command, sectionNum);
                 
                 // Update URL hash for direct linking
-                window.location.hash = `${command}_${section}`;
+                window.location.hash = `${command}_${sectionNum}`;
                 
                 // Scroll to top
                 manPageContent.scrollTop = 0;
@@ -2145,6 +2188,8 @@
             const query = e.target.value;
             const fullTextSearchEnabled = document.getElementById('fullTextSearch').checked;
             
+            console.log(`Input event: query="${query}", fullTextSearch=${fullTextSearchEnabled}`);
+            
             if (query.length > 0 && currentState === 'initial') {
                 currentState = 'search';
                 container.classList.add('search-active');
@@ -2159,6 +2204,7 @@
                 } else {
                     results = searchManPages(query, sectionSelect.value);
                 }
+                console.log(`Search completed, found ${results.length} results`);
                 displaySuggestions(results);
             }, fullTextSearchEnabled ? 500 : 150);
         });
@@ -2298,7 +2344,7 @@
                         item.command === command && item.section === parseInt(section)
                     );
                     if (found) {
-                        displayManPage(found.command, found.section, found.file);
+                        displayManPage(found.command || found.name, found.section, found.file);
                     }
                 }
             }

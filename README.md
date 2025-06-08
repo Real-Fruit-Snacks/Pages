@@ -5,7 +5,7 @@ A self-contained web application for searching and viewing Linux manual pages, d
 ## Features
 
 - 🔍 **Fast Search**: Real-time search with suggestions as you type
-- 📚 **Comprehensive Coverage**: 619 man pages from sections 1-8
+- 📚 **Comprehensive Coverage**: 1,838 official Linux man pages from sections 1-8
 - 📋 **TLDR Integration**: Quick practical examples for each command
 - 🌓 **Dark Mode**: Toggle between light and dark themes
 - 🚀 **Lazy Loading**: Man pages load on-demand for optimal performance
@@ -28,7 +28,7 @@ A self-contained web application for searching and viewing Linux manual pages, d
 .
 ├── index.html              # Complete web application
 ├── data/                   # Man page data
-│   ├── index.js           # Search index (619 commands)
+│   ├── index.js           # Search index (1,838 commands)
 │   ├── man_1.js           # Man page content
 │   └── manifest.js        # Data file listing
 ├── .github/               # GitHub Actions
@@ -143,8 +143,9 @@ The application includes comprehensive coverage of Linux commands:
 - **TLDR Data**: Cached in localStorage with 7-day expiration
 - **Syntax Highlighting**: Man page content is enhanced with HTML formatting
 - **Storage**: Uses localStorage for bookmarks, history, and preferences
-- **Data Updates**: All placeholder entries replaced with comprehensive documentation
-- **Command Coverage**: Expanded from 393 to 619 commands with full man pages
+- **Data Updates**: All entries now contain official Linux man page documentation
+- **Command Coverage**: Expanded from 619 to 1,838 commands with full man pages
+- **Authentic Content**: Man pages sourced from linux.die.net for accuracy
 
 ## Browser Support
 
@@ -178,7 +179,7 @@ The application includes comprehensive coverage of Linux commands:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Note: Linux manual pages are aggregated from various sources and remain under their original licenses.
+Note: Linux manual pages are sourced from official documentation at linux.die.net and remain under their original licenses.
 
 ## Contributing
 
