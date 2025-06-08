@@ -1,3 +1,3 @@
-const manFiles = [
+window.manFiles = [
   'data/man_1.js',
 ];

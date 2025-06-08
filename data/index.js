@@ -1,4 +1,4 @@
-const searchIndex = [
+window.searchIndex = [
     { command: "chroot", section: 8, description: "run command with a different root directory", file: 1 },
     { command: "parted", section: 8, description: "a partition manipulation program", file: 1 },
     { command: "ulimit", section: 1, description: "user resource limits", file: 1 },
