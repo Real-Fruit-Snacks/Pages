@@ -346,6 +346,32 @@
             padding: 0 2px;
         }
 
+        .man-page-content .tldr-content {
+            background: #f0f9ff;
+            border: 1px solid #e0f2fe;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .man-page-content .tldr-content b {
+            color: #0f172a;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .man-page-content .tldr-content code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+
+        .man-page-content .placeholder {
+            color: #059669;
+            font-style: italic;
+        }
+
         .man-page-content .cross-ref {
             color: #1967d2;
             text-decoration: underline;
@@ -831,6 +857,24 @@
             background: #524c00;
         }
 
+        body.dark-mode .man-page-content .tldr-content {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        body.dark-mode .man-page-content .tldr-content b {
+            color: #f1f5f9;
+        }
+
+        body.dark-mode .man-page-content .tldr-content code {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .man-page-content .placeholder {
+            color: #34d399;
+        }
+
         /* TLDR Section Styles */
         .tldr-section {
             background: #f0f8ff;
@@ -1218,43 +1262,77 @@
 
         // Process and enhance man page content
         function processManPageContent(content) {
-            // First escape HTML to prevent XSS
-            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // LinuxCommandLibrary data contains HTML formatting that we need to preserve
+            // while still protecting against XSS attacks
             
-            // Now apply formatting - the order is important!
-            // We need to escape HTML first, then add our own HTML tags
+            // Step 1: Escape potentially dangerous characters except for safe HTML tags
+            // We'll use a more selective approach
             
-            // Highlight section headers
-            content = content.replace(/^([A-Z][A-Z\s]+)$/gm, '<span class="section-header">$1</span>');
+            // First, protect script tags and other dangerous elements
+            content = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+            content = content.replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '');
+            content = content.replace(/<object[^>]*>[\s\S]*?<\/object>/gi, '');
+            content = content.replace(/<embed[^>]*>/gi, '');
             
-            // Highlight command options (e.g., -a, --all)
-            content = content.replace(/(\s|^)(-{1,2}[a-zA-Z0-9-]+)/g, '$1<span class="option">$2</span>');
+            // Step 2: Process custom tags from LinuxCommandLibrary
+            // These appear to be already HTML with custom classes
+            content = content.replace(/<command>/g, '<span class="command">');
+            content = content.replace(/<\/command>/g, '</span>');
+            content = content.replace(/<option>/g, '<span class="option">');
+            content = content.replace(/<\/option>/g, '</span>');
             
-            // Highlight commands in backticks or quotes
-            content = content.replace(/`([^`]+)`/g, '<span class="command">$1</span>');
-            content = content.replace(/"([^"]+)"/g, function(match, p1) {
-                // Only highlight if it looks like a command
-                if (p1.match(/^[a-z0-9_-]+$/i)) {
-                    return '<span class="command">' + p1 + '</span>';
+            // Step 3: Process section headers
+            // LinuxCommandLibrary uses plain text headers, so we need to identify them
+            content = content.replace(/^([A-Z][A-Z\s]+)$/gm, function(match) {
+                // Don't process if it's already in HTML tags
+                if (match.includes('<') || match.includes('>')) {
+                    return match;
                 }
-                return match;
+                return '<span class="section-header">' + match + '</span>';
             });
             
-            // Make cross-references clickable (e.g., ls(1), chmod(2))
+            // Step 4: Process TLDR sections specially
+            // TLDR sections in LinuxCommandLibrary have HTML formatting we want to preserve
+            content = content.replace(/TLDR\s*\n\s*(.+?)(?=\n[A-Z]|\n\n|$)/s, function(match, tldrContent) {
+                return 'TLDR\n<div class="tldr-content">' + tldrContent.trim() + '</div>\n';
+            });
+            
+            // Step 5: Highlight commands in backticks (LinuxCommandLibrary format)
+            content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Step 6: Process square brackets as placeholders
+            content = content.replace(/\[([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
+            
+            // Step 7: Make cross-references clickable (e.g., ls(1), chmod(2))
             content = content.replace(/\b([a-z0-9_-]+)\((\d)\)/gi, function(match, cmd, section) {
                 return '<span class="cross-ref" data-command="' + cmd + '" data-section="' + section + '">' + match + '</span>';
             });
             
-            // Highlight example blocks
-            content = content.replace(/(EXAMPLES?|Example:?)([\s\S]*?)(?=^[A-Z]|$)/gm, function(match, header, body) {
-                if (body.trim()) {
-                    return header + '\n<div class="example">' + body.trim() + '</div>\n';
+            // Step 8: Ensure line breaks are preserved
+            // LinuxCommandLibrary content already has <br> tags, so we don't need to add more
+            // Just ensure newlines are converted where needed
+            content = content.replace(/\n/g, function(match, offset) {
+                // Check if we're already in an HTML context
+                const before = content.substring(Math.max(0, offset - 10), offset);
+                const after = content.substring(offset, Math.min(content.length, offset + 10));
+                
+                // Don't add <br> if we're already near a <br> tag
+                if (before.includes('<br>') || after.includes('<br>')) {
+                    return match;
                 }
-                return match;
+                
+                // Don't add <br> inside HTML tags
+                if (before.includes('<') && !before.includes('>')) {
+                    return match;
+                }
+                
+                return '<br>\n';
             });
             
-            // Convert newlines to <br> tags for proper formatting
-            content = content.replace(/\n/g, '<br>\n');
+            // Step 9: Clean up any double escaping that might have occurred
+            content = content.replace(/&amp;lt;/g, '&lt;');
+            content = content.replace(/&amp;gt;/g, '&gt;');
+            content = content.replace(/&amp;amp;/g, '&amp;');
             
             return content;
         }
