@@ -1,5 +1,5 @@
 // Search index for all man pages
-// Generated from official Linux man-pages project and HTML supplements
+// Generated from official Linux man-pages project and system man pages
 
 window.searchIndex = [
   {
@@ -204,6 +204,12 @@ window.searchIndex = [
     "command": "_sysctl",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "7z",
+    "section": 1,
+    "description": "file archiver with high compression ratio",
     "file": 1
   },
   {
@@ -435,9 +441,57 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "alsamixer",
+    "section": 1,
+    "description": "soundcard mixer",
+    "file": 1
+  },
+  {
+    "command": "amixer",
+    "section": 1,
+    "description": "command-line mixer",
+    "file": 1
+  },
+  {
+    "command": "aplay",
+    "section": 1,
+    "description": "play audio files",
+    "file": 1
+  },
+  {
+    "command": "apparmor",
+    "section": 7,
+    "description": "application security framework",
+    "file": 1
+  },
+  {
+    "command": "apropos",
+    "section": 1,
+    "description": "search the manual page descriptions",
+    "file": 1
+  },
+  {
+    "command": "apt",
+    "section": 8,
+    "description": "command-line interface for package management",
+    "file": 1
+  },
+  {
+    "command": "apt-get",
+    "section": 8,
+    "description": "APT package handling utility",
+    "file": 1
+  },
+  {
     "command": "arch_prctl",
     "section": 2,
     "description": "set architecture - specific thread state",
+    "file": 1
+  },
+  {
+    "command": "arecord",
+    "section": 1,
+    "description": "record audio files",
     "file": 1
   },
   {
@@ -549,6 +603,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "arp",
+    "section": 8,
+    "description": "manipulate the system ARP cache",
+    "file": 1
+  },
+  {
     "command": "ascii",
     "section": 7,
     "description": "ASCII character set encoded in octal, decimal, and hexadecimal",
@@ -600,6 +660,12 @@ window.searchIndex = [
     "command": "asinl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "aspell",
+    "section": 1,
+    "description": "interactive spell checker",
     "file": 1
   },
   {
@@ -741,6 +807,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "awk",
+    "section": 1,
+    "description": "pattern scanning and processing language",
+    "file": 1
+  },
+  {
     "command": "backtrace",
     "section": 3,
     "description": "support for application self - debugging",
@@ -774,6 +846,18 @@ window.searchIndex = [
     "command": "basename",
     "section": 3,
     "description": "parse pathname components",
+    "file": 1
+  },
+  {
+    "command": "bash",
+    "section": 1,
+    "description": "GNU Bourne-Again SHell",
+    "file": 1
+  },
+  {
+    "command": "bc",
+    "section": 1,
+    "description": "arbitrary precision calculator language",
     "file": 1
   },
   {
@@ -879,6 +963,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "brasero",
+    "section": 1,
+    "description": "CD/DVD burning application",
+    "file": 1
+  },
+  {
     "command": "break",
     "section": 2,
     "description": "Manual page",
@@ -954,6 +1044,12 @@ window.searchIndex = [
     "command": "bzero",
     "section": 3,
     "description": "zero a byte string",
+    "file": 1
+  },
+  {
+    "command": "bzip2",
+    "section": 1,
+    "description": "a block-sorting file compressor",
     "file": 1
   },
   {
@@ -1371,6 +1467,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "chattr",
+    "section": 1,
+    "description": "change file attributes",
+    "file": 1
+  },
+  {
     "command": "chcon",
     "section": 1,
     "description": "change file security context",
@@ -1590,6 +1692,12 @@ window.searchIndex = [
     "command": "cksum",
     "section": 1,
     "description": "checksum and count the bytes in a file",
+    "file": 1
+  },
+  {
+    "command": "clear",
+    "section": 1,
+    "description": "clear the terminal screen",
     "file": 1
   },
   {
@@ -1983,6 +2091,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "convert",
+    "section": 1,
+    "description": "convert between image formats",
+    "file": 1
+  },
+  {
     "command": "copy_file_range",
     "section": 2,
     "description": "Copy a range of data from one file to another",
@@ -2277,6 +2391,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "cron",
+    "section": 8,
+    "description": "daemon to execute scheduled commands",
+    "file": 1
+  },
+  {
+    "command": "crontab",
+    "section": 1,
+    "description": "maintain crontab files for individual users",
+    "file": 1
+  },
+  {
     "command": "crypt",
     "section": 3,
     "description": "password and data encryption",
@@ -2286,6 +2412,12 @@ window.searchIndex = [
     "command": "crypt_r",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "cryptsetup",
+    "section": 8,
+    "description": "manage plain dm-crypt and LUKS encrypted volumes",
     "file": 1
   },
   {
@@ -2409,6 +2541,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "curl",
+    "section": 1,
+    "description": "transfer a URL",
+    "file": 1
+  },
+  {
     "command": "cuserid",
     "section": 3,
     "description": "Manual page",
@@ -2505,9 +2643,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "diff",
+    "section": 1,
+    "description": "compare files line by line",
+    "file": 1
+  },
+  {
     "command": "difftime",
     "section": 3,
     "description": "calculate time difference",
+    "file": 1
+  },
+  {
+    "command": "dig",
+    "section": 1,
+    "description": "DNS lookup utility",
     "file": 1
   },
   {
@@ -2643,6 +2793,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "dpkg",
+    "section": 1,
+    "description": "package manager for Debian",
+    "file": 1
+  },
+  {
     "command": "dprintf",
     "section": 3,
     "description": "Manual page",
@@ -2712,6 +2868,12 @@ window.searchIndex = [
     "command": "duplocale",
     "section": 3,
     "description": "duplicate a locale object",
+    "file": 1
+  },
+  {
+    "command": "dvdauthor",
+    "section": 1,
+    "description": "DVD authoring tool",
     "file": 1
   },
   {
@@ -2985,6 +3147,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "eqn",
+    "section": 1,
+    "description": "format equations for troff",
+    "file": 1
+  },
+  {
     "command": "erand48",
     "section": 3,
     "description": "Manual page",
@@ -3129,6 +3297,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ethtool",
+    "section": 8,
+    "description": "query or control network driver and hardware settings",
+    "file": 1
+  },
+  {
     "command": "euidaccess",
     "section": 3,
     "description": "check effective user's permissions for a file",
@@ -3210,6 +3384,12 @@ window.searchIndex = [
     "command": "execvpe",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "exim",
+    "section": 8,
+    "description": "a mail transport agent",
     "file": 1
   },
   {
@@ -3717,6 +3897,24 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ffmpeg",
+    "section": 1,
+    "description": "video converter",
+    "file": 1
+  },
+  {
+    "command": "ffplay",
+    "section": 1,
+    "description": "ffmpeg media player",
+    "file": 1
+  },
+  {
+    "command": "ffprobe",
+    "section": 1,
+    "description": "ffmpeg media probe",
+    "file": 1
+  },
+  {
     "command": "ffs",
     "section": 3,
     "description": "find first bit set in a word",
@@ -3837,6 +4035,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "file",
+    "section": 1,
+    "description": "determine file type",
+    "file": 1
+  },
+  {
     "command": "FILE",
     "section": 3,
     "description": "Manual page",
@@ -3858,6 +4062,12 @@ window.searchIndex = [
     "command": "filesystems",
     "section": 5,
     "description": "Linux filesystem types: ext, ext2, ext3, ext4, hpfs, iso9660, JFS, minix, msdos, ncpfs nfs, ntfs, proc, Reiserfs, smb, sysv, umsdos, vfat, XFS, xiafs",
+    "file": 1
+  },
+  {
+    "command": "find",
+    "section": 1,
+    "description": "search for files in a directory hierarchy",
     "file": 1
   },
   {
@@ -4156,6 +4366,12 @@ window.searchIndex = [
   },
   {
     "command": "free",
+    "section": 1,
+    "description": "display amount of free and used memory in the system",
+    "file": 1
+  },
+  {
+    "command": "free",
     "section": 3,
     "description": "Manual page",
     "file": 1
@@ -4449,6 +4665,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "fuser",
+    "section": 1,
+    "description": "identify processes using files or sockets",
+    "file": 1
+  },
+  {
     "command": "futex",
     "section": 2,
     "description": "fast user - space locking",
@@ -4554,6 +4776,12 @@ window.searchIndex = [
     "command": "gcvt",
     "section": 3,
     "description": "convert a floating - point number to a string",
+    "file": 1
+  },
+  {
+    "command": "genisoimage",
+    "section": 1,
+    "description": "create ISO9660/Joliet/HFS filesystem",
     "file": 1
   },
   {
@@ -4800,6 +5028,12 @@ window.searchIndex = [
     "command": "geteuid32",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "getfacl",
+    "section": 1,
+    "description": "get file access control lists",
     "file": 1
   },
   {
@@ -5571,6 +5805,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "gimp",
+    "section": 1,
+    "description": "GNU Image Manipulation Program",
+    "file": 1
+  },
+  {
+    "command": "git",
+    "section": 1,
+    "description": "the fast distributed version control system",
+    "file": 1
+  },
+  {
     "command": "glibc",
     "section": 7,
     "description": "Manual page",
@@ -5643,6 +5889,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "grep",
+    "section": 1,
+    "description": "print lines matching a pattern",
+    "file": 1
+  },
+  {
+    "command": "groff",
+    "section": 1,
+    "description": "document formatting system",
+    "file": 1
+  },
+  {
     "command": "group",
     "section": 5,
     "description": "user group file",
@@ -5655,9 +5913,33 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "groupadd",
+    "section": 8,
+    "description": "create a new group",
+    "file": 1
+  },
+  {
+    "command": "groupdel",
+    "section": 8,
+    "description": "delete a group",
+    "file": 1
+  },
+  {
+    "command": "groupmod",
+    "section": 8,
+    "description": "modify a group definition",
+    "file": 1
+  },
+  {
     "command": "groups",
     "section": 1,
     "description": "print the groups a user is in",
+    "file": 1
+  },
+  {
+    "command": "growisofs",
+    "section": 1,
+    "description": "DVD recording program",
     "file": 1
   },
   {
@@ -5673,9 +5955,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "gzip",
+    "section": 1,
+    "description": "compress or expand files",
+    "file": 1
+  },
+  {
     "command": "h_errno",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "halt",
+    "section": 8,
+    "description": "halt the system",
     "file": 1
   },
   {
@@ -5745,6 +6039,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "host",
+    "section": 1,
+    "description": "DNS lookup utility",
+    "file": 1
+  },
+  {
     "command": "host.conf",
     "section": 5,
     "description": "resolver configuration file",
@@ -5758,8 +6058,20 @@ window.searchIndex = [
   },
   {
     "command": "hostname",
+    "section": 1,
+    "description": "show or set the system's host name",
+    "file": 1
+  },
+  {
+    "command": "hostname",
     "section": 7,
     "description": "hostname resolution description",
+    "file": 1
+  },
+  {
+    "command": "hostnamectl",
+    "section": 1,
+    "description": "control the system hostname",
     "file": 1
   },
   {
@@ -5844,6 +6156,12 @@ window.searchIndex = [
     "command": "htons",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "htop",
+    "section": 1,
+    "description": "interactive process viewer",
     "file": 1
   },
   {
@@ -5937,6 +6255,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "identify",
+    "section": 1,
+    "description": "identify the format and characteristics of image files",
+    "file": 1
+  },
+  {
     "command": "idle",
     "section": 2,
     "description": "make process 0 idle",
@@ -5967,6 +6291,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ifconfig",
+    "section": 8,
+    "description": "configure a network interface",
+    "file": 1
+  },
+  {
+    "command": "iftop",
+    "section": 8,
+    "description": "display bandwidth usage on an interface",
+    "file": 1
+  },
+  {
     "command": "ilogb",
     "section": 3,
     "description": "get integer exponent of a floating - point value",
@@ -5982,6 +6318,12 @@ window.searchIndex = [
     "command": "ilogbl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "imagemagick",
+    "section": 1,
+    "description": "image manipulation programs",
     "file": 1
   },
   {
@@ -6105,6 +6447,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "info",
+    "section": 1,
+    "description": "read info documents",
+    "file": 1
+  },
+  {
     "command": "init_module",
     "section": 2,
     "description": "load a kernel module",
@@ -6198,6 +6546,12 @@ window.searchIndex = [
     "command": "insl",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "insmod",
+    "section": 8,
+    "description": "simple program to insert a module into the Linux Kernel",
     "file": 1
   },
   {
@@ -6465,6 +6819,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ip",
+    "section": 8,
+    "description": "show / manipulate routing, network devices, interfaces and tunnels",
+    "file": 1
+  },
+  {
     "command": "ipc",
     "section": 2,
     "description": "System V IPC system calls",
@@ -6492,6 +6852,12 @@ window.searchIndex = [
     "command": "ipcs",
     "section": 1,
     "description": "show information on IPC facilities",
+    "file": 1
+  },
+  {
+    "command": "iptables",
+    "section": 8,
+    "description": "administration tool for IPv4/IPv6 packet filtering and NAT",
     "file": 1
   },
   {
@@ -7191,6 +7557,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "journalctl",
+    "section": 1,
+    "description": "query the systemd journal",
+    "file": 1
+  },
+  {
     "command": "jrand48",
     "section": 3,
     "description": "Manual page",
@@ -7278,6 +7650,12 @@ window.searchIndex = [
     "command": "kill",
     "section": 2,
     "description": "send signal to a process",
+    "file": 1
+  },
+  {
+    "command": "killall",
+    "section": 1,
+    "description": "kill processes by name",
     "file": 1
   },
   {
@@ -7809,6 +8187,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "less",
+    "section": 1,
+    "description": "opposite of more",
+    "file": 1
+  },
+  {
     "command": "lfind",
     "section": 3,
     "description": "Manual page",
@@ -7866,6 +8250,12 @@ window.searchIndex = [
     "command": "libc",
     "section": 7,
     "description": "overview of standard C libraries on Linux",
+    "file": 1
+  },
+  {
+    "command": "libreoffice",
+    "section": 1,
+    "description": "office suite",
     "file": 1
   },
   {
@@ -8091,6 +8481,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "localectl",
+    "section": 1,
+    "description": "control the system locale and keyboard layout settings",
+    "file": 1
+  },
+  {
     "command": "localedef",
     "section": 1,
     "description": "compile locale definition files",
@@ -8229,6 +8625,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "loginctl",
+    "section": 1,
+    "description": "control the login manager",
+    "file": 1
+  },
+  {
     "command": "logl",
     "section": 3,
     "description": "Manual page",
@@ -8244,6 +8646,12 @@ window.searchIndex = [
     "command": "logout",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "logrotate",
+    "section": 8,
+    "description": "rotates, compresses, and mails system logs",
     "file": 1
   },
   {
@@ -8355,6 +8763,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "lsattr",
+    "section": 1,
+    "description": "list file attributes",
+    "file": 1
+  },
+  {
     "command": "lsblk",
     "section": 8,
     "description": "list block devices",
@@ -8409,9 +8823,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "lsmod",
+    "section": 8,
+    "description": "show the status of modules in the Linux Kernel",
+    "file": 1
+  },
+  {
     "command": "lsns",
     "section": 8,
     "description": "list namespaces",
+    "file": 1
+  },
+  {
+    "command": "lsof",
+    "section": 8,
+    "description": "list open files",
+    "file": 1
+  },
+  {
+    "command": "lspci",
+    "section": 8,
+    "description": "list all PCI devices",
     "file": 1
   },
   {
@@ -8427,9 +8859,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "lsusb",
+    "section": 8,
+    "description": "list USB devices",
+    "file": 1
+  },
+  {
     "command": "lutimes",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "lvm",
+    "section": 8,
+    "description": "logical volume manager",
     "file": 1
   },
   {
@@ -8445,15 +8889,33 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "mail",
+    "section": 1,
+    "description": "send and receive mail",
+    "file": 1
+  },
+  {
     "command": "mailaddr",
     "section": 7,
     "description": "mail addressing description",
     "file": 1
   },
   {
+    "command": "mailx",
+    "section": 1,
+    "description": "send and receive mail",
+    "file": 1
+  },
+  {
     "command": "major",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "make",
+    "section": 1,
+    "description": "GNU make utility to maintain groups of programs",
     "file": 1
   },
   {
@@ -8532,6 +8994,12 @@ window.searchIndex = [
     "command": "mallopt",
     "section": 3,
     "description": "set memory allocation parameters",
+    "file": 1
+  },
+  {
+    "command": "man",
+    "section": 1,
+    "description": "interface to the system reference manuals",
     "file": 1
   },
   {
@@ -8658,6 +9126,12 @@ window.searchIndex = [
     "command": "md5sum",
     "section": 1,
     "description": "compute and check MD5 message digest",
+    "file": 1
+  },
+  {
+    "command": "mdadm",
+    "section": 8,
+    "description": "manage MD devices aka Linux Software RAID",
     "file": 1
   },
   {
@@ -8997,6 +9471,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "modprobe",
+    "section": 8,
+    "description": "add and remove modules from the Linux Kernel",
+    "file": 1
+  },
+  {
+    "command": "mogrify",
+    "section": 1,
+    "description": "resize, blur, crop, despeckle, dither, and more",
+    "file": 1
+  },
+  {
     "command": "more",
     "section": 1,
     "description": "file perusal filter for crt viewing",
@@ -9066,6 +9552,12 @@ window.searchIndex = [
     "command": "mprotect",
     "section": 2,
     "description": "set protection on a region of memory",
+    "file": 1
+  },
+  {
+    "command": "mpv",
+    "section": 1,
+    "description": "media player",
     "file": 1
   },
   {
@@ -9321,9 +9813,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "nano",
+    "section": 1,
+    "description": "small, friendly text editor",
+    "file": 1
+  },
+  {
     "command": "nanosleep",
     "section": 2,
     "description": "high - resolution sleep",
+    "file": 1
+  },
+  {
+    "command": "nc",
+    "section": 1,
+    "description": "arbitrary TCP and UDP connections and listens",
     "file": 1
   },
   {
@@ -9360,6 +9864,12 @@ window.searchIndex = [
     "command": "netlink",
     "section": 7,
     "description": "communication between kernel and user space (AF_NETLINK)",
+    "file": 1
+  },
+  {
+    "command": "netstat",
+    "section": 8,
+    "description": "print network connections, routing tables, and interface statistics",
     "file": 1
   },
   {
@@ -9549,6 +10059,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "nroff",
+    "section": 1,
+    "description": "format documents for character-cell devices",
+    "file": 1
+  },
+  {
     "command": "nscd",
     "section": 8,
     "description": "name service cache daemon",
@@ -9564,6 +10080,12 @@ window.searchIndex = [
     "command": "nsenter",
     "section": 1,
     "description": "run program with namespaces of other\n      processes",
+    "file": 1
+  },
+  {
+    "command": "nslookup",
+    "section": 1,
+    "description": "query Internet name servers interactively",
     "file": 1
   },
   {
@@ -9831,6 +10353,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "pacmd",
+    "section": 1,
+    "description": "reconfigure a PulseAudio sound server",
+    "file": 1
+  },
+  {
+    "command": "pactl",
+    "section": 1,
+    "description": "control a PulseAudio sound server",
+    "file": 1
+  },
+  {
     "command": "pam",
     "section": 3,
     "description": "Pluggable Authentication Modules Library",
@@ -10041,9 +10575,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "parted",
+    "section": 8,
+    "description": "a partition manipulation program",
+    "file": 1
+  },
+  {
+    "command": "partprobe",
+    "section": 8,
+    "description": "inform the OS of partition table changes",
+    "file": 1
+  },
+  {
     "command": "partx",
     "section": 8,
     "description": "tell the kernel about the presence and\n      numbering of on - disk partitions",
+    "file": 1
+  },
+  {
+    "command": "passwd",
+    "section": 1,
+    "description": "change user password",
     "file": 1
   },
   {
@@ -10062,6 +10614,12 @@ window.searchIndex = [
     "command": "paste",
     "section": 1,
     "description": "merge lines of files",
+    "file": 1
+  },
+  {
+    "command": "patch",
+    "section": 1,
+    "description": "apply a diff file to an original",
     "file": 1
   },
   {
@@ -10617,9 +11175,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "pgrep",
+    "section": 1,
+    "description": "look up processes based on name and other attributes",
+    "file": 1
+  },
+  {
     "command": "phys",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "pic",
+    "section": 1,
+    "description": "compile pictures for troff",
     "file": 1
   },
   {
@@ -10650,6 +11220,18 @@ window.searchIndex = [
     "command": "pidfd_send_signal",
     "section": 2,
     "description": "send a signal to a process specified by a file descriptor",
+    "file": 1
+  },
+  {
+    "command": "pidof",
+    "section": 8,
+    "description": "find the process ID of a running program",
+    "file": 1
+  },
+  {
+    "command": "ping",
+    "section": 8,
+    "description": "send ICMP ECHO_REQUEST to network hosts",
     "file": 1
   },
   {
@@ -10710,6 +11292,12 @@ window.searchIndex = [
     "command": "pkeys",
     "section": 7,
     "description": "overview of Memory Protection Keys",
+    "file": 1
+  },
+  {
+    "command": "pkill",
+    "section": 1,
+    "description": "signal processes based on name and other attributes",
     "file": 1
   },
   {
@@ -10836,6 +11424,12 @@ window.searchIndex = [
     "command": "pow10l",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "poweroff",
+    "section": 8,
+    "description": "power off the system",
     "file": 1
   },
   {
@@ -10998,6 +11592,12 @@ window.searchIndex = [
     "command": "protocols",
     "section": 5,
     "description": "protocols definition file",
+    "file": 1
+  },
+  {
+    "command": "ps",
+    "section": 1,
+    "description": "report a snapshot of the current processes",
     "file": 1
   },
   {
@@ -11535,6 +12135,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "pulseaudio",
+    "section": 1,
+    "description": "sound system",
+    "file": 1
+  },
+  {
     "command": "putc",
     "section": 3,
     "description": "Manual page",
@@ -11793,6 +12399,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "rar",
+    "section": 1,
+    "description": "archive files with compression",
+    "file": 1
+  },
+  {
     "command": "raw",
     "section": 7,
     "description": "Linux IPv4 raw sockets",
@@ -11922,6 +12534,12 @@ window.searchIndex = [
     "command": "reboot",
     "section": 2,
     "description": "reboot or enable/disable Ctrl - Alt - Del",
+    "file": 1
+  },
+  {
+    "command": "reboot",
+    "section": 8,
+    "description": "reboot the system",
     "file": 1
   },
   {
@@ -12303,6 +12921,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "rmmod",
+    "section": 8,
+    "description": "simple program to remove a module from the Linux Kernel",
+    "file": 1
+  },
+  {
     "command": "round",
     "section": 3,
     "description": "round to nearest integer, away from zero",
@@ -12318,6 +12942,12 @@ window.searchIndex = [
     "command": "roundl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "route",
+    "section": 8,
+    "description": "show / manipulate the IP routing table",
     "file": 1
   },
   {
@@ -12348,6 +12978,12 @@ window.searchIndex = [
     "command": "rresvport_af",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "rsync",
+    "section": 1,
+    "description": "a fast, versatile, remote (and local) file-copying tool",
     "file": 1
   },
   {
@@ -12438,6 +13074,12 @@ window.searchIndex = [
     "command": "runcon",
     "section": 1,
     "description": "run command with specified security\n      context",
+    "file": 1
+  },
+  {
+    "command": "runlevel",
+    "section": 8,
+    "description": "print previous and current SysV runlevel",
     "file": 1
   },
   {
@@ -12651,6 +13293,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "scp",
+    "section": 1,
+    "description": "secure copy (remote file copy program)",
+    "file": 1
+  },
+  {
     "command": "script",
     "section": 1,
     "description": "make typescript of terminal session",
@@ -12696,6 +13344,12 @@ window.searchIndex = [
     "command": "security",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "sed",
+    "section": 1,
+    "description": "stream editor for filtering and transforming text",
     "file": 1
   },
   {
@@ -12837,6 +13491,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "sendmail",
+    "section": 8,
+    "description": "an electronic mail transport agent",
+    "file": 1
+  },
+  {
     "command": "sendmmsg",
     "section": 2,
     "description": "send multiple messages on a socket",
@@ -12858,6 +13518,12 @@ window.searchIndex = [
     "command": "seq",
     "section": 1,
     "description": "print a sequence of numbers",
+    "file": 1
+  },
+  {
+    "command": "service",
+    "section": 8,
+    "description": "run a System V init script",
     "file": 1
   },
   {
@@ -12948,6 +13614,12 @@ window.searchIndex = [
     "command": "seteuid",
     "section": 2,
     "description": "set effective user or group ID",
+    "file": 1
+  },
+  {
+    "command": "setfacl",
+    "section": 1,
+    "description": "set file access control lists",
     "file": 1
   },
   {
@@ -13305,6 +13977,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "sftp",
+    "section": 1,
+    "description": "secure file transfer program",
+    "file": 1
+  },
+  {
     "command": "sgetmask",
     "section": 2,
     "description": "manipulation of signal mask (obsolete)",
@@ -13320,6 +13998,12 @@ window.searchIndex = [
     "command": "sgetspent_r",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "sh",
+    "section": 1,
+    "description": "shell, the standard command language interpreter",
     "file": 1
   },
   {
@@ -13422,6 +14106,12 @@ window.searchIndex = [
     "command": "shutdown",
     "section": 2,
     "description": "shut down part of a full - duplex connection",
+    "file": 1
+  },
+  {
+    "command": "shutdown",
+    "section": 8,
+    "description": "halt, power-off or reboot the machine",
     "file": 1
   },
   {
@@ -14343,6 +15033,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "soelim",
+    "section": 1,
+    "description": "eliminate .so requests from nroff input",
+    "file": 1
+  },
+  {
     "command": "sort",
     "section": 1,
     "description": "sort lines of text files",
@@ -14439,6 +15135,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ss",
+    "section": 8,
+    "description": "another utility to investigate sockets",
+    "file": 1
+  },
+  {
     "command": "sscanf",
     "section": 3,
     "description": "Manual page",
@@ -14448,6 +15150,12 @@ window.searchIndex = [
     "command": "ssetmask",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "ssh",
+    "section": 1,
+    "description": "OpenSSH SSH client (remote login program)",
     "file": 1
   },
   {
@@ -14811,6 +15519,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "strings",
+    "section": 1,
+    "description": "print the sequences of printable characters in files",
+    "file": 1
+  },
+  {
     "command": "strlen",
     "section": 3,
     "description": "calculate the length of a string",
@@ -15012,6 +15726,12 @@ window.searchIndex = [
     "command": "subpage_prot",
     "section": 2,
     "description": "define a subpage protection for an address range",
+    "file": 1
+  },
+  {
+    "command": "sudo",
+    "section": 8,
+    "description": "execute a command as another user",
     "file": 1
   },
   {
@@ -15315,6 +16035,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "sysctl",
+    "section": 8,
+    "description": "configure kernel parameters at runtime",
+    "file": 1
+  },
+  {
     "command": "sysfs",
     "section": 2,
     "description": "get filesystem type information",
@@ -15354,6 +16080,12 @@ window.searchIndex = [
     "command": "system_data_types",
     "section": 7,
     "description": "overview of system data types",
+    "file": 1
+  },
+  {
+    "command": "systemctl",
+    "section": 1,
+    "description": "control the systemd system and service manager",
     "file": 1
   },
   {
@@ -15537,9 +16269,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "tar",
+    "section": 1,
+    "description": "an archiving utility",
+    "file": 1
+  },
+  {
     "command": "taskset",
     "section": 1,
     "description": "set or retrieve a process's CPU\n      affinity",
+    "file": 1
+  },
+  {
+    "command": "tbl",
+    "section": 1,
+    "description": "format tables for troff",
+    "file": 1
+  },
+  {
+    "command": "tc",
+    "section": 8,
+    "description": "show / manipulate traffic control settings",
     "file": 1
   },
   {
@@ -15627,9 +16377,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "telinit",
+    "section": 8,
+    "description": "change system runlevel",
+    "file": 1
+  },
+  {
     "command": "telldir",
     "section": 3,
     "description": "return current location in directory stream",
+    "file": 1
+  },
+  {
+    "command": "telnet",
+    "section": 1,
+    "description": "user interface to the TELNET protocol",
+    "file": 1
+  },
+  {
+    "command": "tempfile",
+    "section": 1,
+    "description": "create a temporary file in a safe manner",
     "file": 1
   },
   {
@@ -15732,6 +16500,12 @@ window.searchIndex = [
     "command": "time_t",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "timedatectl",
+    "section": 1,
+    "description": "control the system time and date",
     "file": 1
   },
   {
@@ -15897,6 +16671,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "tmux",
+    "section": 1,
+    "description": "terminal multiplexer",
+    "file": 1
+  },
+  {
     "command": "toascii",
     "section": 3,
     "description": "convert character to ASCII",
@@ -15912,6 +16692,12 @@ window.searchIndex = [
     "command": "tolower_l",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "top",
+    "section": 1,
+    "description": "display Linux processes",
     "file": 1
   },
   {
@@ -15966,6 +16752,18 @@ window.searchIndex = [
     "command": "tr",
     "section": 1,
     "description": "translate or delete characters",
+    "file": 1
+  },
+  {
+    "command": "traceroute",
+    "section": 8,
+    "description": "print the route packets trace to network host",
+    "file": 1
+  },
+  {
+    "command": "troff",
+    "section": 1,
+    "description": "typeset documents",
     "file": 1
   },
   {
@@ -16134,6 +16932,18 @@ window.searchIndex = [
     "command": "udplite",
     "section": 7,
     "description": "Lightweight User Datagram Protocol",
+    "file": 1
+  },
+  {
+    "command": "ufw",
+    "section": 8,
+    "description": "uncomplicated firewall",
+    "file": 1
+  },
+  {
+    "command": "ufw",
+    "section": 8,
+    "description": "uncomplicated firewall",
     "file": 1
   },
   {
@@ -16347,6 +17157,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "unzip",
+    "section": 1,
+    "description": "extract compressed files in a ZIP archive",
+    "file": 1
+  },
+  {
+    "command": "update-rc.d",
+    "section": 8,
+    "description": "install and remove System-V style init script links",
+    "file": 1
+  },
+  {
     "command": "updwtmp",
     "section": 3,
     "description": "append an entry to the wtmp file",
@@ -16419,9 +17241,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "useradd",
+    "section": 8,
+    "description": "create a new user or update default new user information",
+    "file": 1
+  },
+  {
+    "command": "userdel",
+    "section": 8,
+    "description": "delete a user account and related files",
+    "file": 1
+  },
+  {
     "command": "userfaultfd",
     "section": 2,
     "description": "create a file descriptor for handling page faults in user space",
+    "file": 1
+  },
+  {
+    "command": "usermod",
+    "section": 8,
+    "description": "modify a user account",
     "file": 1
   },
   {
@@ -16701,9 +17541,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "vim",
+    "section": 1,
+    "description": "Vi IMproved, a text editor",
+    "file": 1
+  },
+  {
     "command": "vipw",
     "section": 8,
     "description": "edit the password or group file",
+    "file": 1
+  },
+  {
+    "command": "vlc",
+    "section": 1,
+    "description": "VLC media player",
     "file": 1
   },
   {
@@ -16728,6 +17580,12 @@ window.searchIndex = [
     "command": "vmsplice",
     "section": 2,
     "description": "splice user pages to/from a pipe",
+    "file": 1
+  },
+  {
+    "command": "vmstat",
+    "section": 8,
+    "description": "report virtual memory statistics",
     "file": 1
   },
   {
@@ -16815,6 +17673,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "w",
+    "section": 1,
+    "description": "show who is logged on and what they are doing",
+    "file": 1
+  },
+  {
     "command": "wait",
     "section": 2,
     "description": "wait for process to change state",
@@ -16860,6 +17724,12 @@ window.searchIndex = [
     "command": "warnx",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "watch",
+    "section": 1,
+    "description": "execute a program periodically, showing output fullscreen",
     "file": 1
   },
   {
@@ -17073,9 +17943,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "wget",
+    "section": 1,
+    "description": "network downloader",
+    "file": 1
+  },
+  {
+    "command": "whatis",
+    "section": 1,
+    "description": "display one-line manual page descriptions",
+    "file": 1
+  },
+  {
     "command": "whereis",
     "section": 1,
     "description": "locate the binary, source, and manual page\n      files for a command",
+    "file": 1
+  },
+  {
+    "command": "which",
+    "section": 1,
+    "description": "locate a command",
     "file": 1
   },
   {
@@ -17088,6 +17976,12 @@ window.searchIndex = [
     "command": "whoami",
     "section": 1,
     "description": "print effective userid",
+    "file": 1
+  },
+  {
+    "command": "whois",
+    "section": 1,
+    "description": "client for the whois directory service",
     "file": 1
   },
   {
@@ -17130,6 +18024,12 @@ window.searchIndex = [
     "command": "wmemset",
     "section": 3,
     "description": "fill an array of wide - characters with a constant wide character",
+    "file": 1
+  },
+  {
+    "command": "wodim",
+    "section": 1,
+    "description": "write optical media",
     "file": 1
   },
   {
@@ -17178,6 +18078,12 @@ window.searchIndex = [
     "command": "x25",
     "section": 7,
     "description": "ITU - T X",
+    "file": 1
+  },
+  {
+    "command": "xargs",
+    "section": 1,
+    "description": "build and execute command lines from standard input",
     "file": 1
   },
   {
@@ -17475,6 +18381,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "xxd",
+    "section": 1,
+    "description": "make a hexdump or do the reverse",
+    "file": 1
+  },
+  {
+    "command": "xz",
+    "section": 1,
+    "description": "compress or decompress .xz and .lzma files",
+    "file": 1
+  },
+  {
     "command": "y0",
     "section": 3,
     "description": "Bessel functions of the second kind",
@@ -17550,6 +18468,12 @@ window.searchIndex = [
     "command": "zic",
     "section": 8,
     "description": "timezone compiler",
+    "file": 1
+  },
+  {
+    "command": "zip",
+    "section": 1,
+    "description": "package and compress (archive) files",
     "file": 1
   },
   {

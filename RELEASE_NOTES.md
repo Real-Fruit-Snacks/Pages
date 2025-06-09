@@ -7,7 +7,7 @@ Self-contained Linux manual pages viewer with official documentation for offline
 This release contains everything needed to deploy the Linux Man Pages application:
 
 - **Complete web application** - Single-page application with all functionality
-- **2,926 Linux commands** - Comprehensive collection including official man pages and essential utilities
+- **3,080 Linux commands** - Complete collection including find, grep, sed, awk, and all essential tools
 - **No external dependencies** - Works completely offline
 - **GitHub/GitLab Pages ready** - Automatic deployment via CI/CD
 
@@ -48,8 +48,9 @@ This release contains everything needed to deploy the Linux Man Pages applicatio
 
 ## 📝 Note
 
-- Contains 2,926 Linux man pages with comprehensive coverage
+- Contains 3,080 Linux man pages with complete coverage
 - Includes official Linux man-pages project (2,487 pages)
-- Plus 439 essential system utilities (coreutils, util-linux, etc.)
-- Full coverage of all sections 1-8 including everyday commands
+- Plus 593 essential system utilities and tools
+- Now includes critical commands like find, grep, sed, awk, tar, ssh, git, etc.
+- Full coverage of all sections 1-8 with all essential Linux commands
 - TLDR summaries fetch from GitHub on first use, then cache locally
