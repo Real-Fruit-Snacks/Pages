@@ -1,6 +1,17 @@
-# Linux Man Pages v4.0.3
+# Linux Man Pages v4.0.4
 
 Self-contained Linux manual pages viewer with official documentation for offline deployment.
+
+## 🧹 v4.0.4 Changes - Repository Cleanup
+
+- **Removed ~80MB of unnecessary files**:
+  - Test scripts and temporary files
+  - Old release archives
+  - Source HTML man pages directory
+  - Backup directories and files
+- **Improved .gitignore** to prevent future clutter
+- **Repository now contains only essential files** for deployment
+- **No functional changes** to the application
 
 ## 🔧 v4.0.3 Changes
 
