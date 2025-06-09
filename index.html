@@ -346,26 +346,6 @@
             padding: 0 2px;
         }
 
-        .man-page-content .tldr-content {
-            background: #f0f9ff;
-            border: 1px solid #e0f2fe;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 12px 0;
-        }
-
-        .man-page-content .tldr-content b {
-            color: #0f172a;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .man-page-content .tldr-content code {
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-        }
 
         .man-page-content .placeholder {
             color: #059669;
@@ -857,19 +837,6 @@
             background: #524c00;
         }
 
-        body.dark-mode .man-page-content .tldr-content {
-            background: #1e293b;
-            border-color: #334155;
-        }
-
-        body.dark-mode .man-page-content .tldr-content b {
-            color: #f1f5f9;
-        }
-
-        body.dark-mode .man-page-content .tldr-content code {
-            background: #334155;
-            color: #e2e8f0;
-        }
 
         body.dark-mode .man-page-content .placeholder {
             color: #34d399;
@@ -1291,11 +1258,9 @@
                 return '<span class="section-header">' + match + '</span>';
             });
             
-            // Step 4: Process TLDR sections specially
-            // TLDR sections in LinuxCommandLibrary have HTML formatting we want to preserve
-            content = content.replace(/TLDR\s*\n\s*(.+?)(?=\n[A-Z]|\n\n|$)/s, function(match, tldrContent) {
-                return 'TLDR\n<div class="tldr-content">' + tldrContent.trim() + '</div>\n';
-            });
+            // Step 4: Remove TLDR sections from the man page content
+            // We display a better formatted TLDR at the bottom from the TLDR pages project
+            content = content.replace(/TLDR\s*\n\s*(.+?)(?=\n[A-Z]|\n\n|$)/s, '');
             
             // Step 5: Highlight commands in backticks (LinuxCommandLibrary format)
             content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -1348,6 +1313,10 @@
                 // Check if this is a section header (all caps, at start of line)
                 if (/^[A-Z][A-Z\s]+$/.test(line.trim()) && line.trim().length > 2) {
                     const sectionName = line.trim();
+                    // Skip TLDR section since we display it separately at the bottom
+                    if (sectionName === 'TLDR') {
+                        continue;
+                    }
                     currentSection = {
                         name: sectionName,
                         line: i,
