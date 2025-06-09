@@ -5,7 +5,7 @@ A self-contained web application for searching and viewing Linux manual pages, d
 ## Features
 
 - 🔍 **Fast Search**: Real-time search with suggestions as you type
-- 📚 **Comprehensive Coverage**: 3,080 Linux man pages from sections 1-8
+- 📚 **Comprehensive Coverage**: 6,800 Linux man pages including modern tools
 - 📋 **TLDR Integration**: Quick practical examples for each command
 - 🌓 **Dark Mode**: Toggle between light and dark themes
 - 🚀 **Lazy Loading**: Man pages load on-demand for optimal performance
@@ -28,7 +28,7 @@ A self-contained web application for searching and viewing Linux manual pages, d
 .
 ├── index.html              # Complete web application
 ├── data/                   # Man page data
-│   ├── index.js           # Search index (3,080 commands)
+│   ├── index.js           # Search index (6,800 commands)
 │   ├── man_1.js           # Man page content
 │   └── manifest.js        # Data file listing
 ├── .github/               # GitHub Actions
@@ -143,8 +143,8 @@ The application includes comprehensive coverage of Linux commands:
 - **TLDR Data**: Cached in localStorage with 7-day expiration
 - **Syntax Highlighting**: Man page content is enhanced with HTML formatting
 - **Storage**: Uses localStorage for bookmarks, history, and preferences
-- **Command Coverage**: 3,080 Linux man pages (including find, grep, sed, awk, etc.)
-- **Data Source**: Linux man-pages project + system utilities + essential tools
+- **Command Coverage**: 6,800 Linux man pages from LinuxCommandLibrary
+- **Data Source**: LinuxCommandLibrary database (includes standard + modern tools)
 - **Data Format**: Properly formatted man pages using standard man toolchain
 
 ## Browser Support
