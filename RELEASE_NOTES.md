@@ -1,6 +1,13 @@
-# Linux Man Pages v4.0.0
+# Linux Man Pages v4.0.1
 
 Self-contained Linux manual pages viewer with official documentation for offline deployment.
+
+## 🔧 v4.0.1 Changes
+
+- **Fixed HTML formatting** - Man pages now display with proper formatting (bold, italic, code blocks)
+- **TLDR sections** - Now properly formatted with descriptions and examples
+- **Improved readability** - Commands, options, and placeholders are visually distinct
+- **Dark mode support** - All new formatting elements work in both light and dark themes
 
 ## 📦 What's Included
 
