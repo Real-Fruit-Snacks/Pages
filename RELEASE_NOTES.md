@@ -1,22 +1,22 @@
-# Linux Man Pages v1.0.0
+# Linux Man Pages v2.0.0
 
-Self-contained Linux manual pages viewer for offline GitLab Pages deployment.
+Self-contained Linux manual pages viewer with official documentation for offline deployment.
 
 ## 📦 What's Included
 
-This release contains everything needed to deploy the Linux Man Pages application on an isolated GitLab Pages instance:
+This release contains everything needed to deploy the Linux Man Pages application:
 
 - **Complete web application** - Single-page application with all functionality
-- **393 Linux commands** - Comprehensive man page coverage
+- **1,873 Linux commands** - Comprehensive man page documentation
 - **No external dependencies** - Works completely offline
-- **GitLab CI/CD ready** - Includes `.gitlab-ci.yml` for automatic deployment
+- **GitHub/GitLab Pages ready** - Automatic deployment via CI/CD
 
 ## 🚀 Quick Deployment
 
-1. Download `linux-man-pages-v1.0.0.tar.gz`
-2. Extract to your GitLab repository
-3. Push to GitLab - automatic deployment via CI/CD
-4. Access at `https://[username].gitlab.io/[repo-name]/`
+1. Download the latest release
+2. Extract to your repository  
+3. Push to GitHub/GitLab - automatic deployment via CI/CD
+4. Access at `https://[username].[github|gitlab].io/[repo-name]/`
 
 ## ✨ Features
 
@@ -38,15 +38,17 @@ This release contains everything needed to deploy the Linux Man Pages applicatio
 
 ## 📏 Package Size
 
-- **Compressed**: ~52KB (tar.gz)
-- **Extracted**: ~392KB
+- **Compressed**: ~1.2MB (tar.gz)
+- **Extracted**: ~3.9MB
+- **Data files**: Split into manageable chunks under 80MB each
 
 ## 🔒 Checksums
 
-```
-SHA256 (tar.gz): c7fb1d06d959a59e84c5c8bc73ae52147e67ecf014326c52e2535af4c0ca8ea9
-```
+*Checksums will be generated for official releases*
 
 ## 📝 Note
 
-TLDR summaries currently fetch from GitHub on first use, then cache locally. Future releases will include pre-bundled TLDR data for complete offline operation.
+- Contains 1,873 Linux commands with documentation
+- Mix of official man pages (375 commands) and existing documentation (1,498 commands)
+- TLDR summaries fetch from GitHub on first use, then cache locally
+- Expanded coverage across all man page sections (1-8)
