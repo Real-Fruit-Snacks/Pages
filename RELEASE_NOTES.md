@@ -1,12 +1,17 @@
-# Linux Man Pages v4.0.2
+# Linux Man Pages v4.0.3
 
 Self-contained Linux manual pages viewer with official documentation for offline deployment.
 
-## 🔧 v4.0.2 Changes
+## 🔧 v4.0.3 Changes
 
-- **Removed duplicate TLDR section** - The embedded TLDR from man pages is now hidden
+- **Fixed TLDR deduplication** - The embedded TLDR from man pages is now properly removed
 - **Cleaner interface** - Only the well-formatted TLDR section at the bottom is displayed
-- **Less clutter** - TLDR no longer appears in the section navigation sidebar
+- **Less clutter** - TLDR no longer appears in the section navigation sidebar or main content
+- **Improved regex** - Fixed the order of content processing to ensure TLDR removal works correctly
+
+## 🔧 v4.0.2 Changes (Failed Fix)
+
+- **Attempted to remove duplicate TLDR section** - Fix did not work due to processing order issue
 
 ## 🔧 v4.0.1 Changes
 

@@ -1248,7 +1248,12 @@
             content = content.replace(/<option>/g, '<span class="option">');
             content = content.replace(/<\/option>/g, '</span>');
             
-            // Step 3: Process section headers
+            // Step 3: Remove TLDR sections from the man page content
+            // We display a better formatted TLDR at the bottom from the TLDR pages project
+            // Match TLDR followed by everything until the next all-caps section header
+            content = content.replace(/TLDR\n[\s\S]*?(?=\n[A-Z][A-Z\s]+\n)/g, '');
+            
+            // Step 4: Process section headers
             // LinuxCommandLibrary uses plain text headers, so we need to identify them
             content = content.replace(/^([A-Z][A-Z\s]+)$/gm, function(match) {
                 // Don't process if it's already in HTML tags
@@ -1257,10 +1262,6 @@
                 }
                 return '<span class="section-header">' + match + '</span>';
             });
-            
-            // Step 4: Remove TLDR sections from the man page content
-            // We display a better formatted TLDR at the bottom from the TLDR pages project
-            content = content.replace(/TLDR\s*\n\s*(.+?)(?=\n[A-Z]|\n\n|$)/s, '');
             
             // Step 5: Highlight commands in backticks (LinuxCommandLibrary format)
             content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
