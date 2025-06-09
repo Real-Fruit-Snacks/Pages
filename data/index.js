@@ -1,5 +1,5 @@
 // Search index for all man pages
-// Generated from official Linux man-pages project
+// Generated from official Linux man-pages project and HTML supplements
 
 window.searchIndex = [
   {
@@ -303,6 +303,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "addpart",
+    "section": 8,
+    "description": "tell the kernel about the existence of a\n      partition",
+    "file": 1
+  },
+  {
     "command": "address_families",
     "section": 7,
     "description": "socket address families (domains)",
@@ -330,6 +336,12 @@ window.searchIndex = [
     "command": "afs_syscall",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "agetty",
+    "section": 8,
+    "description": "alternative Linux getty",
     "file": 1
   },
   {
@@ -747,6 +759,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "base64",
+    "section": 1,
+    "description": "base64 encode/decode data and print to\n      standard output",
+    "file": 1
+  },
+  {
+    "command": "basename",
+    "section": 1,
+    "description": "strip directory and suffix from\n      filenames",
+    "file": 1
+  },
+  {
     "command": "basename",
     "section": 3,
     "description": "parse pathname components",
@@ -807,9 +831,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "blkdiscard",
+    "section": 8,
+    "description": "discard sectors on a device",
+    "file": 1
+  },
+  {
+    "command": "blkid",
+    "section": 8,
+    "description": "locate/print block device attributes",
+    "file": 1
+  },
+  {
     "command": "blksize_t",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "blockdev",
+    "section": 8,
+    "description": "call block device ioctls from the command\n      line",
     "file": 1
   },
   {
@@ -975,6 +1017,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "cal",
+    "section": 1,
+    "description": "display a calendar",
+    "file": 1
+  },
+  {
     "command": "calloc",
     "section": 3,
     "description": "Manual page",
@@ -1062,6 +1110,12 @@ window.searchIndex = [
     "command": "casinl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "cat",
+    "section": 1,
+    "description": "concatenate files and print on the standard\n      output",
     "file": 1
   },
   {
@@ -1245,6 +1299,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "cfdisk",
+    "section": 8,
+    "description": "display or manipulate a disk partition\n      table",
+    "file": 1
+  },
+  {
     "command": "cfgetispeed",
     "section": 3,
     "description": "Manual page",
@@ -1311,15 +1371,51 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "chcon",
+    "section": 1,
+    "description": "change file security context",
+    "file": 1
+  },
+  {
+    "command": "chcpu",
+    "section": 8,
+    "description": "configure CPUs",
+    "file": 1
+  },
+  {
     "command": "chdir",
     "section": 2,
     "description": "change working directory",
     "file": 1
   },
   {
+    "command": "chfn",
+    "section": 1,
+    "description": "change your finger information",
+    "file": 1
+  },
+  {
+    "command": "chgrp",
+    "section": 1,
+    "description": "change group ownership",
+    "file": 1
+  },
+  {
+    "command": "chmod",
+    "section": 1,
+    "description": "change file mode bits",
+    "file": 1
+  },
+  {
     "command": "chmod",
     "section": 2,
     "description": "change permissions of a file",
+    "file": 1
+  },
+  {
+    "command": "chown",
+    "section": 1,
+    "description": "change file owner and group",
     "file": 1
   },
   {
@@ -1336,8 +1432,26 @@ window.searchIndex = [
   },
   {
     "command": "chroot",
+    "section": 1,
+    "description": "run command or interactive shell with\n      special root directory",
+    "file": 1
+  },
+  {
+    "command": "chroot",
     "section": 2,
     "description": "change root directory",
+    "file": 1
+  },
+  {
+    "command": "chrt",
+    "section": 1,
+    "description": "manipulate the real - time attributes of a\n      process",
+    "file": 1
+  },
+  {
+    "command": "chsh",
+    "section": 1,
+    "description": "change your login shell",
     "file": 1
   },
   {
@@ -1470,6 +1584,12 @@ window.searchIndex = [
     "command": "CIRCLEQ_REMOVE",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "cksum",
+    "section": 1,
+    "description": "checksum and count the bytes in a file",
     "file": 1
   },
   {
@@ -1785,6 +1905,36 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "col",
+    "section": 1,
+    "description": "filter reverse line feeds from input",
+    "file": 1
+  },
+  {
+    "command": "colcrt",
+    "section": 1,
+    "description": "filter nroff output for CRT previewing",
+    "file": 1
+  },
+  {
+    "command": "colrm",
+    "section": 1,
+    "description": "remove columns from a file",
+    "file": 1
+  },
+  {
+    "command": "column",
+    "section": 1,
+    "description": "columnate lists",
+    "file": 1
+  },
+  {
+    "command": "comm",
+    "section": 1,
+    "description": "compare two sorted files line by line",
+    "file": 1
+  },
+  {
     "command": "complex",
     "section": 7,
     "description": "basics of complex mathematics",
@@ -1896,6 +2046,12 @@ window.searchIndex = [
     "command": "cosl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "cp",
+    "section": 1,
+    "description": "copy files and directories",
     "file": 1
   },
   {
@@ -2169,6 +2325,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "csplit",
+    "section": 1,
+    "description": "split a file into sections determined by\n      context lines",
+    "file": 1
+  },
+  {
     "command": "csqrt",
     "section": 3,
     "description": "complex square root",
@@ -2241,15 +2403,33 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ctrlaltdel",
+    "section": 8,
+    "description": "set the function of the Ctrl - Alt - Del\n      combination",
+    "file": 1
+  },
+  {
     "command": "cuserid",
     "section": 3,
     "description": "Manual page",
     "file": 1
   },
   {
+    "command": "cut",
+    "section": 1,
+    "description": "remove sections from each line of files",
+    "file": 1
+  },
+  {
     "command": "daemon",
     "section": 3,
     "description": "run in the background",
+    "file": 1
+  },
+  {
+    "command": "date",
+    "section": 1,
+    "description": "print or set the system date and time",
     "file": 1
   },
   {
@@ -2271,6 +2451,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "dd",
+    "section": 1,
+    "description": "convert and copy a file",
+    "file": 1
+  },
+  {
     "command": "ddp",
     "section": 7,
     "description": "Linux AppleTalk protocol implementation",
@@ -2280,6 +2466,12 @@ window.searchIndex = [
     "command": "delete_module",
     "section": 2,
     "description": "unload a kernel module",
+    "file": 1
+  },
+  {
+    "command": "delpart",
+    "section": 8,
+    "description": "tell the kernel to forget about a\n      partition",
     "file": 1
   },
   {
@@ -2307,9 +2499,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "df",
+    "section": 1,
+    "description": "report file system disk space usage",
+    "file": 1
+  },
+  {
     "command": "difftime",
     "section": 3,
     "description": "calculate time difference",
+    "file": 1
+  },
+  {
+    "command": "dir",
+    "section": 1,
+    "description": "list directory contents",
     "file": 1
   },
   {
@@ -2319,9 +2523,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "dircolors",
+    "section": 1,
+    "description": "color setup for ls",
+    "file": 1
+  },
+  {
     "command": "dirfd",
     "section": 3,
     "description": "get directory stream file descriptor",
+    "file": 1
+  },
+  {
+    "command": "dirname",
+    "section": 1,
+    "description": "strip last component from file name",
     "file": 1
   },
   {
@@ -2403,6 +2619,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "dmesg",
+    "section": 1,
+    "description": "print or control the kernel ring buffer",
+    "file": 1
+  },
+  {
     "command": "dn_comp",
     "section": 3,
     "description": "Manual page",
@@ -2463,6 +2685,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "du",
+    "section": 1,
+    "description": "estimate file space usage",
+    "file": 1
+  },
+  {
     "command": "dup",
     "section": 2,
     "description": "duplicate a file descriptor",
@@ -2505,6 +2733,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "echo",
+    "section": 1,
+    "description": "display a line of text",
+    "file": 1
+  },
+  {
     "command": "ecvt",
     "section": 3,
     "description": "convert a floating - point number to a string",
@@ -2520,6 +2754,12 @@ window.searchIndex = [
     "command": "edata",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "eject",
+    "section": 1,
+    "description": "eject removable media",
     "file": 1
   },
   {
@@ -2646,6 +2886,12 @@ window.searchIndex = [
     "command": "endutxent",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "env",
+    "section": 1,
+    "description": "run a program in a modified environment",
     "file": 1
   },
   {
@@ -3027,6 +3273,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "expand",
+    "section": 1,
+    "description": "convert tabs to spaces",
+    "file": 1
+  },
+  {
     "command": "expf",
     "section": 3,
     "description": "Manual page",
@@ -3063,6 +3315,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "expr",
+    "section": 1,
+    "description": "evaluate expressions",
+    "file": 1
+  },
+  {
     "command": "fabs",
     "section": 3,
     "description": "absolute value of floating - point number",
@@ -3093,6 +3351,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "factor",
+    "section": 1,
+    "description": "factor numbers",
+    "file": 1
+  },
+  {
     "command": "fadvise64",
     "section": 2,
     "description": "Manual page",
@@ -3106,8 +3370,20 @@ window.searchIndex = [
   },
   {
     "command": "fallocate",
+    "section": 1,
+    "description": "preallocate or deallocate space to a\n      file",
+    "file": 1
+  },
+  {
+    "command": "fallocate",
     "section": 2,
     "description": "manipulate file space",
+    "file": 1
+  },
+  {
+    "command": "false",
+    "section": 1,
+    "description": "do nothing, unsuccessfully",
     "file": 1
   },
   {
@@ -3249,6 +3525,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "fdformat",
+    "section": 8,
+    "description": "low - level format a floppy disk",
+    "file": 1
+  },
+  {
     "command": "fdim",
     "section": 3,
     "description": "positive difference",
@@ -3264,6 +3546,12 @@ window.searchIndex = [
     "command": "fdiml",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "fdisk",
+    "section": 8,
+    "description": "manipulate disk partition table",
     "file": 1
   },
   {
@@ -3573,6 +3861,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "findfs",
+    "section": 8,
+    "description": "find a filesystem by label or UUID",
+    "file": 1
+  },
+  {
+    "command": "findmnt",
+    "section": 8,
+    "description": "find a filesystem",
+    "file": 1
+  },
+  {
     "command": "finit_module",
     "section": 2,
     "description": "Manual page",
@@ -3606,6 +3906,12 @@ window.searchIndex = [
     "command": "float_t",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "flock",
+    "section": 1,
+    "description": "manage locks from shell scripts",
     "file": 1
   },
   {
@@ -3717,6 +4023,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "fmt",
+    "section": 1,
+    "description": "simple optimal text formatter",
+    "file": 1
+  },
+  {
     "command": "fmtmsg",
     "section": 3,
     "description": "print formatted error messages",
@@ -3726,6 +4038,12 @@ window.searchIndex = [
     "command": "fnmatch",
     "section": 3,
     "description": "match filename or pathname",
+    "file": 1
+  },
+  {
+    "command": "fold",
+    "section": 1,
+    "description": "wrap each input line to fit in specified\n      width",
     "file": 1
   },
   {
@@ -3915,6 +4233,24 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "fsck",
+    "section": 8,
+    "description": "check and repair a Linux filesystem",
+    "file": 1
+  },
+  {
+    "command": "fsck.cramfs",
+    "section": 8,
+    "description": "fsck compressed ROM file system",
+    "file": 1
+  },
+  {
+    "command": "fsck.minix",
+    "section": 8,
+    "description": "check consistency of Minix\n      filesystem",
+    "file": 1
+  },
+  {
     "command": "fseek",
     "section": 3,
     "description": "reposition a stream",
@@ -3936,6 +4272,18 @@ window.searchIndex = [
     "command": "fsetxattr",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "fsfreeze",
+    "section": 8,
+    "description": "suspend access to a filesystem (Ext3/4,\n      ReiserFS, JFS, XFS)",
+    "file": 1
+  },
+  {
+    "command": "fstab",
+    "section": 5,
+    "description": "static information about the filesystems",
     "file": 1
   },
   {
@@ -3978,6 +4326,12 @@ window.searchIndex = [
     "command": "fstatvfs",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "fstrim",
+    "section": 8,
+    "description": "discard unused blocks on a mounted\n      filesystem",
     "file": 1
   },
   {
@@ -4714,6 +5068,12 @@ window.searchIndex = [
   },
   {
     "command": "getopt",
+    "section": 1,
+    "description": "parse command options (enhanced)",
+    "file": 1
+  },
+  {
+    "command": "getopt",
     "section": 3,
     "description": "Parse command - line options",
     "file": 1
@@ -5079,6 +5439,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "getumask",
+    "section": 3,
+    "description": "get file creation mask",
+    "file": 1
+  },
+  {
     "command": "getunwind",
     "section": 2,
     "description": "copy the unwind data to caller's buffer",
@@ -5289,6 +5655,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "groups",
+    "section": 1,
+    "description": "print the groups a user is in",
+    "file": 1
+  },
+  {
     "command": "gsignal",
     "section": 3,
     "description": "software signal facility",
@@ -5349,9 +5721,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "head",
+    "section": 1,
+    "description": "output the first part of files",
+    "file": 1
+  },
+  {
     "command": "herror",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "hexdump",
+    "section": 1,
+    "description": "display file contents in hexadecimal,\n      decimal, octal, or ascii",
     "file": 1
   },
   {
@@ -5364,6 +5748,12 @@ window.searchIndex = [
     "command": "host.conf",
     "section": 5,
     "description": "resolver configuration file",
+    "file": 1
+  },
+  {
+    "command": "hostid",
+    "section": 1,
+    "description": "print the numeric identifier for the\n      current host",
     "file": 1
   },
   {
@@ -5475,6 +5865,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "hwclock",
+    "section": 8,
+    "description": "read or set the hardware clock (RTC)",
+    "file": 1
+  },
+  {
     "command": "hypot",
     "section": 3,
     "description": "Euclidean distance function",
@@ -5526,6 +5922,12 @@ window.searchIndex = [
     "command": "iconvconfig",
     "section": 8,
     "description": "create iconv module configuration cache",
+    "file": 1
+  },
+  {
+    "command": "id",
+    "section": 1,
+    "description": "print real and effective user and group IDs",
     "file": 1
   },
   {
@@ -5697,6 +6099,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "infnan",
+    "section": 3,
+    "description": "deal with infinite or not - a - number (NaN)\n      result",
+    "file": 1
+  },
+  {
     "command": "init_module",
     "section": 2,
     "description": "load a kernel module",
@@ -5796,6 +6204,12 @@ window.searchIndex = [
     "command": "insque",
     "section": 3,
     "description": "insert/remove an item from a queue",
+    "file": 1
+  },
+  {
+    "command": "install",
+    "section": 1,
+    "description": "copy files and set attributes",
     "file": 1
   },
   {
@@ -5991,6 +6405,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ioctl_list",
+    "section": 2,
+    "description": "list of ioctl calls in Linux/i386\n      kernel",
+    "file": 1
+  },
+  {
     "command": "ioctl_ns",
     "section": 2,
     "description": "ioctl() operations for Linux namespaces",
@@ -6006,6 +6426,12 @@ window.searchIndex = [
     "command": "ioctl_userfaultfd",
     "section": 2,
     "description": "create a file descriptor for handling page faults in user space",
+    "file": 1
+  },
+  {
+    "command": "ionice",
+    "section": 1,
+    "description": "set or get process I/O scheduling class and\n      priority",
     "file": 1
   },
   {
@@ -6048,6 +6474,24 @@ window.searchIndex = [
     "command": "ipc_namespaces",
     "section": 7,
     "description": "overview of Linux IPC namespaces",
+    "file": 1
+  },
+  {
+    "command": "ipcmk",
+    "section": 1,
+    "description": "make various IPC resources",
+    "file": 1
+  },
+  {
+    "command": "ipcrm",
+    "section": 1,
+    "description": "remove certain IPC resources",
+    "file": 1
+  },
+  {
+    "command": "ipcs",
+    "section": 1,
+    "description": "show information on IPC facilities",
     "file": 1
   },
   {
@@ -6531,6 +6975,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "isosize",
+    "section": 8,
+    "description": "output the length of an iso9660\n      filesystem",
+    "file": 1
+  },
+  {
     "command": "isprint",
     "section": 3,
     "description": "Manual page",
@@ -6735,6 +7185,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "join",
+    "section": 1,
+    "description": "join lines of two files on a common field",
+    "file": 1
+  },
+  {
     "command": "jrand48",
     "section": 3,
     "description": "Manual page",
@@ -6814,8 +7270,20 @@ window.searchIndex = [
   },
   {
     "command": "kill",
+    "section": 1,
+    "description": "terminate a process",
+    "file": 1
+  },
+  {
+    "command": "kill",
     "section": 2,
     "description": "send signal to a process",
+    "file": 1
+  },
+  {
+    "command": "killpg",
+    "section": 2,
+    "description": "send signal to a process group",
     "file": 1
   },
   {
@@ -6858,6 +7326,12 @@ window.searchIndex = [
     "command": "labs",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "last",
+    "section": 1,
+    "description": "show a listing of last logged in\n      users",
     "file": 1
   },
   {
@@ -6921,6 +7395,36 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "lber-decode",
+    "section": 3,
+    "description": "OpenLDAP LBER simplified Basic\n      Encoding Rules library routines for decoding",
+    "file": 1
+  },
+  {
+    "command": "lber-encode",
+    "section": 3,
+    "description": "OpenLDAP LBER simplified Basic Encoding Rules library\n      routines for encoding",
+    "file": 1
+  },
+  {
+    "command": "lber-memory",
+    "section": 3,
+    "description": "OpenLDAP LBER memory allocators",
+    "file": 1
+  },
+  {
+    "command": "lber-sockbuf",
+    "section": 3,
+    "description": "OpenLDAP LBER I/O infrastructure",
+    "file": 1
+  },
+  {
+    "command": "lber-types",
+    "section": 3,
+    "description": "OpenLDAP\n      LBER types and allocation functions",
+    "file": 1
+  },
+  {
     "command": "lchown",
     "section": 2,
     "description": "Manual page",
@@ -6975,6 +7479,270 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ldap",
+    "section": 3,
+    "description": "OpenLDAP Lightweight Directory Access\n      Protocol API",
+    "file": 1
+  },
+  {
+    "command": "ldap_abandon",
+    "section": 3,
+    "description": "Abandon an LDAP operation in\n      progress",
+    "file": 1
+  },
+  {
+    "command": "ldap_add",
+    "section": 3,
+    "description": "Perform an LDAP add\n      operation",
+    "file": 1
+  },
+  {
+    "command": "ldap_bind",
+    "section": 3,
+    "description": "LDAP bind\n      routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_compare",
+    "section": 3,
+    "description": "Perform an LDAP compare\n      operation.",
+    "file": 1
+  },
+  {
+    "command": "ldap_controls",
+    "section": 3,
+    "description": "LDAP control manipulation routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_delete",
+    "section": 3,
+    "description": "Perform an LDAP delete\n      operation.",
+    "file": 1
+  },
+  {
+    "command": "ldap_dup",
+    "section": 3,
+    "description": "Duplicate and destroy LDAP\n      session handles",
+    "file": 1
+  },
+  {
+    "command": "ldap_error",
+    "section": 3,
+    "description": "LDAP protocol error handling\n      routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_extended_operation",
+    "section": 3,
+    "description": "Extends the LDAP operations to the LDAP server.",
+    "file": 1
+  },
+  {
+    "command": "ldap_first_attribute",
+    "section": 3,
+    "description": "step\n      through LDAP entry attributes",
+    "file": 1
+  },
+  {
+    "command": "ldap_first_entry",
+    "section": 3,
+    "description": "LDAP result entry parsing and counting routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_first_message",
+    "section": 3,
+    "description": "Stepping through messages in a result chain",
+    "file": 1
+  },
+  {
+    "command": "ldap_first_reference",
+    "section": 3,
+    "description": "Stepping through continuation\n      references in a result chain",
+    "file": 1
+  },
+  {
+    "command": "ldap_get_dn",
+    "section": 3,
+    "description": "LDAP DN handling routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_get_option",
+    "section": 3,
+    "description": "LDAP option\n      handling routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_get_values",
+    "section": 3,
+    "description": "LDAP attribute value handling routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_memory",
+    "section": 3,
+    "description": "LDAP\n      memory allocation routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_modify",
+    "section": 3,
+    "description": "Perform an LDAP\n      modify operation",
+    "file": 1
+  },
+  {
+    "command": "ldap_modrdn",
+    "section": 3,
+    "description": "Perform an LDAP modify RDN operation",
+    "file": 1
+  },
+  {
+    "command": "ldap_open",
+    "section": 3,
+    "description": "Initialize\n      the LDAP library and open a connection to an LDAP server",
+    "file": 1
+  },
+  {
+    "command": "ldap_parse_reference",
+    "section": 3,
+    "description": "Extract referrals and\n      controls from a reference message",
+    "file": 1
+  },
+  {
+    "command": "ldap_parse_result",
+    "section": 3,
+    "description": "Parsing results",
+    "file": 1
+  },
+  {
+    "command": "ldap_parse_sort_control",
+    "section": 3,
+    "description": "Decode the information\n      returned from a search operation that used a server - side sort\n      control",
+    "file": 1
+  },
+  {
+    "command": "ldap_parse_vlv_control",
+    "section": 3,
+    "description": "Decode the information\n      returned from a search operation that used a VLV (virtual\n      list view) control",
+    "file": 1
+  },
+  {
+    "command": "ldap_rename",
+    "section": 3,
+    "description": "Renames the specified\n      entry.",
+    "file": 1
+  },
+  {
+    "command": "ldap_result",
+    "section": 3,
+    "description": "Wait for the result of an LDAP\n      operation",
+    "file": 1
+  },
+  {
+    "command": "ldap_schema",
+    "section": 3,
+    "description": "Schema\n      definition handling routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_search",
+    "section": 3,
+    "description": "Perform an LDAP\n      search operation",
+    "file": 1
+  },
+  {
+    "command": "ldap_sort",
+    "section": 3,
+    "description": "LDAP sorting routines (deprecated)",
+    "file": 1
+  },
+  {
+    "command": "ldap_sync",
+    "section": 3,
+    "description": "LDAP sync routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_tls",
+    "section": 3,
+    "description": "LDAP TLS initialization routines",
+    "file": 1
+  },
+  {
+    "command": "ldap_url",
+    "section": 3,
+    "description": "LDAP Uniform Resource Locator routines",
+    "file": 1
+  },
+  {
+    "command": "ldap.conf",
+    "section": 5,
+    "description": "LDAP configuration\n      file/environment variables",
+    "file": 1
+  },
+  {
+    "command": "ldapcompare",
+    "section": 1,
+    "description": "LDAP compare tool",
+    "file": 1
+  },
+  {
+    "command": "ldapdelete",
+    "section": 1,
+    "description": "LDAP delete entry tool",
+    "file": 1
+  },
+  {
+    "command": "ldapexop",
+    "section": 1,
+    "description": "issue LDAP extended operations",
+    "file": 1
+  },
+  {
+    "command": "ldapmodify",
+    "section": 1,
+    "description": "LDAP modify entry and LDAP add\n      entry tools",
+    "file": 1
+  },
+  {
+    "command": "ldapmodrdn",
+    "section": 1,
+    "description": "LDAP rename entry tool",
+    "file": 1
+  },
+  {
+    "command": "ldappasswd",
+    "section": 1,
+    "description": "change the password of an LDAP\n      entry",
+    "file": 1
+  },
+  {
+    "command": "ldapsearch",
+    "section": 1,
+    "description": "LDAP search tool",
+    "file": 1
+  },
+  {
+    "command": "ldapurl",
+    "section": 1,
+    "description": "LDAP URL formatting tool",
+    "file": 1
+  },
+  {
+    "command": "ldapwhoami",
+    "section": 1,
+    "description": "LDAP who am i? tool",
+    "file": 1
+  },
+  {
+    "command": "ldattach",
+    "section": 8,
+    "description": "attach a line discipline to a serial\n      line",
+    "file": 1
+  },
+  {
     "command": "ldconfig",
     "section": 8,
     "description": "configure dynamic linker run - time bindings",
@@ -7002,6 +7770,12 @@ window.searchIndex = [
     "command": "ldexpl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "ldif",
+    "section": 5,
+    "description": "LDAP Data Interchange Format",
     "file": 1
   },
   {
@@ -7083,9 +7857,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "libblkid",
+    "section": 3,
+    "description": "block device identification library",
+    "file": 1
+  },
+  {
     "command": "libc",
     "section": 7,
     "description": "overview of standard C libraries on Linux",
+    "file": 1
+  },
+  {
+    "command": "line",
+    "section": 1,
+    "description": "read one line",
+    "file": 1
+  },
+  {
+    "command": "link",
+    "section": 1,
+    "description": "call the link function to create a link to a\n      file",
     "file": 1
   },
   {
@@ -7269,6 +8061,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ln",
+    "section": 1,
+    "description": "make links between files",
+    "file": 1
+  },
+  {
     "command": "locale",
     "section": 1,
     "description": "get locale - specific information",
@@ -7407,6 +8205,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "logger",
+    "section": 1,
+    "description": "enter messages into the system log",
+    "file": 1
+  },
+  {
+    "command": "login",
+    "section": 1,
+    "description": "begin session on the system",
+    "file": 1
+  },
+  {
     "command": "login",
     "section": 3,
     "description": "write utmp and wtmp entries",
@@ -7422,6 +8232,12 @@ window.searchIndex = [
     "command": "logl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "logname",
+    "section": 1,
+    "description": "print user's login name",
     "file": 1
   },
   {
@@ -7443,6 +8259,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "look",
+    "section": 1,
+    "description": "display lines beginning with a given\n      string",
+    "file": 1
+  },
+  {
     "command": "lookup_dcookie",
     "section": 2,
     "description": "return a directory entry's path",
@@ -7458,6 +8280,12 @@ window.searchIndex = [
     "command": "loop-control",
     "section": 4,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "losetup",
+    "section": 8,
+    "description": "set up and control loop devices",
     "file": 1
   },
   {
@@ -7521,6 +8349,24 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ls",
+    "section": 1,
+    "description": "list directory contents",
+    "file": 1
+  },
+  {
+    "command": "lsblk",
+    "section": 8,
+    "description": "list block devices",
+    "file": 1
+  },
+  {
+    "command": "lscpu",
+    "section": 1,
+    "description": "display information about the CPU\n      architecture",
+    "file": 1
+  },
+  {
     "command": "lsearch",
     "section": 3,
     "description": "linear search of an array",
@@ -7542,6 +8388,30 @@ window.searchIndex = [
     "command": "lsetxattr",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "lsipc",
+    "section": 1,
+    "description": "show information on IPC facilities currently\n      employed in the system",
+    "file": 1
+  },
+  {
+    "command": "lslocks",
+    "section": 8,
+    "description": "list local system locks",
+    "file": 1
+  },
+  {
+    "command": "lslogins",
+    "section": 1,
+    "description": "display information about known users in\n      the system",
+    "file": 1
+  },
+  {
+    "command": "lsns",
+    "section": 8,
+    "description": "list namespaces",
     "file": 1
   },
   {
@@ -7779,6 +8649,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "mcookie",
+    "section": 1,
+    "description": "generate magic cookies for xauth",
+    "file": 1
+  },
+  {
+    "command": "md5sum",
+    "section": 1,
+    "description": "compute and check MD5 message digest",
+    "file": 1
+  },
+  {
     "command": "mem",
     "section": 4,
     "description": "system memory, kernel memory and system ports",
@@ -7881,6 +8763,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "mesg",
+    "section": 1,
+    "description": "display (or do not display) messages from\n      other users",
+    "file": 1
+  },
+  {
     "command": "migrate_pages",
     "section": 2,
     "description": "move all pages in a process to another set of nodes",
@@ -7905,6 +8793,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "misc_conv",
+    "section": 3,
+    "description": "text based conversation function",
+    "file": 1
+  },
+  {
+    "command": "mkdir",
+    "section": 1,
+    "description": "make directories",
+    "file": 1
+  },
+  {
     "command": "mkdir",
     "section": 2,
     "description": "create a directory",
@@ -7924,6 +8824,12 @@ window.searchIndex = [
   },
   {
     "command": "mkfifo",
+    "section": 1,
+    "description": "make FIFOs (named pipes)",
+    "file": 1
+  },
+  {
+    "command": "mkfifo",
     "section": 3,
     "description": "make a FIFO special file (a named pipe)",
     "file": 1
@@ -7932,6 +8838,36 @@ window.searchIndex = [
     "command": "mkfifoat",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "mkfs",
+    "section": 8,
+    "description": "build a Linux filesystem",
+    "file": 1
+  },
+  {
+    "command": "mkfs.bfs",
+    "section": 8,
+    "description": "make an SCO bfs filesystem",
+    "file": 1
+  },
+  {
+    "command": "mkfs.cramfs",
+    "section": 8,
+    "description": "make compressed ROM file system",
+    "file": 1
+  },
+  {
+    "command": "mkfs.minix",
+    "section": 8,
+    "description": "make a Minix filesystem",
+    "file": 1
+  },
+  {
+    "command": "mknod",
+    "section": 1,
+    "description": "make block or character special files",
     "file": 1
   },
   {
@@ -7968,6 +8904,18 @@ window.searchIndex = [
     "command": "mkstemps",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "mkswap",
+    "section": 8,
+    "description": "set up a Linux swap area",
+    "file": 1
+  },
+  {
+    "command": "mktemp",
+    "section": 1,
+    "description": "create a temporary file or directory",
     "file": 1
   },
   {
@@ -8049,6 +8997,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "more",
+    "section": 1,
+    "description": "file perusal filter for crt viewing",
+    "file": 1
+  },
+  {
     "command": "motd",
     "section": 5,
     "description": "message of the day",
@@ -8061,6 +9015,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "mount",
+    "section": 8,
+    "description": "mount a filesystem",
+    "file": 1
+  },
+  {
     "command": "mount_namespaces",
     "section": 7,
     "description": "overview of Linux mount namespaces",
@@ -8070,6 +9030,12 @@ window.searchIndex = [
     "command": "mount_setattr",
     "section": 2,
     "description": "change properties of a mount or mount tree",
+    "file": 1
+  },
+  {
+    "command": "mountpoint",
+    "section": 1,
+    "description": "see if a directory or file is a\n      mountpoint",
     "file": 1
   },
   {
@@ -8307,9 +9273,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "mv",
+    "section": 1,
+    "description": "move (rename) files",
+    "file": 1
+  },
+  {
     "command": "name_to_handle_at",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "namei",
+    "section": 1,
+    "description": "follow a pathname until a terminal point is\n      found",
     "file": 1
   },
   {
@@ -8400,6 +9378,12 @@ window.searchIndex = [
     "command": "newfstatat",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "newgrp",
+    "section": 1,
+    "description": "log in to a new group",
     "file": 1
   },
   {
@@ -8494,8 +9478,20 @@ window.searchIndex = [
   },
   {
     "command": "nice",
+    "section": 1,
+    "description": "run a program with modified scheduling\n      priority",
+    "file": 1
+  },
+  {
+    "command": "nice",
     "section": 2,
     "description": "change process priority",
+    "file": 1
+  },
+  {
+    "command": "nl",
+    "section": 1,
+    "description": "number lines of files",
     "file": 1
   },
   {
@@ -8511,9 +9507,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "nohup",
+    "section": 1,
+    "description": "run a command immune to hangups, with output\n      to a non - tty",
+    "file": 1
+  },
+  {
     "command": "nologin",
     "section": 5,
     "description": "prevent unprivileged users from logging into the system",
+    "file": 1
+  },
+  {
+    "command": "nologin",
+    "section": 8,
+    "description": "politely refuse a login",
+    "file": 1
+  },
+  {
+    "command": "nproc",
+    "section": 1,
+    "description": "print the number of processing units\n      available",
     "file": 1
   },
   {
@@ -8544,6 +9558,12 @@ window.searchIndex = [
     "command": "nscd.conf",
     "section": 5,
     "description": "name service cache daemon configuration file",
+    "file": 1
+  },
+  {
+    "command": "nsenter",
+    "section": 1,
+    "description": "run program with namespaces of other\n      processes",
     "file": 1
   },
   {
@@ -8598,6 +9618,18 @@ window.searchIndex = [
     "command": "numa",
     "section": 7,
     "description": "overview of Non - Uniform Memory Architecture",
+    "file": 1
+  },
+  {
+    "command": "numfmt",
+    "section": 1,
+    "description": "Convert numbers from/to human - readable\n      strings",
+    "file": 1
+  },
+  {
+    "command": "od",
+    "section": 1,
+    "description": "dump files in octal and other formats",
     "file": 1
   },
   {
@@ -8799,6 +9831,222 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "pam",
+    "section": 3,
+    "description": "Pluggable Authentication Modules Library",
+    "file": 1
+  },
+  {
+    "command": "pam",
+    "section": 8,
+    "description": "Pluggable Authentication Modules for\n      Linux",
+    "file": 1
+  },
+  {
+    "command": "pam_acct_mgmt",
+    "section": 3,
+    "description": "PAM account validation\n      management",
+    "file": 1
+  },
+  {
+    "command": "pam_authenticate",
+    "section": 3,
+    "description": "account authentication",
+    "file": 1
+  },
+  {
+    "command": "pam_chauthtok",
+    "section": 3,
+    "description": "updating authentication tokens",
+    "file": 1
+  },
+  {
+    "command": "pam_close_session",
+    "section": 3,
+    "description": "terminate PAM session\n      management",
+    "file": 1
+  },
+  {
+    "command": "pam_conv",
+    "section": 3,
+    "description": "PAM conversation function",
+    "file": 1
+  },
+  {
+    "command": "pam_end",
+    "section": 3,
+    "description": "termination of PAM transaction",
+    "file": 1
+  },
+  {
+    "command": "pam_error",
+    "section": 3,
+    "description": "display error messages to\n      the user",
+    "file": 1
+  },
+  {
+    "command": "pam_fail_delay",
+    "section": 3,
+    "description": "request a delay on failure",
+    "file": 1
+  },
+  {
+    "command": "pam_get_authtok",
+    "section": 3,
+    "description": "get authentication token",
+    "file": 1
+  },
+  {
+    "command": "pam_get_data",
+    "section": 3,
+    "description": "get module internal data",
+    "file": 1
+  },
+  {
+    "command": "pam_get_item",
+    "section": 3,
+    "description": "getting PAM informations",
+    "file": 1
+  },
+  {
+    "command": "pam_get_user",
+    "section": 3,
+    "description": "get user name",
+    "file": 1
+  },
+  {
+    "command": "pam_getenv",
+    "section": 3,
+    "description": "get a PAM environment variable",
+    "file": 1
+  },
+  {
+    "command": "pam_getenvlist",
+    "section": 3,
+    "description": "getting the PAM environment",
+    "file": 1
+  },
+  {
+    "command": "pam_info",
+    "section": 3,
+    "description": "display messages to the\n      user",
+    "file": 1
+  },
+  {
+    "command": "pam_misc_drop_env",
+    "section": 3,
+    "description": "liberating a locally saved\n      environment",
+    "file": 1
+  },
+  {
+    "command": "pam_misc_paste_env",
+    "section": 3,
+    "description": "transcribing an environment to\n      that of PAM",
+    "file": 1
+  },
+  {
+    "command": "pam_misc_setenv",
+    "section": 3,
+    "description": "BSD like PAM environment variable\n      setting",
+    "file": 1
+  },
+  {
+    "command": "pam_open_session",
+    "section": 3,
+    "description": "start PAM session management",
+    "file": 1
+  },
+  {
+    "command": "pam_prompt",
+    "section": 3,
+    "description": "interface to conversation\n      function",
+    "file": 1
+  },
+  {
+    "command": "pam_putenv",
+    "section": 3,
+    "description": "set or change PAM environment\n      variable",
+    "file": 1
+  },
+  {
+    "command": "pam_set_data",
+    "section": 3,
+    "description": "set module internal data",
+    "file": 1
+  },
+  {
+    "command": "pam_set_item",
+    "section": 3,
+    "description": "set and update PAM informations",
+    "file": 1
+  },
+  {
+    "command": "pam_setcred",
+    "section": 3,
+    "description": "establish / delete user\n      credentials",
+    "file": 1
+  },
+  {
+    "command": "pam_sm_acct_mgmt",
+    "section": 3,
+    "description": "PAM service function for account\n      management",
+    "file": 1
+  },
+  {
+    "command": "pam_sm_authenticate",
+    "section": 3,
+    "description": "PAM service function for user\n      authentication",
+    "file": 1
+  },
+  {
+    "command": "pam_sm_chauthtok",
+    "section": 3,
+    "description": "PAM service function for\n      authentication token management",
+    "file": 1
+  },
+  {
+    "command": "pam_sm_close_session",
+    "section": 3,
+    "description": "PAM service function to\n      terminate session management",
+    "file": 1
+  },
+  {
+    "command": "pam_sm_open_session",
+    "section": 3,
+    "description": "PAM service function to start\n      session management",
+    "file": 1
+  },
+  {
+    "command": "pam_sm_setcred",
+    "section": 3,
+    "description": "PAM service function to alter\n      credentials",
+    "file": 1
+  },
+  {
+    "command": "pam_start",
+    "section": 3,
+    "description": "initialization of PAM transaction",
+    "file": 1
+  },
+  {
+    "command": "pam_strerror",
+    "section": 3,
+    "description": "return string describing PAM error\n      code",
+    "file": 1
+  },
+  {
+    "command": "pam_syslog",
+    "section": 3,
+    "description": "send messages to the\n      system logger",
+    "file": 1
+  },
+  {
+    "command": "partx",
+    "section": 8,
+    "description": "tell the kernel about the presence and\n      numbering of on - disk partitions",
+    "file": 1
+  },
+  {
     "command": "passwd",
     "section": 5,
     "description": "password file",
@@ -8811,9 +10059,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "paste",
+    "section": 1,
+    "description": "merge lines of files",
+    "file": 1
+  },
+  {
     "command": "path_resolution",
     "section": 7,
     "description": "how a pathname is resolved to a file",
+    "file": 1
+  },
+  {
+    "command": "pathchk",
+    "section": 1,
+    "description": "check whether file names are valid or\n      portable",
     "file": 1
   },
   {
@@ -8853,6 +10113,474 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "pcre2",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_callout_enumerate",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_code_copy",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_code_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_compile",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_compile_context_copy",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_compile_context_create",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_compile_context_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_config",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_dfa_match",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_general_context_copy",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_general_context_create",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_general_context_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_get_error_message",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_get_mark",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_get_ovector_count",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_get_ovector_pointer",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_get_startchar",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_jit_compile",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_jit_free_unused_memory",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_jit_match",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_jit_stack_assign",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_jit_stack_create",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_jit_stack_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_maketables",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_match",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_match_context_copy",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_match_context_create",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_match_context_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_match_data_create",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_match_data_create_from_pattern",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_match_data_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_pattern_info",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_serialize_decode",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_serialize_encode",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_serialize_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_serialize_get_number_of_codes",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_bsr",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_callout",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_character_tables",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_compile_recursion_guard",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_match_limit",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_newline",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_offset_limit",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_parens_nest_limit",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_recursion_limit",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_set_recursion_memory_management",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substitute",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_copy_byname",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_copy_bynumber",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_get_byname",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_get_bynumber",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_length_byname",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_length_bynumber",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_list_free",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_list_get",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_nametable_scan",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2_substring_number_from_name",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2-config",
+    "section": 1,
+    "description": "config - program to return PCRE2\n      configuration",
+    "file": 1
+  },
+  {
+    "command": "pcre2api",
+    "section": 3,
+    "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "pcre2build",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API) . .",
+    "file": 1
+  },
+  {
+    "command": "pcre2callout",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2compat",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2grep",
+    "section": 1,
+    "description": "a grep with Perl - compatible regular\n      expressions.",
+    "file": 1
+  },
+  {
+    "command": "pcre2jit",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2limits",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2matching",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2partial",
+    "section": 3,
+    "description": "Perl - compatible regular expressions",
+    "file": 1
+  },
+  {
+    "command": "pcre2pattern",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2perform",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2posix",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2sample",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2serialize",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2stack",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2syntax",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
+    "command": "pcre2test",
+    "section": 1,
+    "description": "a program for testing Perl - compatible\n      regular expressions.",
+    "file": 1
+  },
+  {
+    "command": "pcre2unicode",
+    "section": 3,
+    "description": "Perl - compatible regular expressions (revised\n      API)",
+    "file": 1
+  },
+  {
     "command": "perf_event_open",
     "section": 2,
     "description": "set up performance monitoring",
@@ -8880,6 +10608,12 @@ window.searchIndex = [
     "command": "personality",
     "section": 2,
     "description": "set the process execution domain",
+    "file": 1
+  },
+  {
+    "command": "pg",
+    "section": 1,
+    "description": "browse pagewise through text files",
     "file": 1
   },
   {
@@ -8919,6 +10653,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "pinky",
+    "section": 1,
+    "description": "lightweight finger",
+    "file": 1
+  },
+  {
     "command": "pipe",
     "section": 2,
     "description": "create pipe",
@@ -8940,6 +10680,12 @@ window.searchIndex = [
     "command": "pivot_root",
     "section": 2,
     "description": "change the root mount",
+    "file": 1
+  },
+  {
+    "command": "pivot_root",
+    "section": 8,
+    "description": "change the root filesystem",
     "file": 1
   },
   {
@@ -9111,6 +10857,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "pr",
+    "section": 1,
+    "description": "convert text files for printing",
+    "file": 1
+  },
+  {
     "command": "prctl",
     "section": 2,
     "description": "operations on a process or thread",
@@ -9147,9 +10899,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "printenv",
+    "section": 1,
+    "description": "print all or part of environment",
+    "file": 1
+  },
+  {
+    "command": "printf",
+    "section": 1,
+    "description": "format and print data",
+    "file": 1
+  },
+  {
     "command": "printf",
     "section": 3,
     "description": "formatted output conversion",
+    "file": 1
+  },
+  {
+    "command": "prlimit",
+    "section": 1,
+    "description": "get and set process resource limits",
     "file": 1
   },
   {
@@ -9753,6 +11523,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ptx",
+    "section": 1,
+    "description": "produce a permuted index of file contents",
+    "file": 1
+  },
+  {
     "command": "pty",
     "section": 7,
     "description": "pseudoterminal interfaces",
@@ -9870,6 +11646,12 @@ window.searchIndex = [
     "command": "pvalloc",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "pwd",
+    "section": 1,
+    "description": "print name of current/working directory",
     "file": 1
   },
   {
@@ -10017,6 +11799,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "raw",
+    "section": 8,
+    "description": "bind a Linux raw character device",
+    "file": 1
+  },
+  {
     "command": "rawmemchr",
     "section": 3,
     "description": "Manual page",
@@ -10078,6 +11866,12 @@ window.searchIndex = [
   },
   {
     "command": "readlink",
+    "section": 1,
+    "description": "print resolved symbolic links or\n      canonical file names",
+    "file": 1
+  },
+  {
+    "command": "readlink",
     "section": 2,
     "description": "read value of a symbolic link",
     "file": 1
@@ -10086,6 +11880,12 @@ window.searchIndex = [
     "command": "readlinkat",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "readprofile",
+    "section": 8,
+    "description": "read kernel profiling information",
     "file": 1
   },
   {
@@ -10104,6 +11904,12 @@ window.searchIndex = [
     "command": "reallocarray",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "realpath",
+    "section": 1,
+    "description": "print the resolved path",
     "file": 1
   },
   {
@@ -10270,6 +12076,12 @@ window.searchIndex = [
   },
   {
     "command": "rename",
+    "section": 1,
+    "description": "rename files",
+    "file": 1
+  },
+  {
+    "command": "rename",
     "section": 2,
     "description": "change the name or location of a file",
     "file": 1
@@ -10284,6 +12096,12 @@ window.searchIndex = [
     "command": "renameat2",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "renice",
+    "section": 1,
+    "description": "alter priority of running processes",
     "file": 1
   },
   {
@@ -10377,6 +12195,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "reset",
+    "section": 1,
+    "description": "reset the terminal",
+    "file": 1
+  },
+  {
+    "command": "resizepart",
+    "section": 8,
+    "description": "tell the kernel about the new size of a\n      partition",
+    "file": 1
+  },
+  {
     "command": "resolv.conf",
     "section": 5,
     "description": "resolver configuration file",
@@ -10398,6 +12228,12 @@ window.searchIndex = [
     "command": "restart_syscall",
     "section": 2,
     "description": "restart a system call after interruption by a stop signal",
+    "file": 1
+  },
+  {
+    "command": "rev",
+    "section": 1,
+    "description": "reverse lines characterwise",
     "file": 1
   },
   {
@@ -10446,6 +12282,18 @@ window.searchIndex = [
     "command": "rintl",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "rm",
+    "section": 1,
+    "description": "remove files or directories",
+    "file": 1
+  },
+  {
+    "command": "rmdir",
+    "section": 1,
+    "description": "remove empty directories",
     "file": 1
   },
   {
@@ -10557,6 +12405,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "rtcwake",
+    "section": 8,
+    "description": "enter a system sleep state until specified\n      wakeup time",
+    "file": 1
+  },
+  {
     "command": "rtime",
     "section": 3,
     "description": "get time from a remote machine",
@@ -10578,6 +12432,18 @@ window.searchIndex = [
     "command": "rtnetlink",
     "section": 7,
     "description": "Linux routing socket",
+    "file": 1
+  },
+  {
+    "command": "runcon",
+    "section": 1,
+    "description": "run command with specified security\n      context",
+    "file": 1
+  },
+  {
+    "command": "runuser",
+    "section": 1,
+    "description": "run a command with substitute user and\n      group ID",
     "file": 1
   },
   {
@@ -10785,6 +12651,18 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "script",
+    "section": 1,
+    "description": "make typescript of terminal session",
+    "file": 1
+  },
+  {
+    "command": "scriptreplay",
+    "section": 1,
+    "description": "play back typescripts, using timing\n      information",
+    "file": 1
+  },
+  {
     "command": "sd",
     "section": 4,
     "description": "driver for SCSI disk drives",
@@ -10977,6 +12855,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "seq",
+    "section": 1,
+    "description": "print a sequence of numbers",
+    "file": 1
+  },
+  {
     "command": "services",
     "section": 5,
     "description": "Internet network services list",
@@ -11016,6 +12900,12 @@ window.searchIndex = [
     "command": "setaliasent",
     "section": 3,
     "description": "read an alias entry",
+    "file": 1
+  },
+  {
+    "command": "setarch",
+    "section": 8,
+    "description": "change reported architecture in new\n      program environment and set personality flags",
     "file": 1
   },
   {
@@ -11223,6 +13113,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "setpriv",
+    "section": 1,
+    "description": "run a program with different Linux\n      privilege settings",
+    "file": 1
+  },
+  {
     "command": "setprotoent",
     "section": 3,
     "description": "Manual page",
@@ -11302,6 +13198,12 @@ window.searchIndex = [
   },
   {
     "command": "setsid",
+    "section": 1,
+    "description": "run a program in a new session",
+    "file": 1
+  },
+  {
+    "command": "setsid",
     "section": 2,
     "description": "creates a session and sets the process group ID",
     "file": 1
@@ -11328,6 +13230,12 @@ window.searchIndex = [
     "command": "setstate_r",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "setterm",
+    "section": 1,
+    "description": "set terminal attributes",
     "file": 1
   },
   {
@@ -11391,6 +13299,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "sfdisk",
+    "section": 8,
+    "description": "display or manipulate a disk partition\n      table",
+    "file": 1
+  },
+  {
     "command": "sgetmask",
     "section": 2,
     "description": "manipulation of signal mask (obsolete)",
@@ -11406,6 +13320,36 @@ window.searchIndex = [
     "command": "sgetspent_r",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "sha1sum",
+    "section": 1,
+    "description": "compute and check SHA1 message digest",
+    "file": 1
+  },
+  {
+    "command": "sha224sum",
+    "section": 1,
+    "description": "compute and check SHA224 message\n      digest",
+    "file": 1
+  },
+  {
+    "command": "sha256sum",
+    "section": 1,
+    "description": "compute and check SHA256 message\n      digest",
+    "file": 1
+  },
+  {
+    "command": "sha384sum",
+    "section": 1,
+    "description": "compute and check SHA384 message\n      digest",
+    "file": 1
+  },
+  {
+    "command": "sha512sum",
+    "section": 1,
+    "description": "compute and check SHA512 message\n      digest",
     "file": 1
   },
   {
@@ -11460,6 +13404,18 @@ window.searchIndex = [
     "command": "shmop",
     "section": 2,
     "description": "System V shared memory operations",
+    "file": 1
+  },
+  {
+    "command": "shred",
+    "section": 1,
+    "description": "overwrite a file to hide its contents, and\n      optionally delete it",
+    "file": 1
+  },
+  {
+    "command": "shuf",
+    "section": 1,
+    "description": "generate random permutations",
     "file": 1
   },
   {
@@ -11919,6 +13875,324 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "slapacl",
+    "section": 8,
+    "description": "Check access to a list of attributes.",
+    "file": 1
+  },
+  {
+    "command": "slapadd",
+    "section": 8,
+    "description": "Add entries to a SLAPD database",
+    "file": 1
+  },
+  {
+    "command": "slapauth",
+    "section": 8,
+    "description": "Check a list of string - represented IDs\n      for LDAP authc/authz",
+    "file": 1
+  },
+  {
+    "command": "slapcat",
+    "section": 8,
+    "description": "SLAPD database to LDIF utility",
+    "file": 1
+  },
+  {
+    "command": "slapd",
+    "section": 8,
+    "description": "Stand - alone LDAP Daemon",
+    "file": 1
+  },
+  {
+    "command": "slapd-bdb",
+    "section": 5,
+    "description": "Berkeley DB\n      backends to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-config",
+    "section": 5,
+    "description": "configuration backend to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-dnssrv",
+    "section": 5,
+    "description": "DNS SRV referral backend to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-ldap",
+    "section": 5,
+    "description": "LDAP backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-ldbm",
+    "section": 5,
+    "description": "Discontinued LDBM backend to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-ldif",
+    "section": 5,
+    "description": "LDIF backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-mdb",
+    "section": 5,
+    "description": "Memory - Mapped DB backend to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-meta",
+    "section": 5,
+    "description": "metadirectory backend to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-monitor",
+    "section": 5,
+    "description": "Monitor backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-ndb",
+    "section": 5,
+    "description": "MySQL NDB backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-null",
+    "section": 5,
+    "description": "Null backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-passwd",
+    "section": 5,
+    "description": "/etc/passwd backend to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-perl",
+    "section": 5,
+    "description": "Perl backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-relay",
+    "section": 5,
+    "description": "relay backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-shell",
+    "section": 5,
+    "description": "Shell backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-sock",
+    "section": 5,
+    "description": "Socket backend/overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd-sql",
+    "section": 5,
+    "description": "SQL backend to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapd.access",
+    "section": 5,
+    "description": "access configuration for slapd, the\n      stand - alone LDAP daemon",
+    "file": 1
+  },
+  {
+    "command": "slapd.backends",
+    "section": 5,
+    "description": "backends for slapd, the stand - alone\n      LDAP daemon",
+    "file": 1
+  },
+  {
+    "command": "slapd.conf",
+    "section": 5,
+    "description": "configuration file for slapd, the\n      stand - alone LDAP daemon",
+    "file": 1
+  },
+  {
+    "command": "slapd.overlays",
+    "section": 5,
+    "description": "overlays for slapd, the stand - alone\n      LDAP daemon",
+    "file": 1
+  },
+  {
+    "command": "slapd.plugin",
+    "section": 5,
+    "description": "plugin configuration for slapd, the\n      stand - alone LDAP daemon",
+    "file": 1
+  },
+  {
+    "command": "slapdn",
+    "section": 8,
+    "description": "Check a list of string - represented LDAP DNs\n      based on schema syntax",
+    "file": 1
+  },
+  {
+    "command": "slapindex",
+    "section": 8,
+    "description": "Reindex entries in a SLAPD database",
+    "file": 1
+  },
+  {
+    "command": "slapo-accesslog",
+    "section": 5,
+    "description": "Access Logging overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-auditlog",
+    "section": 5,
+    "description": "Audit Logging overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-chain",
+    "section": 5,
+    "description": "chain overlay to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-collect",
+    "section": 5,
+    "description": "Collective attributes overlay\n      to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-constraint",
+    "section": 5,
+    "description": "Attribute Constraint\n      Overlay to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-dds",
+    "section": 5,
+    "description": "Dynamic Directory Services overlay\n      to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-dyngroup",
+    "section": 5,
+    "description": "Dynamic Group overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-dynlist",
+    "section": 5,
+    "description": "Dynamic List overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-memberof",
+    "section": 5,
+    "description": "Reverse Group Membership\n      overlay to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-pbind",
+    "section": 5,
+    "description": "proxy bind overlay to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-pcache",
+    "section": 5,
+    "description": "proxy cache overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-ppolicy",
+    "section": 5,
+    "description": "Password Policy overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-refint",
+    "section": 5,
+    "description": "Referential Integrity overlay\n      to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-retcode",
+    "section": 5,
+    "description": "return code overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-rwm",
+    "section": 5,
+    "description": "rewrite/remap overlay to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-sssvlv",
+    "section": 5,
+    "description": "Server Side Sorting and Virtual\n      List View overlay to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-syncprov",
+    "section": 5,
+    "description": "Sync Provider overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-translucent",
+    "section": 5,
+    "description": "Translucent Proxy overlay\n      to slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-unique",
+    "section": 5,
+    "description": "Attribute Uniqueness overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slapo-valsort",
+    "section": 5,
+    "description": "Value Sorting overlay to\n      slapd",
+    "file": 1
+  },
+  {
+    "command": "slappasswd",
+    "section": 8,
+    "description": "OpenLDAP password utility",
+    "file": 1
+  },
+  {
+    "command": "slapschema",
+    "section": 8,
+    "description": "SLAPD in - database schema checking\n      utility",
+    "file": 1
+  },
+  {
+    "command": "slaptest",
+    "section": 8,
+    "description": "Check the suitability of the OpenLDAP\n      slapd configuration",
+    "file": 1
+  },
+  {
+    "command": "sleep",
+    "section": 1,
+    "description": "delay for a specified amount of time",
+    "file": 1
+  },
+  {
     "command": "sleep",
     "section": 3,
     "description": "sleep for a specified number of seconds",
@@ -12069,9 +14343,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "sort",
+    "section": 1,
+    "description": "sort lines of text files",
+    "file": 1
+  },
+  {
     "command": "splice",
     "section": 2,
     "description": "splice data to/from a pipe",
+    "file": 1
+  },
+  {
+    "command": "split",
+    "section": 1,
+    "description": "split a file into pieces",
     "file": 1
   },
   {
@@ -12280,6 +14566,12 @@ window.searchIndex = [
   },
   {
     "command": "stat",
+    "section": 1,
+    "description": "display file or file system status",
+    "file": 1
+  },
+  {
+    "command": "stat",
     "section": 2,
     "description": "get file status",
     "file": 1
@@ -12318,6 +14610,12 @@ window.searchIndex = [
     "command": "stdarg",
     "section": 3,
     "description": "variable argument lists",
+    "file": 1
+  },
+  {
+    "command": "stdbuf",
+    "section": 1,
+    "description": "Run COMMAND, with modified buffering\n      operations for its standard streams.",
     "file": 1
   },
   {
@@ -12694,8 +14992,20 @@ window.searchIndex = [
   },
   {
     "command": "stty",
+    "section": 1,
+    "description": "change and print terminal line settings",
+    "file": 1
+  },
+  {
+    "command": "stty",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "su",
+    "section": 1,
+    "description": "run a command with substitute user and group\n      ID",
     "file": 1
   },
   {
@@ -12708,6 +15018,18 @@ window.searchIndex = [
     "command": "suffixes",
     "section": 7,
     "description": "list of file suffixes",
+    "file": 1
+  },
+  {
+    "command": "sulogin",
+    "section": 8,
+    "description": "single - user login",
+    "file": 1
+  },
+  {
+    "command": "sum",
+    "section": 1,
+    "description": "checksum and count the blocks in a file",
     "file": 1
   },
   {
@@ -12867,6 +15189,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "swaplabel",
+    "section": 8,
+    "description": "print or change the label or UUID of a\n      swap area",
+    "file": 1
+  },
+  {
     "command": "swapoff",
     "section": 2,
     "description": "Manual page",
@@ -12876,6 +15204,18 @@ window.searchIndex = [
     "command": "swapon",
     "section": 2,
     "description": "start/stop swapping to file/device",
+    "file": 1
+  },
+  {
+    "command": "swapon",
+    "section": 8,
+    "description": "enable/disable devices and files\n      for paging and swapping",
+    "file": 1
+  },
+  {
+    "command": "switch_root",
+    "section": 8,
+    "description": "switch to another filesystem as the\n      root of the mount tree",
     "file": 1
   },
   {
@@ -12900,6 +15240,12 @@ window.searchIndex = [
     "command": "symlinkat",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "sync",
+    "section": 1,
+    "description": "Synchronize cached writes to persistent\n      storage",
     "file": 1
   },
   {
@@ -13020,6 +15366,24 @@ window.searchIndex = [
     "command": "sysvipc",
     "section": 7,
     "description": "System V interprocess communication mechanisms",
+    "file": 1
+  },
+  {
+    "command": "tac",
+    "section": 1,
+    "description": "concatenate and print files in reverse",
+    "file": 1
+  },
+  {
+    "command": "tail",
+    "section": 1,
+    "description": "output the last part of files",
+    "file": 1
+  },
+  {
+    "command": "tailf",
+    "section": 1,
+    "description": "follow the growth of a log file",
     "file": 1
   },
   {
@@ -13173,6 +15537,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "taskset",
+    "section": 1,
+    "description": "set or retrieve a process's CPU\n      affinity",
+    "file": 1
+  },
+  {
     "command": "tcdrain",
     "section": 3,
     "description": "Manual page",
@@ -13246,6 +15616,12 @@ window.searchIndex = [
   },
   {
     "command": "tee",
+    "section": 1,
+    "description": "read from standard input and write to standard\n      output and files",
+    "file": 1
+  },
+  {
+    "command": "tee",
     "section": 2,
     "description": "duplicating pipe content",
     "file": 1
@@ -13269,6 +15645,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "terminal-colors.d",
+    "section": 5,
+    "description": "colors.d - Configure output colorization\n      for various utilities",
+    "file": 1
+  },
+  {
     "command": "termio",
     "section": 7,
     "description": "System V terminal driver interface",
@@ -13278,6 +15660,12 @@ window.searchIndex = [
     "command": "termios",
     "section": 3,
     "description": "get and set terminal attributes, line control, get and set baud rate",
+    "file": 1
+  },
+  {
+    "command": "test",
+    "section": 1,
+    "description": "check file types and compare values",
     "file": 1
   },
   {
@@ -13356,6 +15744,12 @@ window.searchIndex = [
     "command": "timelocal",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "timeout",
+    "section": 1,
+    "description": "run a command with a time limit",
     "file": 1
   },
   {
@@ -13521,6 +15915,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "touch",
+    "section": 1,
+    "description": "change file timestamps",
+    "file": 1
+  },
+  {
     "command": "toupper",
     "section": 3,
     "description": "convert uppercase or lowercase",
@@ -13563,9 +15963,27 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "tr",
+    "section": 1,
+    "description": "translate or delete characters",
+    "file": 1
+  },
+  {
+    "command": "true",
+    "section": 1,
+    "description": "do nothing, successfully",
+    "file": 1
+  },
+  {
     "command": "trunc",
     "section": 3,
     "description": "round to integer, toward zero",
+    "file": 1
+  },
+  {
+    "command": "truncate",
+    "section": 1,
+    "description": "shrink or extend the size of a file to\n      the specified size",
     "file": 1
   },
   {
@@ -13596,6 +16014,18 @@ window.searchIndex = [
     "command": "tsearch",
     "section": 3,
     "description": "manage a binary search tree",
+    "file": 1
+  },
+  {
+    "command": "tsort",
+    "section": 1,
+    "description": "perform topological sort",
+    "file": 1
+  },
+  {
+    "command": "tty",
+    "section": 1,
+    "description": "print the file name of the terminal connected\n      to standard input",
     "file": 1
   },
   {
@@ -13638,6 +16068,12 @@ window.searchIndex = [
     "command": "ttytype",
     "section": 5,
     "description": "terminal device to default terminal type mapping",
+    "file": 1
+  },
+  {
+    "command": "tunelp",
+    "section": 8,
+    "description": "set various parameters for the lp\n      device",
     "file": 1
   },
   {
@@ -13755,6 +16191,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "ul",
+    "section": 1,
+    "description": "do underlining",
+    "file": 1
+  },
+  {
     "command": "ulckpwdf",
     "section": 3,
     "description": "Manual page",
@@ -13779,9 +16221,21 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "umount",
+    "section": 8,
+    "description": "unmount file systems",
+    "file": 1
+  },
+  {
     "command": "umount2",
     "section": 2,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "uname",
+    "section": 1,
+    "description": "print system information",
     "file": 1
   },
   {
@@ -13794,6 +16248,12 @@ window.searchIndex = [
     "command": "undocumented",
     "section": 3,
     "description": "undocumented library functions",
+    "file": 1
+  },
+  {
+    "command": "unexpand",
+    "section": 1,
+    "description": "convert spaces to tabs",
     "file": 1
   },
   {
@@ -13821,6 +16281,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "uniq",
+    "section": 1,
+    "description": "report or omit repeated lines",
+    "file": 1
+  },
+  {
     "command": "units",
     "section": 7,
     "description": "decimal and binary prefixes",
@@ -13830,6 +16296,12 @@ window.searchIndex = [
     "command": "unix",
     "section": 7,
     "description": "sockets for local interprocess communication",
+    "file": 1
+  },
+  {
+    "command": "unlink",
+    "section": 1,
+    "description": "call the unlink function to remove the\n      specified file",
     "file": 1
   },
   {
@@ -13864,6 +16336,12 @@ window.searchIndex = [
   },
   {
     "command": "unshare",
+    "section": 1,
+    "description": "run program with some namespaces unshared\n      from parent",
+    "file": 1
+  },
+  {
+    "command": "unshare",
     "section": 2,
     "description": "disassociate parts of the process execution context",
     "file": 1
@@ -13878,6 +16356,12 @@ window.searchIndex = [
     "command": "updwtmpx",
     "section": 3,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "uptime",
+    "section": 1,
+    "description": "tell how long the system has been\n      running",
     "file": 1
   },
   {
@@ -13941,6 +16425,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "users",
+    "section": 1,
+    "description": "print the user names of users currently\n      logged in to the current host",
+    "file": 1
+  },
+  {
     "command": "usleep",
     "section": 3,
     "description": "suspend execution for microsecond intervals",
@@ -13989,6 +16479,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "utmpdump",
+    "section": 1,
+    "description": "dump UTMP and WTMP files in raw\n      format",
+    "file": 1
+  },
+  {
     "command": "utmpname",
     "section": 3,
     "description": "Manual page",
@@ -14010,6 +16506,72 @@ window.searchIndex = [
     "command": "uts_namespaces",
     "section": 7,
     "description": "overview of Linux UTS namespaces",
+    "file": 1
+  },
+  {
+    "command": "uuid",
+    "section": 3,
+    "description": "DCE compatible Universally Unique Identifier\n      library",
+    "file": 1
+  },
+  {
+    "command": "uuid_clear",
+    "section": 3,
+    "description": "reset value of UUID variable to the\n      NULL value",
+    "file": 1
+  },
+  {
+    "command": "uuid_compare",
+    "section": 3,
+    "description": "compare whether two UUIDs are the\n      same",
+    "file": 1
+  },
+  {
+    "command": "uuid_copy",
+    "section": 3,
+    "description": "copy a UUID value",
+    "file": 1
+  },
+  {
+    "command": "uuid_generate",
+    "section": 3,
+    "description": "create a new unique UUID\n      value",
+    "file": 1
+  },
+  {
+    "command": "uuid_is_null",
+    "section": 3,
+    "description": "compare the value of the UUID to the\n      NULL value",
+    "file": 1
+  },
+  {
+    "command": "uuid_parse",
+    "section": 3,
+    "description": "convert an input UUID string into\n      binary representation",
+    "file": 1
+  },
+  {
+    "command": "uuid_time",
+    "section": 3,
+    "description": "extract the time at which the UUID was\n      created",
+    "file": 1
+  },
+  {
+    "command": "uuid_unparse",
+    "section": 3,
+    "description": "convert an UUID from binary\n      representation to a string",
+    "file": 1
+  },
+  {
+    "command": "uuidd",
+    "section": 8,
+    "description": "UUID generation daemon",
+    "file": 1
+  },
+  {
+    "command": "uuidgen",
+    "section": 1,
+    "description": "create a new UUID value",
     "file": 1
   },
   {
@@ -14064,6 +16626,12 @@ window.searchIndex = [
     "command": "vcsa",
     "section": 4,
     "description": "Manual page",
+    "file": 1
+  },
+  {
+    "command": "vdir",
+    "section": 1,
+    "description": "list directory contents",
     "file": 1
   },
   {
@@ -14130,6 +16698,12 @@ window.searchIndex = [
     "command": "vhangup",
     "section": 2,
     "description": "virtually hangup the current terminal",
+    "file": 1
+  },
+  {
+    "command": "vipw",
+    "section": 8,
+    "description": "edit the password or group file",
     "file": 1
   },
   {
@@ -14271,6 +16845,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "wall",
+    "section": 1,
+    "description": "write a message to all users",
+    "file": 1
+  },
+  {
     "command": "warn",
     "section": 3,
     "description": "Manual page",
@@ -14286,6 +16866,12 @@ window.searchIndex = [
     "command": "wavelan",
     "section": 4,
     "description": "AT&T GIS WaveLAN ISA device driver",
+    "file": 1
+  },
+  {
+    "command": "wc",
+    "section": 1,
+    "description": "print newline, word, and byte counts for each\n      file",
     "file": 1
   },
   {
@@ -14481,6 +17067,36 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "wdctl",
+    "section": 8,
+    "description": "show hardware watchdog status",
+    "file": 1
+  },
+  {
+    "command": "whereis",
+    "section": 1,
+    "description": "locate the binary, source, and manual page\n      files for a command",
+    "file": 1
+  },
+  {
+    "command": "who",
+    "section": 1,
+    "description": "show who is logged on",
+    "file": 1
+  },
+  {
+    "command": "whoami",
+    "section": 1,
+    "description": "print effective userid",
+    "file": 1
+  },
+  {
+    "command": "wipefs",
+    "section": 8,
+    "description": "wipe a signature from a device",
+    "file": 1
+  },
+  {
     "command": "wmemchr",
     "section": 3,
     "description": "search a wide character in a wide - character array",
@@ -14532,6 +17148,12 @@ window.searchIndex = [
     "command": "wprintf",
     "section": 3,
     "description": "formatted wide - character output conversion",
+    "file": 1
+  },
+  {
+    "command": "write",
+    "section": 1,
+    "description": "send a message to another user",
     "file": 1
   },
   {
@@ -14889,6 +17511,12 @@ window.searchIndex = [
     "file": 1
   },
   {
+    "command": "yes",
+    "section": 1,
+    "description": "output a string repeatedly until killed",
+    "file": 1
+  },
+  {
     "command": "yn",
     "section": 3,
     "description": "Manual page",
@@ -14922,6 +17550,12 @@ window.searchIndex = [
     "command": "zic",
     "section": 8,
     "description": "timezone compiler",
+    "file": 1
+  },
+  {
+    "command": "zramctl",
+    "section": 8,
+    "description": "set up and control zram devices",
     "file": 1
   }
 ];

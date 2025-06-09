@@ -1,4 +1,4 @@
-# Linux Man Pages v3.0.0
+# Linux Man Pages v3.1.0
 
 Self-contained Linux manual pages viewer with official documentation for offline deployment.
 
@@ -7,7 +7,7 @@ Self-contained Linux manual pages viewer with official documentation for offline
 This release contains everything needed to deploy the Linux Man Pages application:
 
 - **Complete web application** - Single-page application with all functionality
-- **2,487 Linux commands** - Official man pages from the Linux man-pages project
+- **2,926 Linux commands** - Comprehensive collection including official man pages and essential utilities
 - **No external dependencies** - Works completely offline
 - **GitHub/GitLab Pages ready** - Automatic deployment via CI/CD
 
@@ -48,7 +48,8 @@ This release contains everything needed to deploy the Linux Man Pages applicatio
 
 ## 📝 Note
 
-- Contains 2,487 official Linux man pages from the Linux man-pages project
-- Complete replacement of all previous man page data
-- Full coverage of sections 1-8 with properly formatted content
+- Contains 2,926 Linux man pages with comprehensive coverage
+- Includes official Linux man-pages project (2,487 pages)
+- Plus 439 essential system utilities (coreutils, util-linux, etc.)
+- Full coverage of all sections 1-8 including everyday commands
 - TLDR summaries fetch from GitHub on first use, then cache locally
