@@ -1,3 +1,3 @@
 window.manFiles = [
-  'data/man_1.js',
+  "data/man_1.js"
 ];
