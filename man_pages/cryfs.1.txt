@@ -1,0 +1,196 @@
+cryfs(1)                    General Commands Manual                   cryfs(1)
+
+NAME
+       cryfs - cryptographic filesystem for the cloud
+
+SYNOPSIS
+       cryfs [-c file] [-f] [options] basedir mountpoint
+       cryfs --help|--version|--show-ciphers
+
+DESCRIPTION
+       CryFS encrypts your files, so you can safely store them anywhere.
+
+       The  goal  of  CryFS  is  not only to keep file contents, but also file
+       sizes, metadata and directory structure confidential.  CryFS  uses  en‐
+       crypted  same-size  blocks  to  store both the files themselves and the
+       block's relations to another.  These blocks are  stored  as  individual
+       files  in the base directory, which can then be synchronized with cloud
+       services such as Dropbox.
+
+       The blocks are encrypted using a random key, which is stored in a  con‐
+       figuration  file  encrypted  by  the user's passphrase.  By default, it
+       will be stored together with the data in the base  directory,  but  you
+       can  choose a different location if you do not want it in your cloud or
+       when using a weak passphrase.
+
+USING CRYFS
+   Selecting base and mount directories
+       While you can access your files through your mount directory, CryFS ac‐
+       tually places them in your base directory after encrypting.  CryFS will
+       encrypt and decrypt your files 'on the fly' as they  are  accessed,  so
+       files will never be stored on the disk in unencrypted form.
+
+       You  can choose any empty directory as your base, but your mount direc‐
+       tory should be outside of any cloud storage, as your cloud may  try  to
+       sync your (temporarily mounted) unencrypted files as well.
+
+   Setup and usage of your encrypted directory
+       Creating  and mounting your encrypted storage use the same command-line
+       syntax:
+              cryfs basedir mountpoint
+
+       If CryFS detects an encrypted storage in the given base directory,  you
+       will  be  asked  for  the passphrase to unlock and mount it. Otherwise,
+       CryFS will help you with creating one, just follow  the  on-screen  in‐
+       structions.
+
+       After  you  are  done  working  with your encrypted files, unmount your
+       storage with the command
+              cryfs-unmount mountpoint
+
+   Changing your passphrase
+       As the encryption key to your CryFS storage is stored in your  configu‐
+       ration  file,  it  would be possible to re-encrypt it using a different
+       passphrase (although this feature has not been implemented yet).
+
+       However, this does not change the actual encryption key of  your  stor‐
+       age,  so  someone  with  access to the old passphrase and configuration
+       file (for example through the file history of your cloud or  your  file
+       system)  could  still  access  your files, even those created after the
+       password change.
+
+       For this reason, the recommended way to change your  passphrase  is  to
+       create  a new CryFS storage with the new passphrase and move your files
+       from the old to the new one.
+
+OPTIONS
+   Getting help
+       -h, --help
+              Show a help message containing short descriptions  for  all  op‐
+              tions.
+
+       --show-ciphers
+              Show a list of all supported encryption ciphers.
+
+       --version
+              Show the CryFS version number.
+
+   Encryption parameters
+       --blocksize arg
+              Set the block size to arg bytes. Defaults to 32768.
+
+              A  higher  block  size  may help reducing the file count in your
+              base directory (especially when storing large files),  but  will
+              also waste more space when storing smaller files.
+
+       --cipher arg
+              Use   arg   as  the  cipher  for  the  encryption.  Defaults  to
+              aes-256-gcm.
+
+       -c file, --config file
+              Use file as configuration file for this CryFS storage instead of
+              basedir/cryfs.config
+
+   General options
+       -f, --foreground
+              Run CryFS in the foreground. Stop using CTRL-C.
+
+       --allow-filesystem-upgrade
+              Allow  upgrading  the  file system if it was created with an old
+              CryFS version. After the upgrade, older CryFS versions might not
+              be able to use the file system anymore.
+
+       --allow-integrity-violations
+              By default, CryFS checks for integrity violations, i.e. will no‐
+              tice if an adversary modified or rolled back  the  file  system.
+              Using  this flag, you can disable the integrity checks. This can
+              for example be helpful for loading an old snapshot of your  file
+              system without CryFS thinking an adversary rolled it back.
+
+       --allow-replaced-filesystem
+              By  default,  CryFS  remembers  file systems it has seen in this
+              base directory and checks that it didn't get replaced by an  at‐
+              tacker  with  an  entirely  different file system since the last
+              time it was loaded. However, if you do want to replace the  file
+              system  with an entirely new one, you can pass in this option to
+              disable the check.
+
+       --create-missing-basedir
+              Creates the base directory even if there is  no  directory  cur‐
+              rently there, skipping the normal confirmation message to create
+              it later.
+
+       --create-missing-mountpoint
+              Creates the mountpoint even if there is no  directory  currently
+              there,  skipping  the  normal  confirmation message to create it
+              later.
+
+       --missing-block-is-integrity-violation=true
+              When CryFS encounters a missing ciphertext block, it cannot can‐
+              not (yet) know if it was deleted by an unauthorized adversary or
+              by a second authorized client. This is one of  the  restrictions
+              of  the integrity checks currently in place. You can enable this
+              flag to treat missing ciphertext blocks as integrity violations,
+              but then your file system will not be usable by multiple clients
+              anymore. By default, this flag is disabled.
+
+       --logfile file
+              Write status information to file. If no logfile is given,  CryFS
+              will  write  them  to syslog in background mode, or to stdout in
+              foreground mode.
+
+       --unmount-idle arg
+              Unmount automatically after arg minutes of inactivity.
+
+FUSE Options
+       -o option, --fuse-option option
+              Pass through options to the FUSE filesystem driver.
+
+       For example:
+
+       -o allow_other
+              This option overrides the security measure restricting file  ac‐
+              cess to the filesystem owner, so that all users (including root)
+              can access the files.
+
+       -o allow_root
+              This option is similar to allow_other but file access is limited
+              to  the  filesystem owner and root.  This option and allow_other
+              are mutually exclusive.
+
+ENVIRONMENT
+       CRYFS_FRONTEND=noninteractive
+              With this option set, CryFS will only  ask  for  the  encryption
+              passphrase  once.  Instead of asking the user for parameters not
+              specified on the command line, it will just use the default val‐
+              ues. CryFS will also not ask you to confirm your passphrase when
+              creating a new CryFS storage.
+
+              Set this environment variable when automating CryFS using exter‐
+              nal tools or shell scripts.
+
+       CRYFS_NO_UPDATE_CHECK=true
+              By  default,  CryFS  connects to the internet to check for known
+              security vulnerabilities and new versions. This option  disables
+              this.
+
+       CRYFS_LOCAL_STATE_DIR=[path]
+              Sets  the  directory cryfs uses to store local state. This local
+              state is used to recognize known file systems and run  integrity
+              checks  (i.e.  check  that  they haven't been modified by an at‐
+              tacker.  Default value: ${HOME}/.cryfs
+
+SEE ALSO
+       mount.fuse(1), fusermount(1) cryfs-unmount(1)
+
+       For   more   information   about   the   design   of    CryFS,    visit
+       https://www.cryfs.org
+
+       Visit  the development repository at https://github.com/cryfs/cryfs for
+       the source code and the full list of contributors to CryFS.
+
+AUTHORS
+       CryFS was created by Sebastian Messmer and contributors.  This man page
+       was written by Maximilian Wende.
+
+                                                                      cryfs(1)

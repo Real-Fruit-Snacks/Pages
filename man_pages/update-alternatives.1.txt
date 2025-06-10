@@ -1,0 +1,413 @@
+update-alternatives(1)            dpkg suite            update-alternatives(1)
+
+NAMN
+       update-alternatives - underhåller symboliska länkar för att bestämma
+       standardkommandon
+
+SYNOPS
+       update-alternatives [flagga...] åtgärd
+
+BESKRIVNING
+       update-alternatives skapar, tar bort, underhåller och visar information
+       om de symboliska länkar som ingår i Debians alternativsystem.
+
+       Det är möjligt för flera kommandon som tillhandahåller identisk eller
+       liknande funktionalitet att vara installerade på ett system samtidigt.
+       Till exempel har många system flera textredigeringsprogram installerade
+       samtidigt, vilket ger användarna på systemet valmöjligheter, var och en
+       kan använda olika textredigeringsprogram om de så önskar, men det gör
+       det svårt för ett program att göra ett bra val av textredigerare att
+       anropa om en användare inte har gjort ett specifikt val.
+
+       Debians alternativsystem försöker lösa detta problem. Ett generiskt
+       namn i filsystemet delas av alla filer som tillhandahåller utbytbar
+       funktionalitet. Alternativsystemet och systemadministratören anger
+       tillsammans vilken specifik fil som ska refereras av sitt generiska
+       namn. Till exempel kan alternativsystemet låta det generiska namnet
+       /usr/bin/editor att peka mot /usr/bin/nvi som standard om både
+       textredigeringsprogrammet ed(1) och nvi(1) båda är installerade på
+       systemet. Systemadministratören kan överstyra detta och låta det peka
+       på /usr/bin/ed istället, och alternativsystemet kommer inte ändra denna
+       inställning förrän det ombeds att göra det.
+
+       Det generiska namnet är inte en direkt symbolisk länk till det valda
+       alternativet. Istället är det en symbolisk länk till ett namn i
+       katalogen alternatives, vilket i sin tur är en symbolisk länk till den
+       faktiska fil det pekar mot. Detta görs så att systemadministratörens
+       ändringar kan begränsas till katalogen /etc: FHS (se detta) ger orsaker
+       till varför detta är Bra.
+
+       When each package providing a file with a particular functionality is
+       installed, changed or removed, update-alternatives is called to update
+       information about that file in the alternatives system. update-
+       alternatives is usually called from the following Debian package
+       maintainer scripts, postinst (configure) to install the alternative and
+       from prerm and postrm (remove) to remove the alternative.  Note: in
+       most (if not all) cases no other maintainer script actions should call
+       update-alternatives, in particular neither of upgrade nor disappear, as
+       any other such action can lose the manual state of an alternative, or
+       make the alternative temporarily flip-flop, or completely switch when
+       several of them have the same priority.
+
+       It is often useful for a number of alternatives to be synchronized, so
+       that they are changed as a group; for example, when several versions of
+       the vi(1)  editor are installed, the manual page referenced by
+       /usr/share/man/man1/vi.1 should correspond to the executable referenced
+       by /usr/bin/vi.  update-alternatives handles this by means of master
+       and slave links; when the master is changed, any associated slaves are
+       changed too.  A master link and its associated slaves make up a link
+       group.
+
+       En länkgrupp kan vid varje given tidpunkt vara i ett av två lägen:
+       automatisk eller manuell. När en grupp är i automatiskt läge kommer
+       alternativsystemet automatiskt att bestämma när och hur länkar ska
+       uppdateras då paket installeras eller tas bort. I manuellt läge kommer
+       alternativsystemet att behålla administratörens val och undvika att
+       ändra länkarna (förutom om något är trasigt).
+
+       Länkgrupper är i automatiskt läge när de först introduceras på
+       systemet. Om systemadministratören gör ändringar till systemets
+       automatiska inställningar kommer detta att noteras nästa gång update-
+       alternatives körs på den ändrade länkens grupp och gruppen kommer
+       automatiskt att växlas till manuellt läge.
+
+       Varje alternativ har en prioritet kopplad till sig. När en länkgrupp är
+       i automatiskt läge kommer det alternativ som medlemmar i gruppen pekar
+       mot vara den med den högsta prioriteten.
+
+       När flaggan --config används kommer update-alternatives att visa alla
+       val för länkgruppen där namn är huvudalternativnamnet. Det aktuella
+       valet är markerat med en ”*”. Du kommer därefter att få välja vad som
+       ska göras med länkgruppen. Beroende på vad du väljer kommer längruppen
+       inte längre att vara i auto-läge. Du måste använda flaggan --auto för
+       att återgå till automatiskt läge (eller köra --config på nytt och välja
+       alternativet som märkts som automatiskt).
+
+       Om du vill konfigurera icke-interaktivt kan du använda flaggan --set i
+       stället (se nedan).
+
+       Olika paket som tillhandahåller samma fil måste göra så i samförstånd.
+       Det betyder att det är ett krav att alla involverade paket använder sig
+       av update-alternatives. Det är inte möjligt att överstyra en fil ett
+       paket som inte använder update-alternatives-mekanismen.
+
+TERMINOLOGI
+       Efter update-alternatives aktiviteter är ganska komplexa blir det
+       enklare att förstå hur det fungerar genom att vi förklarar några
+       specifika termer.
+
+       generiskt namn (eller alternativlänk).
+           Ett namn, till exempel /usr/bin/editor, som via alternativsystemet
+           pekar på en av flera filer med liknande funktionalitet.
+
+       alternativnamn
+           Namnet på en symbolisk länk i alternativkatalogen.
+
+       alternativ (eller alternativsökväg)
+           Namnet på en specifik fil i filsystemet, som kan vara tillgänglig
+           via ett generiskt namn med hjälp av alternativsystemet.
+
+       alternativkatalog
+           En katalog, som standard /etc/alternatives, som innehåller de
+           symboliska länkarna.
+
+       administrativ katalog
+           En katalog, som standard /var/lib/dpkg/alternatives, som innehåller
+           tillståndsinformation för update-alternatives.
+
+       länkgrupp
+           En uppsättning relaterade symboliska länkar, avsedda att uppdateras
+           som en grupp.
+
+       huvudlänk
+           Alternativlänken i en länkgrupp som bestämmer hur de andra länkarna
+           i gruppen ställs in.
+
+       slavlänk
+           En alternativlänk i en länkgrupp som styrs av hur huvudlänken
+           ställs in.
+
+       automatiskt läge
+           När en länkgrupp är i automatiskt läge försäkrar alternativsystemet
+           att länkarna i gruppen pekar på det högstprioriterade alternativet
+           som är lämpligt för gruppen.
+
+       manuellt läge
+           När en grupp är i manuellt läge kommer inte alternativsystemet att
+           utföra några ändringar till systemadministratörens inställningar.
+
+KOMMANDON
+       --install länk namn sökväg prioritet [--slave länk namn sökväg]...
+           Lägg till en grupp med alternativ till systemet. länk är det
+           generiska namnet för huvudlänken, namn är namnet på dess symboliska
+           länk i alternativkatalogen och sökväg är alternativet som
+           introduceras för huvudlänken. Argumenten efter --slave är det
+           generiska namnet, namnet på den symboliska länken i
+           alternativkatalogen och alternativet för slavlänken. Noll eller
+           flera --slave-flaggor kan anges, där alla följs av tre argument.
+           Observera att om ett slavalternativ inte finns kommer motsvarande
+           slavlänk helt enkelt inte att installeras (en varning kommer
+           fortfarande att visas). Om en verklig fil är installerad där en
+           alternativlänk måste installeras behålls den såvida inte --force
+           används.
+
+           Om det angivna alternativnamnet redan finns i alternativsystemets
+           databas kommer informationen som anges att läggas in som en ny
+           uppsättning av alternativ för gruppen. Om inte kommer en ny grupp,
+           inställd på automatiskt läge, att läggas till med given
+           information. Om gruppen är i automatiskt läge och det alternativ
+           som läggs in har högre prioritet än alla andra installerade
+           alternativ för gruppen kommer de symboliska länkarna att uppdateras
+           så att de pekar på de nyligen tillagda alternativen.
+
+       --set namn sökväg
+           Sätt programmet sökväg som ett alternativ till namn. Detta
+           motsvarar --config men är icke-interaktivt och kan därmed användas
+           i ett skript.
+
+       --remove namn <sökväg>
+           Ta bort ett alternativ och alla dess anknutna slavlänkar. namn är
+           ett namn i alternativkatalogen och sökväg är ett absolut filnamn
+           till vilket namn kunde länkas. Om namn faktiskt är länkat till
+           sökväg kommer namn att uppdateras till att peka på ett annat
+           lämpligt alternativ (och gruppen ställs tillbaka till automatiskt
+           läge), eller att tas bort om det inte finns något alternativ kvar.
+           Anknutna slavlänkar kommer uppdateras eller tas bort på motsvarande
+           vis. Om länken inte för tillfället pekar på sökväg kommer inga
+           länkar att uppdateras, endast informationen om alternativet tas
+           bort.
+
+       --remove-all namn
+           Tar bort alla alternativ och alla deras anslutna slavlänkar. namn
+           är ett namn i alternativkatalogen.
+
+       --all
+           Anropar --config på alla alternativ. Kan med framgång kombineras
+           med --skip-auto för att gå igenom och konfigurera alla alternativ
+           som inte är ställda i automatiskt läge. Trasiga alternativ visas
+           också. Ett enkelt sätt att fixa alla trasiga alternativ är därmed
+           att anropa yes '' | update-alternatives --force --all.
+
+       --auto namn
+           Ställ in länkgruppen bakom alternativet för namn till automatiskt
+           läge. Detta får till följd att den huvudsakliga symboliska länken
+           och dess slavar uppdateras till att peka på det högst prioriterade
+           installerade alternativet.
+
+       --display namn
+           Visa information om länkgruppen. Information som visas är gruppens
+           läge (automatiskt eller manuellt), huvud- och slavlänk, vilket
+           alternativ den huvudsakliga länken just nu pekar på, vilka andra
+           alternativ som är tillgängliga (och deras motsvarande
+           slavalternativ), samt det högst prioriterade alternativ som för
+           närvarande är installerat.
+
+       --get-selections
+           Visa alla huvudalternativnamn (de som styr en länkgrupp) och deras
+           status (sedan version 1.15.0). Varje rad innehåller upp till tre
+           fält (avdelade med ett eller flera blanksteg). Det första fältet är
+           alternativnamnet, det andra är status (antingen auto eller
+           manuell), och det sista innehåller det nuvarande valet för
+           alternativet (observera: detta är ett filnamn och kan därmed
+           innehålla blanksteg).
+
+       --set-selections
+           Läs en alternativkonfiguration från standard in på formatet som
+           skapas av --get-selections och konfigurera om dem på motsvarande
+           sätt (sedan version 1.15.0).
+
+       --query namn
+           Visa information om länkgruppen på samma sätt som --display, men i
+           ett maskintolkbart sätt (sedan version 1.15.0, se stycket
+           FRÅGEFORMAT nedan).
+
+       --list namn
+           Visar alla mål för länkgruppen.
+
+       --config namn
+           Visa tillgängliga alternativ för en länkgrupp och låt användaren
+           att interaktivt välja vilken som ska användas. Länkgruppen
+           uppdateras.
+
+       --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+FLAGGOR
+       --altdir katalog
+           Anger alternativkatalogen om detta inte ska vara förvalet. Förval
+           är ”/etc/alternatives”.
+
+       --admindir katalog
+           Anger den administrativa katalogen om detta inte ska vara förvalet.
+           Förval är ”/var/lib/dpkg/alternatives” om DPKG_ADMINDIR inte har
+           satts.
+
+       --instdir katalog
+           Anger installationskatalogen där alternativlänkar kommer skapas
+           (sedan version 1.20.1). Förval är ”/” om DPKG_ROOT inte har satts.
+
+       --root katalog
+           Anger rotkatalogen (sedan version 1.20.1). Detta sätter också
+           alternativkatalog, installationskatalog och administrativ katalog
+           motsvarande. Förval är ”/” om DPKG_ROOT inte har satts.
+
+       --log fil
+           Anger loggfilen (sedan version 1.15.0), om det ska vara en annan än
+           förvalet (/var/log/alternatives.log).
+
+       --force
+           Låt att ersätta eller ta bort en verklig fil som installerats där
+           en alternativlänk måste installeras eller tas bort.
+
+       --skip-auto
+           Hoppa över konfigureringsfrågor för alternativ som är korrekt
+           konfigurerade i automatiskt läge. Denna flagga är endast relevant
+           för --config och --all.
+
+       --quiet
+           Skriv inte några kommentarer såvida det inte uppstår ett fel.
+
+       --verbose
+           Visa fler kommentarer om vad update-alternatives gör.
+
+       --debug
+           Visa ännu fler kommentarer, användabara för felsökning, om vad som
+           görs (sedan version 1.19.3).
+
+RETURVÄRDE
+       0   Den önskade funktionen utfördes utan fel.
+
+       2   Problem uppstod vid tolkning av kommandoraden eller när funktionen
+           skulle utföras.
+
+MILJÖVARIABLER
+       DPKG_ROOT
+           Om satt och flaggan --instdir eller -root inte har angivits kommer
+           det användas som filsystemets rotkatalog.
+
+       DPKG_ADMINDIR
+           Om satt och flaggan --admindir inte har angivits används det som
+           bas-administrativ katalog.
+
+FILER
+       /etc/alternatives/
+           Den förvalda alternativkatalogen. Kan överstyras med flaggan
+           --altdir.
+
+       /var/lib/dpkg/alternatives/
+           Den förvalda administrativa katalogen. Kan överstyras med flaggan
+           --admindir.
+
+FRÅGEFORMAT
+       Formatet för --query använder ett RFC822-liknande platt format. Det
+       består av n + 1 stycken där n är antalet tillgängliga alternativ i den
+       efterfrågade länkgruppen. Det första stycket innehåller följande fält:
+
+       Namn: namn
+           Alternativets namn i den alternativa katalogen.
+
+       Link: länk
+           Generiskt namn för alternativet.
+
+       Slaves: lista-över-slavar
+           När detta fält är tillgängligt innehåller next-raderna alla
+           slavlänkar som kopplas till huvudlänken för alternativet. Varje rad
+           beskriver en slav. Varje rad innehåller ett blanksteg, det
+           generiska namnet på slavalternativet, ytterligare ett blanksteg,
+           och sökvägen till slavalternativet.
+
+       Status: status
+           Status för alternativet (auto eller manual).
+
+       Best: bästa-val
+           Sökvägen till det bästa alternativet i länkgruppen. Tas inte med om
+           inget alternativ är tillgängligt.
+
+       Value: för-närvarande-valt-alternativ
+           Sökvägen till det för närvarande valda alternativet. Kan även ta
+           det magiska värdet none (inget). Det används om det inte finns
+           någon länk.
+
+       Övriga stycken beskriver tillgängliga alternativ i den efterfrågade
+       länkgruppen:
+
+       Alternative: sökväg-till-alternativet
+           Sökväg till alternativet som beskrivs i stycket.
+
+       Priority: prioritetsvärde
+           Värdet för prioriteten på alternativet.
+
+       Slaves: lista-över-slavar
+           När detta fält anges innehåller next-raderna alla slavalternativ
+           som kopplas till huvudlänken för alternativet. Varje rad beskriver
+           en slav. Varje rad innehåller ett blanksteg, det generiska namnet
+           på slavalternativet, ytterligare ett blanksteg, och sökvägen till
+           slavalternativet.
+
+   Exempel
+        $ update-alternatives --query editor
+        Name: editor
+        Link: /usr/bin/editor
+        Slaves:
+         editor.1.gz /usr/share/man/man1/editor.1.gz
+         editor.fr.1.gz /usr/share/man/fr/man1/editor.1.gz
+         editor.it.1.gz /usr/share/man/it/man1/editor.1.gz
+         editor.pl.1.gz /usr/share/man/pl/man1/editor.1.gz
+         editor.ru.1.gz /usr/share/man/ru/man1/editor.1.gz
+        Status: auto
+        Best: /usr/bin/vim.basic
+        Value: /usr/bin/vim.basic
+
+        Alternative: /bin/ed
+        Priority: -100
+        Slaves:
+         editor.1.gz /usr/share/man/man1/ed.1.gz
+
+        Alternative: /usr/bin/vim.basic
+        Priority: 50
+        Slaves:
+         editor.1.gz /usr/share/man/man1/vim.1.gz
+         editor.fr.1.gz /usr/share/man/fr/man1/vim.1.gz
+         editor.it.1.gz /usr/share/man/it/man1/vim.1.gz
+         editor.pl.1.gz /usr/share/man/pl/man1/vim.1.gz
+         editor.ru.1.gz /usr/share/man/ru/man1/vim.1.gz
+
+DIAGNOSTIK
+       Med --verbose kommer update-alternatives att beskriva i det oändliga
+       vad det gör på sin standard ut-kanal. Om ett fel uppstår skriver
+       update-alternatives ut felmeddelanden på sin standard fel-kanal och
+       avslutar med felkoden 2. Diagnostikinformationen bör vara
+       självförklarande, sänd in en felrapport om du inte tycker att den är
+       det.
+
+EXEMPEL
+       Det är flera paket som tillhandahåller en textredigerare kompatibel med
+       vi, till exempel nvi och vim. Vilken bestäms via länkgruppen vi, vilken
+       innehåller länkar både för själva programmet och dessa anknutna
+       manualsida.
+
+       För att visa vilka tillgängliga paket som tillhandahåller vi, samt dess
+       aktuella inställning, använd kommandot --display:
+
+        update-alternatives --display vi
+
+       För att välja en specifik implementation av vi, utför detta kommando
+       som root och välj sedan ett tal från listan:
+
+        update-alternatives --config vi
+
+       För att återgå till att vi-implementationen väljs automatiskt, utför
+       detta som root:
+
+        update-alternatives --auto vi
+
+SE ÄVEN
+       ln(1), FHS (the Filesystem Hierarchy Standard).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06            update-alternatives(1)

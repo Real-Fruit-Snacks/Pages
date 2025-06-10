@@ -1,0 +1,250 @@
+dpkg-maintscript-helper(1)        dpkg suite        dpkg-maintscript-helper(1)
+
+NAMN
+       dpkg-maintscript-helper - går runt kända dpkg-begränsningar i
+       paketskript
+
+SYNOPS
+       dpkg-maintscript-helper kommando [flagga...] -- maint-script-flagga...
+
+KOMMANDON OCH PARAMETRAR
+       supports kommando
+       rm_conffile konffil [tidigare-version [paket]]
+       mv_conffile gammalkonffil nykonffil [tidigare-version [paket]]
+       symlink_to_dir sökväg gammalt-mål [tidigare-version [paket]]
+       dir_to_symlink sökväg nytt-mål [tidigare-version [paket]]
+
+BESKRIVNING
+       Programmet skrevs för att köras i paketskript för att utföra en del
+       åtgärder som dpkg (ännu) inte själv kan hantera, antingen på grund av
+       designval eller på grund av nuvarande begränsningar.
+
+       Many of those tasks require coordinated actions from several maintainer
+       scripts (preinst, postinst, prerm, postrm). To avoid mistakes the same
+       call simply needs to be put in all scripts and the program will
+       automatically adapt its behavior based on the environment variable
+       DPKG_MAINTSCRIPT_NAME and on the maintainer scripts arguments that you
+       have to forward after a double hyphen.
+
+       This program was introduced in dpkg 1.15.7.
+
+DELADE PARAMETRAR
+       tidigare-version
+           Anger den senaste version av paketet vars uppgradering ska orsaka
+           händelsen. Det är viktigt att beräkna tidigare-version korrekt så
+           att operationerna utförs korrekt även om användaren byggt om
+           paketet med en lokal version. Om tidigare-version är tom eller
+           utelämnas försöks operationen vid varje uppgradering (notera: det
+           är säkrare att ange versionen och endast försöka utföra operationen
+           en gång).
+
+           Om konffilen inte har sänts med i flera versioner och du nu
+           uppdaterar utvecklarskripten till att städa bort den gamla filen
+           bör tidigare-version baseras på den version av paketet du nu
+           förbereder, inte den första version av paketet som saknade
+           konffilen. Detta gäller på samma sätt för alla andra åtgärder.
+
+           Som ett exempel, för en konffil som togs bort i version 2.0-1 av
+           ett paket bör tidigareversion sättas till 2.0-1~. Detta får
+           konffilen att tas bort även om användaren bygger om den tidigare
+           versionen 1.0-1 som 1.0-1local1. Eller ett paket som bytt en sökväg
+           från att vara en symbolisk länk (skeppad i version 1.0-1) till en
+           katalog (skeppad i version 2.0-1), men bara utfört själva ändringen
+           i utvecklarskripten i version 3.0-1, bör sätta tidigareversion till
+           3.0-1~.
+
+       paket
+           Paketnamnet som äger sökvägsnamnet/-en. När paketet är ”Multi-Arch:
+           same” måste parametern innehålla arkitekturkvalificeraren, i andra
+           fall bör den inte innehålla arkitekturkvalificeraren (eftersom det
+           skulle hindra korsgraderingar, eller byte från att vara
+           arkitekturspecifikt till all-arkitektur eller vice veras). Om
+           parametern är tom eller inte anges, kommer miljövariablerna
+           DPKG_MAINTSCRIPT_PACKAGE och DPKG_MAINTSCRIPT_ARCH (som satta av
+           dpkg när utvecklarskripten körs) att användas för att skapa ett
+           arkitekturkvalificerat paketnamn.
+
+       --  Alla parametrar till utvecklarskripten måste vidaresändas till
+           programmen efter --.
+
+KONFFIL-RELATERADE ÅTGÄRDER
+       När ett paket uppgraderas kommer dpkg inte att automatiskt ta bort en
+       konffil (en konfigurationsfil för vilken dpkg ska behålla användarens
+       ändringar) om den inte finns i den nya versionen. Det finns två
+       grundläggande skäl till detta; den första är att konffilen kan ha
+       tappats av misstag och nästa version kan komma att återställa den,
+       varpå användaren inte vill tappa sina ändringar. Den andra är att för
+       att göra det möjligt för paket att gå över från en dpkg-hanterad
+       konffil till en fil som hanteras av paketets skript, vanligtvis genom
+       ett verktyg som debconf eller ucf.
+
+       Det innebär att, om paketet menar att byta namn eller ta bort en
+       konfigurationsfil, så måste det göra så explicit, och då kan dpkg-
+       maintscript-helper användas för att implementera en elegant borttagning
+       och flyttning av konffiler i paketscripten.
+
+   Ta bort en konffil
+       Note: This can be replaced in most cases by the "remove-on-upgrade"
+       flag in DEBIAN/conffiles (since dpkg 1.20.6), see deb-conffiles(5).
+
+       Om en konffil helt tas bort bör den tas bort från disk, såvida inte
+       användaren har modifierat den. Om det finns lokala ändringar bör de
+       bibehållas. Om paketuppgraderingen avbryts bör inte konffilen som just
+       blev föråldrad försvinna.
+
+       Allt detta implementeras genom att lägga in följande skalkod i
+       paketskripten preinst, postinst och postrm:
+
+            dpkg-maintscript-helper rm_conffile \
+               konffil tidigare-version paket -- "$@"
+
+       konffil är namnet på konffilen som ska tas bort.
+
+       Aktuell implementation: i preinst kontrolleras om konffilen ändrades
+       och i så fall byts namnet på den till antingen konffil.dpkg-remove (om
+       inte modifierad) eller till konffil.dpkg-backup (om modifierad). I
+       postinst byts namnet på den sistnämnda filen till konffil.dpkg-bak och
+       behålls som referens om den innehåller ändringar av användaren, medan
+       den tidigare kommer att tas bort. Om paketuppgraderingen avbryts kommer
+       postrm att ominstallera den ursprungliga konffilen. Vid borttagning
+       kommer postrm även att ta bort .dpkg-bak-filen som behållits fram till
+       dess.
+
+   Byta namn på en konffil
+       Om en konffil flyttas från en plats till en annan måste du se till att
+       du flyttar med eventuella ändringar gjorda av användaren. Detta kan
+       först verka vara en enkel ändring av preinst-skriptet, men det kommer
+       leda till att användaren ombeds att godkänna ändringar i konffilen för
+       dpkg, även om denne inte är ansvarig för dem.
+
+       En elegant namnändring kan implementeras genom att lägga in följande
+       skalkod i paketskripten preinst, postinst och postrm:
+
+            dpkg-maintscript-helper mv_conffile \
+               gammal-konffil ny-konffil tidigare-version paket -- "$@"
+
+       gammalkonffil och nykonffil är de gamla och nya namnen på konffilen
+       vars namn ska bytas.
+
+       Aktuell implementation: I preinst kontrolleras om konffilen har
+       ändrats, om ja lämnas den kvar på plats, annars byts namnet på den till
+       gammalkonffil.dpkg-remove. Vid konfigurering tar postinst bort
+       gammalkonffil.dpkg-remove och byter namn på gammalkonffil till
+       nykonffil om gammalkonffil fortfarande finns. Vid avbruten uppgradering
+       eller installation byter postrm tillbaka namnet från
+       gammalkonffil.dpkg-remove till gammalkonffil om så behövs.
+
+VÄXLING MELLAN SYMLÄNKAR OCH KATALOGER
+       Vid uppgradering av ett paket kommer dpkg inte att automatiskt byta ut
+       en symbolisk länk mot en katalog, eller omvänt. Nedgraderingar stöds
+       inte och sökvägen kommer lämnas som den var.
+
+       Note: The symlinks and directories created during these switches need
+       to be shipped in the new packages, or dpkg will not be able to remove
+       them on purge.
+
+   Byta en symbolisk länk mot en katalog
+       Om en symbolisk länk byts mot en riktig katalog måste du se till att
+       den symboliska länken tas bort innan uppackningen. Detta kan först
+       verka vara en enkel ändring av preinst-skriptet, men det kommer leda
+       till vissa problem om den lokale administratören har justerat den
+       symboliska länken, eller om paketet ska nedgraderas.
+
+       En elegant namnändring kan implementeras genom att lägga in följande
+       skalkod i paketskripten preinst, postinst och postrm:
+
+            dpkg-maintscript-helper symlink_to_dir \
+               sökvägsnamn gammalt-mål tidigare-version paket -- "$@"
+
+       sökväg är den absoluta sökvägen för den gamla symboliska länken
+       (sökvägen kommer vara en katalog när installationen är färdig) och
+       gammalt-mål är målet på den tidigare symboliska länken i sökväg. Den
+       kan antingen vara absolut eller relativ till katalogen som innehåller
+       sökväg.
+
+       Aktuell implementation: I preinst kontrolleras om den symboliska länken
+       finns och pekar på gammalt-mål, om inte lämnas den kvar, i annat fall
+       byts namnet ut mot sökväg.dpkg-backup. Vid konfigurering tar postinst
+       bort sökväg.dpkg-bakcup om sökväg.dpkg-backup fortfarande är en
+       symbolisk länk. Vid avbruten uppgradering eller installation byter
+       postrm tillbaka namnet från sökväg.dpkg-bakcup till sökväg om så
+       behövs.
+
+   Byta en symbolisk länk mot en katalog
+       Om en riktig katalog byts mot en symbolisk länk måste du se till att
+       katalogen tas bort innan uppackningen. Detta kan först verka vara en
+       enkel ändring av preinst-skriptet, men det kommer leda till vissa
+       problem om katalogen innehåller konffiler, sökvägar som ägs av andra
+       paket, lokalt skapade sökvägar, eller om paketet ska nedgraderas.
+
+       Ett elegant byte kan implementeras genom att lägga in följande skalkod
+       i paketskripten preinst, postinst och postrm:
+
+            dpkg-maintscript-helper dir_to_symlink \
+               sökvägsnamn nytt-target tidigare-version paket -- "$@"
+
+       sökväg är det absoluta namnet på den gamla katalogen (sökvägen kommer
+       vara en symbolisk länk när installationen är färdig) och nytt-mål är
+       målet på den nya symboliska länken i sökväg. Den kan antingen vara
+       absolut eller relativ till katalogen som innehåller sökväg.
+
+       Aktuell implementation: I preinst kontrolleras om katalogen finns, inte
+       innehåller konffiler, sökvägar som ägs av andra paket, eller lokalt
+       skapade sökvägar, om inte så kommer den lämnas kvar, annars byts namnet
+       ut mot sökväg.dpkg-backup och en tom samlingsplatskatalog skapas i
+       sökväg, markerad med en fil så att dpkg kan hålla ordning på den. Vid
+       konfigurering slutför postinst växlingen om sökväg.dpkg-backup
+       fortfarande är en katalog och sökväg är samlingsplatskatalogen; den tar
+       bort märkningsfilen, flyttar nyligen skapade filer inuti
+       samlingskatalogen till målet för den symboliska länken nytt-mål/,
+       ersätter den nu tomma samlingskatalogen sökväg med en symbolisk länk
+       till nytt-mål och tar bort sökväg.dpkg-backup. Vid avbruten
+       uppgradering eller installation byter postrm tillbaka namnet från
+       sökväg.dpkg-backup till sökväg om så behövs.
+
+INTEGRERA I PAKET
+       När ett paketeringshjälpprogram används, kontrollera att det har direkt
+       integrering med dpkg-maintscript-helper, något som kan göra ditt liv
+       enklare. Se till exempel dh_installdeb(1).
+
+       Givet att dpkg-maintscript-helper används i preinst så innebär detta
+       villkorslöst att ett förhandsberoende (”pre-dependency”) krävs för att
+       försäkra att den nödvändiga versionen av dpkg redan har packats upp.
+       Den version som krävs beror på vilket kommando som används, för
+       rm_conffile och mv_conffile är det 1.15.7.2, för symlink_to_dir och
+       dir_to_symlnk är det 1.17.14:
+
+        Pre-Depends: dpkg (>= 1.17.14)
+
+       Men i många fall är operationen som utförs av programmet inte kritiskt
+       för paketet, och istället för att använda ett förhandsberoende kan vi
+       anropa programmet endast om vi vet att det nödvändiga kommandot stöds
+       av den nu installerade dpkg:
+
+            if dpkg-maintscript-helper supports kommando; then
+               dpkg-maintscript-helper kommando ...
+            fi
+
+       Kommandot supports returnerar 0 vid framgång, annars 1. Kommandot
+       supports kontrollerar om miljövariablerna som sätts av dpkg och som
+       krävs av skriptet är närvarande, och kommer anse det som ett fel om
+       miljövariablerna inte är tillräckliga.
+
+MILJÖVARIABLER
+       DPKG_ROOT
+           Om satt kommer det användar som filsystemets rotkatalog.
+
+       DPKG_ADMINDIR
+           Omm satt kommer det användas som dpkg:s datakatalog.
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.19.1). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+SE ÄVEN
+       dh_installdeb(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06        dpkg-maintscript-helper(1)

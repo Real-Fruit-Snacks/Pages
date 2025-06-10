@@ -1,0 +1,158 @@
+deb-changes(5)                    dpkg suite                    deb-changes(5)
+
+NAMN
+       dpkg-changes - filformat för Debians ändringsfiler
+
+SYNOPS
+       filnamn.changes
+
+BESKRIVNING
+       Varje Debianinsändning består av en styrfil .changes, som innehåller
+       ett antal fält i deb822(5)-format.
+
+       Varje fält börjar med en etikett, såsom Source eller Binary
+       (skiftlägesoberoende), följt av ett kolontecken och fältets kropp
+       (skiftlägesberoende såvida inte annat anges). Fält avdelas endast av
+       fältetiketter. Med andra ord kan texten i fälten spänna över flera
+       rader, men installationsverktygen kommer oftast att slå samman rader
+       när kroppen tolkas (förutom när det gäller flerradsfälten Description,
+       Changes, Files, Checksums-Sha1 och Checksums-Sha256, se nedan).
+
+       Styrinformationen kan omges av en OpenPGP-signatur i ASCII-skal, såsom
+       beskrivs i RFC4880.
+
+FÄLT
+       Format: formatversion (krävs)
+           Värdet för fältet anger filens formatversion. Fältets syntax är ett
+           versionsnummer med en huvud- och en underdel. Ändringar som inte är
+           bakåtkompatibla ökar huvudversionen medan ändringar som är
+           bakåtkompatibla (till exempel nya fält) ökar underversionen.
+           Aktuell formatversion är 1.8.
+
+       Date: utgivningsdatum (krävs)
+           Det datum då paketet sist byggdes eller redigerades. Det måste vara
+           på samma format som datumet i deb-changelog(5)-posten.
+
+           Värdet på fältet hämtas vanligtvis ut från filen debian/changelog.
+
+       Source: källkodsnamn [(källkodsversion)] (krävs)
+           Namnet på källkodspaketet. Om versionen på källkoden inte är samma
+           som versionen på binären kommer källkodsnamn åtföljas av en
+           källkodsversion i parentes. Detta kan uppstå när bygget är för en
+           insändning bestående av enbart binärer från någon annan än den
+           paketansvarige (”binary-only non-maintainer upload”).
+
+       Binary: binärpaketlista (krävs i sammanhang)
+           Det här flerdelade fältet är en blankstegsavdelad lista över
+           binärpaket som ska sändas in. Om insändningen endast består av
+           källkod kan fältet utelämnas (sedan dpkg 1.19.3).
+
+       Architecture: arklista>
+           Listar arkitekturer för de filer som sänds in just nu. Vanliga
+           arkitekturer är amd64, armel, i386, osv. Observera att värdet all
+           är avsett för paket som är oberoende av arkitektur. Om källkoden
+           för paketet också sänds in måste specialvädet source också tas med.
+           Arkitekturer med jokertecken är inte tillåtna i listan.
+
+       Version: versionssträng (krävs)
+           Vanligtvis är detta det ursprungliga paketets versionsnummer på den
+           form programmets författare använder. Den kan även innehålla ett
+           Debianuppdateringsnummer (för paket vars källa är utanför Debian).
+           Exakt format och sorteringsalgoritm beskrivs i deb-version(7).
+
+       Distribution: distributioner (krävs)
+           Listar en eller flera blankstegsavdelade distributioner där denna
+           version ska installeras när den har sänts in till arkivet.
+
+       Urgency: brådska (rekommenderas)
+           Hur brådskande insändningen är. De för närvarande kända värdena,
+           sorterande från minst till mest brådskande, är: low, medium, high,
+           critical and emergency.
+
+       Maintainer: fullt-namn-epost (krävs)
+           Ska vara på formatet ”Joe Bloggs <jbloggs@example.org>” och är
+           normalt sett den person som skapat paketet, till skillnad från
+           författaren av den programvara som paketerades.
+
+       Changed-By: fullt-namn-epost
+           Ska vara på formatet ”Joe Bloggs <jbloggs@example.org>” och är
+           normalt sett den person som förberett paketändringarna för denna
+           utgåva.
+
+       Description: (rekommenderas)
+        binärpaketnamn - binärpaketsammanfattning
+           Detta flerradiga fält innehåller en lista över binärpaketnamn följt
+           av ett blanksteg, ett bindestreck (”-”) och deras möjligen
+           avkortade korta beskrivningar. Om insändningen endast består av
+           källkod kan fältet utelämnas (sedan dpkg 1.19.3).
+
+       Closes: felnummer-lista
+           En blankstegsavdelad lista över felrapportnummer för felrapporter
+           som lösts med denna insändning. Distributionsarkivprogramvaran kan
+           använda detta fält för att automatiskt stänga de angivna
+           felrapporterna i distributionens felrapporteringssystem.
+
+       Binary-Only: yes
+           Det här fältet anger att insändningen är bestående av enbart
+           binärer från någon annan än den paketansvarige (”binary-only non-
+           maintainer build”). Den kommer från nyckeln och värdet
+           binary-only=yes i ändringsloggens metadatafält.
+
+       Built-For-Profiles: profillista
+           Det här fältet anger en blankstegsavdelad lista över byggprofiler
+           som insändningen byggdes med.
+
+       Changes: (krävs)
+        ändringsloggposter
+           Det här flerradiga fältet innehåller den sammanslagna texten från
+           alla ändringsloggposter som är en del av insändningen. För att göra
+           fältet till ett giltigt flerradsfält ersätts tomma rader med en
+           ensam punkt (”.”) och alla rader får ett teckens indrag. Exakt
+           innehåll beror på formatet på ändringsloggen.
+
+       Files: (krävs)
+        md5summa storlek sektion prioritet filnamn
+           Det här flerradiga fältet innehåller en lista över filer
+           tillsammans med md5-summa, storlek, sektion och prioritet för var
+           och en av dem.
+
+           Första raden i fältvärdet (delen av på samma rad som fältnamnet
+           följt av kolon) är alltid tom. Innehållet i fältet anges som
+           fortsättningsrader, en rad per fil. Varje rad består av
+           blankstegsavdelade fält som beskriver filen: md5-summan,
+           filstorleken, filsektionen, filprioriteten och filnamnet.
+
+           Det här fälten visar alla filer insändningen består av. Listan över
+           filer i fältet måste motsvara listan över filer i de andra
+           relaterade Checksums-fälten.
+
+       Checksums-Sha1: (krävs)
+       Checksums-Sha256: (krävs)
+        kontrollsumma storlek filnamn
+           De här flerradsfälteten innehåller en lista med filer med en
+           kontrollsumma och storlek för var och en. Fälten har samma syntax
+           och skiljer sig bara vad gäller vilken kontrollsummealgoritm som
+           används: SHA-1 för Checksums-Sha1 och SHA-256 för Checksums-Sha256.
+
+           Första raden i fältvärdet (delen av på samma rad som fältnamnet
+           följt av kolon) är alltid tom. Innehållet i fältet anges som
+           fortsättningsrader, en rad per fil. Varje rad består av
+           blankstegsavdelade fält som beskriver filen: kontrollsumman,
+           filstorleken och filnamnet.
+
+           De här fälten visar alla filer insändningen består av. Listan över
+           filer i fälten måste motsvara listan över filer i fältet Files och
+           de andra relaterade Checksums-fälten.
+
+PROGRAMFEL
+       Fältet Files är inte konsistent med de andra Checksums-fälten. Fälten
+       Changed-By ocha Maintainer har förvirrande namn. Fältet Distribution
+       innehåller information om vad som vanligtvis kallas en svit (”suite”).
+
+SE ÄVEN
+       deb822(5), deb-src-control(5), deb-version(7).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                    deb-changes(5)

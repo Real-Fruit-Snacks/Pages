@@ -1,0 +1,232 @@
+fakeroot(1)                      Debian manual                     fakeroot(1)
+
+NAMN
+       fakeroot  -  utför  ett kommando i en miljö som fejkar root-privilegier
+       för filmanipulation
+
+SYNOPSIS
+       fakeroot [-l|--lib bibliotek] [--faked fejkad-binär]  [-i  läsfil]  [-s
+       sparfil]   [-u|--unknown-is-real   ]   [-b|--fd-base   ]  [-h|--help  ]
+       [-v|--version ] [--] [kommando]
+
+BESKRIVNING
+       fakeroot utför ett kommando i  en  miljö  där  kommandot  tror  sig  ha
+       root-privilegier  för  filmanipulering.  Detta är användbart för att ge
+       användare möjlighet att skapa arkiv (tar, ar, .deb osv) som  innehåller
+       filer  med  root-rättigheter/ägarskap. Utan fakeroot tvingas man att ha
+       root-privilegier för att skapa de filer arkivet består av  med  korrekt
+       ägarskaps-  och  rättighetsinformation,  alternativt konstruera arkiven
+       manuellt utan att använda arkiveringsprogrammet.
+
+       fakeroot works by replacing the  file  manipulation  library  functions
+       (chmod(2),  stat(2) etc.) by ones that simulate the effect the real li‐
+       brary functions would have had, had the user really  been  root.  These
+       wrapper  functions  are in a shared library /usr/lib/*/libfakeroot-*.so
+       or similar location on your platform.   The  shared  object  is  loaded
+       through the LD_PRELOAD mechanism of the dynamic loader. (See ld.so(8))
+
+       Om  du planerar att bygga paket med hjälp av fakeroot, försök först att
+       bygga fakeroot-paketet: ”debian/rules build”-stadiet har ett par tester
+       (som  mestadels testar efter buggar i gamla versioner av fakeroot).  Om
+       dessa tester misslyckas (till exempel på grund  av  att  du  har  vissa
+       libc5-program på ditt system) så är det troligt att du också kommer att
+       misslyckas bygga andra paket, och det är möjligt att dessa fel blir be‐
+       tydligt svårare att hitta.
+
+       Märk  väl  att det är bäst att inte bygga binärerna själva med hjälp av
+       fakeroot. Särskilt configure och liknande program ogillar att  systemet
+       plötsligt  beter  sig  annorlunda än vad de förväntar sig. Det är också
+       möjligt att dessa program rensar bort vissa miljövariabler som fakeroot
+       behöver.
+
+FLAGGOR
+       -l bibliotek, --lib bibliotek
+              Ange ett alternativt bibliotek med ersättningsfunktioner.
+
+       --faked binär
+              Ange en alternativ binär att använda istället för faked(1).
+
+       [--] kommando
+              Det  kommando som du vill att fakeroot skall utföra. Använd ‘--’
+              om kommandot har andra flaggor som kan tänkas förvirra fakeroots
+              tolkning av kommandoradsflaggor.
+
+       -s sparfil
+              Spara  fakeroot-miljön  till  sparfil  vid avslut. Denna fil kan
+              användas för att senare återställa miljön med -i. Men  om  denna
+              filen  skulle  läcka  kommer fakeroot börja bete sig på konstiga
+              sätt om du inte låter bli filerna som använts inuti fakeroot när
+              du  är  utanför  miljön. Detta kan dock fortfarande vara använd‐
+              bart. Det kan till exempel användas med rsync(1) för att  säker‐
+              hetskopiera   och  återställa  hela  katalogträd  kompletta  med
+              användare, grupp och  enhetsinformation  utan  att  behöva  vara
+              root. Se /usr/share/doc/fakeroot/README.saving för vidare infor‐
+              mation.
+
+       -i läsfil
+              Läs in en  fakeroot-miljö  som  tidigare  sparats  via  -s  från
+              läsfil.  Notera  att detta inte implicit sparar filen, använd -s
+              också för det beteendet. Användning av samma fil för både -i och
+              -s vid samma fakeroot-körning är säkert.
+
+       -u, --unknown-is-real
+              Använd  det  riktiga  ägarskapet  för filer som inte tidigare är
+              kända av  fakeroot  istället  för  att  låtsas  att  de  ägs  av
+              root:root.
+
+       -b fd  Ange  fd-bas  (endast TCP-läge). fd är det minsta fildeskriptor‐
+              nummer som används för TCP-anslutningar; detta kan vara  viktigt
+              för  att undvika konflikter med fildeskriptorerna som används av
+              program som körs under fakeroot.
+
+       -h     Visa hjälp.
+
+       -v     Visa version.
+
+EXEMPEL
+       Här är ett exempel på hur fakeroot kan användas.  Notera att i den  fe‐
+       jkade  root-miljön  så  lyckas  filmanipulering  som kräver root-privi‐
+       legier, trots att den egentligen inte utförs.
+
+       $  whoami
+       joost
+       $ fakeroot /bin/bash
+       #  whoami
+       root
+       # mknod hda3 b 3 1
+       # ls -ld hda3
+       brw-r--r--   1 root     root       3,   1 Jul  2 22:58 hda3
+       # chown joost:root hda3
+       # ls -ld hda3
+       brw-r--r--   1 joost    root       3,   1 Jul  2 22:58 hda3
+       # ls -ld /
+       drwxr-xr-x  20 root     root         1024 Jun 17 21:50 /
+       # chown joost:users /
+       # chmod a+w /
+       # ls -ld /
+       drwxrwxrwx  20 joost    users        1024 Jun 17 21:50 /
+       # exit
+       $ ls -ld /
+       drwxr-xr-x  20 root     root         1024 Jun 17 21:50 //
+       $ ls -ld hda3
+       -rw-r--r--   1 joost    users           0 Jul  2 22:58 hda3
+
+       Enbart de operationer som användaren joost skulle  kunna  ha  genomfört
+       som sig själv utförs på riktigt.
+
+       fakeroot  skrevs speciellt i syfte att ge användare möjlighet att skapa
+       Debian GNU/Linux-paket (i deb(5) format) utan  att  behöva  root-privi‐
+       legier.   Detta  kan  utföras  genom  kommandon såsom dpkg-buildpackage
+       -rfakeroot eller debuild -rfakeroot (-rfakeroot är  numera  standard  i
+       debuild, så du behöver inte ens använda den parametern).
+
+SÄKERHETSASPEKTER
+       fakeroot  är  ett  vanligt program utan setuid. Det ger inte användaren
+       några extra privilegier, och minskar inte systemets säkerhet.
+
+FILER
+       /usr/lib/*/libfakeroot-*.so The shared library containing  the  wrapper
+       functions.
+
+MILJÖ
+       FAKEROOTKEY
+              Den nyckel som används för att kommunicera med fakeroot-demonen.
+              Varje program som startats med korrekt LD_PRELOAD och  en  FAKE‐
+              ROOTKEY för en körande demon kommer automatiskt att ansluta till
+              den demonen, och kommer att ha samma fejkade syn på filsystemets
+              ägarskap  och  rättigheter (givet att demonen och programmet som
+              ansluter till den startats av samma användare).
+
+       LD_LIBRARY_PATH
+
+       LD_PRELOAD
+              Fakeroot är implementerat av ersättning  av  systemanrop.  Detta
+              åstadkoms  genom att ställa in LD_LIBRARY_PATH=/usr/lib/fakeroot
+              och LD_PRELOAD=libfakeroot.so.0. Det biblioteket läses in  innan
+              systemets  C-bibliotek, och därför kan de flesta biblioteksfunk‐
+              tioner genskjutas av det.  Om  du  behöver  ställa  in  antingen
+              LD_LIBRARY_PATH  eller  LD_PRELOAD inifrån en fakeroot-miljö bör
+              den ställas in relativt till de givna sökvägarna, d.v.s.  LD_LI‐
+              BRARY_PATH=$LD_LIBRARY_PATH:/foo/bar/
+
+BEGRÄNSNINGAR
+       Biblioteksversioner
+              Varje  kommando  som  utförs inom fakeroot måste vara länkat mot
+              samma version av libc som fakeroot självt.
+
+       open()/create()
+              fakeroot innehåller inga ersättningsfunktioner för open(),  cre‐
+              ate(), osv. Så om användaren joost antingen utför
+
+              touch foo
+              fakeroot
+              ls -al foo
+
+              eller omvänt,
+
+              fakeroot
+              touch foo
+              ls -al foo
+
+              så  kan  fakeroot inte på något sätt känna till att i det första
+              fallet så borde ägaren för filen foo vara joost men i det senare
+              fallet  root.  När  det gäller Debian-paket, så är det alltid ok
+              att ge alla ”okända” filer uid=gid=0. Den korrekta lösningen  på
+              det  här  problemet  är  att  även ha en ersättningsfunktion för
+              open() och create(), men det skapar andra problem, såsom paketet
+              libtricks visar exempel på. Det paketet har ersättningar för be‐
+              tydligt fler funktioner, och försökte att göra betydligt mer  än
+              fakeroot  .  Det  visade  sig att en smärre uppgradering av libc
+              (från en version där  funktionen  stat()  inte  använde  sig  av
+              open() till en version där stat() ibland använde sig av open()),
+              orsakade oförklarliga krascher (dvs,  stat()  i  libc6  anropade
+              ersättningsfunktionen för open(), som senare anropade libc6 ver‐
+              sion av stat(), osv).
+
+       GNU configure (och liknande program)
+              fakeroot ändrar i praktiken hur systemet beter sig. Program  som
+              försöker  känna av systemets beteende (exempelvis GNU configure)
+              kan bli förvirrade av detta (och även om de inte blir det så kan
+              fakeroot  bli  förvirrat).  Därför är det inte rekommenderat att
+              utföra ”configure” inifrån fakeroot. Då configure bör anropas av
+              ”debian/rules build”, så borde ”dpkg-buildpackage -rfakeroot” ta
+              hand om detta på ett korrekt sätt.
+
+BUGGAR
+       fakeroot har ingen ersättningsfunktion för open(). Detta i  sig  självt
+       är  inget  fel,  men  om  ett program utför open("fil", O_WRONLY, 000),
+       försöker skriva till filen ”fil”, stänger den, och sedan  försöker  att
+       läsa  filen,  så  misslyckas detta då filen kommer att ha rättigheterna
+       000. Felet består i att om en process med root-privilegier försöker sig
+       på  det  samma,  så  kommer  anropet  till  open() att lyckas, eftersom
+       filrättigheter inte kontrolleras alls för  root.  Jag  valde  att  inte
+       skriva  ersättningsfunktioner  för  open(),  eftersom open() används av
+       många andra funktioner i libc (även de som har  ersättningsfunktioner),
+       vilket  ger upphov till cirkelreferenser eller potential för cirkelref‐
+       erenser ifall implementationen av vissa funktioner i libc förändras).
+
+LICENS
+       fakeroot distribueras under GNU General Public License.  (GPL 2.0 eller
+       senare).
+
+FÖRFATTARE
+       joost witteveen
+              <joostje@debian.org>
+
+       Clint Adams
+              <clint@debian.org>
+
+       Timo Savola
+
+ÖVERSÄTTNING
+       David Weinehall <tao@kernel.org>
+
+MANUALSIDA
+       till  större  delen skriven av J.H.M. Dassen <jdassen@wi.LeidenUniv.nl>
+       med ett flertal ändringar/tillägg av joost och Clint.
+
+SE ÄVEN
+       faked(1)  dpkg-buildpackage(1), debuild(1)  /usr/share/doc/fakeroot/DE‐
+       BUG
+
+Debian Project                 5:e oktober 2014                    fakeroot(1)

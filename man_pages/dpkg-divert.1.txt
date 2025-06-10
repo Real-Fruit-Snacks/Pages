@@ -1,0 +1,185 @@
+dpkg-divert(1)                    dpkg suite                    dpkg-divert(1)
+
+NAMN
+       dpkg-divert - överstyr ett pakets version av en fil
+
+SYNOPS
+       dpkg-divert [flagga...] åtgärd
+
+BESKRIVNING
+       dpkg-divert är verktyget som används för att ställa in och uppdatera
+       listan över omdirigeringar.
+
+       Filomdirigeringar (diversions) är ett sätt att tvinga dpkg(1) att inte
+       installera en fil på sin plats, utan på en omdirigerad plats.
+       Omdirigeringar kan användas i skript i Debianpaket för att flytta bort
+       en fil när den orsakar en konflikt. Systemadministratörer kan också
+       använda det för att överstyra några pakets konfigurationsfiler, eller
+       när några filer (som inte markerats som konfigurationsfiler) måste
+       bibehållas av dpkg när en nyare version av ett paket som innehåller de
+       filerna installeras.
+
+KOMMANDON
+       [--add] fil
+           Lägg till en omdirigering för fil. Filen blir för närvarande inte
+           namnändrad, se --rename.
+
+       --remove fil
+           Ta bort en omdirigering för fil. Filen blir för närvarande inte
+           namnändrad, se --rename.
+
+       --list [filnamnsmönster]
+           Visa alla omdirigeringar, eller de som matchar filnamnsmönster.
+
+       --listpackage fil
+           Visa namnet på paketet som omdirigerar fil (sedan dpkg 1.15.0).
+           Svarar LOCAL om fil har omdirigerats lokalt och ingenting om fil
+           inte är omdirigerad.
+
+       --truename fil
+           Visa det riktiga namnet på en omdirigerad fil.
+
+FLAGGOR
+       --admindir katalog
+           Ställ den administrativa katalogen till katalog. Förval är
+           ”/var/lib/dpkg” om DPKG_ADMINDIR inte har valts.
+
+       --instdir katalog
+           Sätt installationskatalogen, som anger katalogen där paket
+           installeras (sedan dpkg 1.19.2). Förval är ”/” om DPKG_ROOT inte
+           har satts.
+
+       --root katalog
+           Sätt rotkatalogen till katalog, vilket sätter
+           installationskatalogen till ”katalog” och den administrativa
+           katalogen till ”katalog/var/lib/dpkg” (sedan dpkg 1.19.2) om
+           DPKG_ROOT inte har satts.
+
+       --divert omdirigera-till
+           omdirigera-till är platsen där de versioner av fil som
+           tillhandahålls av andra paket kommer omdirigeras till.
+
+       --local
+           Anger att alla pakets versioner av denna fil ska omdirigeras. Det
+           innebär att det inte finns några undantag, och att oavsett vilket
+           paket som installeras så omdirigeras filen. Detta kan användas av
+           en administratör för att installera en lokalt modifierad version.
+
+       --package paket
+           paket är namnet på ett paket vars kopia av fil inte kommer att
+           omdirigeras, dvs. fil kommer omdirigeras för alla paket förutom
+           paket.
+
+       --quiet
+           Tyst läge, dvs. ingen pratsam utdata.
+
+       --rename
+           Flytta faktiskt filen åt sidan (eller tillbaka). dpkg-divert kommer
+           att avbryta körningen om destinationsfilen redan existerar. Detta
+           är det normala beteende som används för omdirigeringar från
+           paketuppsättningen som inte är märkt Essential (se --no-rename för
+           mer detaljer).
+
+       --no-rename
+           Anger att filen inte ska få ett nytt namn när omdirigeringar läggs
+           till eller tas bort i databasen (sedan dpkg 1.19.1). Detta är tänkt
+           för omdirigeringar av filer från paketuppsättningen märkt
+           Essential, där det att originalfilen temporärt försvinner inte är
+           acceptabelt, eftersom det kan göra så att systemet inte längre
+           fungerar. Detta är standardbeteendet, men det kommer ändras i dpkg
+           1.20.x-cykeln.
+
+       --test
+           Testläge, dvs. utför inga faktiska ändringar, bara visa vad som
+           skulle hända.
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+RETURVÄRDE
+       0   Den önskade funktionen utfördes utan fel.
+
+       2   Ödesdigert eller irreparabelt fel på grund av felaktig användning
+           på kommandoraden, eller interaktioner med systemet, såsom
+           databasåtkomst, minnesallokeringer, osv.
+
+MILJÖVARIABLER
+       DPKG_ROOT
+           Om satt och flaggorna --instdir och --root inte har angivits
+           används det som filsystemets rotkatalog (sedan dpkg 1.19.2).
+
+       DPKG_ADMINDIR
+           Om satt, och flaggorna --admindir eller --root inte har angivits,
+           används värdet som datakatalog för dpkg.
+
+       DPKG_MAINTSCRIPT_PACKAGE
+           Om satt, och flaggorna --local och --package inte har angivits,
+           kommer dpkg-divert använda det som paketnamn.
+
+       DPKG_DEBUG
+           Anger felsökningsmasken (sedan dpkg 1.21.10) från ett oktalt värde.
+           De flaggor som för närvarande godtas beskrivs i flaggan dpkg
+           --debug, men alla dess flaggor påverkar inte nödvändigtvis detta
+           program.
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+FILER
+       /var/lib/dpkg/diversions
+           Filen som innehåller den aktuella listan med systemets
+           omdirigeringar. Den är placerad i dpkg:s administrativa katalog,
+           tillsammans med andra filer som är viktiga för dpkg, till exempel
+           status och available.
+
+           Note: dpkg-divert preserves the old copy of this file, with
+           extension -old, before replacing it with the new one.
+
+ANTECKNINGAR
+       Vid tillägg är standard --local och --divert original.distrib. Vid
+       borttagning måste --package eller --local och --divert matcha om de
+       anges.
+
+       Kataloger kan inte omdirigeras med dpkg-divert.
+
+       Se upp när du omdirigerar delade bibliotek. ldconfig(8) skapar en
+       symbolisk länk baserad på DT_SONAME-fältet som är inbyggt i
+       biblioteket. Eftersom ldconfig inte följer omdirigeringar (bara dpkg
+       gör det) kan den symboliska länken komma att peka på det omdirigerade
+       biblioteket om ett omdirigerat bibliotek har samma SONAME som det ej
+       omdirigerade.
+
+EXEMPEL
+       För att omdirigera alla exemplar av en /usr/bin/exempel till
+       /usr/bin/exempel.foo, dvs. omdirigera samtliga paket som
+       tillhandahåller /usr/bin/exempel så att de installerar den som
+       /usr/bin/exempel.foo, och utför namnbytet om det behövs:
+
+        dpkg-divert --divert /usr/bin/exempel.foo --rename /usr/bin/exempel
+
+       För att ta bort omdirigeringen:
+
+        dpkg-divert --rename --remove /usr/bin/exempel
+
+       För att omdirigera samtliga paket som försöker installera
+       /usr/bin/exempel till /usr/bin/exempel.foo, förutom i det egna paketet
+       wibble:
+
+        dpkg-divert --package wibble --divert /usr/bin/exempel.foo \
+           --rename /usr/bin/exempel
+
+       För att ta bort omdirigeringen:
+
+        dpkg-divert --package wibble --rename --remove /usr/bin/exempel
+
+SE ÄVEN
+       dpkg(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                    dpkg-divert(1)

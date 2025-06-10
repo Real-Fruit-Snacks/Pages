@@ -1,0 +1,103 @@
+SAVELOG(8)                  System Manager's Manual                 SAVELOG(8)
+
+IME
+       savelog - shrani datoteko dnevnika
+
+POVZETEK
+       savelog  [-m  način]  [-u  uporabnik] [-g skupina] [-t] [-p] [-c cikel]
+       [-l] [-j] [-C] [-d] [-l] [-r rolldir] [-n] [-q] [-D  oblikadatuma]  da‐
+       toteka ...
+
+OPIS
+       Ukaz  savelog  shrani in po želji stisne stare kopije datotek. Starejše
+       različice file se imenujejo:
+
+              file.<number><compress_suffix>
+
+       kjer je <number> številka različice,  0  predstavlja  najnovejšo.   Ra‐
+       zličice  številka > 0 so stisnjene, razen če to prepreči -l.  Različica
+       številka 0 ni stisnjena, saj ima lahko opravilo file še vedno odprt  za
+       I/O.  Samo cycle različic datoteke je ohranjenih.
+
+       Če datoteka ne obstaja in je -t podan, bo ustvarjena.
+
+       Za  datoteke, ki obstajajo in imajo dolžino večjo od nič, so opravljena
+       naslednja dejanja:
+
+       1)     Version numbered files are cycled.  Version file.2 is  moved  to
+              version  file.3,  version file.1 is moved to version file.2, and
+              so on.  Finally version file.0 is moved to version  file.1,  and
+              version file is deleted.  Both compressed names and uncompressed
+              names are cycled, regardless of -l.  Missing version  files  are
+              ignored.
+
+       2)     The  new  file.1 is compressed unless the -l flag was given.  It
+              is changed subject to the -m, -u, and -g flags.
+
+       3)     The main file is moved to file.0.
+
+       4)     Če so podane zastavice -m, -u, -g, -t, ali pa -p, je  ustvarjena
+              prazna  file glede na podane zastavice.  Z zastavico -p , je da‐
+              toteka ustvarjena z enakim lastništvom, skupino in pravicami kot
+              prej.
+
+       5)     The new file.0 is changed subject to the -m, -u, and -g flags.
+
+MOŽNOSTI
+       -m način
+              chmod datoteke dnevnikov k danim pravicam, predpostavi -t
+
+       -u uporabnik
+              chown datoteke dnevnikov k uporabniku, predpostavi -t
+
+       -g skupina
+              chgrp datoteke dnevnikov k skupini, predpostavi -t
+
+       -c cycle
+              Save  cycle  versions  of  the  logfile (default: 7).  The cycle
+              count must be at least 2.
+
+       -t     ustvari "touch" novo datoteko dnevnika
+
+       -l     ne stiskaj datotek dnevnikov (privzeto: stiskaj)
+
+       -p     ohrani lastništvo, skupino in dovojenja datoteke dnevnika
+
+       -j     stisni z bzip2 namesto z gzip
+
+       -J     stisni z xz2 namesto z gzip
+
+              For xz no strength option is set, and xz decides on the  default
+              based on the total amount of physical RAM.  Note that xz can use
+              a very large amount of memory for the higher compression levels.
+
+       -1 .. -9
+              moč stiskanja ali poraba pomnilnika (privzeto: 9, razen za xz)
+
+       -C     prisili čiščenje krožnih datotek dnevnikov
+
+       -d     za obračanje uporabi standardni datum
+
+       -D oblika datuma
+              override date format, in the syntax understood  by  the  date(1)
+              command
+
+       -r     use rolldir instead of . to roll files
+
+       -n     ne vrti praznih datotek
+
+       -q     molči
+
+HROŠČI
+       If a process is still writing to file.0, and savelog moves it to file.1
+       and compresses it, data could be lost.
+
+OGLEJTE SI TUDI
+       logrotate(8)
+
+TRANSLATION
+       This document is a translation.
+
+       Regarding errors such as tihs one, contact <sl@li.org>,
+
+Debian                            30 Dec 2017                       SAVELOG(8)

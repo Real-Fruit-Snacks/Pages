@@ -1,0 +1,110 @@
+Mouse::Util::MetaRole(User Contributed Perl DocumentMouse::Util::MetaRole(3pm)
+
+NAME
+       Mouse::Util::MetaRole - Apply roles to any metaclass, as well as the
+       object base class
+
+SYNOPSIS
+         package MyApp::Mouse;
+
+         use Mouse ();
+         use Mouse::Exporter;
+         use Mouse::Util::MetaRole;
+
+         use MyApp::Role::Meta::Class;
+         use MyApp::Role::Meta::Method::Constructor;
+         use MyApp::Role::Object;
+
+         Mouse::Exporter->setup_import_methods( also => 'Mouse' );
+
+         sub init_meta {
+             shift;
+             my %args = @_;
+
+             Mouse->init_meta(%args);
+
+             Mouse::Util::MetaRole::apply_metaroles(
+                 for             => $args{for_class},
+                 class_metaroles => {
+                     class       => ['MyApp::Role::Meta::Class'],
+                     constructor => ['MyApp::Role::Meta::Method::Constructor'],
+                 },
+             );
+
+             Mouse::Util::MetaRole::apply_base_class_roles(
+                 for   => $args{for_class},
+                 roles => ['MyApp::Role::Object'],
+             );
+
+             return $args{for_class}->meta();
+         }
+
+DESCRIPTION
+       This utility module is designed to help authors of Mouse extensions
+       write extensions that are able to cooperate with other Mouse
+       extensions. To do this, you must write your extensions as roles, which
+       can then be dynamically applied to the caller's metaclasses.
+
+       This module makes sure to preserve any existing superclasses and roles
+       already set for the meta objects, which means that any number of
+       extensions can apply roles in any order.
+
+USAGE
+       It is very important that you only call this module's functions when
+       your module is imported by the caller. The process of applying roles to
+       the metaclass reinitializes the metaclass object, which wipes out any
+       existing attributes already defined. However, as long as you do this
+       when your module is imported, the caller should not have any attributes
+       defined yet.
+
+       The easiest way to ensure that this happens is to use Mouse::Exporter,
+       which can generate the appropriate "init_meta" method for you, and make
+       sure it is called when imported.
+
+FUNCTIONS
+       This module provides two functions.
+
+   apply_metaroles( ... )
+       This function will apply roles to one or more metaclasses for the
+       specified class. It accepts the following parameters:
+
+       •   for => $name
+
+           This specifies the class or for which to alter the meta classes.
+           This can be a package name, or an appropriate meta-object (a
+           Mouse::Meta::Class or Mouse::Meta::Role).
+
+       •   class_metaroles => \%roles
+
+           This is a hash reference specifying which metaroles will be applied
+           to the class metaclass and its contained metaclasses and helper
+           classes.
+
+           Each key should in turn point to an array reference of role names.
+
+           It accepts the following keys:
+
+           class
+           attribute
+           method
+           constructor
+           destructor
+       •   role_metaroles => \%roles
+
+           This is a hash reference specifying which metaroles will be applied
+           to the role metaclass and its contained metaclasses and helper
+           classes.
+
+           It accepts the following keys:
+
+           role
+           method
+
+   apply_base_class_roles( for => $class, roles => \@roles )
+       This function will apply the specified roles to the object's base
+       class.
+
+SEE ALSO
+       Moose::Util::MetaRole
+
+perl v5.36.0                      2022-10-20        Mouse::Util::MetaRole(3pm)

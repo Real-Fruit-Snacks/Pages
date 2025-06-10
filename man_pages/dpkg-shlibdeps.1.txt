@@ -1,0 +1,337 @@
+dpkg-shlibdeps(1)                 dpkg suite                 dpkg-shlibdeps(1)
+
+NAMN
+       dpkg-shlibdeps - skapar substvar-beroenden för delade bibliotek
+
+SYNOPS
+       dpkg-shlibdeps [flagga...] [-e] programfil [flagga...]
+
+BESKRIVNING
+       dpkg-shlibdeps beräknar beroenden mellan exekverbara filer som anges
+       som argument och delade bibliotek. Beroendena läggs till i
+       substitueringsvariabelfilen debian/substvars som variabler med namnen
+       shlibs:beroendefält där beroendeefält är ett beroendefältsnamn. Alla
+       andra variabler som börjar på shlibs: tas bort ur filen.
+
+       dpkg-shlibdeps kan generera beroendeinformation från två
+       informationskällor, antingen filen symbols eller filen shlibs. För
+       varje binärfil som analyseras av dpkg-shlibdeps tas en lista fram över
+       vilka bibliotek de är länkade mot. Programmet slår sedan upp varje
+       bibliotek i filen symbols, eller i filen shlibs (om den förstnämnda
+       inte existerar eller om debian/shlibs.local innehåller ett relevant
+       beroende). ). De båda filerna ska tillhandahållas av bibliotekspaketet
+       och borde därför vara tillgängliga som /var/lib/dpkg/info/paket.symbols
+       eller /var/lib/dpkg/info/paket.shlibs. Paketnamnet identifieras i två
+       steg: biblioteksfilen lokaliseras på systemet (genom att slå upp i de
+       kataloger ld.so skulle använt), och därefter används dpkg -S
+       biblioteksfil för att slå upp vilket paket biblioteket kommer från.
+
+   Symbolfiler
+       Symbolfiler innehåller mer finkornig beroendeinformation genom att ange
+       det minsta beroendet för varje symbol som exporteras av biblioteket.
+       Skriptet försöker hitta de symboler som är associerade med ett
+       bibliotek på följande platser (den första träffen används):
+
+       debian/*/DEBIAN/symbols
+           Information om delade bibliotek som skapats av den aktuella
+           byggproceduren som också anropade dpkg-shlibdeps. De genereras av
+           dpkg-gensymbols(1). De används endast om biblioteket finns i
+           paketets byggräd. Filen symbols i det byggträdet går före symbols-
+           filer från andra binärpaket.
+
+       /etc/dpkg/symbols/package.symbols.arkitektur
+       /etc/dpkg/symbols/paket.symbols
+           Överstyrningsfil för beroendeinformation för delade bibliotek, per
+           system. arkitektur är det aktuella systemets arkitektur (hämtas
+           från dpkg-architecture -qDEB_HOST_ARCH).
+
+       Utdata från ”dpkg-query --control-path package symbols”
+           Paketlokal överstyrande beroendeinformation för delade bibliotek.
+           Filerna befinner sig i /var/lib/dpkg om inte överstyrt med
+           --admindir.
+
+       dpkg-shlibs kommer ihåg den (största) minimala version som behövs av
+       varje bibliotek när den söker genom de symboler som används av alla
+       binärfilerna. När proceduren är avslutad kan den visa det minsta
+       beroende som behövs av alla bibliotek som används (så tillvida
+       informationen i symbols-filerna är korrekt).
+
+       Som en säkerhetsåtgärd kan en symbols-fil innehålla
+       metainformationsfältet Build-Depends-Package, varpå dpkg-shlibdeps
+       hämtar vilken minsta version som behövs för paketet ur Build-
+       Depends-fältet och använder denna version om den är högre än den minsta
+       version som beräknats genom att söka genom symbolerna.
+
+   Shlibs-filer
+       Shlibs-filer associerar ett bibliotek direkt till ett beroende (utan
+       att se på symbolerna). Det är därför oftare starkare än vad som
+       egentligen behövs, men mycket säkert och enkelt att hantera.
+
+       Beroenden för ett bibliotek slås upp på flera platser. Den första filen
+       som innehåller information om det intressanta biblioteket används:
+
+       debian/shlibs.local
+           Paketlokal överstyrande beroendeinformation för delade bibliotek.
+
+       /etc/dpkg/shlibs.override
+           Systemspecifik överstyrande beroendeinformation för delade
+           bibliotek.
+
+       debian/*/DEBIAN/shlibs
+           Information om delade bibliotek som skapats av den aktuella
+           byggproceduren som också anropade dpkg-shlibdeps. De genereras av
+           dpkg-gensymbols(1). De används bara om biblioteket finns i paketets
+           byggträd. Filen shlibs i byggträdet går före shlibs-filer från
+           andra paket.
+
+       Utdata från ”dpkg-query --control-path package shlibs”
+           Paketlokal överstyrande beroendeinformation för delade bibliotek.
+           Filerna befinner sig i /var/lib/dpkg om inte överstyrt med
+           --admindir.
+
+       /etc/dpkg/shlibs.default
+           Systemspecifik standardberoendeinformation för delade bibliotek.
+
+       De utökade beroendena används sedan direkt (förutom om de filtrerats
+       bort för att de identifierats som dubbletter, eller svagare än ett
+       annat beroende).
+
+FLAGGOR
+       dpkg-shlibdeps tolkar argument som inte är flaggor som namn på körbara
+       filer, precis som om de angivits som -eprogramfil.
+
+       -eprogramfil
+           Ta med beroenden som är passar för delade bibliotek som krävs för
+           programfil. Flaggan kan användas flera gånger.
+
+       -lkatalog
+           Lägg till katalog först i listan över kataloger som ska eftersökas
+           efter privata delade bibliotek (sedan dpkg 1.17.0). Flaggan kan
+           användas flera gånger.
+
+           Note: Use this option instead of setting LD_LIBRARY_PATH, as that
+           environment variable is used to control the run-time linker and
+           abusing it to set the shared library paths at build-time can be
+           problematic when cross-compiling for example.
+
+       -dberoendefält
+           Lägg till beroenden som ska läggas till till control-filens
+           beroendefält beroendefält. (Beroenden för detta fält läggs in i
+           variabeln shlibs:beroendefält.)
+
+           Flaggan -dberoendefält gäller för samtliga binärer efter flaggan,
+           fram till nästa -dberoendefält. Standardvärdet för beroendefält är
+           Depends.
+
+           Om samma katalogpost (eller en uppsättning alternativ) förekommer i
+           mer än ett av de kända beroendefältnamnen Pre-Depends, Depends,
+           Recommends, Enhances eller Suggests så kommer dpkg-shlibdeps att
+           automatiskt ta bort beroendet från samtliga fält förutom det som
+           anger de viktigaste beroendena.
+
+       -pvariabelnamnsprefix
+           Inled substitueringsvariabler med variabelnamnsprefix: i stället
+           för shlibs:. På samma sätt kommer befintliga
+           substitueringsvariabler som inleds med variabelnamnsprefix: (i
+           stället för shlibs:) att tas bort från substitueringsvariabelfilen.
+
+       -O[filnamn]
+           Skriv substitueringsvariabelinställningar på standard ut (eller
+           filnamn om angivet, sedan dpkg 1.17.2), i stället för att försöka
+           lägga till dem i substitueringsvariabelfilen (som standard
+           debian/substvars).
+
+       -ttyp
+           Föredra information om delade bibliotek som märkts för den givna
+           pakettypen. Om det inte finns någon märkt information används
+           omärkt. Standardpakettypen är deb. Beroendeinformation för delade
+           bibliotek märks för en given typ genom att inleda det med namnet på
+           typen, ett kolon, samt blanktecken.
+
+       -Llokal-shlibs-fil
+           Läs överstyrande beroendeinformation om delade bibliotek från
+           lokal-shlibs-fil i stället för debian/shlibs.local.
+
+       -Tsubstvars-fil
+           Skriv substitueringsvariabler i substvars-fil; standard är
+           debian/substvars.
+
+       -V  Aktiverar pratsamt läge (sedan dpkg 1.14.8). Flera meddelanden
+           visas för att förklara vad dpkg-shlibs håller på med.
+
+       -xpaket
+           Uteslut paketet från de genererade beroendena (dpkg 1.14.8).
+           Flaggan är användbar för att undvika självberoenden för paket som
+           innehåller ELF-binärer (exekverbara eller
+           biblioteksinsticksprogram) som använder ett bibliotek som ligger i
+           samma paket. Flaggan kan användas flera gånger för att utesluta
+           flera paket.
+
+       -Spaketbyggkatalog
+           Se först i paketbyggkatalog vid försök att hitta ett bibliotek
+           (sedan dpkg 1.14.15). Användbart när källkodspaketet bygger flera
+           varianter av samma bibliotek och du vill se till att du får
+           beroendet från ett givet binärpaket. Flaggan kan användas flera
+           gånger: kataloger söks efter i samma ordning före kataloger från
+           andra binärpaket.
+
+       -Ipaketbyggkatalog
+           Ignorera paketbyggkatalog vid sökning efter delade shlibs, symboler
+           och delade biblioteksfiler (sedan dpkg 1.18.5). Flaggan kan
+           användas flera gånger.
+
+       --ignore-missing-info
+           Misslyckas inte om det inte upptäcks någon beroendeinformation för
+           ett delat bibliotek (sedan dpkg 1.14.8). Den här flaggan
+           rekommenderas inte, alla bibliotek bör tillhandahålla
+           beroendeinformation (antingen med shlibs-filer eller med symbols-
+           filer), även om de ännu inte används av andra paket.
+
+       --warnings=värde
+           Värde är ett bitfält som anger de varningar som kan ges av dpkg-
+           shlibdeps (sedan dpkg 1.14.17). Bit 0 (värde=1) aktiverar varningen
+           ”symbolen sym, som används av binär, hittades inte i något av
+           biblioteken”, bit 1 (värde=2) aktiverar varningen ”paketet kunde
+           undvika ett onödigt beroende” och bit 2 (värde=4) aktiverar
+           varningen ”binär borde inte vara länkat mot bibliotek”. Standard
+           för värde är 3: de första två varningarna är aktiva som standard,
+           men inte den sista. Sätt värde till 7 om du vill att alla varningar
+           ska vara aktiva.
+
+       --admindir=kat
+           Ändra platsen för dpkg-databasen (sedan dpkg 1.14.0). Förvald plats
+           är /var/lib/dpkg.
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+MILJÖVARIABLER
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_NLS
+           Om satt, används för att bestämma om lokalt språkstöd ska
+           aktiveras, även känt som internationaliseringsstöd (eller i18n)
+           (sedan dpkg 1.19.0). Tillåtna värden är: 0 och 1 (förval).
+
+DIAGNOSTIK
+   Varningar
+       Eftersom dpkg-shlibdeps analyserar mängden symboler som används av
+       varje binärfil i det genererade paketet, kan det i flera fall skriva ut
+       varningsmeddelanden. De visar på saker som kan förbättras i paketet. I
+       de flesta fall gäller förbättringarna direkt uppströmskällkoden. Här är
+       de varningar du kan stöta på, i fallande allvarlighetsgrad:
+
+       symbolen sym, som används av binär, hittades inte i något av
+       biblioteken.
+           Den omnämnda symbolen hittades inte i biblioteken som länkas mot
+           binären. Binär är antagligen ett bibliotek och måste länkas mot ett
+           annat bibliotek under byggproceduren (länkarflaggan -lbibliotek).
+
+       binär innehåller en referens till symbolen sym som inte kan kopplas;
+       det är troligen ett insticksprogram
+           Den angivna symbolen hittades inte i biblioteken som länkats mot
+           binären. Binär är antagligen ett insticksprogram och symbolen
+           tillhandahålls av programmet som läser in det. I teorin har inte
+           insticksprogram något SONAME, men den här binären har ett och
+           därmed kunde det inte tydligt identifieras som insticksprogram. Det
+           faktum att binären befinner sig i en icke-offentlig katalog är dock
+           en stark indikation på att det inte är ett vanligt delat bibliotek.
+           Om binären faktiskt är ett insticksprogram kan du ignorera
+           varningen. Det är dock alltid möjligt att det är ett riktigt
+           bibliotek och att program som länker det använder en RPATH så att
+           den dynamiska länkaren hittar det. Om så är fallet är biblioteket
+           trasigt och behöver fixas.
+
+       paketet kan undvika ett onödigt beroende om binär inte länkades mot
+       bibliotek (det använder inget av bibliotekets symboler)
+           Ingen av binärerna som länkas mot bibliotek använder någon av
+           symbolerna som tillhandahålls av biblioteket. Genom att rätta alla
+           binärer kan du undvika beroendet som gäller detta bibliotek (såvida
+           inte samma beroende även genereras av ett annat bibliotek som
+           faktiskt används).
+
+       paketet kunde undvika ett onödigt beroende om binärer inte länkades mot
+       bibliotek (de använder inga av bibliotekets symboler)
+           Exakt samma varning som ovan, men för flera binärer
+
+       binär borde inte vara länkat mot bibliotek (det använder inget av
+       bibliotekets symboler)
+           Binär länkar mot ett bibliotek den inte behöver. Det är inte ett
+           problem, Men genom att inte länka biblioteket mot binären kan man
+           uppnå en mindre prestandaförbättring. Varningen kontrollerar samma
+           information som den föregående, men gör det för varje binär
+           istället för att utföra kontrollen globalt på alla analyserade
+           binärer.
+
+   Fel
+       dpkg-shlibdeps kommer att misslyckas om det inte hittar ett öppet
+       bibliotek som en av binärerna använder, eller om biblioteket saknar
+       associerad beroendeinformation (antingen en shlibs-fil eller en
+       symbols-fil). Ett öppet bibliotek har ett SONAME och är
+       versionshanterad (libvadsomhelst.so.X). Ett privat bibliotek (till
+       exempel ett insticksprogram) bör inte ha något SONAME och behöver inte
+       vara versionshanterat.
+
+       hittade inte biblioteket bibliotek-sonamn som behövs för binär (dess
+       RPATH är "rpath")
+           Binär använder ett bibliotek som heter bibliotek-sonamn, men dpkg-
+           shlibdeps kunde inte hitta biblioteket. dpkg-shlibdeps skapar en
+           lista över kataloger det ser i på följande sätt: katalogerna som
+           beskrivs i RPATH i binären, kataloger som lagts till med flaggan
+           -l, kataloger i miljövariabeln LD_LIBRARY_PATH, kors-
+           multiarkitekturskataloger (t.ex /lib/arm64-linux-gnu,
+           /usr/lib/arm64-linux-gnu), vanliga öppna kataloger (/lib,
+           /usr/lib), kataloger listade i /etc/ld.so.conf, samt föråldrade
+           multilib-kataloger (/lib32, /usr/lib32, /lib64, /usr/lib64).
+           Därefter ser det i motsvarande kataloger i byggträdet för paketet
+           som innehåller binären som analyseras, i paketbyggträdet som anges
+           med kommandoradsflaggan -S, i andra pakets byggträd som innehåller
+           en DEBIAN/shlibs-fil och slutligen i rotkatalogen. Om biblioteket
+           inte hittas i någon av dessa kataloger får du det här
+           felmeddelandet.
+
+           Om biblioteket som inte hittades ligger i en privat katalog i samma
+           paket bör du lägga till katalogen med -l. Om det finns i ett annat
+           binärpaket som byggs bör du se till att shlibs- eller symbols-filen
+           för paketet redan har skapats och att -l innehåller korrekt katalog
+           som det också ligger i en privat katalog.
+
+       hittade ingen beroendeinformation för biblioteksfil (använd av binär).
+           Biblioteket som behövs av binär hittades i biblioteksfil av dpkg-
+           shlibdeps, men dpkg-shlibdeps kunde inte hitta någon
+           beroendeinformation för biblioteket. För att hitta beroendet har
+           det försökt koppla biblioteket mot ett Debianpaket med hjälp av
+           dpkg -S biblioteksfil. Därefter såg det i motsvarande shlibs- och
+           symbols-filer i /var/lib/dpkg/info/, samt i de olika paketens
+           byggträd (debian/*/DEBIAN/).
+
+           Det här felet kan orsakas av felaktiga eller saknade shlibs- eller
+           symbols-filer i bibliotekets paket. Det kan även inträffa om
+           biblioteket byggts i samma källkodspaket och om shlibs-filen ännu
+           inte har skapats (då måste du fixa debian/rules så att det skapar
+           shlibs-filen innan det anropar dpkg-shlibdeps). Felaktig RPATH kan
+           också leda till att biblioteket hittas under ett icke-kanoniskt
+           namn (till exempel: /usr/lib/openoffice.org/../lib/libssl.so.9.8
+           istället för /usr/lib/libssl.so.0.9.8) som inte associeras till
+           något paket, dpkg-shlibdeps försöker gå runt detta genom att falla
+           tillbaka på ett kanoniskt namn (med realpath(3)), men det fungerar
+           kanske inte alltid. Det är alltid bäst att städa upp RPATH i
+           binären för att undvika problem.
+
+           Om du anropar dpkg-shlibdeps i pratsamt läge (-v) kommer det ge
+           mycket mer information om var det försökte hitta
+           beroendeinformationen. Det kan vara användbart om du inte förstår
+           varför du får felmeddelandet.
+
+SE ÄVEN
+       deb-substvars(5), deb-shlibs(5), deb-symbols(5), dpkg-gensymbols(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                 dpkg-shlibdeps(1)

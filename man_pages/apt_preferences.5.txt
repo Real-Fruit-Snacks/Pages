@@ -1,0 +1,612 @@
+APT_PREFERENCES(5)                    APT                   APT_PREFERENCES(5)
+
+NOME
+       apt_preferences - Ficheiro de controle de preferências para o APT
+
+DESCRIÇÃO
+       O ficheiro de preferências do APT /etc/apt/preferences e os ficheiros
+       fragmentados no directório /etc/apt/preferences.d/ podem ser usados
+       para controlar quais as versões de pacotes irão ser selecionadas para
+       instalação.
+
+       Várias versões de um pacote podem estar disponíveis para instalação
+       quando o ficheiro sources.list(5) contém referências a mais do que uma
+       distribuição (por exemplo, stable e testing). O APT atribui uma
+       prioridade a cada versão que está disponível. Sujeito a
+       constrangimentos de dependências, o apt-get seleciona a versão com a
+       prioridade mais alta para instalação. As preferências do APT sobrepõem
+       as prioridades que o APT atribui às versões de pacotes por
+       predefinição, assim dando controle ao utilizador sobre qual é
+       selecionado para instalação.
+
+       Podem estar disponíveis várias instâncias da mesma versão de um pacote
+       quando o ficheiro sources.list(5) contém referências a mais do que uma
+       fonte. Neste caso o apt-get descarrega a instância listada mais cedo no
+       ficheiro sources.list(5). As preferências do APT não afectam a escolha
+       da instância, apenas a escolha da versão.
+
+       As preferências são um poder forte nas mãos de um administrador de
+       sistemas mas também se podem tornar no seu maior pesadelo se forem
+       usadas sem cuidado! O APT não irá questionar as preferências, portanto
+       as definições erradas irão acabar em pacotes não instaláveis ou
+       decisões erradas ao actualizar pacotes. Irão surgir ainda mais
+       problemas se forem misturadas múltiplas distribuições sem o perfeito
+       entendimento dos parágrafos seguintes. Os pacotes incluídos num
+       lançamento específico não são testados e por isso nem sempre funcionam
+       como esperado nos lançamentos mais antigos ou recentes ou em conjunto
+       com outros pacotes de lançamentos diferentes. Você foi avisado.
+
+       Note que os ficheiros no directório /etc/apt/preferences.d são
+       analisados em ordem alfanumérica ascendente e precisam obedecer à
+       convenção de nomes seguinte: Os ficheiros ou não têm extensão ou têm
+       "pref" na extensão do nome de ficheiro e apenas contêm caracteres
+       alfanuméricos, traço (-), underscore (_) e ponto (.). Caso contrário o
+       APT irá escrever um aviso de que ignorou um ficheiro, a menos que esse
+       ficheiro corresponda a um padrão da lista de configuração
+       Dir::Ignore-Files-Silently - e neste caso será ignorado em silêncio.
+
+   Atribuições de Prioridade Predefinidas do APT
+       Senão existir um ficheiro de preferências ou se não existe uma entrada
+       no ficheiro que se aplique a uma versão particular então a prioridade
+       atribuída a essa versão é a prioridade da distribuição à qual essa
+       versão pertence. É possível definir uma distribuição singular, "o
+       lançamento de destino", a qual recebe uma prioridade mais alta que as
+       outras distribuições por predefinição. O lançamento de destino pode ser
+       definido na linha de comandos do apt-get ou no ficheiro de configuração
+       do APT /etc/apt/apt.conf. Note que isto tem precedências sobre qualquer
+       prioridade geral que possa definir no ficheiro /etc/apt/preferences
+       descrito mais tarde, mas não sobre pacotes especificamente
+       imobilizados. Por exemplo,
+
+           apt-get install -t testing algum-pacote
+
+           APT::Default-Release "stable";
+
+       Se o lançamento destinado foi especificado, então o APT usa o seguinte
+       algoritmo para definir as prioridades das versões de um pacote.
+       Atribuir:
+
+       priority 1
+           para as versões vindas de arquivos cujos ficheiros Release estejam
+           marcados como "NotAutomatic: yes" mas não como
+           "ButAutomaticUpgrades: yes" como o arquivo experimental da Debian,
+           assim como versões que não estejam faseadas nestes sistemas.
+
+       priority 100
+           para a versão que já está instalada (se alguma) e para as versões
+           vindas de arquivos cujos ficheiros Release estejam marcados como
+           "NotAutomatic: yes" e "ButAutomaticUpgrades: yes" como o arquivo
+           backports da Debian desde squeeze-backports.
+
+       priority 500
+           para as versões que não pertencem ao lançamento destinado.
+
+       priority 990
+           para as versões que pertencem ao lançamento destinado.
+       A mais alta dessas prioridades cuja descrição coincide com a versão é
+       especificada para a versão.
+
+       Se o lançamento de destino não foi especificado, então o APT
+       simplesmente atribui prioridade 100 a todas as versões de pacotes
+       instalados e prioridade 500 e todas as versões de pacotes não
+       instalados, à excepção de versões que venham de arquivos cujos
+       ficheiros Release estejam marcados como "NotAutomatic: yes" - estas
+       versões ficam com prioridade 1 ou prioridade 100 se for marcado
+       adicionalmente como "ButAutomaticUpgrades: yes".
+
+       O APT então aplica as seguintes regras, listadas em ordem de
+       precedência, para determinar qual versão de um pacote deve instalar.
+
+       •   Nunca faz downgrade a menos que uma versão disponível exceda 1000.
+           ("Downgrading" é instalar uma versão menos recente de um pacote no
+           lugar de uma versão mais recente. Note que nenhuma das prioridades
+           predefinidas do APT excede 1000; tais altas prioridades só podem
+           ser definidas no ficheiro de preferências. Note também que fazer o
+           downgrade a um pacote pode ser arriscado.)
+
+       •   Instala a versão de prioridade mais alta.
+
+       •   Se duas ou mais versões tiverem a mesma prioridade, instala a mais
+           recente (isto é, aquela com o número de versão mais alto).
+
+       •   Se duas ou mais versões têm a mesma prioridade e o mesmo número de
+           versão mas ou os pacotes diferem em alguns dos seus metadados ou a
+           opção --reinstall é fornecida, instala a que foi desinstalada.
+
+       Numa situação típica, a versão instalada de um pacote (prioridade 100)
+       não é tão recente como uma das versões disponíveis nas fontes listadas
+       no ficheiro sources.list(5) (prioridade 500 ou 990). Então o pacote
+       será actualizado quando for executado apt-get install algum-pacote ou
+       apt-get upgrade.
+
+       Mais raramente, a versão instalada de um pacote é mais recente que
+       qualquer das outras versões disponíveis. O pacote não será regredido
+       para uma versão inferior quando for executado apt-get install
+       algum-pacote ou apt-get upgrade.
+
+       Por vezes a versão instalada de um pacote é mais recente que a versão
+       pertencente ao lançamento de destino, mas não tão recente que uma
+       versão pertencente a alguma outra distribuição. Tal pacote será de
+       facto actualizado quando for executado apt-get install algum-pacote ou
+       apt-get upgrade, porque pelo menos uma das versões disponíveis tem uma
+       prioridade mais alta que a versão instalada.
+
+   Actualizações Faseadas
+       O APT compreende um campo chamado Phased-Update-Percentage que pode ser
+       usado para controlar o lançamento de uma nova versão. É um número
+       inteiro entre 0 e 100.
+
+       A elegibilidade do sistema para uma actualização faseada é determinada
+       ao semear a geração de número aleatório com o nome do pacote fonte, o
+       número de versão, e /etc/id-de-máquina, e depois calcular um inteiro na
+       gama [0, 100]. Se este inteiro for maior que Phased-Update-Percentage,
+       a versão é fixada a 1, e assim mantida retida. Caso contrário,
+       aplicam-se as regras políticas normais.
+
+       No caso de você ter vários sistemas em que deseja receber o mesmo
+       conjunto de actualizações, você pode definir APT::Machine-ID para um
+       UUID tal que eles todos faseem o mesmo, ou definir
+       APT::Get::Never-Include-Phased-Updates ou
+       APT::Get::Always-Include-Phased-Updates para verdadeiro de modo a que o
+       APT nunca/sempre considere actualizações faseadas.
+
+   O Efeito das Preferências do APT
+       O ficheiro de preferências do APT permite ao administrador do sistema
+       controlar a atribuição de prioridades. O ficheiro consiste em um ou
+       mais registos de multi-linhas separados por linhas vazias. Os registos
+       podem ter um ou dois formatos, um formato específico e um formato
+       geral.
+
+       •   O formato específico atribui um prioridade (um "Pin-Priority") a um
+           ou mais pacotes específicos e versão específica ou série de
+           versões. Por exemplo, o seguinte registo atribui uma alta
+           prioridade a todas as versões do pacote perl cujo número de versão
+           começa com "5.32". Múltiplos pacotes podem ser separados por
+           espaços.
+
+               Package: perl
+               Pin: version 5.32*
+               Pin-Priority: 1001
+
+       •   O formato geral atribui uma prioridade a todas as versões de
+           pacotes numa dada distribuição (isto é, a todas as versões de
+           pacotes que estão listados num certo ficheiro Release) ou a todas
+           as versões de pacotes vindos de um site de Internet particular,
+           como identificado pelo nome de domínio totalmente qualificado do
+           site.
+
+           Esta entrada general-form no ficheiro de preferências do APT
+           aplica-se apenas a grupos de pacotes. Por exemplo, o seguinte
+           registo atribui uma alta prioridade a todas as versões de pacotes
+           disponíveis a partir de um site local.
+
+               Package: *
+               Pin: origin ""
+               Pin-Priority: 999
+
+           Uma nota de atenção: a palavra chave usada aqui é "origin" que pode
+           ser usada para corresponder a um nome de máquina. O seguinte
+           registo irá atribuir uma alta prioridade a todas as versões
+           disponíveis do servidor identificadas pelo nome de máquina
+           "ftp.de.debian.org"
+
+               Package: *
+               Pin: origin "ftp.de.debian.org"
+               Pin-Priority: 999
+
+           Isto não deve ser confundido com a Origem de uma distribuição como
+           especificada num ficheiro Release. O que representa a etiqueta
+           "Origin:" num ficheiro Release não é um endereço de Internet mas um
+           nome de autor ou marca, tal como "Debian" ou "Ximian".
+
+           O seguinte registo atribui uma baixa prioridade a todas as versões
+           de pacotes pertencentes a qualquer distribuição cujo nome de
+           Arquivo é "unstable".
+
+               Package: *
+               Pin: release a=unstable
+               Pin-Priority: 50
+
+           O seguinte registo atribui uma alta prioridade a todas as versões
+           de pacotes pertencentes a qualquer distribuição cujo nome de código
+           é "trixie".
+
+               Package: *
+               Pin: release n=trixie
+               Pin-Priority: 900
+
+           O seguinte registo atribui alta prioridade a todas as versões de
+           pacotes pertencentes a qualquer lançamento cujo nome de Arquivo é
+           "stable" e cujo número de Versão de lançamento é "12".
+
+               Package: *
+               Pin: release a=stable, v=12
+               Pin-Priority: 500
+
+       O efeito do operador vírgula é semelhante a um "e" lógico. Todas as
+       condições têm de ser satisfeitas para o pin corresponder. Há uma
+       excepção: Para qualquer tipo de condição (tal como duas condições "a"),
+       apenas a última de tais condições é verificada.
+
+   Corresponder pacotes no campo Package
+       O campo Package especifica o pacote ao qual uma prioridade de fixação é
+       aplicada. O campo pode ou conter um nome de pacote binário, um nome de
+       pacote fonte (prefixado com "src:"), uma expressão glob(7) ou uma
+       expressão regular (dentro de barras). Podem ser listados vários nomes
+       de pacotes, expressões glob(7) e expressões regulares separados por
+       espaços o que neste caso o registo irá corresponder a qualquer um dos
+       pacotes correspondentes.
+
+       Por predefinição, apenas pacotes da arquitectura nativa são
+       correspondidos. Para corresponder pacotes binários de qualquer
+       arquitectura, adicione o sufixo :any ao nome do pacote. Você pode
+       também limitar a correspondência a uma arquitectura específica ao
+       acrescentar o nome da arquitectura ao nome do pacote, separado pelo
+       caractere dos dois pontos.
+
+       Por exemplo, o seguinte exemplo usa uma expressão glob e uma expressão
+       regular para designar a prioridade 500 a todos os pacotes de
+       experimental onde o nome começa com gnome (como uma expressão tipo
+       glob(7)) ou contém a palavra kde (como uma expressão regular extensa do
+       POSIX rodeada de barras).
+
+           Package: gnome* /kde/
+           Pin: release a=experimental
+           Pin-Priority: 500
+
+       A regra para essas expressões é que elas podem ocorrer em qualquer
+       sítio onde uma string pode ocorrer. Assim, o seguinte pin designa a
+       prioridade 990 a todos os pacotes de um lançamento que começa com
+       lunar.
+
+           Package: *
+           Pin: release n=lunar*
+           Pin-Priority: 990
+
+       Se ocorrer uma expressão regular num campo Package, o comportamento é o
+       mesmo como se esta expressão regular fosse substituída por uma lista de
+       todos os nomes de pacotes a que ela coincide. No entanto não está
+       decidido se isto irá mudar no futuro; assim você deve sempre listar os
+       pins "wild-card" primeiro, para que depois os pins específicos os
+       sobreporem. O padrão "*" num campo Package não é considerado uma
+       expressão glob(7) em si próprio.
+
+       Para fixar todos os binários produzidos pelo pacote fonte do apt desta
+       versão do APT para 990, você pode fazer:
+
+           Package: src:apt
+           Pin: version 2.6.1
+           Pin-Priority: 990
+
+       A fixação de pacote fonte pode ser combinada com expressões regulares e
+       padrões glob, e também podem tomar uma arquitectura binária.
+
+       Por exemplo, vamos fixar todos os binários para todas as arquitecturas
+       produzidas por qualquer pacote fonte que contenha apt no seu nome para
+       990:
+
+           Package: src:*apt*:any
+           Pin: version *
+           Pin-Priority: 990
+
+       O sufixo :any certifica a selecção de pacotes binários de qualquer
+       arquitectura. Sem este sufixo, o apt assume implicitamente o sufixo
+       :native o qual irá apenas selecionar pacotes da arquitectura nativa.
+
+   Como o APT Interpreta as Prioridades
+       As prioridades (P) atribuídas no ficheiro de preferências do APT têm de
+       ser inteiros positivos ou negativos. Elas são interpretadas como o
+       seguinte (falando grosso):
+
+       P >= 1000
+           provoca que uma versão seja instalada mesmo que isso constitua uma
+           redução na versão do pacote (downgrade)
+
+       990 <= P < 1000
+           provoca que uma versão seja instalada mesmo que não venha do
+           lançamento de destino, a menos que a versão instalada seja mais
+           recente
+
+       500 <= P < 990
+           provoca que uma versão seja instalada a menos que exista uma versão
+           disponível pertencente ao lançamento de destino ou se a versão
+           instalada é mais recente
+
+       100 <= P < 500
+           provoca que uma versão seja instalada a menos que exista uma versão
+           disponível pertencente a outra distribuição ou se a versão
+           instalada é mais recente
+
+       0 < P < 100
+           provoca que uma versão seja instalada apenas se não existir nenhuma
+           versão instalada do pacote
+
+       P < 0
+           previne a instalação da versão
+
+       P = 0
+           tem comportamento não definido, não o utilize.
+
+       O primeiro registo de forma-especifica que corresponda a uma versão de
+       pacote disponível determina a prioridade da versão do pacote. Falhando
+       isso, a prioridade do pacote é definida como o máximo de todas as
+       prioridades definidas por registos de forma-genérica que correspondam à
+       versão. Os registos definidos que usem padrões diferentes de "*" no
+       campo Pin são tratados como registos de forma-especifica.
+
+       Por exemplo, suponha que o ficheiro de preferências do APT contém os
+       três registos apresentados atrás:
+
+           Package: perl
+           Pin: version 5.32*
+           Pin-Priority: 1001
+
+           Package: *
+           Pin: origin ""
+           Pin-Priority: 999
+
+           Package: *
+           Pin: release unstable
+           Pin-Priority: 50
+
+       Então:
+
+       •   Será instalada a versão mais recente disponível do pacote perl,
+           desde que o número da versão comece com "5.32". Se qualquer versão
+           5.32* do perl estiver disponível e a versão instalada for 5.36*,
+           então será feito um downgrade ao perl.
+
+       •   Uma versão de qualquer pacote que não seja o perl e que esteja
+           disponível a partir do sistema local tem prioridade sobre outras
+           versões, mesmo versões que pertencem ao lançamento de destino.
+
+       •   Uma versão de um pacote cuja origem não é o sistema local mas
+           qualquer outro site listado em sources.list(5) e o qual pertence a
+           uma distribuição unstable apenas é instalado se for selecionado
+           para instalação e se nenhuma versão do pacote já estiver instalada.
+
+   Determinação da Versão do Pacote e Propriedades da Distribuição
+       As localizações listadas no ficheiro sources.list(5) devem fornecer os
+       ficheiros Packages e Release para descrever os pacotes disponíveis
+       nessa localização.
+
+       O ficheiro Packages é normalmente encontrado no directório
+       .../dists/nome-da-distribuição/componente/arquitectura: por exemplo,
+       .../dists/stable/main/binary-i386/Packages. Consiste numa série de
+       registos de várias linhas, um para cada pacote disponível nesse
+       directório. Apenas duas linhas em cada registo são relevantes para
+       definir prioridades do APT:
+
+       a linha Package:
+           fornece o nome do pacote
+
+       a linha Version:
+           fornece o número de versão do pacote nomeado
+
+       O ficheiro Release fica normalmente no directório .../dists/nome da
+       distribuição: por exemplo, .../dists/stable/Release, ou
+       .../dists/bookworm/Release. Consiste num único registo de várias linhas
+       que se aplica a todos os pacotes na árvore de directórios sob o seu
+       pai. Ao contrário do ficheiro Packages, quase todas as linhas num
+       ficheiro Release são relevantes para definir as prioridades do APT:
+
+       a linha Archive: ou Suite:
+           nomeia o arquivo ao qual pertencem todos os pacotes na árvore de
+           directórios. Por exemplo, a linha "Archive: stable" ou "Suite:
+           stable" especifica que todos os pacotes na árvore de directórios
+           abaixo do pai do ficheiro Release estão num arquivo stable.
+           Especificar este valor no ficheiro de preferências do APT irá
+           requerer a linha:
+
+               Pin: release a=stable
+
+       a linha Codename:
+           nomeia o nome de código a qual todos os pacotes na árvore de
+           directórios pertencem. Por exemplo, a linha "Codename: trixie"
+           especifica que todos os pacotes na árvore de directórios abaixo do
+           pai do ficheiro Release pertencem a uma versão chamada trixie.
+           Especificar este valor no ficheiro de preferências do APT requer a
+           linha:
+
+               Pin: release n=trixie
+
+       a linha Version:
+           nomeia a versão de lançamento. Por exemplo, os pacotes na árvore
+           podem pertencer ao lançamento de Debian versão 12. Note que não há
+           normalmente um número de versão para as distribuições testing e
+           unstable. porque ainda não foram lançadas. Especificar isto no
+           ficheiro de preferências do APT irá requerer uma das seguintes
+           linhas:
+
+               Pin: release v=12
+               Pin: release a=stable, v=12
+               Pin: release 12
+
+       a linha Component:
+           nomeia o componente de licenciamento associado com os pacotes na
+           árvore de directórios do ficheiro Release. Por exemplo, a linha
+           "Component: main" especifica que todos os pacotes na árvore de
+           directórios são do componente main, o que implica que estão
+           licenciados sob os termos listados em Debian Free Software
+           Guidelines. Especificar este componente no ficheiro de preferências
+           do APT irá requerer a linha:
+
+               Pin: release c=main
+
+       a linha Origin:
+           nomeia a originador dos pacotes na árvore de directórios do
+           ficheiro Release. Geralmente, isto é Debian. Especificar esta
+           etiqueta no ficheiro de preferências do APT irá requerer a linha:
+
+               Pin: release o=Debian
+
+       a linha Label:
+           nomeia a etiqueta dos pacotes na árvore de directórios do ficheiro
+           Release. Geralmente, isto é Debian. Especificar esta etiqueta no
+           ficheiro de preferências do APT irá requerer a linha:
+
+               Pin: release l=Debian
+
+       Todos os ficheiros Packages e Release obtidos das localizações listadas
+       no ficheiro sources.list(5) são armazenados no directório
+       /var/lib/apt/lists, ou no ficheiro nomeado pela variável
+       Dir::State::Lists no ficheiro apt.conf. Por exemplo, o ficheiro
+       debian.lcs.mit.edu_debian_dists_unstable_contrib_binary-i386_Release
+       contém o ficheiro Release obtido do site debian.lcs.mit.edu para
+       ficheiros da arquitectura binary-i386 do componente contrib da
+       distribuição unstable.
+
+   Linhas Opcionais num Registo de Preferências do APT
+       Cada registo no ficheiro de preferências do APT por começar
+       opcionalmente com uma ou mais linhas começadas com a palavra
+       Explanation:. Isto disponibiliza um espaço para comentários.
+
+EXEMPLOS
+   Acompanhando Stable
+       O seguinte ficheiro de preferências do APT irá fazer com que o APT
+       atribua uma prioridade mais alta que o predefinido (500) a todos as
+       versões de pacotes que pertencem a uma distribuição stable e uma
+       prioridade proibitivamente baixa a versões de pacotes pertencentes a
+       outras distribuições Debian.
+
+           Explicação: Desinstala ou não instala quaisquer versões de pacotes originais
+           Explicação: Debian para além daquelas da distribuição stable
+           Package: *
+           Pin: release a=stable
+           Pin-Priority: 900
+
+           Package: *
+           Pin: release o=Debian
+           Pin-Priority: -10
+
+       Com um ficheiro sources.list(5) apropriado e o ficheiro de preferências
+       acima, qualquer dos seguintes comandos irá fazer com que o APT
+       actualize para as versões stable mais recentes.
+
+           apt-get install nome-do-pacote
+           apt-get upgrade
+           apt-get dist-upgrade
+
+       O seguinte comandos irá fazer com que o APT actualize o pacote
+       especificado para a versão mais recente da distribuição testing; o
+       pacote não será actualizado de novo a menos que seja executado este
+       comando outra vez.
+
+           apt-get install pacote/testing
+
+   Acompanhando Testing ou Unstable
+       O seguinte ficheiro de preferências do APT irá fazer com que o APT
+       atribua uma prioridade alta a versões de pacotes da distribuição
+       testing, uma prioridade mais baixa a versões de pacotes da distribuição
+       unstable, e uma prioridade proibitivamente baixa a versões de pacotes
+       de outras distribuições Debian.
+
+           Package: *
+           Pin: release a=testing
+           Pin-Priority: 900
+
+           Package: *
+           Pin: release a=unstable
+           Pin-Priority: 800
+
+           Package: *
+           Pin: release o=Debian
+           Pin-Priority: -10
+
+       Com um ficheiro sources.list(5) apropriado e o ficheiro de preferências
+       acima, qualquer dos seguintes comandos irá fazer com que o APT
+       actualize para as versões testing mais recentes.
+
+           apt-get install nome-do-pacote
+           apt-get upgrade
+           apt-get dist-upgrade
+
+       O comando seguinte irá fazer com que o APT actualize o pacote
+       especificado para a versão mais recente da distribuição unstable.
+       Posteriormente, o apt-get upgrade irá actualizar o pacote para a versão
+       testing mais recente se essa for mais recente que a versão instalada,
+       caso contrário, para a versão unstable mais recente se essa for mais
+       recente que a versão instalada.
+
+           apt-get install pacote/unstable
+
+   Acompanhando a evolução de um nome de código de lançamento
+       O seguinte ficheiro de preferências do APT irá fazer com que o APT
+       atribua uma prioridade mais alta que a predefinida (500) a todas as
+       versões de pacotes pertencentes a um nome de código especificado de uma
+       distribuição com uma prioridade proibitivamente baixa a versões de
+       pacotes pertencentes a outras distribuições, nomes de código ou
+       arquivos Debian. Note que com estas preferências o APT irá seguir a
+       migração de um lançamento a partir do arquivo testing para stable e
+       mais tarde oldstable. Se você que seguir por exemplo o progresso em
+       testing não obstante as alterações do nome de código, você deve usar as
+       configurações exemplo acima.
+
+           Explicação: Desinstala ou não instala nenhumas versões de pacotes originais Debian
+           Explicação: para além daquelas da distribuição com nome de código trixie ou sid
+           Package: *
+           Pin: release n=trixie
+           Pin-Priority: 900
+
+           Explicação: Debian unstable tem sempre o nome de código sid
+           Package: *
+           Pin: release a=sid
+           Pin-Priority: 800
+
+           Package: *
+           Pin: release o=Debian
+           Pin-Priority: -10
+
+       Com um ficheiro sources.list(5) apropriado e o ficheiro de preferências
+       acima, qualquer dos seguintes comandos fará com que o APT actualize
+       para a versão mais recente no lançamento com nome de código trixie.
+
+           apt-get install nome-do-pacote
+           apt-get upgrade
+           apt-get dist-upgrade
+
+       O seguinte comando irá fazer com que o APT actualize o pacote
+       especificado para a versão mais recente da distribuição sid.
+       Posteriormente, apt-get upgrade irá actualizar o pacote para a versão
+       trixie mais recente se essa for mais recente que a versão instalada,
+       caso contrário, para a versão sid mais recente se essa for mais recente
+       que a versão instalada.
+
+           apt-get install pacote/sid
+
+FICHEIROS
+       /etc/apt/preferences
+           Ficheiro de preferências de versão. Isto é onde você deve
+           especificar "pinning", isto é, uma preferência para obter certos
+           pacotes A partir de uma fonte separada ou a partir duma versão
+           diferente de uma distribuição. Item de Configuração:
+           Dir::Etc::Preferences.
+
+       /etc/apt/preferences.d/
+           Ficheiros fragmentados para as preferências de versão. Item de
+           Configuração: Dir::Etc::PreferencesParts.
+
+VEJA TAMBÉM
+       apt-get(8) apt-cache(8) apt.conf(5) sources.list(5)
+
+BUGS
+       página de bugs do APT[1]. Se deseja reportar um bug no APT, por favor
+       veja /usr/share/doc/debian/bug-reporting.txt ou o comando reportbug(1).
+
+TRADUÇÃO
+       A tradução Portuguesa foi feita por Américo Monteiro
+       <a_monteiro@netcabo.pt> de 2009 a 2012. A tradução foi revista pela
+       equipa de traduções portuguesas da Debian <traduz@debianpt.org>.
+
+       Note que este documento traduzido pode conter partes não traduzidas.
+       Isto é feito propositadamente, para evitar perdas de conteúdo quando a
+       tradução está atrasada relativamente ao conteúdo original.
+
+AUTOR
+       Equipa do APT
+
+NOTAS
+        1. página de bugs do APT
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                       03 Janeiro 2022             APT_PREFERENCES(5)

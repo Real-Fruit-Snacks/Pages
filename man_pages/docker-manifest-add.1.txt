@@ -1,0 +1,139 @@
+podman-manifest-add(1)      General Commands Manual     podman-manifest-add(1)
+
+NAME
+       podman-manifest-add - Add an image to a manifest list or image index
+
+SYNOPSIS
+       podman manifest add [options] listnameorindexname [transport]:imagename
+
+DESCRIPTION
+       Adds the specified image to the specified manifest list or image index.
+
+RETURN VALUE
+       The list image's ID.
+
+OPTIONS
+   --all
+       If  the  image  which  should be added to the list or index is itself a
+       list or index, add all of the contents to the local list.  By  default,
+       only  one  image from such a list or index will be added to the list or
+       index.  Combining --all with any of the other options  described  below
+       is NOT recommended.
+
+   --annotation=annotation=value
+       Set an annotation on the entry for the image.
+
+   --arch
+       Override the architecture which the list or index records as a require‐
+       ment for the image.  If imageName refers to a manifest  list  or  image
+       index,  the architecture information will be retrieved from it.  Other‐
+       wise, it will be retrieved from the image's configuration information.
+
+   --authfile=path
+       Path of the authentication file. Default is ${XDG_RUNTIME_DIR}/contain‐
+       ers/auth.json,  which  is set using podman login.  If the authorization
+       state is not found there, $HOME/.docker/config.json is  checked,  which
+       is set using docker login.
+
+       Note:  There is also the option to override the default path of the au‐
+       thentication file by setting the REGISTRY_AUTH_FILE  environment  vari‐
+       able. This can be done with export REGISTRY_AUTH_FILE=path.
+
+   --cert-dir=path
+       Use  certificates at path (*.crt, *.cert, *.key) to connect to the reg‐
+       istry. (Default: /etc/containers/certs.d) Please refer  to  containers-
+       certs.d(5)  for details.  (This option is not available with the remote
+       Podman client, including Mac and Windows (excluding WSL2) machines)
+
+   --creds=[username[:password]]
+       The [username[:password]] to use to authenticate with the registry,  if
+       required.   If  one  or  both  values  are not supplied, a command line
+       prompt will appear and the value can be entered. The  password  is  en‐
+       tered without echo.
+
+   --features
+       Specify  the  features list which the list or index records as require‐
+       ments for the image.  This option is rarely used.
+
+   --os
+       Override the OS which the list or index records as  a  requirement  for
+       the  image.  If imagename refers to a manifest list or image index, the
+       OS information will be retrieved from it.  Otherwise, it  will  be  re‐
+       trieved from the image's configuration information.
+
+   --os-version
+       Specify the OS version which the list or index records as a requirement
+       for the image.  This option is rarely used.
+
+   --tls-verify
+       Require HTTPS and verify certificates when contacting  registries  (de‐
+       fault:  true).   If  explicitly  set  to true, TLS verification will be
+       used.  If set to false, TLS verification will  not  be  used.   If  not
+       specified,  TLS verification will be used unless the target registry is
+       listed as an insecure registry in containers-registries.conf(5)
+
+   --variant
+       Specify the variant which the list or  index  records  for  the  image.
+       This  option  is typically used to distinguish between multiple entries
+       which share the same architecture value,  but  which  expect  different
+       versions of its instruction set.
+
+Transport
+       Multiple transports are supported:
+
+       docker://docker-reference (default)
+         An  image  in  a  registry implementing the "Docker Registry HTTP API
+       V2". By default, uses the authorization state in  $XDG_RUNTIME_DIR/con‐
+       tainers/auth.json, which is set using (podman login). If the authoriza‐
+       tion state is not found there,  $HOME/.docker/config.json  is  checked,
+       which is set using (docker login).
+
+              $ podman manifest add mylist:v1.11 docker://quay.io/username/myimage
+
+       containers-storage:oci-reference
+         An  image in oci-reference format stored in the local container stor‐
+       age. oci-reference must contain a tag.
+
+              $ podman manifest add mylist:v1.11 containers-storage:quay.io/username/myimage
+
+       dir:path
+         An existing local directory path storing  the  manifest,  layer  tar‐
+       balls, and signatures as individual files. This
+         is  a non-standardized format, primarily useful for debugging or non‐
+       invasive container inspection.
+
+              $ podman manifest add dir:/tmp/myimage
+
+       docker-archive:path[:docker-reference]
+         An image is stored in the docker save formatted file.   docker-refer‐
+       ence is only used when creating such a
+         file, and it must not contain a digest.
+
+              $ podman manifest add docker-archive:/tmp/myimage
+
+       docker-daemon:docker-reference
+         An  image  in docker-reference format stored in the docker daemon in‐
+       ternal storage. The docker-reference can also be an image  ID  (docker-
+       daemon:algo:digest).
+
+              $ sudo podman manifest add docker-daemon:docker.io/library/myimage:33
+
+       oci-archive:path:tag
+         An image tag in a directory compliant with "Open Container Image Lay‐
+       out Specification" at path.
+
+              $ podman manifest add oci-archive:/tmp/myimage
+
+EXAMPLE
+              podman manifest add mylist:v1.11 docker://fedora
+              71c201d10fffdcac52968a000d85a0a016ca1c7d5473948000d3131c1773d965
+
+              podman manifest add --all mylist:v1.11 docker://fedora
+              71c201d10fffdcac52968a000d85a0a016ca1c7d5473948000d3131c1773d965
+
+              podman manifest add --arch arm64 --variant v8 mylist:v1.11 docker://71c201d10fffdcac52968a000d85a0a016ca1c7d5473948000d3131c1773d965
+
+SEE ALSO
+       podman(1), podman-manifest(1)
+
+                                                        podman-manifest-add(1)

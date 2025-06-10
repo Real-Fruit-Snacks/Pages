@@ -1,44 +1,65 @@
 # Linux Man Pages
 
-A self-contained web application for searching and viewing Linux manual pages, designed for static hosting on GitHub Pages or GitLab Pages. Works completely offline after initial deployment.
+A fully self-contained, offline-capable web application for searching and viewing Linux manual pages. Designed for static hosting on GitHub Pages, GitLab Pages, or any web server. No internet connection required after deployment - all data is included!
+
+## Project Structure
+
+```
+.
+├── index.html          # Complete application (HTML + CSS + JS)
+├── data/               # Search indexes
+├── themes/             # Theme CSS files
+├── man_pages/          # Man page content files
+├── tldr_pages/         # TLDR summaries
+├── docs/               # Documentation
+└── tests/              # Test scripts
+```
 
 ## Features
 
 - 🔍 **Fast Search**: Real-time search with suggestions as you type
-- 📚 **Comprehensive Coverage**: 6,800 Linux man pages including modern tools
-- 📋 **TLDR Integration**: Quick practical examples for each command
-- 🌓 **Dark Mode**: Toggle between light and dark themes
-- 🚀 **Lazy Loading**: Man pages load on-demand for optimal performance
+- 📚 **Comprehensive Coverage**: 7,897 Linux man pages from official sources
+- 📋 **TLDR Integration**: Quick practical examples included locally
+- 🎨 **Multiple Themes**: 5 beautiful themes (Dark, Solarized Dark, Dracula, Monokai, High Contrast)
+- 🚀 **Instant Loading**: All data stored locally for blazing-fast performance
 - 📱 **Responsive Design**: Works perfectly on desktop and mobile devices
-- 🔒 **Self-Contained**: No external dependencies or API calls
-- 💾 **Size Optimized**: Automatically splits data to respect hosting limits
+- 🔒 **100% Offline**: No external dependencies, CDNs, or API calls
+- 💾 **Optimized Storage**: Efficient data structure respects hosting limits
 - ⭐ **Bookmarks**: Save frequently used commands
 - 🕐 **History**: Track recently viewed pages
 - ⌨️ **Keyboard Navigation**: Full keyboard support for power users
-- 🔎 **Full-Text Search**: Search within man page content (optional)
+- 🌐 **No Internet Required**: Works completely offline after deployment
 
 ## Live Demo
 
 - **GitHub Pages**: https://real-fruit-snacks.github.io/Pages/
 - **GitLab Pages**: `https://[your-username].gitlab.io/[your-repo]/`
 
-## Structure
+## What's Included
 
 ```
-.
-├── index.html              # Complete web application
-├── data/                   # Man page data
-│   ├── index.js           # Search index (6,800 commands)
-│   ├── man_1.js           # Man page content
-│   └── manifest.js        # Data file listing
+├── index.html             # Complete web application
+├── data/                  # Application data
+│   ├── index.js          # Search index (7,897 commands)
+│   └── tldr_index.js     # TLDR pages index
+├── themes/                # Modular theme CSS files
+│   ├── dark.css          # Default dark theme
+│   ├── solarized-dark.css # Solarized dark theme
+│   ├── dracula.css       # Dracula theme
+│   ├── monokai.css       # Monokai theme
+│   └── high-contrast.css # Accessibility theme
+├── man_pages/             # 7,897 man page files
+│   └── [command].[section].txt
+├── tldr_pages/            # TLDR summaries
+│   ├── common/           # Cross-platform commands
+│   └── linux/            # Linux-specific commands
+├── docs/                  # Documentation
+├── tests/                 # Test scripts
 ├── .github/               # GitHub Actions
-│   └── workflows/
-│       └── deploy-pages.yml
-├── .gitlab-ci.yml         # GitLab CI/CD configuration
-├── .nojekyll              # Disable Jekyll processing
-├── README.md              # Documentation
-├── LICENSE                # MIT License
-└── package.json           # Package info (no dependencies needed)
+├── .gitlab-ci.yml         # GitLab CI/CD
+├── .nojekyll             # GitHub Pages config
+├── package.json          # Node.js config
+└── README.md             # This file
 ```
 
 ## Deployment
@@ -106,11 +127,19 @@ cd Pages
    - Use arrow keys to navigate suggestions
    - Press Escape to close
 4. **TLDR**: Click the 📋 button to jump to quick examples
-5. **Keyboard Shortcuts**:
+5. **Themes**: Click the theme toggle (🌙) in the top-left corner
+6. **Keyboard Shortcuts**:
    - `/` - Focus search
    - `Escape` - Clear search or close man page
    - `↑/↓` - Navigate suggestions
-   - `Ctrl+K` - Toggle dark mode
+
+## Available Themes
+
+- **Dark** - Default dark theme with blue accents
+- **Solarized Dark** - Popular color scheme for reduced eye strain
+- **Dracula** - Purple-accented dark theme
+- **Monokai** - Classic code editor theme
+- **High Contrast** - Accessibility-focused with maximum contrast
 
 ## Man Page Sections
 
@@ -137,15 +166,17 @@ The application includes comprehensive coverage of Linux commands:
 ## Technical Details
 
 - **File Size Management**: Automatically splits data into multiple files under 80MB each
-- **Performance**: Uses lazy loading to load only requested man pages
+- **Performance**: Instant loading with pre-processed local data
 - **Search Index**: Pre-built index enables instant search without loading all data
 - **Cross-Browser**: Compatible with all modern browsers
-- **TLDR Data**: Cached in localStorage with 7-day expiration
+- **TLDR Data**: Stored locally, no caching needed
 - **Syntax Highlighting**: Man page content is enhanced with HTML formatting
 - **Storage**: Uses localStorage for bookmarks, history, and preferences
-- **Command Coverage**: 6,800 Linux man pages from LinuxCommandLibrary
-- **Data Source**: LinuxCommandLibrary database (includes standard + modern tools)
-- **Data Format**: Properly formatted man pages using standard man toolchain
+- **Command Coverage**: 7,897 Linux man pages from official sources
+- **TLDR Coverage**: Comprehensive TLDR pages for common and Linux-specific commands
+- **Theme System**: Modular CSS architecture with 5 built-in themes
+- **Data Format**: Pre-processed text files for instant loading
+- **Search Performance**: No limit on search results displayed
 
 ## Browser Support
 
@@ -165,15 +196,25 @@ The application includes comprehensive coverage of Linux commands:
 ## Privacy
 
 - No analytics or tracking
-- No external requests (except TLDR on first use)
+- No external requests whatsoever
 - All data stored locally in browser
 - No cookies required
+- Works in private/incognito mode
+
+## Offline Capability
+
+This application is **100% offline-capable**. All resources are included:
+- ✅ All man pages stored locally in `man_pages/` directory
+- ✅ All TLDR summaries stored locally in `tldr_pages/` directory  
+- ✅ All themes stored locally in `themes/` directory
+- ✅ No external CDNs or API calls
+- ✅ No internet connection required after deployment
 
 ## Known Limitations
 
-- TLDR summaries require internet on first fetch (cached afterwards)
-- Maximum 100MB per data file (GitLab Pages limit)
-- Search limited to command names and descriptions
+- Maximum 100MB per file (GitHub/GitLab Pages limit)
+- Search shows all matching results without pagination
+- Search limited to command names and descriptions (not full-text)
 
 ## License
 

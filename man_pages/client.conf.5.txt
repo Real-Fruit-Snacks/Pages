@@ -1,0 +1,144 @@
+client.conf(5)                   OpenPrinting                   client.conf(5)
+
+NOME
+       client.conf - ficheiro de configuração de cliente para cups (descontin‐
+       uado no macos)
+
+DESCRIÇÃO
+       O ficheiro client.conf configura o cliente do CUPS e  está  normalmente
+       localizado  nos  directórios  /etc/cups  e/ou  ~/.cups.  Cada  linha no
+       ficheiro pode ser uma directiva de configuração, uma linha  em  branco,
+       ou um comentário. As linhas de comentários começam com o caractere #.
+
+       Nota: A partir do macOS 10.7, este ficheiro é apenas usado por linha de
+       comandos e aplicações X11 mais o backend IPP.  A  directiva  ServerName
+       nem  é suportada no macOS. A partir do macOS 10.12, todas as aplicações
+       podem  aceder  a  estas   definições   no   ficheiro   /Library/Prefer‐
+       ences/org.cups.PrintingPrefs.plist em vez deste. Veja a secção NOTAS em
+       baixo para mais informação.
+
+   DIRECTIVAS
+       As seguintes directivas são  compreendidas  pelo  cliente.  Consulte  a
+       ajuda online para descrições detalhadas.
+
+       AllowAnyRoot Yes
+
+       AllowAnyRoot No
+            Especifica  se se deve permitir TLS com certificados que não foram
+            assinados por uma Autoridade de Certificados de confiança. A  pre‐
+            definição é "Yes".
+
+       AllowExpiredCerts Yes
+
+       AllowExpiredCerts No
+            Especifica  se  se deve permitir TLS com certificados expirados. A
+            predefinição é "No".
+
+       DigestOptions DenyMD5
+
+       DigestOptions None
+            Especifica opções de autenticação HTTP Digest.  DenyMD5  desactiva
+            suporte para o algoritmo hash MD5 original.
+
+       Encryption IfRequested
+
+       Encryption Never
+
+       Encryption Required
+            Especifica o nível de encriptação que deve ser usado.
+
+       GSSServiceName name
+            Especifica  o  nome  de  serviço  Kerberos que é usado para auten‐
+            ticação, tipicamente "host", "http", ou "ipp".  O CUPS adiciona  o
+            nome  de máquina remoto ("name@server.example.com") por si. O nome
+            predefinido é "http".
+
+       ServerName hostname-or-ip-address[:port]
+
+       ServerName /domain/socket
+            Especifica o endereço e opcionalmente o porto a usar ao se ligar a
+            um servidor. Nota: Esta directiva não é suportada no macOS 10.7 ou
+            posterior.
+
+       ServerName hostname-or-ip-address[:port]/version=1.1
+            Especifica o endereço e opcionalmente o porto a usar ao se ligar a
+            um servidor que corre CUPS 1.3.12 e anterior.
+
+       SSLOptions  [AllowDH]  [AllowRC4]  [AllowSSL3]  [DenyCBC]  [DenyTLS1.0]
+       [MaxTLS1.0] [MaxTLS1.1] [MaxTLS1.2] [MaxTLS1.3] [MinTLS1.0] [MinTLS1.1]
+       [MinTLS1.2] [MinTLS1.3]
+
+       SSLOptions None
+            Define  opções  de  encriptação (apenas em /etc/cups/client.conf).
+            Por predefinição, o CUPS apenas  suporta  encriptação  usando  TLS
+            v1.0  ou superior usando suites de cifra conhecidas seguras. A se‐
+            gurança é reduzida são usadas opções Allow. A segurança  é  melho‐
+            rada  quando são usadas opções Deny. A opção AllowDH activa suites
+            de cifra que usam negociação de chaves Diffie-Hellman simples (não
+            suportado  em sistemas que usem TLS GNU).  A opção AllowRC4 activa
+            as suites de cifra RC4 de 128-bit, as quais  são  requeridas  para
+            alguns  clientes antigos. A opção AllowSSL3 activa SSL v3.0, o que
+            é requerido por alguns clientes antigos que não suportam TLS v1.0.
+            A  opção  DenyCBC  desactiva  toda as suites de cifra CBC. A opção
+            DenyTLS1.0 desactiva suporte a TLS v1.0 -  isto  define  a  versão
+            mínima  de  protocolo  para  TLS  v1.1. As opções MinTLS definem a
+            versão TLS mínima a suportar. As opções MaxTLS  definem  a  versão
+            TLS  máxima  a suportar. Nem todos os sistemas operativos suportam
+            TLS 1.3 nesta altura.
+
+       TrustOnFirstUse Yes
+
+       TrustOnFirstUse No
+            Especifica se se deve confiar em novos certificados  TLS.  A  pre‐
+            definição é "Yes".
+
+       User name
+            Especifica o nome de utilizador predefinido a usar para pedidos.
+
+       UserAgentTokens None
+
+       UserAgentTokens ProductOnly
+
+       UserAgentTokens Major
+
+       UserAgentTokens Minor
+
+       UserAgentTokens Minimal
+
+       UserAgentTokens OS
+
+       UserAgentTokens Full
+            Especifica que informação está incluída no cabeçalho User-Agent de
+            pedidos HTTP.  "None" desactiva o cabeçalho User-Agent.   "Produc‐
+            tOnly"  reporta "CUPS".  "Major" reporta "CUPS/major IPP/2".  "Mi‐
+            nor"  reporta  "CUPS/major.minor  IPP/2.1".    "Minimal"   reporta
+            "CUPS/major.minor.patch  IPP/2.1".   "OS"  reporta "CUPS/major.mi‐
+            nor.path (osname osversion) IPP/2.1".   "Full"  reporta  "CUPS/ma‐
+            jor.minor.path  (osname osversion; architecture) IPP/2.1".  A pre‐
+            definição é "Minimal".
+
+       ValidateCerts Yes
+
+       ValidateCerts No
+            Especifica se apenas se deve permitir TLS  com  certificados  cujo
+            nome comum correspondem ao nome de máquina. A predefinição é "No".
+
+NOTAS
+       O  ficheiro client.conf está descontinuado no macOS e não será mais su‐
+       portado em futuros lançamentos do CUPS. As definições  de  configuração
+       podem ser visualizadas ou alteradas usando o comando defaults(1):
+       defaults write /Library/Preferences/org.cups.PrintingPrefs.plist Encryption Required
+       defaults write /Library/Preferences/org.cups.PrintingPrefs.plist TrustOnFirstUse -bool NO
+
+       defaults read /Library/Preferences/org.cups.PrintingPrefs.plist Encryption
+       Em   Linux   e   noutros   sistemas   que  usem  GNU  TLS,  o  ficheiro
+       /etc/cups/ssl/site.crl, se presente, fornece uma lista de  certificados
+       X.509 revogados e é usado quando se validam certificados.
+
+VEJA TAMBÉM
+       cups(1), default(1), Ajuda Online do CUPS (http://localhost:631/help)
+
+COPYRIGHT
+       Copyright © 2021-2022 de OpenPrinting.
+
+2021-02-28                           CUPS                       client.conf(5)

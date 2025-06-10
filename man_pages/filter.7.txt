@@ -1,0 +1,249 @@
+filter(7)                        OpenPrinting                        filter(7)
+
+NOME
+       filter - interface de filtros de conversão de ficheiros do cups
+
+RESUMO
+       filter job user title num-copies options [ filename ]
+
+       #include <cups/cups.h>
+
+       ssize_t cupsBackChannelRead(char *buffer, size_t bytes,
+                                   double timeout);
+
+       cups_sc_status_t cupsSideChannelDoRequest(cups_sc_command_t command,
+                                                 char *data, int *datalen,
+                                                 double timeout);
+
+       #include <cups/ppd.h>
+
+       const char *cupsGetOption(const char *name, int num_options,
+                        cups_option_t *options);
+
+       int cupsMarkOptions(ppd_file_t *ppd, int num_options,
+                           cups_option_t *options);
+
+       int cupsParseOptions(const char *arg, int num_options,
+                            cups_option_t **options);
+
+       ppd_choice_t *ppdFindMarkedChoice(ppd_file_t *ppd, const char *keyword);
+
+       void ppdMarkDefaults(ppd_file_t *ppd);
+
+       ppd_file_t *ppdOpenFile(const char *filename);
+
+DESCRIÇÃO
+       A  interface  de  filtros  do CUPS fornece um método standard para adi‐
+       cionar suporte para novos tipos de documentos ou impressoras  ao  CUPS.
+       Cada filtro é capaz de converter de um ou mais formatos de entrada para
+       outro formato que pode ser ou imprimido diretamente ou canalizado  para
+       outro filtro para o tornar num formato imprimível.
+
+       Filtros  DEVEM  ser  capazes  de ler a partir de um nome de ficheiro na
+       linha de comandos ou a partir da entrada standard, copiando  a  entrada
+       standard  para  um  ficheiro  temporário como requerido pelo formato do
+       ficheiro. Todas as saídas DEVEM ser enviadas  para  a  saída  standard.
+       Filters NÃO DEVEM tentar comunicar diretamente com a impressora, outros
+       processos, ou outros serviços.
+
+       O nome de comando (argv[0]) é definido para o  nome  da  impressora  de
+       destino mas está também disponível na variável de ambiente PRINTER.
+
+OPÇÕES
+       As opções são passadas em argv[5] e são codificadas a partir dos atrib‐
+       utos IPP correspondentes usados quando o trabalho foi submetido. Use  a
+       função  cupsParseOptions() para carregar as opções numa matriz cups_op‐
+       tion_t e a função cupsGetOption()  para obter o valor  de  um  atributo
+       específico.  Tenha  atenção  aos nomes alternativos comuns de atributos
+       IPP tais como "landscape" para o atributo IPP "orientation-requested".
+
+       As opções passadas na linha de comandos tipicamente não incluem as  es‐
+       colhas  predefinidas  do  ficheiro  PPD  da  impressora. Use as funções
+       ppdMarkDefaults()  e cupsMarkOptions()   da  biblioteca  do  CUPS  para
+       aplicar  as opções às predefinições do PPD e mapear quaisquer atributos
+       IPP às opções  PPD  correspondentes.  Use  ppdFindMarkedChoice()   para
+       obter a escolha de selecção-de-utilizador para uma opção PPD. Por exem‐
+       plo, um filtro pode usar o seguinte código para determinar o valor  ac‐
+       tual da opção PPD Duplex.
+
+           ppd_file_t *ppd = ppdOpenFile(getenv("PPD"));
+           cups_option_t *options = NULL;
+           int num_options = cupsParseOptions(argv[5], 0, &options);
+
+           ppdMarkDefaults(ppd);
+           cupsMarkOptions(ppd, num_options, options);
+
+           ppd_choice_t *choice = ppdFindMarkedChoice(ppd, "Duplex");
+
+       Os  filtros  raster devem usar um conjunto de escolhas de opção através
+       do cabeçalho de página raster, pois esses refletem as opções em  efeito
+       para uma determinada página. As opções especificadas na linha de coman‐
+       dos determinam os valores predefinidos  para  o  trabalho  inteiro,  as
+       quais podem ser sobrepostas numa base de por-cada-página.
+
+MENSAGENS DE RELATÓRIO
+       As  mensagens  enviadas para o erro standard são geralmente armazenadas
+       no atributo "printer-state-message" da impressora e no ficheiro  Error‐
+       Log actual. Cada linha começa com, um prefixo standard:
+
+       ALERT: message
+            Define  o  atributo  "printer-state-message" e adiciona a mensagem
+            especificada ao ErrorLog actual usando o nível de log "alert".
+
+       ATTR: attribute=value [ ... attribute=value]
+            Define  o  atributo(s)  de  trabalho  ou  impressora  nomeada.  Os
+            seguintes  atributos  de  trabalho  podem  ser definidos: "job-me‐
+            dia-progress". Os seguintes  atributos  de  impressora  podem  ser
+            definidos:          "auth-info-required",         "marker-colors",
+            "marker-high-levels",    "marker-levels",     "marker-low-levels",
+            "marker-message", "marker-names", "marker-types", "printer-alert",
+            e "printer-alert-description".
+
+       CRIT: message
+            Define o atributo "printer-state-message" e  adiciona  a  mensagem
+            especificada ao ErrorLog actual usando o nível de log "critical".
+
+       DEBUG: message
+            Adiciona a mensagem especificada ao ErrorLog actual usando o nível
+            de log "debug". As mensagens DEBUG nunca são armazenadas no atrib‐
+            uto "printer-state-message".
+
+       DEBUG2: message
+            Adiciona a mensagem especificada ao ErrorLog actual usando o nível
+            de log "debug2". As mensagens  DEBUG2  nunca  são  armazenadas  no
+            atributo "printer-state-message".
+
+       EMERG: message
+            Define  o  atributo  "printer-state-message" e adiciona a mensagem
+            especificada ao ErrorLog actual usando o nível de log "emergency".
+
+       ERROR: message
+            Define o atributo "printer-state-message" e  adiciona  a  mensagem
+            especificada ao ErrorLog actual usando o nível de log "error".
+
+       INFO: message
+            Define  o  atributo  "printer-state-message". Se o LogLevel actual
+            estiver definido para "debug2", também adiciona a mensagem especi‐
+            ficada ao ErrorLog usando o nível de log "info".
+
+       NOTICE: message
+            Define  o  atributo  "printer-state-message" e adiciona a mensagem
+            especificada ao ErrorLog actual usando o nível de log "notice".
+
+       PAGE: page-number #-copies
+
+       PAGE: total #-pages
+            Adiciona a entrada ao PageLog actual. A  primeira  forma  adiciona
+            #-copies ao atributo "job-media-sheets-completed". A segunda forma
+            define o atributo "job-media-sheets-completed" para #-pages.
+
+       PPD: Keyword=Value [ ... KeywordN=Value ]
+            Define a palavra chave nomeada no ficheiro PPD da impressora. Isto
+            é  usado  tipicamente  pare atualizar palavras chave de opção pre‐
+            definida como a DefaultPageSize e as várias opções instaláveis  no
+            ficheiro PPD.
+
+       STATE: printer-state-reason [ ... printer-state-reason ]
+
+       STATE: + printer-state-reason [ ... printer-state-reason ]
+
+       STATE: - printer-state-reason [ ... printer-state-reason ]
+            Define,  adiciona, ou remove palavras chave "printer-state-reason"
+            para  a  fila  actual.  Tipicamente  isto  é  usado  para  indicar
+            condições de média, tinta e toner numa impressora.
+
+       WARNING: message
+            Define  o  atributo  "printer-state-message" e adiciona a mensagem
+            especificada ao ErrorLog actual usando o nível de log "warning".
+
+VARIÁVEIS DE AMBIENTE
+       As seguintes variáveis de ambiente são  definidas  pelo  servidor  CUPS
+       quando se executa o filtro:
+
+       CHARSET
+            O   conjunto  de  caracteres  de  texto  predefinido,  tipicamente
+            "utf-8".
+
+       CLASS
+            Quando um trabalho é submetido  para  uma  classe  de  impressora,
+            contém  o  nome da classe de impressora de destino. Caso contrário
+            esta variável de ambiente não será definida.
+
+       CONTENT_TYPE
+            O tipo de média MIME associado com o  ficheiro  de  trabalho  sub‐
+            metido, por exemplo "application/postscript".
+
+       CUPS_CACHEDIR
+            O  directório  onde ficheiros de cache semi-persistentes podem ser
+            encontrados e armazenados.
+
+       CUPS_DATADIR
+            O directório onde podem ser encontrados ficheiros de dados.
+
+       CUPS_FILETYPE
+            O tipo de ficheiro a ser imprimido: "job-sheet"  para  uma  página
+            banner e "document" para um ficheiro de impressão regular.
+
+       CUPS_MAX_MESSAGE
+            O  tamanho  máximo  de uma mensagem enviada para stderr, incluindo
+            qualquer prefixo inicial e o indício de nova linha final.
+
+       CUPS_SERVERROOT
+            O directório raiz do servidor.
+
+       FINAL_CONTENT_TYPE
+            O tipo de média MIME associado com a saída destinada à impressora,
+            por exemplo "application/vnd.cups-postscript".
+
+       LANG O locale de idioma predefinido (tipicamente C ou en).
+
+       PATH O  caminho  de execução standard para programas externos que podem
+            ser corridos pelo filtro.
+
+       PPD  O nome de caminho completo do ficheiro PostScript Printer Descrip‐
+            tion (PPD) para esta impressora.
+
+       PRINTER
+            O nome da impressora.
+
+       RIP_CACHE
+            A  quantidade de memória recomendada a usar para Raster Image Pro‐
+            cessors (RIPs).
+
+       SOFTWARE
+            O   nome   e   número   de   versão   do   servidor   (tipicamente
+            CUPS/maior.menor).
+
+       TZ   A zona horária do servidor.
+
+       USER O  utilizador  que  executa  o filtro, tipicamente "lp" ou "root";
+            consulte o ficheiro cups-files.conf para a definição actual.
+
+DE ACORDO COM
+       Apesar da interface do filtro ser compatível com scripts  de  interface
+       do System V, o CUPS não suporta scripts de interface System V.
+
+NOTAS
+       Drivers  de  impressoras  e backends do CUPS estão descontinuados e não
+       irão ser mais suportados num futuro lançamento do CUPS. Impressoras que
+       não  suportem  IPP  podem  ser  suportadas  usando  aplicações  como  a
+       ippeveprinter(1).
+
+       Os filtros do CUPS não se destinam a ser corridos diretamente pelo uti‐
+       lizador. Além dos problemas com a interface antiga do System V (argv[0]
+       é o nome da impressora), os filtros do CUPS também esperam variáveis de
+       ambiente  específicas  e  descritores de ficheiro, e tipicamente correm
+       numa sessão de utilizador que (no macOS) tem restrições adicionais  que
+       afectam  como  eles  correm.  A  menos que você seja um desenvolvedor e
+       saiba o que está a fazer, por favor não corra os  filtros  diretamente.
+       Em  vez  disso, use o programa cupsfilter(8) para usar os filtros apro‐
+       priados para as conversões que você precisa.
+
+VEJA TAMBÉM
+       backend(7), cups(1), cups-files.conf(5), cupsd(8), cupsfilter(8),
+       Ajuda Online do CUPS (http://localhost:631/help)
+
+COPYRIGHT
+       Copyright © 2021-2022 de OpenPrinting.
+
+2021-02-28                           CUPS                            filter(7)

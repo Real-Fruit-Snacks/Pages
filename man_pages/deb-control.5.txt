@@ -1,0 +1,342 @@
+deb-control(5)                    dpkg suite                    deb-control(5)
+
+NAMN
+       deb-control - huvudstyrfilsformat för Debians binärpaket
+
+SYNOPS
+       DEBIAN/control
+
+BESKRIVNING
+       Varje Debianbinärpaket innehåller en fil control i posten control, och
+       dess deb822(5)-format är en delmängd av huvud-debian/control-filen från
+       Debiankällkodspaketen, se deb-src-control(5).
+
+       Filen innehåller ett antal fält. Varje fält börjar med en etikett,
+       såsom Package eller Version (skiftlägesoberoende), följt av ett
+       kolontecken och fältets kropp (skiftlägesberoende såvida inte annat
+       anges). Fält avdelas endast av fältetiketter. Med andra ord kan texten
+       i fälten spänna över flera rader, men installationsverktygen kommer
+       oftast att slå samman rader när kroppen tolkas (förutom när det gäller
+       fältet Description, se nedan).
+
+FÄLT
+       Package: paketnamn (krävs)
+           Värdet på fältet bestämmer paketets namn, och används av de flesta
+           installationsverktygen för att generera filnamnen.
+
+       Package-Type: deb|udeb|typ
+           Detta fält anger paketets typ. udeb används för storleksbegränsade
+           paket som används av debians installationsprogram. deb är
+           standardvärdet, och antas om fältet saknas. Fler typer kan komma
+           att läggas till i framtiden.
+
+       Version: versionssträng (krävs)
+           Vanligtvis är detta det ursprungliga paketets versionsnummer på den
+           form programmets författare använder. Den kan även innehålla ett
+           Debianuppdateringsnummer (för paket vars källa är utanför Debian).
+           Exakt format och sorteringsalgoritm beskrivs i deb-version(7).
+
+       Maintainer: fullt-namn-epost (rekommenderas)
+           Ska vara på formatet ”Joe Bloggs <jbloggs@foo.com>” och är normalt
+           sett den person som skapat paketet, till skillnad från författaren
+           av den programvara som paketerades.
+
+       Description: kort-beskrivning (rekommenderas)
+        lång-beskrivning
+           Formatet för paketbeskrivningen är en kortfattad sammanfattning på
+           den första raden (efter Description-fältet). Följande rader bör
+           användas för en längre, mer detaljerad beskrivning. Varje rad i den
+           lägre beskrivningen måste inledas med ett blanksteg, och blanka
+           rader i den långa beskrivningen måste innehålla en ensam punkt
+           (”.”) efter det inledande blanksteget.
+
+       Section: sektion
+           Detta är ett generellt fält som ger paketet en kategori baserat på
+           programvara som det installerar. Några vanliga sektioner är utils,
+           net, mail, text, x11, osv.
+
+       Priority: prioritet
+           Ställer in hur viktigt paketet är jämfört med systemet som helhet.
+           Vanliga prioriteter är required (nödvändig), standard (normal),
+           optional (valfritt), extra (extra), osv.
+
+       Gälten Section och Priority har vanligtvis en definierad uppsättning
+       accepterade värden baserade på den specifika distributionens policy.
+
+       Installed-Size: storlek
+           Ungefärlig total storlek för paketets installerade filer, i KiB-
+           enheter. Algoritmen för att beräkna storleken beskrivs i
+           deb-substvars(5).
+
+       Protected: yes|no
+           Fältet krävs normalt sett endast om svaret är yes (ja), och
+           betecknar att paketet huvudsakligen krävs för en korrekt start av
+           systemet eller som används som skräddarsydda systemlokala
+           metapaket. dpkg(1) eller andra installationsverktyg tillåter inte
+           att ett paket märkt Protected tas bort (åtminstone inte utan att
+           använda en av de tvingande flaggorna).
+
+           Stöds sedan dpkg 1.20.1.
+
+       Essential: yes|no
+           Fältet krävs normalt sett endast om svaret är yes (ja), och
+           betecknar att paketet krävs av pakethanteringssystemet, för att
+           systemet generellt ska fungera korrekt eller under start (även om
+           det sistnämnda bör skrivas om till att istället använda ett
+           Protected-fält). dpkg(1) eller andra installationsverktyg tillåter
+           inte att ett paket märkt Essential tas bort (åtminstone inte utan
+           att använda en av de tvingande flaggorna).
+
+       Build-Essential: yes|no
+           Fältet krävs normalt sett endast om svaret är yes (ja), och sätts
+           vanligtvis in av arkivprogramvaran. Det betecknar ett paket som
+           krävs för att bygga andra paket.
+
+       Architecture: ark|all> (krävs)
+           Arkitekturen anger vilken sorts maskinvara paketet kompilerades
+           för. Vanliga arkitekturer är amd64, armel, i386, powerpc, osv.
+           Observera att värdet all är avsett för paket som är oberoende av
+           arkitektur. Exempel på detta är skal- eller Perlskript och
+           dokumentation.
+
+       Origin: namn
+           Namnet på den distribution paketet härstammar från.
+
+       Bugs: url
+           URL:en till felrapporteringssystemet för detta paket. Det nuvarande
+           formatet är systemtyp://adress, till exempel
+           debbugs://bugs.debian.org.
+
+       Homepage: url
+           URL till uppströmsprojektets hemside-url.
+
+       Tag: lista-med-märken
+           Lista över märken som beskriver paketets egenskaper. En
+           beskrivningen och förteckning över kända märken finns i paketet
+           debtags.
+
+       Multi-Arch: no|same|foreign|allowed
+           Det här fältet används för att ange hur paketet ska bete sig på
+           installationer där flera arkitekturer stöds.
+
+           no (nej)
+               Det här är förval om fältet utesluts, i vilket fall det normalt
+               sett inte är nödvändligt att lägga till fältet med ett explicit
+               no-värde.
+
+           same (samma)
+               Paketet kan installeras vid sidan av sig självt, men kan inte
+               användas för att tillfredsställa beroenden för några paket på
+               andra arkitekturer än sig självt.
+
+           foreign (oegen)
+               Paketet kan inte installeras vid sidan av sig självt, men bör
+               tillåtas att tillfredsställa beroenden som inte anger en
+               arkitektur för paket från en annan arkitektur än sig självt (om
+               en beroende har en specifik arkitekturangivelse kommer värdet
+               foreign att ignoreras).
+
+           allowed (tillåtet)
+               Detta tillåter omvända beroenden att ange i sitt Depends-fält
+               att de tillåter det här paketet från en oegen arkitektur genom
+               att kvalificera paketnamnet med :any, men har annars ingen
+               effekt.
+
+       Source: källkodsnamn [(källkodsversion)]
+           Namnet på källkodspaketet det här binärpaketet kommer från, om det
+           skiljer sig från namnet på själva paketet. Om källkodsversionen
+           skiljer sig från binärversionen kommer källkodsnamn följas av
+           källkodsversion i parentes. Detta kan till exempel uppstå när
+           bygget är för en insändning bestående av enbart binärer från någon
+           annan än den paketansvarige (”binary-only non-maintainer upload”)
+           eller när man anger en annan binärversion genom ”dpkg-gencontrol
+           -v”.
+
+       Subarchitecture: värde
+       Kernel-Version: värde
+       Installer-Menu-Item: värde
+           Dessa fält används av debian-installer och behövs normalt inte. För
+           mer information om dem, se
+           <https://salsa.debian.org/installer-team/debian-installer/-/raw/master/doc/devel/modules.txt>.
+
+       Depends: paketlista
+           Lista över paket som krävs för att paketet ska kunna tillhandahålla
+           en icke-trivial mängd funktionalitet. Pakethanteringsprogramvaran
+           kommer inte tillåta att ett paket installeras om paketen som listas
+           i Depends-fältet inte är installerade (åtminstone inte utan att
+           använda en av de tvingande flaggorna). Vid en installation körs
+           postinst-skripten från paketen i Depends-fältet innan de paket som
+           beror på dem. Under det omvända förhållandet, en borttagning, körs
+           prerm-skriptet från ett paket innan de som kommer från paketen i
+           dess Depends-fält.
+
+       Pre-Depends: paketlista
+           Lista över paket som måste vara installerade och konfigurerade
+           innan paketet kan installeras. Detta används normalt i de fall
+           paketet kräver att ett annat paket är installerat för sitt preinst-
+           skript.
+
+       Recommends: paketlista
+           Lista över paket som bör installeras tillsammans med paketet i de
+           allra flesta fall.  Pakethanteringsprogramvaran kommer att varna
+           användaren om man installerar ett paket utan de som listas i
+           Recommends-fältet.
+
+       Suggests: paketlista
+           Lista över paket som är relaterade till paketet och som kanske kan
+           göra det mer användbart, men utan vilka det fortfarande är rimligt
+           att installera paketet.
+
+       Syntaxen för fälten Depends, Pre-Depends, Recommends och Suggests är en
+       lista med grupper av alternativa paket. Varje grupp innehåller en lista
+       med paket avdelade med ett vertikalstreck (”rör”), ”|”.  Grupperna
+       avdelas med kommatecken. Komma utläses som ”OCH”, och vertikalstrecken
+       som ”ELLER”, där vertikalstrecken binder hårdare. Ett paketnamn kan
+       möjligen följas av en arkitekturangivelse efter ett kolontecken ”:”,
+       möjligen åtföljt av en versionsnummerangivelse inom parentes.
+
+       En arkitekturangivelse kan vara ett existerande Debianarkitekturnamn
+       (sedan dpkg 1.16.5) eller any (sedan dpkg 1.16.2). Om det utesluts är
+       förvalet den aktuella binärpaketarkitekturen. Ett existerande
+       Debianarkitekturnamn motsvarar exakt den arkitekturen för det
+       paketnamnet, any motsvarar valfri arkitektur för paketnamnet om paketet
+       har markerats som Multi-Arch: allowed.
+
+       Ett versionsnummer kan börja med ”>>”, vilket betyder att vilken som
+       helst senare version matchar, där det är valfritt att ange
+       Debianuppdateringen (avdelad med bindestreck).  Tillåtna
+       versionrelationer är ”>>” för större än, ”<<” för mindre än, ”>=” för
+       större än eller lika med, ”<=” för mindre än eller lika med, och ”=”
+       för lika med.
+
+       Breaks: paketlista
+           Listar paket som förstörs av detta, till exempel genom att lyfta
+           fram fel när det namngivna paketet beror på detta.
+           Pakethanteringsprogramvaran tillåter inte att förstörda paket
+           konfigureras; problemet löses vanligtvis genom att uppgradera
+           paketen som namnges i ett Breaks-fält.
+
+       Conflicts: paketlista
+           Listar paket som är i konflikt (krockar) med detta, till exempel
+           genom att innehålla filer med samma namn.
+           Pakethanteringsprogramvaran tillåter inte två sådana paket att vara
+           installerade samtidigt. Två paket med inbördes konflikt bör
+           innehålla en Conflicts-rad med varandras namn.
+
+       Replaces: paketlista
+           Lista över paket ersätts av filer från det här paketet. Detta
+           används för att möjliggöra paket att skriva över filer från andra
+           paket, och används normalt sett tillsammans med Conflicts-fältet
+           för att tvinga fram borttagning av det andra paketet om även det
+           här har de filer som finns i paketet det står i konflikt med.
+
+       Syntaxen för Breaks, Conflicts och Replaces är en lista över paketnamn
+       avdelade med komman (och eventuella blanktecken). I fälten Breaks och
+       Conflicts läses kommatecknet som ”ELLER”. En valfri arkitekturangivelse
+       kan också läggas till paketnamnet med samma syntax som över, men
+       förvalet är any istället för binärpaketets arkitektur. Ett eventuellt
+       versionsnummer kan också anges, med samma syntax som ovan för fälten
+       Breaks, Conflicts och Replaces.
+
+       Enhances: paketlista
+           Detta är en lista över paket som förbättras av detta. Det liknar
+           Suggests men är i motsatt riktning.
+
+       Provides: paketlista
+           Detta är en lista av virtuella paket som tillhandahålls av detta.
+           Normalt sett används detta i de fall flera paket tillhandahåller
+           samma tjänst. Till exempel kan både sendmail och exim fungera som
+           e-postserver, så de tillhandahåller ett gemensamt paket
+           (”mail-transport-agent”) på vilket andra paket kan bero, vilket gör
+           det möjligt för sendmail eller exim att fungera som ett alternativ
+           som tillfredsställer beroendet. Detta förhindrar att paket som
+           beror på en e-postserver måste känna till alla deras paketnamn och
+           använda ”|” för att dela av listan.
+
+       Syntaxen för Provides är en lista över paketnamn avdelade med komman
+       (och eventuella blanktecken). En valfri arkitekturangivelse kan också
+       läggas till paketnamnet med samma syntax som över. Om det inte anges är
+       förvalet binärpaketets arkitektur. Ett eventuellt exakt (lika med)
+       versionsnummer kan också anges, med samma syntax som ovan (sedan dpkg
+       1.17.11).
+
+       Built-Using: paketlista
+           Beroendefältet visar ytterligare källkodspaket som användes när
+           binärpaketet byggdes för att uppfylla licensvillkor. Detta anger
+           för hanteringsprogramvaran för arkivet att dessa ytterligare
+           källkodspaket måste behållas så länge binärpaketet finns i arkivet.
+           Fältet måste innehålla en kommaavdelad lista med källkodspaket med
+           strikta ”=” versionsberoenden inom parentes. Observera att
+           hanteringsprogramvaran för arkivet troligen kommer att avvisa en
+           insändning som deklarerar en Built-Using-relation som inte kan
+           uppfyllas inom arkivet.
+
+       Static-Built-Using: paketlista
+           Beroendefältet visar ytterligare källkodspaket som användes när
+           binärpaketet byggdes för att bygga statiskt (till exempel länkning
+           mot statiska bibliotek, byggen för källkodscentrerade spårk såsom
+           Go eller Rust, användning av C/C++-bibliotek som enbart består av
+           filhuvuden, injicering av data-blobbar i kod, osv.). Detta är
+           användbart för att spåra huruvida paketet kan behöva byggas om när
+           källkodspaket som listas här uppdateras, till exempel vid
+           säkerhetsuppdateringar. Fältet måste innehålla en kommaavdelad
+           lista med källkodspaket med strikta ”=” versionsberoenden inom
+           perentes.
+
+           Stöds sedan dpkg 1.21.3.
+
+       Built-For-Profiles: profillista (föråldrat)
+           Det här fältet används för att ange en blankstegsavdelad lista med
+           byggprofiler som det binära paketet byggdes med (sedan dpkg 1.17.2
+           fram till 1.18.18). Informationen som tidigare fanns i det här
+           fältet finns nu i filen .buildinfo som ersätter det.
+
+       Auto-Built-Package: orsakslista
+           Det här fältet innehåller en blankstegsavdelad lista med orsaker
+           till varför det här paketet autogenererades. Binärpaket som
+           markerats med det här fältet kommer inta dyka upp i
+           huvud-källkodsstyrfilen debian/control. Den enda orsak som används
+           är för närvarande debug-symbols (felsökningssymboler).
+
+       Build-Ids: elf-bygg-id-lista
+           Det här fältet innehåller en blankstegsavdelad lista med
+           ELF-bygg-id:n. Det är unika identifierare för semantiskt identiska
+           ELF-objekt, för var av dessa i paketet.
+
+           Formatet och sättet på vilket varje bygg-id beräknas är medvetet
+           inte definierat.
+
+EXEMPEL
+        Package: grep
+        Essential: yes
+        Priority: required
+        Section: base
+        Maintainer: Wichert Akkerman <wakkerma@debian.org>
+        Architecture: sparc
+        Version: 2.4-1
+        Pre-Depends: libc6 (>= 2.0.105)
+        Provides: rgrep
+        Conflicts: rgrep
+        Description: GNU grep, egrep and fgrep.
+         The GNU family of grep utilities may be the "fastest grep in the west".
+         GNU grep is based on a fast lazy-state deterministic matcher (about
+         twice as fast as stock Unix egrep) hybridized with a Boyer-Moore-Gosper
+         search for a fixed string that eliminates impossible text from being
+         considered by the full regexp matcher without necessarily having to
+         look at every character. The result is typically many times faster
+         than Unix grep or egrep. (Regular expressions containing backreferencing
+         will run more slowly, however).
+
+PROGRAMFEL
+       Fältet Build-Ids använder ett ganska allmänt namn utanför sitt
+       ursprungliga sammanhang inuti ett ELF-objekt, som gäller ett väldigt
+       specifikt syfte och exekverbart format.
+
+SE ÄVEN
+       deb822(5), deb-src-control(5), deb(5), deb-version(7), debtags(1),
+       dpkg(1), dpkg-deb(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                    deb-control(5)

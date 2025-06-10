@@ -1,0 +1,130 @@
+APT-TRANSPORT-HTTP(1)                 APT                APT-TRANSPORT-HTTP(1)
+
+NOME
+       apt-transport-https - Transporte do APT para descarregar via Protocolo
+       Seguro HTTP (HTTPS)
+
+DESCRIÇÃO
+       Este transporte do APT permite o uso de repositórios acedidos via HTTP
+       Secure protocol (HTTPS), também chamado de HTTP sobre TLS. Está
+       disponível por predefinição desde o apt 1.5 e estava disponível antes
+       no pacote apt-transport-https. Note que um transporte nunca é chamado
+       directamente por um utilizador mas usado pelas ferramentas do APT com
+       base na configuração do utilizador.
+
+       HTTP é por si próprio um protocolo de transporte não encriptado
+       (comprove apt-transport-http(1)), o qual, sendo indicado pelo S
+       acrescentado, fica embrulhado numa camada encriptada conhecida por
+       Transport Layer Security (TLS) para disponibilizar encriptação
+       fim-para-fim. Um atacante com habilidades suficientes pode mesmo assim
+       observar os colegas de comunicação e uma análise mais profunda à
+       comunicação encriptada pode mesmo assim revelar detalhes importantes.
+       Uma visão geral sobre métodos de transporte disponíveis alternativos é
+       dada em sources.list(5).
+
+OPÇÕES
+       O protocolo HTTPS é baseado no protocolo HTTP, assim todas as opções
+       suportadas pelo apt-transport-http(1) são também suportadas via
+       Acquire::https e irão usa por predefinição os mesmos valores
+       especificados para Acquire::http. Esta manual irá apenas documentar as
+       opções únicas para https.
+
+   Credenciais do Servidor
+       Por predefinição todos os pacotes confiáveis pelo sistema (veja o
+       pacote ca-certificates) são usados para a verificação do certificado do
+       servidor. Uma autoridade de certificação (CA) alternativa pode ser
+       configurada com a opção Acquire::https::CAInfo e a sua opção especifica
+       de máquina Acquire::https::CAInfo::máquina. A opção CAInfo especifica
+       um ficheiro feito de certificados CA (em formato PEM) todos
+       concatenados para criar a cadeia que o APT deve usar para verificar o
+       caminho do seu certificado de raiz auto-assinado. Se o servidor remoto
+       fornecer a cadeia inteira durante a transferência, o ficheiro precisa
+       apenas de conter o certificado de raiz. Caso contrário, é precisa a
+       cadeia inteira. Se precisar de suportar múltiplas autoridades, a única
+       maneira é concatenar tudo.
+
+       Uma lista de revogação de certificados personalizada (CRL) pode ser
+       configurada com as opções Acquire::https::CRLFile e
+       Acquire::https::CRLFile::máquina. Como a opção anterior, um ficheiro em
+       formato PEM precisa de ser especificado.
+
+   Desactivar a segurança
+       Durante a autenticação do servidor, se a verificação do certificado
+       falhar por alguma razão (expirada, revogada, intermediários, etc), a
+       ligação falha. Isto é obviamente o que você espera em todos os casos e
+       o que o valor predefinido (true) da opção Acquire::https::Verify-Peer e
+       o que a variante especifica da máquina fornece. Se você sabe
+       exactamente o que está a fazer, definir esta opção para "false" permite
+       saltar a verificação de certificado de peer e concluir a transação com
+       sucesso. Mais uma vez, esta opção serve para objectivos de depuração e
+       testes apenas pois ela remove toda a segurança fornecida pelo uso de
+       HTTPS.
+
+       De modo semelhante a opção Acquire::https::Verify-Host e a sua variante
+       especifica de máquina pode ser usada para desactivar uma funcionalidade
+       de segurança. O certificado fornecido pelo servidor inclui a identidade
+       do servidor a qual deve corresponder ao nome DNS usado para lhe aceder.
+       Por predefinição, e como pedido por RFC 2818, o nome do mirror é
+       verificado contra a identidade encontrada no certificado. Este
+       comportamento predefinido é seguro e não deve ser alterado, ,mas se
+       você sabe que o servidor que está a usar tem um nome DNS que não
+       corresponde à identidade no seu certificado, você pode definir a opção
+       para "false", o que irá impedir que a comparação seja feita.
+
+   Autenticação do cliente
+       Para além de suportar autenticação baseada em palavra-passe (veja
+       apt_auth.conf(5)) o HTTPS também suporta autenticação baseada em
+       certificados do cliente via Acquire::https::SSLCert e
+       Acquire::https::SSLKey. Estes devem ser definidos respetivamente no
+       nome de ficheiro do certificado de cliente X.509 e a chave privada (não
+       encriptada) associada, ambos em formato PEM. Na prática o uso de
+       variantes especificas da máquina de ambas opções é altamente
+       recomendado.
+
+EXEMPLOS
+           Acquire::https {
+                Proxy::example.org "DIRECT";
+                Proxy "socks5h://apt:pass@127.0.0.1:9050";
+                Proxy-Auto-Detect "/usr/local/bin/apt-https-proxy-auto-detect";
+                No-Cache "true";
+                Max-Age "3600";
+                No-Store "true";
+                Timeout "10";
+                Dl-Limit "42";
+                Pipeline-Depth "0";
+                AllowRedirect "false";
+                User-Agent "My APT-HTTPS";
+                SendAccept "false";
+
+                CAInfo "/path/to/ca/certs.pem";
+                CRLFile "/path/to/all/crl.pem";
+                Verify-Peer "true";
+                Verify-Host::broken.example.org "false";
+                SSLCert::example.org "/path/to/client/cert.pem";
+                SSLKey::example.org "/path/to/client/key.pem"
+           };
+
+VEJA TAMBÉM
+       apt-transport-http(1) apt.conf(5) apt_auth.conf(5) sources.list(5)
+
+BUGS
+       página de bugs do APT[1]. Se deseja reportar um bug no APT, por favor
+       veja /usr/share/doc/debian/bug-reporting.txt ou o comando reportbug(1).
+
+TRADUÇÃO
+       A tradução Portuguesa foi feita por Américo Monteiro
+       <a_monteiro@netcabo.pt> de 2009 a 2012. A tradução foi revista pela
+       equipa de traduções portuguesas da Debian <traduz@debianpt.org>.
+
+       Note que este documento traduzido pode conter partes não traduzidas.
+       Isto é feito propositadamente, para evitar perdas de conteúdo quando a
+       tradução está atrasada relativamente ao conteúdo original.
+
+AUTOR
+       Equipa do APT
+
+NOTAS
+        1. página de bugs do APT
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                        11 Maio 2018            APT-TRANSPORT-HTTP(1)

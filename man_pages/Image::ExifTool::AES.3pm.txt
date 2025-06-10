@@ -1,0 +1,76 @@
+Image::ExifTool::AES(3User Contributed Perl DocumentaImage::ExifTool::AES(3pm)
+
+NAME
+       Image::ExifTool::AES - AES encryption with cipher-block chaining
+
+SYNOPSIS
+         use Image::ExifTool::AES qw(Crypt);
+
+         $err = Crypt(\$plaintext, $key, 1);   # encryption
+
+         $err = Crypt(\$ciphertext, $key);     # decryption
+
+DESCRIPTION
+       This module contains an implementation of the AES encryption/decryption
+       algorithms with cipher-block chaining (CBC) and RFC 2898 PKCS #5
+       padding.  This is the AESV2 and AESV3 encryption mode used in PDF
+       documents.
+
+EXPORTS
+       Exports nothing by default, but "Crypt" may be exported.
+
+METHODS
+   Crypt
+       Implement AES encryption/decryption with cipher-block chaining.
+
+       Inputs:
+           0) Scalar reference for data to encrypt/decrypt.
+
+           1) Encryption key string (must have length 16, 24 or 32).
+
+           2) [optional] Encrypt flag (false to decrypt).
+
+           3) [optional] Flag to avoid removing padding after decrypting, or
+           to avoid adding 16 bytes of padding before encrypting when data
+           length is already a multiple of 16 bytes.
+
+       Returns:
+           On success, the return value is undefined and the data is encrypted
+           or decrypted as specified.  Otherwise returns an error string and
+           the data is left in an indeterminate state.
+
+       Notes:
+           The length of the encryption key dictates the AES mode, with
+           lengths of 16, 24 and 32 bytes resulting in AES-128, AES-192 and
+           AES-256.
+
+           When encrypting, the input data may be any length and will be
+           padded to an even 16-byte block size using the specified padding
+           technique.  If the encrypt flag has length 16, it is used as the
+           initialization vector for the cipher-block chaining, otherwise a
+           random IV is generated.  Upon successful return the data will be
+           encrypted, with the first 16 bytes of the data being the CBC IV.
+
+           When decrypting, the input data begins with the 16-byte CBC
+           initialization vector.
+
+BUGS
+       This code is blindingly slow.  But in truth, slowing down processing is
+       the main purpose of encryption, so this really can't be considered a
+       bug.
+
+AUTHOR
+       Copyright 2003-2023, Phil Harvey (philharvey66 at gmail.com)
+
+       This library is free software; you can redistribute it and/or modify it
+       under the same terms as Perl itself.
+
+REFERENCES
+       <http://www.hoozi.com/Articles/AESEncryption.htm>
+       <http://www.csrc.nist.gov/publications/fips/fips197/fips-197.pdf>
+       <http://www.faqs.org/rfcs/rfc3602.html>
+
+SEE ALSO
+       Image::ExifTool(3pm)
+
+perl v5.36.0                      2023-02-24         Image::ExifTool::AES(3pm)

@@ -1,0 +1,312 @@
+start-stop-daemon(8)              dpkg suite              start-stop-daemon(8)
+
+NAMN
+       start-stop-daemon - startar och stoppar bakgrundsprocesser
+
+SYNOPS
+       start-stop-daemon [flagga...] åtgärd
+
+BESKRIVNING
+       start-stop-daemon används för att styra hur processer på systemnivå
+       skapas och avslutas. Med hjälp av en av sökflaggorna kan start-stop-
+       daemon ställas in att hitta befintliga instanser av en körande process.
+
+       Note: Unless --pid or --pidfile are specified, start-stop-daemon
+       behaves similar to killall(1).  start-stop-daemon will scan the process
+       table looking for any processes which match the process name, parent
+       pid, uid, and/or gid (if specified). Any matching process will prevent
+       --start from starting the daemon. All matching processes will be sent
+       the TERM signal (or the one specified via --signal or --retry) if
+       --stop is specified. For daemons which have long-lived children which
+       need to live through a --stop, you must specify a pidfile.
+
+KOMMANDON
+       -S, --start [--] argument
+           Se om en angiven process existerar, och om så är fallet gör start-
+           stop-daemon ingenting och avslutar med status 1 (0 om --oknodo
+           anges). Om en sådan process inte existerar startas en instans,
+           antingen med programfilen som anges med --exec eller, om den anges,
+           med --startas. Eventuella argument som ges efter -- på
+           kommandoraden skickas utan ändring till programmet som startas.
+
+       -K, --stop
+           Testa om den angivna processen existerar. Om så är fallet sänder
+           start-stop-daemon den signal som anges av --signal till processen,
+           och avslutar med status 0. Om processen inte finns avslutar start-
+           stop-daemon med status 1 (0 om --oknodo anges). Om --retry anges
+           kommer start-stop-daemon kontrollera att processen har avslutats.
+
+       -T, --status
+           Se om den angivna processen existerar, och returnerar en statuskod
+           i enlighet med LBS Init Script Actions (sedan version 1.16.1).
+
+       -H, --help
+           Visa hjälpskärm och avsluta.
+
+       -V, --version
+           Visa programversion och avsluta.
+
+FLAGGOR
+   Matchingsflaggor
+       --pid pid
+           Se efter en process med angiven pid (sedan version 1.17.6). pid
+           måste vara ett tal större än 0.
+
+       --ppid ppid
+           Se efter en process med angiven föräldra-pid ppid (sedan version
+           1.17.7). ppid måste vara ett tal större än 0.
+
+       -p, --pidfile pidfil
+           Kontrollera om en process har skapat filen pidfil.
+
+           Note: Using this matching option alone might cause unintended
+           processes to be acted on, if the old process terminated without
+           being able to remove the pidfile.
+
+           Warning: Using this match option with a world-writable pidfile or
+           using it alone with a daemon that writes the pidfile as an
+           unprivileged (non-root) user will be refused with an error (since
+           version 1.19.3) as this is a security risk, because either any user
+           can write to it, or if the daemon gets compromised, the contents of
+           the pidfile cannot be trusted, and then a privileged runner (such
+           as an init script executed as root) would end up acting on any
+           system process.  Using /dev/null is exempt from these checks.
+
+       -x, --exec programfil
+           Se efter processer som är instanser av programfil. Flaggan
+           programfil bör vara en absolut sökväg.
+
+           Note: This might not work as intended with interpreted scripts, as
+           the executable will point to the interpreter. Take into account
+           processes running from inside a chroot will also be matched, so
+           other match restrictions might be needed.
+
+       -n, --name processnamn
+           Se efter processer med namnet processnamn. Processnamn är
+           vanligtvis processens filnamn, men kan ha ändrats av processen
+           själv.
+
+           Note: On most systems this information is retrieved from the
+           process comm name from the kernel, which tends to have a relatively
+           short length limit (assuming more than 15 characters is non-
+           portable).
+
+       -u, --user användarnamn|användar-id
+           Sök efter processer som ägs av den användare som anges med
+           användarnamn eller användar-id.
+
+           Note: Using this matching option alone will cause all processes
+           matching the user to be acted on.
+
+   Generiska flaggor
+       -g, --group grupp|grupp-id
+           Byt till grupp eller grupp-id när processen startas.
+
+       -s, --signal signal
+           Tillsammans med --stop anger detta den signal som ska sändas till
+           processen som stoppas (förval är TERM).
+
+       -R, --retry tidsgräns|schema
+           Tillsammans med --stop anger detta att start-stop-daemon ska
+           kontrollera att processen avslutas. Den testar flera gånger efter
+           matchande processer som körs, tills ingen längre finns kvar. Om
+           processerna inte avslutar kommer programmet utföra ytterligare
+           kommandon enligt schemat.
+
+           Om tidsgräns anges istället för schema kommer schemat
+           signal/timeout/KILL/timeout att användas, där signal är den signal
+           som anges med --signal.
+
+           schema är den lista med åtminstone två poster avdelade med
+           snedstreck (/); varje post är antingen -signalnummer eller
+           [-]signalnamn, vilket betyder att signalen ska sändas, eller
+           timeout, vilket anger det antal sekunder programmet ska vänta på
+           att processen avslutar, eller forever, vilket betyder att resten av
+           schemat ska repetera för evigt om så behövs.
+
+           Om slutet på schemat nås och forever inte anges kommer start-stop-
+           daemon avslutas med felkod 2. Om ett schema anges kommer eventuell
+           signal angiven med --signal att ignoreras.
+
+       -a, --startas sökväg
+           Tillsammans med --start anger detta att processen som anges med
+           sökväg ska startas. Om den inte anges används argumentet som gavs
+           till --exec.
+
+       -t, --test
+           Skriver ut vad som skulle ha utförts och sätter returvärdet, men
+           utför ingenting.
+
+       -o, --oknodo
+           Returnerar felstatus 0 i stället för 1 om ingen åtgärd
+           utförs/skulle utförts.
+
+       -q, --quiet
+           Skriv inte informationsmeddelanden; visa endast felmeddelanden.
+
+       -c, --chuid användarnamn|användar-id[:grupp|grupp-id]
+           Byt till användarnamnet/användar-id:t innan processen startas. Du
+           kan även ange en grupp genom att lägga till ett kolontecken, :,
+           följt av gruppnamnet eller grupp-id på samma sätt som du skull
+           gjort till kommandot chown(1) (användare:grupp). Om du anger en
+           användare utan att ange en grupp kommer användarens primära grupp-
+           id att användas. När du använder alternativet måste du ha i åtanke
+           att även både primär- och tilläggsgrupp sätts, även om
+           --group-flaggan inte anges. --group-flaggan är bara till för
+           grupper som användaren normalt inte är en medlem i (t.ex för att
+           lägga till gruppmedlemskap för enskilda processer för
+           standardanvändare såsom nobody).
+
+       -r, --chroot rot
+           Byt katalog och rot till rot innan processen startas. Observera att
+           även pidfilen skrivs efter chroot har utförts.
+
+       -d, --chdir sökväg
+           Byt katalog till sökväg innan processen startas. Detta görs efter
+           byte av rot om -r|--chroot-flaggan anges. Om flaggan inte anges
+           kommer start-stop-daemon byta till rotkatalogen innan processen
+           startas.
+
+       -b, --background
+           Används typiskt med program som inte kopplar loss sig av sig
+           själva. Flaggan tvingar start-stop-daemon att förgrena sig (fork)
+           innan processen startar, och tvinga den grenen att köra i
+           bakgrunden.
+
+           Warning: start-stop-daemon cannot check the exit status if the
+           process fails to execute for any reason. This is a last resort, and
+           is only meant for programs that either make no sense forking on
+           their own, or where it's not feasible to add the code for them to
+           do this themselves.
+
+       --notify-await
+           Wait for the background process to send a readiness notification
+           before considering the service started (since version 1.19.3).
+           This implements parts of the systemd readiness protocol, as
+           specified in the sd_notify(3) manual page.  The following variables
+           are supported:
+
+           READY=1
+               Programmet är redo att tillhandahålla sin tjänst, så vi kan
+               avsluta på ett säkert sätt.
+
+           EXTEND_TIMEOUT_USEC=antal
+               Programmet ber om att utöka tidsgränsen med antal
+               mikrosekunder. Detta kommer återställa den aktuella tidsgränsen
+               till det angivna värdet.
+
+           ERRNO=värde
+               Programmet avslutar med en felkod. Gör detsamma och skriv ut
+               den användarvänliga strängen för errno-värdet.
+
+       --notify-timeout tidsgräns
+           Sätt en tidsgräns för flaggan --notify-await (sedan version
+           1.19.3). När tidsgränsen nås kommer start-stop-daemon avslutas med
+           en felkod, och ingen beredskapsinformation kommer väntas på.
+           Förvalet är 60 sekunder.
+
+       -C, --no-close
+           Stäng inte filbeskrivare när serverprocessen tvingas till
+           bakgrunden (sedan version 1.16.5). Använd för felsöknignssyften för
+           att se processutdata, eller för att omdirigera filbeskrivare för
+           att logga processutdata. Endast relevant när --background används.
+
+       -O, --output sökväg
+           Omdirigera standard ut och standard fel till sökväg när
+           serverprocessen tvingas till bakgrunden (sedan version 1.20.6).
+           Endast relevant när --background används.
+
+       -N, --nicelevel heltal
+           Ändrar prioriteten på processen innan den startas.
+
+       -P, --procsched policy:prioritet
+           Ändrar processschemaläggarens policy och prioritet för processen
+           innan den startas (sedan version 1.15.0). Prioriteten är valfri och
+           anges genom att lägga till ett : följt av värdet. Standardvärdet
+           för prioritet är 0. För närvarande stöds värdena other, fifo och rr
+           för policy.
+
+           Det är möjligt att flaggan inte gör något på system där
+           POSIX-processschemaläggning inte stöds.
+
+       -I, --iosched klass:prioritet
+           Ändrar I/O-schemaläggarens klass och -prioritet för processen innan
+           den startas (sedan version 1.15.0). Prioriteten är valfri och anges
+           genom att lägga till ett : följt av värdet. Standardvärdet för
+           prioritet är 4, såvida inte klass är idle, då är prioritet alltid
+           7. För närvarande stöds värdena idle, best-effort och real-time för
+           klass.
+
+           Det är möjligt att flaggan inte gör något på system där
+           Linux-I/O-schemaläggning inte stöds.
+
+       -k, --umask maskvärde
+           Ställer in umaskvärdet på processen innan den startas (sedan
+           version 1.13.22).
+
+       -m, --make-pidfile
+           Används när ett program som inte skapar sin egen pidfil startas.
+           Flaggan kommer att få start-stop-daemon att skapa filen som anges
+           med --pidfile och lägga process-id i den precis innan processen
+           startas. Observera att den endast kommer att tas bort när
+           programmet stoppas om --remove-pidfile används.
+
+           Note: This feature may not work in all cases. Most notably when the
+           program being executed forks from its main process. Because of
+           this, it is usually only useful when combined with the --background
+           option.
+
+       --remove-pidfile
+           Används när ett program som inte tar bort sin egen pid-fil stoppas
+           (sedan version 1.17.19). Flaggan gör att start-stop-daemon tar bort
+           filen som anges med --pidfile efter att processen stoppats.
+
+       -v, --verbose
+           Skriv ut pratsamma informationsmeddelanden.
+
+RETURVÄRDE
+       0   Efterfrågad åtgärd utfördes. Om --oknodo angavs är det även möjligt
+           att ingenting behövde utföras. Det kan hända när --start angavs och
+           en motsvarande process redan körde, eller när --stop angavs och det
+           inte fanns någon motsvarande process.
+
+       1   Om --oknodo inte angavs och ingenting gjordes.
+
+       2   Om --stop och --retry angavs, men slutet på tidtabellen nåddes och
+           processen fortfarande kördes.
+
+       3   Alla andra fel.
+
+       Med --status-åtgärden returneras följande statuskoder:
+
+       0   Programmet kör.
+
+       1   Programmet kör inte och pid-filen finns.
+
+       3   Programmet kör inte.
+
+       4   Kan inte ta reda på programmets status.
+
+EXEMPEL
+       Starta serverprocessen food, såvida inte en redan kör (en process med
+       namnet food, som körs som användaren food, med process-id i food.pid):
+
+        start-stop-daemon --start --oknodo --user food --name food \
+          --pidfile /run/food.pid --startas /usr/sbin/food \
+          --chuid food -- --daemon
+
+       Sänd SIGTERM till food och vänta upp till fem sekunder på att den ska
+       avslutas:
+
+        start-stop-daemon --stop --oknodo --user food --name food \
+          --pidfile /run/food.pid --retry 5
+
+       Demonstration av ett skräddarsytt schema för att avsluta food:
+
+        start-stop-daemon --stop --oknodo --user food --name food \
+          --pidfile /run/food.pid --retry=TERM/30/KILL/5
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06              start-stop-daemon(8)

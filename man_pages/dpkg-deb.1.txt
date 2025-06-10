@@ -1,0 +1,292 @@
+dpkg-deb(1)                       dpkg suite                       dpkg-deb(1)
+
+NAMN
+       dpkg-deb - Debians manipuleringsverktyg för paketarkiv (.deb)
+
+SYNOPS
+       dpkg-deb [flagga...] åtgärd
+
+BESKRIVNING
+       dpkg-deb packar, packar upp och tillhandahåller information om
+       Debianarkiv.
+
+       Använd dpkg för att installera och ta bort paket från ditt system.
+
+       Du kan även starta dpkg-deb genom att anropa dpkg med de flaggor du
+       vill sända till dpkg-deb. dpkg kommer upptäcka att du ville åt dpkg-deb
+       och kör det åt dig.
+
+       För de flesta kommandon som tar ett indataarkiv som argument kan
+       arkivet läsas från standard in om arkivnamnet anges som ett ensamt
+       minustecken (”-”); om det inte stöds kommer det dokumenteras i
+       respektive kommandobeskrivning.
+
+KOMMANDON
+       -b, --build binärkatalog [arkiv|katalog]
+           Skapar ett Debianarkiv från filsystemsträdet som lagras i
+           binärkatalog. binärkatalog måste innehålla underkatalogen DEBIAN,
+           vilken innehåller styrinformationsfiler såsom själv styrfilen
+           control. Katalogen kommer inte att visas i binärpaketets
+           filsystemsarkiv, utan istället kommer filerna läggas i
+           binärpaketets styrinformationsområde.
+
+           Såvida du inte anger --nocheck kommer dpkg-deb att läsa
+           DEBIAN/control och tolka den. Den kommer leta efter syntaxfel och
+           andra problem i filen, och visa namnet på det binärpaket som byggs.
+           dpkg-deb kommer även att kontrollera behörigheten på paketskripten
+           och andra filer som hittas i styrinformationskatalogen DEBIAN.
+
+           Om inget arkiv anges kommer dpkg-deb skriva paketet till filen
+           binärkatalog.deb.
+
+           Om arkivet som ska skapas redan finns kommer det skrivas över.
+
+           Om den andra argumentet är en katalog kommer dpkg-deb skriva till
+           filen directory/paket_version_arkitektur.deb. När en målkatalog
+           anges, istället för en fil, kan inte flaggan --nocheck användas
+           (eftersom dpkg-deb måste läsa och tolka paketets styrfil control
+           för att ta reda på vilket filnamn som ska användas).
+
+       -I, --info arkiv [control-filnamn ...]
+           Tillhandahåller information om ett binärt paketarkiv.
+
+           Om inga control-filnamn anges kommer det att visa en sammanfattning
+           av innehållet i paketet tillsammans med dess styrfil.
+
+           Om ett eller flera control-filnamn anges kommer dpkg-deb att skriva
+           ut dem i den ordning de anges. Om några av komponenterna inte fanns
+           kommer ett felmeddelande för vart och ett skrivas ut på standard
+           fel, och programmet avslutar med felstatus 2.
+
+       -W, --show arkiv
+           Ger information om ett binärt paketarkiv i det format som anges med
+           flaggan --showformat. Det förvalda formatet visar paketets namn och
+           version på en rad, avdelade med tabulatortecken.
+
+       -f, --field arkiv [control-fältnamn ...]
+           Extraherar styrfilsinformation från ett binärt paketarkiv.
+
+           Om du inte anger några control-fältnamn visas hela styrfilen.
+
+           Om några anges kommer dpkg-deb att visa deras innehåll, i den
+           ordning de förekommer i styrfilen. Om mer än ett control-fältnamn
+           anges kommer dpkg-deb visa varje med ett inledande fältnamn (och
+           ett kolon och blanksteg).
+
+           Inga felmeddelande rapporteras för fält som efterfrågas men inte
+           hittas.
+
+       -c, --contents arkiv
+           Visar innehåller i filsystemsträdsarkivsdelen av paketarkivet. Det
+           visas för närvarande i det format som genereras av tars pratsamma
+           visning.
+
+       -x|--extract arkiv katalog
+           Extraherar filsystemsträdet från ett paketarkiv till den angivna
+           katalogen.
+
+           Observera att en extrahering av ett paket till rotkatalogen inte
+           resulterar i en korrekt installation! Använd dpkg för att
+           installera paket.
+
+           katalog (men inte dess föräldrar) kommer skapas om nödvändigt, och
+           dess behörighet kommer att ändras till att motsvara innehållet i
+           paketet.
+
+       -C|--vextract arkiv katalog
+           Är som --extract (-x) med --verbose (-v) som visar en lista över
+           filer som extraheras under tiden.
+
+       -R, --raw-extract arkiv katalog
+           Extraherar filsystemsträdet från ett paketarkiv till den angivna
+           katalogen och styrinformationsfilerna till underkatalogen DEBIAN i
+           den angivna katalogen (sedan dpkg 1.16.1).
+
+           Målkatalogen (men inte dess föräldrar) kommer att skapas om
+           nödvändigt.
+
+           Indataarkivet hanteras (för närvarande) inte sekventiellt, så att
+           läsa det från standard in (”-”) stöds ej.
+
+       --ctrl-tarfile arkiv
+           Extraherar styrinformation från ett binärt paket och sänder det
+           till standard ut i tar-format (sedan dpkg 1.17.14). Tillsammans med
+           tar(1) kan det användas för att hämta ut en specifik styrfil från
+           ett paketarkiv. Indataarkiven behandlas alltid i den ordning de
+           anges.
+
+       --fsys-tarfile arkiv
+           Extraherar filsystemsträdsdata från ett binärt paket och sänder det
+           till standard ut i tar-format. Tillsammans med tar(1) kan det
+           användas för att hämta ut en enskild fil från ett paketarkiv.
+           Indataarkiven behandlas alltid i den ordning de anges.
+
+       -e, --control arkiv [katalog]
+           Extraherar styrinformationsfilerna från paketarkivet till den
+           angivna katalogen.
+
+           Om ingen katalog anges kommer en underkatalog vid namn DEBIAN i den
+           aktuella katalogen att användas.
+
+           Målkatalogen (men inte dess föräldrar) kommer att skapas om
+           nödvändigt.
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+FLAGGOR
+       --showformat=format
+           Flaggan används för att ange formatet på utdata som skapas av
+           --show. Formatet är en sträng som matas ut för varje paket i
+           listan.
+
+           Strängen kan referera till statusfält på formen ”${field-name}”, en
+           förteckning över giltiga fält kan enkelt skapas genom att använda
+           -I på samma paket. En fullständig förklaring av
+           formateringsflaggorna (inklusive ersättningssekvenser och
+           fälttabulering) finns i förklaringen för flaggan --showformat i
+           dpkg-query(1).
+
+           Förvalet för fältet är ”${Package}\t${Version}\n”.
+
+       -zkomprimeringsnivå
+           Ange vilken komprimeringsnivå som ska användas i
+           komprimeringsfunktionen när ett paket byggs (standard är 9 för
+           gzip, 6 för xz, 3 för zstd). Giltiga värden är specifika för
+           packaren. För gzip, 0-9 där 0 mappas mot komprimeraren ingen. För
+           xz 0-9. För zstd 0-22, där nivåerna 20 till 22 aktiverar dess
+           ultraläge. Före dpkg 1.16.2 var nivå 0 komprimeraren ingen för alla
+           komprimerare.
+
+       -Skomprimeringsstrategi
+           Anger vilken komprimeringsstrategi som ska användas i
+           komprimeringsfunktionen när paketet byggs (sedan dpkg 1.16.2).
+           Tillåtet värde är none (sedan dpkg 1.16.4), filtered, huffman, rle
+           och fixed för gzip (sedan dpkg 1.17.0) och extreme för xz.
+
+       -Zkomprimeringstyp
+           Ange vilken komprimeringstyp som ska användas när ett paket byggs.
+           Tillåtna värden är gzip, xz (Sedan dpkg 1.15.6), zstd (sedan dpkg
+           1.21.18) och none (förval är xz).
+
+       --[no-]uniform-compression
+           Ange att samma komprimeringsparametrar ska användas för alla
+           arkivmedlemmar (dvs. control.tar och data.tar; sedan dpkg 1.17.6).
+           I annat fall kommer endast medlemmen data.tar att använda
+           parametrarna. De enda komprimeringstyper som kan användas enhetligt
+           är none, gzip, xz och zstd. Flaggan --no-uniform-compression
+           inaktiverar enhetlig komprimering (sedan dpkg 1.19.0). Enhetlig
+           komprimering är förval (sedan dpkg 1.19.0).
+
+       --threads-max=trådar
+           Anger det maximala antalet trådar som tillåts för komprimerare som
+           stöder flertrådad körning (sedan dpkg 1.21.9).
+
+       --root-owner-group
+           Sätt ägare och grupp för alla posterna i filsystemsträdet till root
+           med ID 0 (sedan dpkg 1.19.0).
+
+           Observera: Flaggan är användbar för root-lösa byggen (se
+           rootless-builds.txt), men bör inte användas när posterna har en
+           ägare eller grupp som inte är root. Stöd för detta kommer läggas
+           till senare i form av ett metamanifest.
+
+       --deb-format=format
+           Väljer vilket arkivformat som skal användas i bygget (sedan dpkg
+           1.17.0). Tillåtna värden är 2.0 för det nya formatet och 0.939000
+           för det gamla (förval är 2.0).
+
+           Det gamla arkivformatet är mer svårtolkat av icke-Debianverktyg och
+           är nu utgånget; dess enda användningsområde är för att bygga paket
+           som ska tolkas av versioner av dpkg äldre än 0.93.76 (september
+           1995), vilka endast släpptes som i386-a.out.
+
+       --nocheck
+           Förhindrar dpkg-deb --build s normala tester på det föreslagna
+           innehållet i arkivet. Du kan bygga vilket arkiv du än vill, oavsett
+           hur trasigt, på det här sätt.
+
+       -v, --verbose
+           Aktiverar pratsam utdata (sedan dpkg 1.16.1). Påverkar för
+           närvarande bara --extract, vilket får det att bete sig som
+           --vextract.
+
+       -D, --debug
+           Aktiverar felsökningsutdata. Denna är inte speciellt intressant.
+
+RETURVÄRDE
+       0   Den önskade funktionen utfördes utan fel.
+
+       2   Ödesdigert eller irreparabelt fel på grund av felaktig användning
+           på kommandoraden, eller interaktioner med systemet, såsom
+           databasåtkomst, minnesallokeringer, osv.
+
+MILJÖVARIABLER
+       DPKG_DEB_THREADS_MAX
+           Anger det maximala antalet trådar som tillåts för komprimerare som
+           stöder flertrådad körning (sedan dpkg 1.21.9).
+
+           Flaggan --threads-max överstyr denna variabel.
+
+       DPKG_DEB_COMPRESSOR_TYPE
+           Ange packartyp att använda (sedan dpkg 1.21.10).
+
+           Flaggan -Z överstyr denna variabel.
+
+       DPKG_DEB_COMPRESSOR_LEVEL
+           Anger pakarnivå att använda (sedan dpkg 1.21.10).
+
+           Flaggan -z överstyr denna variabel.
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       TMPDIR
+           Om satt kommer dpkg-deb att använda det som katalogen där temporära
+           filer och kataloger skapas.
+
+       SOURCE_DATE_EPOCH
+           Om satt kommer det användas som tidsstämpel (som sekunder sedan
+           epoken) i deb(5):s ar(5)-behållare och användas för att tvinga
+           mtime i tar(5)-filposterna.
+
+ANTECKNINGAR
+       Försök inte använda bara dpkg-deb för att installera programvara! Du
+       måste använda normala dpkg för att se till att alla filer läggs på
+       korrekt plats och att paketets skript körs och dess status och innehåll
+       sparas.
+
+SECURITY
+       Examining untrusted package archives or extracting them into staging
+       directories should be considered a security boundary, and any breakage
+       of that boundary stemming from these operations should be considered a
+       security vulnerability.  But handling untrusted package archives should
+       not be done lightly, as the surface area includes any compression
+       library supported, in addition to the archive formats and control files
+       themselves.  Performing these operations over untrusted data as root is
+       strongly discouraged.
+
+       Building package archives should only be performed over trusted data.
+
+PROGRAMFEL
+       dpkg-deb -I paket1.deb paket2.deb gör fel.
+
+       Det finns inte någon autentisering av .deb-filer. Faktiskt finns det
+       inte ens någon enkel kontrollsumma. (Verktyg som arbetar på en högre
+       nivå, som APT, stöder autentisering av .deb-paket som hämtas från ett
+       givet arkiv, och de flesta paket har nu för tiden en md5sum-kontrollfil
+       som skapas av debian/rules. Filen stöds dock inte direkt av
+       lågnivåverktygen.)
+
+SE ÄVEN
+       /usr/share/doc/dpkg/spec/rootless-builds.txt, deb(5), deb-control(5),
+       dpkg(1), dselect(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                       dpkg-deb(1)

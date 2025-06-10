@@ -1,0 +1,123 @@
+mime.types(5)                    OpenPrinting                    mime.types(5)
+
+NOME
+       mime.types - ficheiro de descrição de tipos mime para o cups
+
+DESCRIÇÃO
+       O ficheiro mime.types define os tipos de ficheiros reconhecidos.
+
+       Tipos  de ficheiros adicionais são especificados em ficheiros com a ex‐
+       tensão .types no directório de configuração do CUPS.
+
+       Cada linha no ficheiro mime.types é um comentário, uma linha vazia,  ou
+       uma linha de regra. As linhas comentários começam com o caractere #. As
+       linhas de regras começam com o tipo de media MIME e  são  seguidas  op‐
+       cionalmente por uma série de regras de reconhecimento de ficheiros:
+
+           mime/type [ rule ... rule ]
+
+       As  regras podem ser estendidas por várias linhas usando o caractere de
+       barra invertida (\):
+
+           mime/type [ really-really-really-long-rule ... \       rule ]
+
+       Os tipos de media MIME especificados pelo campo mime/type são sensíveis
+       a maiúsculas/minúsculas e estão ordenados por ordem alfanumérica ascen‐
+       dente para os objectivos  de  corresponderem.  Veja  a  secção  "CORRE‐
+       SPONDÊNCIA E PRIORIDADE DE TIPO" para ,mais informação.
+
+       As regras podem ser agrupadas usando parênteses, juntas usando "+" para
+       um AND lógico, juntas usando "," ou espaço em branco para um OR lógico,
+       e negadas usando "!".
+
+   REGRAS
+       Regras  toma  duas  formas  -  uma  extensão de nome de ficheiro por si
+       própria e funções  com  valores  de  teste  dentro  de  parênteses.  As
+       seguintes funções estão disponíveis:
+
+       match("pattern")
+            Verdadeira  se o nome de ficheiro corresponder à wildcard de shell
+            pattern dada.
+
+       ascii(offset,length)
+            Verdadeira se os bytes de length começando em offset  forem  ASCII
+            válidos imprimíveis (CR, NL, TAB, BS, 32-126).
+
+       printable(offset,length)
+            Verdadeira  se os bytes de length começando em offset forem carac‐
+            teres de 8-bit imprimíveis (CR, NL, TAB, BS, 32-126, 128-254).
+
+       priority(number)
+            Especifica a prioridade relativa deste tipo de média MIME. A  pri‐
+            oridade  predefinida  é  100.  Valores maiores têm prioridade mais
+            alta enquanto valores menores têm prioridade mais baixa.
+
+       string(offset,"string")
+            Verdadeira se os bytes que  começam  em  offset  são  idênticos  a
+            string.
+
+       istring(offset,"string")
+            Verdadeira se os bytes que começam em offset correspondem a string
+            sem respeitar as maiúsculas/minúsculas.
+
+       char(offset,value)
+            Verdadeira se o byte em offset é idêntico a value.
+
+       short(offset,value)
+            Verdadeira se o inteiro 16-bit big-endian em offset é  idêntico  a
+            value.
+
+       int(offset,value)
+            Verdadeira  se  o inteiro 32-bit big-endian em offset é idêntico a
+            value.
+
+       locale("string")
+            Verdadeira se o locale actual corresponder a string.
+
+       contains(offset,range,"string")
+            Verdadeira se os bytes que começam em offset para bytes range con‐
+            terem string.
+
+   CONSTANTES DE STRING
+       As  constantes  de  string podem ser especificadas dentro de aspas ("")
+       para strings que contêm espaços em branco e  colchetes  angulares  (<>)
+       para strings hexadecimais.
+
+   CORRESPONDÊNCIA E PRIORIDADE DOS TIPOS
+       Quando o CUPS precisa de determinar o tipo de média MIME de um determi‐
+       nado ficheiros, verifica cada tipo de média MIME definido nos ficheiros
+       .types.  Quando  dois  ou  mais  tipos  correspondem  a  um determinado
+       ficheiro, o tipo escolhido irá depender do nome e prioridade  do  tipo,
+       com  os tipos de maior prioridade a serem usados sobre os de menor pri‐
+       oridade. Se os tipos tiverem a mesma prioridade, os nomes de tipos  são
+       ordenados em ordem ascendente alfanumérica e o primeiro tipo é o escol‐
+       hido.
+
+       Por exemplo, se dois tipos "text/bar" e "text/foo" estiverem  definidos
+       como  correspondência  da extensão "doc", normalmente o tipo "text/bar"
+       será o escolhido pois o nome é alfa-numericamente menor que "text/foo".
+       No  entanto,  se  "text/foo"  também  definir  uma prioridade maior que
+       "text/bar", então será escolhido "text/foo".
+
+FICHEIROS
+       /etc/cups - Directório típico de configuração do CUPS.
+
+EXEMPLOS
+       Definir dois tipos de média MIME para dados raster, com  um  a  ser  um
+       sub-conjunto com maior prioridade:
+
+           application/vnd.cups-raster  string(0,"RaSt") string(0,"tSaR") \
+                                         string(0,"RaS2") string(0,"2SaR") \
+                                         string(0,"RaS3") string(0,"3SaR")
+
+           image/pwg-raster              string(0,"RaS2") + \
+                                         string(4,PwgRaster<00>) priority(150)
+
+VEJA TAMBÉM
+       cups-files.conf(5),     cupsd.conf(5),     cupsd(8),     cupsfilter(8),
+       mime.convs(5), Ajuda Online do CUPS (http://localhost:631/help)
+
+COPYRIGHT
+       Copyright © 2021-2022 de OpenPrinting.
+
+2021-02-28                           CUPS                        mime.types(5)

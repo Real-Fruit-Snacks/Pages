@@ -1,0 +1,180 @@
+APT-KEY(8)                            APT                           APT-KEY(8)
+
+NOME
+       apt-key - Utilitário de gestão de chaves do APT descontinuado
+
+SINOPSE
+       apt-key [--keyring nome_do_ficheiro] {add nome_do_ficheiro |
+               del id_de_chave | export id_de_chave | exportall | list |
+               finger | adv | update | net-update | {-v | --version} |
+               {-h | --help}}
+
+DESCRIÇÃO
+       apt-key é usado para gerir uma lista de chaves usadas pelo apt para
+       autenticar pacotes. Os pacotes que foram autenticados com estas chaves
+       serão considerados de confiança.
+
+       O uso de apt-key está descontinuado, excepto para o uso de apt-key del
+       em scripts de maintainer para remover chaves existentes do chaveiro
+       principal. Se tal utilização do apt-key é desejada, é requerida a
+       instalação adicional da suite GNU Privacy Guard (empacotada em gnupg).
+
+       apt-key(8) estará disponível por último em Debian 11 e Ubuntu 22.04.
+
+FICHEIROS DE CHAVEIRO SUPORTADOS
+       O apt-key suporta apenas o formato binário OpenPGP (também conhecido
+       como "GPG key public ring") em ficheiros com a extensão "gpg", não o
+       formato de base de dados keybox introduzido em novas versões gpg(1)
+       como predefinição para ficheiros de chaveiro. Os ficheiros chaveiro
+       binários que se destinam a ser usados com qualquer versão do apt devem
+       por isto ser sempre criados com gpg --export.
+
+       Como alternativa, se todos os sistemas que devem estar a usar o
+       chaveiro criado têm pelo menos a versão de apt >= 1.4 instalada, você
+       pode usar o formato blindado de ASCII com a extensão "asc" em
+       substituição o qual pode ser criado com gpg --armor --export.
+
+COMANDOS
+       add nome_do_ficheiro (descontinuado)
+           Adiciona uma chave nova à lista de chaves de confiança. A chave é
+           lida a partir do nome de ficheiro dado com o parâmetro
+           nome_do_ficheiro ou se o nome do ficheiro for - a partir da entrada
+           standard.
+
+           É crítico que as chaves adicionadas manualmente via apt-key sejam
+           verificadas que pertencem ao dono dos repositórios que elas afirmam
+           ser, caso contrário a infraestrutura apt-secure(8) fica
+           completamente indeterminada.
+
+           Note: Em vez de se usar este comando, deve-se colocar um chaveiro
+           directamente no directório /etc/apt/trusted.gpg.d/ com um nome
+           descritivo e com "gpg" ou "asc" como extensão de ficheiro.
+
+       del id_de_chave (maioritariamente descontinuado)
+           Remove uma chave da lista de chaves de confiança.
+
+       export id_de_chave (descontinuado)
+           Escreve o id_de_chave da chave na saída standard.
+
+       exportall (descontinuado)
+           Escreve todas as chaves de confiança na saída standard.
+
+       list, finger (descontinuado)
+           Lista as chaves de confiança com impressões digitais.
+
+       adv (descontinuado)
+           Passa opções avançadas ao gpg. Com adv --recv-key você pode por
+           exemplo descarregar uma chave de servidores de chaves directamente
+           para o conjunto de chaves de confiança. Note que não são feitas
+           verificações, portanto é fácil enfraquecer completamente a
+           infraestrutura apt-secure(8) se for usado sem cuidado.
+
+       update (descontinuado)
+           Actualiza o chaveiro local com o chaveiro do arquivo e remove do
+           chaveiro local as chaves de arquivo que já não são válidas. O
+           chaveiro do arquivo é submetido no pacote archive-keyring da sua
+           distribuição, por exemplo o pacote debian-archive-keyring em
+           Debian.
+
+           Note que uma distribuição não precisa e de facto nem deve usar mais
+           este comando e em vez disso empacotar ficheiros chaveiro no
+           directório /etc/apt/trusted.gpg.d directamente pois isto evita uma
+           dependência no gnupg e é mais fácil gerir as chaves ao simplesmente
+           adicionar e remover ficheiros para responsáveis e utilizadores de
+           modo semelhante.
+
+       net-update (descontinuado)
+           Executa uma actualização que funciona de modo semelhante ao comando
+           update em cima, mas obtém o chaveiro do arquivo a partir de um URI
+           e valida-o com uma chave mestra. Isto requer um wget(1) instalado e
+           uma compilação de APT configurada para ter um servidor de onde
+           obter e um chaveiro mestre para validação. O APT em Debian não
+           suporta este comando, confiando em vez disso no update, mas o APT
+           do Ubuntu fá-lo.
+
+OPÇÕES
+       Note que as opções precisam ser definidas antes dos comandos descritos
+       na secção prévia.
+
+       --keyring nome_do_ficheiro (descontinuado)
+           Com esta opção é possível especificar um ficheiro de chaveiro
+           específico com o qual o comando deve operar. A predefinição é que
+           um comando é executado no ficheiro trusted.gpg assim como em todas
+           as partes do directório trusted.gpg.d, assim trusted.gpg é o
+           chaveiro principal o que significa que, por exemplo, as novas
+           chaves são adicionadas a este.
+
+DESCONTINUAÇÃO
+       Excepto para usar apt-key del em scripts de maintainer, o uso de
+       apt-key está descontinuado. Esta secção mostra como substituir o uso
+       existente de apt-key.
+
+       Se o seu uso existente de apt-key add se parecer com isto:
+
+       wget -qO- https://myrepo.example/myrepo.asc | sudo apt-key add -
+
+       Então você pode substituir directamente isto por (contudo note a
+       recomendação em baixo):
+
+       wget -qO- https://myrepo.example/myrepo.asc | sudo tee
+       /etc/apt/trusted.gpg.d/myrepo.asc
+
+       Certifique-se de usar a extensão "asc" para as chaves blindadas ASCII e
+       a extensão "gpg" para o formato binário OpenPGP (também conhecido como
+       "GPG key public ring"). O formato binário OpenPGP funciona para todas
+       as versões do apt, enquanto o formato blindado ASCII funciona para apt
+       versão >= 1.4.
+
+       Recomendação: Em vez de colocar chaves no directório
+       /etc/apt/trusted.gpg.d, você pode coloca-las em qualquer local no seu
+       sistema de ficheiros ao usar a opção Signed-By no seu sources.list e
+       apontando para o nome de ficheiro da chave. Veja sources.list(5) para
+       detalhes. Desde o APT 2.4, é fornecido /etc/apt/keyrings como a
+       localização recomendada para chaves não geridas por pacotes. Quando se
+       usa sources.list ao estilo deb822, e com a versão de apt >= 2.4, a
+       opção Signed-By pode também ser usada para incluir a chave blindada
+       ASCII completa directamente no sources.list sem um ficheiro adicional.
+
+FICHEIROS
+       /etc/apt/trusted.gpg
+           Chaveiro de chaves de confiança locais, as novas chaves serão
+           adicionadas aqui. Item de Configuração: Dir::Etc::Trusted.
+
+       /etc/apt/trusted.gpg.d/
+           Fragmentos de ficheiro para as chaves de confiança, chaveiros
+           adicionais podem ser armazenados aqui (por outros pacotes ou pelo
+           administrador). Item de Configuração Dir::Etc::TrustedParts.
+
+       /etc/apt/keyrings/
+           Local para armazenar chaveiros adicionais para serem usados com
+           Signed-By.
+
+VEJA TAMBÉM
+       apt-get(8), apt-secure(8)
+
+BUGS
+       página de bugs do APT[1]. Se deseja reportar um bug no APT, por favor
+       veja /usr/share/doc/debian/bug-reporting.txt ou o comando reportbug(1).
+
+AUTOR
+       APT foi escrito pela equipa do APT <apt@packages.debian.org>.
+
+TRADUÇÃO
+       A tradução Portuguesa foi feita por Américo Monteiro
+       <a_monteiro@netcabo.pt> de 2009 a 2012. A tradução foi revista pela
+       equipa de traduções portuguesas da Debian <traduz@debianpt.org>.
+
+       Note que este documento traduzido pode conter partes não traduzidas.
+       Isto é feito propositadamente, para evitar perdas de conteúdo quando a
+       tradução está atrasada relativamente ao conteúdo original.
+
+AUTORES
+       Jason Gunthorpe
+
+       Equipa do APT
+
+NOTAS
+        1. página de bugs do APT
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                      22 Fevereiro 2022                    APT-KEY(8)

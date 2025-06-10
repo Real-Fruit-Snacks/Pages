@@ -1,0 +1,116 @@
+LEXGROG(1)                     手册分页显示工具                     LEXGROG(1)
+
+名称
+       lexgrog - 解析 man 手册页的头部信息
+
+概述
+       lexgrog [-m|-c] [-dfw?V] [-E 编码] 文件 ...
+
+描述
+       lexgrog  是传统的 “groff guess” 工具的一个 lex 实现。它从命令行读取 man
+       手册源文件或预格式化的 “cat”  页  文件列表，并显示  apropos  和  whatis
+       所使用的手册名称和描述。在它之前 man 页面需要的预处理过滤器列表会传递给
+       nroff 和/或 troff。
+
+       如果它的输入错误，lexgrog 会打印 “parse 失败”；这有助于外部程序检查 man
+       页面是否正确。如果               lexgrog               的某个输入文件是
+       “-”，它会从标准输入读取；如果输入文件是压缩文件，将自动读取解压的版本。
+
+选项
+       -d, --debug
+              打印调试信息。
+
+       -m, --man
+              将输入当作    man    页面源文件来解析。如果指定了    --man    或
+              --cat，这将是默认值。
+
+       -c, --cat
+              将输入当作预格式化的  man  页面来解析(“cat  页面”)。不能同时指定
+              --man 和 --cat。
+
+       -w, --whatis
+              显示来自    man    页面头部的名称和描述(apropos    和     whatis
+              就使用这些信息)。这是未指定 --whatis 或 --filters 时的默认值。
+
+       -f, --filters
+              显示在用      nroff      或      troff      格式化之前对     man
+              页面预处理所需的过滤器列表。
+
+       -E 编码, --encoding 编码
+              将页面编码设置为 编码，而非自动推测的编码。
+
+       -?, --help
+              打印帮助消息并退出。
+
+       --usage
+              打印简短的帮助消息并退出。
+
+       -V, --version
+              显示版本信息。
+
+退出状态
+       0      程序成功执行。
+
+       1      用法错误。
+
+       2      lexgrog 无法解析一个或多个输入文件。
+
+示例
+         $ lexgrog man.1
+         man.1: "man - an interface to the system reference manuals"
+         $ lexgrog -fw man.1
+         man.1 (t): "man - an interface to the system reference manuals"
+         $ lexgrog -c whatis.cat1
+         whatis.cat1: "whatis - display manual page descriptions"
+         $ lexgrog broken.1
+         broken.1: parse failed
+
+WHATIS 解析
+       mandb(使用与     lexgrog      相同的代码)解析每个手册页顶部的      NAME
+       节来查找其中所说明对象的名称和描述。
+
+       在使用传统的 man 宏集时，正确的 NAME 节看起来是这样：
+
+              .SH NAME foo \- program to do something
+
+       一些手册分页程序要求      ‘\-’     与上面显示的完全相同；不过     mandb
+       更宽松。尽管如此，保留反斜杠可以更好地兼容其他系统。
+
+       在左侧可能有几个以冒号分隔的名称。包含空格的名称将被忽略以避免某些格式不太正确的
+       NAME
+       节不正常。右侧的文字形式是任意的，可以占多行。如果同一手册页中叙述了几种不同的功能，将使用以下形式：
+
+              .SH NAME foo, bar \- programs to do something .br baz \- program to do nothing
+
+       (可以用一个开始新段落的宏，如 .PP 来代替换行的宏 .br。)
+
+       若使用 BSD 衍生的 mdoc 宏集，正确的 NAME 节看起来是这样：
+
+              .Sh NAME .Nm foo .Nd program to do something
+
+       whatis  解析失败可能有几种原因。有时文档作者将 ‘.SH NAME’ 替换成了 ‘.SH
+       MYPROGRAM’，导致 mandb 找不到用来提取信息的这一节。有时作者包含了  NAME
+       节，但将               ‘name               \-              description’
+       换成了普通的文本。不过任何遵循上面列出语法的用法都是可以授受的。
+
+亦见
+       apropos(1), man(1), whatis(1), mandb(8)
+
+注
+       lexgrog                        试图解析包含                         .so
+       请求的文件，但只有文件正确安装到手册页层次结构路径中时才能正确处理。
+
+作者
+       lexgrog 所使用的扫描 man 页面的代码的作者：
+
+       Wilf. (G.Wilford@ee.surrey.ac.uk).
+       Fabrizio Polacco (fpolacco@debian.org).
+       Colin Watson (cjwatson@debian.org).
+
+       Colin Watson 编写了命令行前端的当前实现，以及本 man 手册页。
+
+BUGS
+       https://gitlab.com/man-db/man-db/-/issues
+       https://savannah.nongnu.org/bugs/?group=man-db
+
+2.11.2                            2023-01-08                        LEXGROG(1)

@@ -1,0 +1,810 @@
+ipptoolfile(5)                   OpenPrinting                   ipptoolfile(5)
+
+NOME
+       ipptoolfile - formato de ficheiro do ipptool
+
+DESCRIÇÃO
+       O  programa  ipptool(1)  aceita  ficheiros  de texto simples de formato
+       livre que descrevem um ou mais pedidos IPP. Os comentários começam  com
+       o  caractere  "#"  e  continuam  até  ao fim da linha. Cada pedido fica
+       rodeado por chavetas, por exemplo:
+
+           # This is a comment
+           {
+             # The name of the test
+             NAME "Print PDF File"
+
+             # The request to send
+             OPERATION Print-Job
+
+             GROUP operation-attributes-tag
+             ATTR charset attributes-charset utf-8
+             ATTR language attributes-natural-language en
+             ATTR uri printer-uri $uri
+             ATTR name requesting-user-name $user
+             ATTR mimeMediaType document-format application/pdf
+
+             GROUP job-attributes-tag
+             ATTR collection media-col {
+               # US Letter plain paper from the "main" tray
+               MEMBER collection media-size {
+                 MEMBER integer x-dimension 21590
+                 MEMBER integer y-dimension 27940
+               }
+               MEMBER integer media-top-margin 423
+               MEMBER integer media-bottom-margin 423
+               MEMBER integer media-left-margin 423
+               MEMBER integer media-right-margin 423
+               MEMBER keyword media-source "main"
+               MEMBER keyword media-type "stationery"
+             }
+
+             FILE testfile.pdf
+
+             # The response to expect
+             STATUS successful-ok
+             EXPECT job-id OF-TYPE integer WITH-VALUE >0
+             EXPECT job-uri OF-TYPE uri
+           }
+           {
+             # The name of the test
+             NAME "Wait for Job to Complete"
+
+             # The request to send
+             OPERATION Get-Job-Attributes
+
+             GROUP operation-attributes-tag
+             ATTR charset attributes-charset utf-8
+             ATTR language attributes-natural-language en
+             ATTR uri printer-uri $uri
+             ATTR integer job-id $job-id
+             ATTR name requesting-user-name $user
+
+             # The response to expect
+             STATUS successful-ok
+             EXPECT job-id OF-TYPE integer WITH-VALUE $job-id
+             EXPECT job-uri OF-TYPE uri
+             EXPECT job-state OF-TYPE enum WITH-VALUE >5 REPEAT-NO-MATCH
+             EXPECT job-originating-user-name OF-TYPE name WITH-VALUE "$user"
+
+             # Show the job state until completed...
+             DISPLAY job-state
+             DISPLAY job-state-reasons
+           }
+
+   DIRECTIVAS DE NÍVEL DE TOPO
+       As seguintes directivas podem ser usadas fora de um test:
+
+       { test }
+            Define um teste.
+
+       DEFINE variable-name value
+            Define a variável nomeada para o valor fornecido. Isto é o equiva‐
+            lente a especificar -d variable-name=value na linha de comandos do
+            ipptool(8).
+
+       DEFINE-DEFAULT variable-name value
+            Define a variável nomeada para o valor fornecido se esta não tiver
+            já um valor.
+
+       FILE-ID "identifier"
+            Especifica uma string identificadora para o ficheiro actual.
+
+       IGNORE-ERRORS yes
+
+       IGNORE-ERRORS no
+            Especifica  se,  por predefinição o ipptool(8)  irá ignorar os er‐
+            rors e continuar com os testes subsequentes..
+
+       INCLUDE "filename"
+
+       INCLUDE <filename>
+            Inclui outro  ficheiro  de  teste.  A  primeira  forma  inclui  um
+            ficheiro  relativo ao ficheiro de teste actual, enquanto a segunda
+            forma inclui um ficheiro do directório de inclusão do ipptool(8).
+
+       INCLUDE-IF-DEFINED name "filename"
+
+       INCLUDE-IF-DEFINED name <filename>
+            Inclui outro ficheiro de  teste  se  a  variável  nomeada  estiver
+            definida. A primeira forma inclui um ficheiro relativo ao ficheiro
+            de teste actual, enquanto a segunda forma inclui  um  ficheiro  do
+            directório de inclusão do ipptool(8).
+
+       INCLUDE-IF-NOT-DEFINED name "filename"
+
+       INCLUDE-IF-NOT-DEFINED name <filename>
+            Inclui  outro  ficheiro de teste se a variável nomeada não estiver
+            definida. A primeira forma inclui um ficheiro relativo ao ficheiro
+            de  teste  actual,  enquanto a segunda forma inclui um ficheiro do
+            directório de inclusão do ipptool(8).
+
+       SKIP-IF-DEFINED variable-name
+
+       SKIP-IF-NOT-DEFINED variable-name
+            Especifica que o lembrete do ficheiro de teste  deve  ser  saltado
+            quando a variável está ou não está definida.
+
+       STOP-AFTER-INCLUDE-ERROR no
+
+       STOP-AFTER-INCLUDE-ERROR yes
+            especifica  se  os  testes  devem  ser  parados  após  um erro num
+            ficheiro incluído.
+
+       TRANSFER auto
+            Especifica que os teste irão, por predefinição, usar "Transfer-En‐
+            coding:  chunked"  para  pedidos  com  ficheiro  anexados  e "Con‐
+            tent-Length:" para pedidos sem ficheiros anexados.
+
+       TRANSFER chunked
+            Especifica que os teste irão, por predefinição, usar  o  cabeçalho
+            "Transfer-Encoding:  chunked" de HTTP/1.1. Esta é a predefinição e
+            é equivalente a especificar -c na linha de comandos do ipptool(8).
+            O  suporte para pedidos chunked é necessário para conformidade com
+            todas as versões de IPP.
+
+       TRANSFER length
+            Especifica que os teste irão, por predefinição, usar  o  cabeçalho
+            "Content-Length:" de HTTP/1.0. Isto é equivalente a especificar -l
+            na linha de comandos do ipptool(8). O suporte para pedidos content
+            length é necessário para conformidade com todas as versões de IPP.
+
+       VERSION 1.0
+
+       VERSION 1.1
+
+       VERSION 2.0
+
+       VERSION 2.1
+
+       VERSION 2.2
+            Especifica  o  número  de  versão  IPP  predefinido a usar para os
+            testes que se seguem:
+
+   DIRECTIVAS DE TESTE
+       As seguintes directivas são compreendidas dentro de um test:
+
+       ATTR out-of-band-tag attribute-name
+
+       ATTR tag attribute-name value(s)
+            Adiciona um atributo ao pedido de teste.  Etiquetas  fora-de-banda
+            (admin-define,  delete-attribute, no-value, not-settable, unknown,
+            unsupported) não têm valor. Os valores para outras  etiquetas  são
+            delimitados  pelo caractere vírgula (",") - vírgulas escapadas us‐
+            ando o caractere "\". Atributos e valores comuns estão listados no
+            registro IANA IPP - veja referências em baixo.
+
+       ATTR  collection attribute-name { MEMBER tag member-name value(s) ... }
+       [ ... ,{ ... } ]
+            Adiciona um atributo de coleção ao pedido de teste.  Atributos  de
+            membro  seguem  a mesma sintaxe que os atributos regulares e podem
+            eles próprios  serem  coleções  aninhadas.  Podem  ser  fornecidos
+            quando  necessário  múltiplos  valores  de  coleção  separados por
+            vírgulas.
+
+       COMPRESSION deflate
+
+       COMPRESSION gzip
+
+       COMPRESSION none
+            Usa a compressão especificada nos dados do documento  seguindo  os
+            atributos num pedido Print-Job ou Send-Document.
+
+       DELAY seconds[,repeat-seconds]
+            Especifica  o  atraso  em  segundos antes do teste ser corrido. Se
+            forem fornecidos dois valores, o segundo valor é usado como atraso
+            entre repetição de testes.
+
+       DISPLAY attribute-name
+            Especifica que o valor do atributo nomeado deve fazer parte do re‐
+            sultado do relatório de teste.
+
+       EXPECT attribute-name [ predicate(s) ]
+
+       EXPECT ?attribute-name predicate(s)
+
+       EXPECT !attribute-name
+            Especifica que a resposta deve/pode/deve  não  inclui  o  atributo
+            nomeado. Requerimentos adicionais podem ser adicionados como pred‐
+            icados - veja a secção "PREDICADOS DE EXPECT" para mais informação
+            sobre  predicados. Os nomes de atributos podem especificar atribu‐
+            tos membros ao separar os nomes de atributo e membro com  a  barra
+            inclinada  para frente, por exemplo "media-col/media-size/x-dimen‐
+            sion".
+
+       EXPECT-ALL attribute-name [ predicate(s) ]
+
+       EXPECT-ALL ?attribute-name predicate(s)
+            Especifica que a resposta deve/pode incluir o atributo  nomeado  e
+            que  todas  as  ocorrências desse atributo têm de corresponder aos
+            predicados fornecidos.
+
+       FILE filename
+            Especifica um ficheiro a incluir no final do pedido. Isto é  usado
+            tipicamente quando se envia um ficheiro de impressão de teste.
+
+       GROUP tag
+            Especifica  a etiqueta de grupo para atributos subsequentes no pe‐
+            dido.
+
+       IGNORE-ERRORS yes
+
+       IGNORE-ERRORS no
+            Especifica se o ipptool(8)  irá ignorar erros e continuar  com  os
+            testes subsequentes.
+
+       MONITOR-PRINTER-STATE  [ printer-uri ] { EXPECT attribute-name [ predi‐
+       cate(s) ] }
+            Especifica os testes de monitorização do estado da impressora a  a
+            correr  em paralelo com a operação de teste. Os testes de monitor‐
+            ização irão correr até que todas as condições EXPECT estejam  sat‐
+            isfeitas ou que a operação de teste principal seja completa, o que
+            ocorrer primeiro.
+
+       NAME "literal string"
+            Especifica o nome humanamente-legível do teste.
+
+       OPERATION operation-code
+            Especifica a operação a ser executada.
+
+       PASS-IF-DEFINED variable-name
+
+       PASS-IF-NOT-DEFINED variable-name
+            Especifica que o teste actual  deve  ser  passado  automaticamente
+            quando a variável está ou não está definida.
+
+       PAUSE "message"
+            Mostra  a  mensagem  fornecida  e espera que o utilizador carregue
+            numa tecla para continuar.
+
+       REQUEST-ID number
+
+       REQUEST-ID random
+            Especifica o valor request-id a usar no pedido, seja um número in‐
+            teiro  ou  a palavra "random" para usar um valor gerado aleatoria‐
+            mente (a predefinição).
+
+       RESOURCE path
+            Especifica um caminho de recurso alternativo que é  usado  para  o
+            pedido  HTTP  POST. A predefinição é o recurso do URI fornecido ao
+            programa ipptool(8).
+
+       SKIP-IF-DEFINED variable-name
+
+       SKIP-IF-NOT-DEFINED variable-name
+            Especifica que o teste actual deve ser saltado quando  a  variável
+            está ou não está definida.
+
+       SKIP-PREVIOUS-ERROR yes
+
+       SKIP-PREVIOUS-ERROR no
+            Especifica  se  o ipptool(8)  irá saltar o teste actual se o teste
+            anterior resultou em erro/falha.
+
+       STATUS status-code [ predicate ]
+            Especifica um valor de código-de-estado da resposta esperada.  Re‐
+            querimentos  adicionais  podem  ser  adicionados como predicados -
+            veja a secção "PREDICADOS DE ESTADO" para  mais  informação  sobre
+            predicados.
+
+       TEST-ID "identifier"
+            Especifica uma string de identificação para o teste actual.
+
+       TRANSFER auto
+            Especifica que este teste irá usar "Transfer-Encoding: chunked" se
+            tiver um ficheiro anexado ou "Content-Length:" caso contrário.
+
+       TRANSFER chunked
+            Especifica que este teste irá usar o  cabeçalho  HTTP/1.1  "Trans‐
+            fer-Encoding: chunked".
+
+       TRANSFER length
+            Especifica  que  este  teste  irá  usar o cabeçalho HTTP/1.0 "Con‐
+            tent-Length:".
+
+       VERSION 1.0
+
+       VERSION 1.1
+
+       VERSION 2.0
+
+       VERSION 2.1
+
+       VERSION 2.2
+            Especifica o número de versão IPP a usar para este teste.
+
+   PREDICADOS DE EXPECT
+       Os seguintes predicados são compreendidos pela directiva de  teste  EX‐
+       PECT:
+
+       COUNT number
+            Requer  que o atributo EXPECT tenha um número especificado de val‐
+            ores.
+
+       DEFINE-MATCH variable-name
+            Define a variável para "1" quando a condição  EXPECT  corresponde.
+            Um efeito secundário deste predicado é que EXPECT nunca irá falhar
+            um teste.
+
+       DEFINE-NO-MATCH variable-name
+            Define a variável para "1" quando a  condição  EXPECT  não  corre‐
+            sponde.  Um  efeito  secundário deste predicado é que EXPECT nunca
+            irá falhar um teste.
+
+       DEFINE-VALUE variable-name
+            Define a variável para o valor do atributo quando a  condição  EX‐
+            PECT  corresponde.  Um efeito secundário deste predicado é que EX‐
+            PECT nunca irá falhar um teste.
+
+       DISPLAY-MATCH "message"
+            Mostra a mensagem especificada quando  a  condição  EXPECT  corre‐
+            sponde.
+
+       IF-DEFINED variable-name
+            Faz  com  que  as  condições  EXPECT  sejam  aplicadas apenas se a
+            variável especificada esteja definida.
+
+       IF-NOT-DEFINED variable-name
+            Faz com que as  condições  EXPECT  sejam  aplicadas  apenas  se  a
+            variável especificada não esteja definida.
+
+       IN-GROUP tag
+            Requer que o atributo EXPECT esteja na etiqueta do grupo especifi‐
+            cado.
+
+       OF-TYPE tag[(limits)|tag|...]
+            Requer que o atributo EXPECT use uma das etiquetas  de  valor  es‐
+            pecificadas.  A  maioria  das etiquetas de valor também suportam a
+            especificação de limites em  parênteses,  por  exemplo  "name(42)"
+            iria  permitir  strings nameWith/WithoutLanguage até 42 octetos em
+            comprimento, "name(4:MAX)" iria permitir strings nameWith/Without‐
+            Language   entre   4  e  255  octetos  em  comprimento,  e  "inte‐
+            ger(-273:MAX)" iria permitir inteiros entre -273 e 2147483647.
+
+       REPEAT-LIMIT number
+            Especifica o número máximo de vezes a repetir se o  predicado  RE‐
+            PEAT-MATCH  ou  REPEAT-NO-MATCH  for  especificado.  O  valor pre‐
+            definido é 1000.
+
+       REPEAT-MATCH
+
+       REPEAT-NO-MATCH
+            Especifica que o teste actual deve ser repetido quando a  condição
+            EXPECT corresponda ou não corresponda.
+
+       SAME-COUNT-AS attribute-name
+            Requer que o atributo EXPECT tenha o mesmo número de valores que o
+            atributo paralelo especificado.
+
+       WITH-ALL-HOSTNAMES "literal string"
+
+       WITH-ALL-HOSTNAMES "/regular expression/"
+            Requer que todos os valores URI contenham um nome-de-máquina  cor‐
+            respondente.
+
+       WITH-ALL-RESOURCES "literal string"
+
+       WITH-ALL-RESOURCES "/regular expression/"
+            Requer  que  todos  os valores URI contenham um recurso correspon‐
+            dente (incluindo / inicial).
+
+       WITH-ALL-SCHEMES "literal string"
+
+       WITH-ALL-SCHEMES "/regular expression/"
+            Requer que todos os valores URI contenham  um  esquema  correspon‐
+            dente.
+
+       WITH-ALL-VALUES "literal string"
+            Requer  que  todos os valores do atributo EXPECT correspondam lit‐
+            eralmente à  string.  As  comparações  são  sensíveis  a  maiúscu‐
+            las/minúsculas.
+
+       WITH-ALL-VALUES <number
+
+       WITH-ALL-VALUES =number
+
+       WITH-ALL-VALUES >number
+
+       WITH-ALL-VALUES number[,...,number]
+            Requer  que  todos  os valores do atributo EXPECT correspondam aos
+            número(s) ou comparação numérica. Ao comparar valores rangeOfInte‐
+            ger, os operadores "<" e ">" apenas verificam o limite superior do
+            alcance.
+
+       WITH-ALL-VALUES "false"
+
+       WITH-ALL-VALUES "true"
+            Requer que todos os valores do  atributo  EXPECT  correspondam  ao
+            valor booleano dado.
+
+       WITH-ALL-VALUES "/regular expression/"
+            Requer  que todos os valores do atributo EXPECT correspondam à ex‐
+            pressão regular, a qual tem de estar em conformidade com a sintaxe
+            de  expressões  regulares do POSIX. As comparações são sensíveis a
+            maiúsculas/minúsculas.
+
+       WITH-DISTINCT-VALUES
+            Requer que todos os valores do atributo EXPECT sejam  únicos.   As
+            comparações  são  sensíveis  a  maiúsculas/minúsculas.  Apenas  os
+            atributos charset, collection, enum, integer,  keyword,  mimeMedi‐
+            aType,  naturalLanguage, rangeOfInteger, resolution, uriScheme su‐
+            portam este predicado.
+
+       WITH-HOSTNAME "literal string"
+
+       WITH-HOSTNAME "/regular expression/"
+            Requer  que  pelo  menos  um   dos   valores   URI   contenha   um
+            nome-de-máquina correspondente.
+
+       WITH-RESOURCE "literal string"
+
+       WITH-RESOURCE "/regular expression/"
+            Requer  que pelo menos um dos valores URI contenha um recurso cor‐
+            respondente (incluindo / inicial).
+
+       WITH-SCHEME "literal string"
+
+       WITH-SCHEME "/regular expression/"
+            Requer que pelo menos um dos valores URI contenha um esquema  cor‐
+            respondente.
+
+       WITH-VALUE "literal string"
+            Requer  que  pelo  menos  um dos valores do atributo EXPECT corre‐
+            sponda literalmente à  string.  As  comparações  são  sensíveis  a
+            maiúsculas/minúsculas.
+
+       WITH-VALUE <number
+
+       WITH-VALUE =number
+
+       WITH-VALUE >number
+
+       WITH-VALUE number[,...,number]
+            Requer  que pelo menos um valor do atributo EXPECT corresponda aos
+            número(s) ou comparação numérica. Ao comparar valores rangeOfInte‐
+            ger, os operadores "<" e ">" apenas verificam o limite superior do
+            alcance.
+
+       WITH-VALUE "false"
+
+       WITH-VALUE "true"
+            Requer que pelo menos um dos valores  do  atributo  EXPECT  corre‐
+            sponda ao valor booleano dado.
+
+       WITH-VALUE "/regular expression/"
+            Requer  que  pelo  menos  um dos valores do atributo EXPECT corre‐
+            sponda à expressão regular, a qual tem de  estar  em  conformidade
+            com a sintaxe de expressões regulares do POSIX. As comparações são
+            sensíveis a maiúsculas/minúsculas.
+
+       WITH-VALUE-FROM attribute-name
+            Requer que  os  valor(es)  do  atributo  EXPECT  correspondam  aos
+            valor(es)   no   atributo   especificado.   Por  exemplo,  "EXPECT
+            job-sheets  WITH-VALUE-FROM  job-sheets-supported"  requer  que  o
+            valor  "job-sheets"  esteja  listado  como  um  valor  do atributo
+            "job-sheets-supported".
+
+   PREDICADOS DE ESTADOS
+       Os seguintes predicados são compreendidos pela directiva de teste  STA‐
+       TUS:
+
+       DEFINE-MATCH variable-name
+            Define  a  variável  para "1" quando STATUS corresponde. Um efeito
+            secundário deste predicado é que este STATUS nunca irá  falhar  um
+            teste.
+
+       DEFINE-NO-MATCH variable-name
+            Define  a  variável  para  "1"  quando  STATUS não corresponde. Um
+            efeito secundário deste predicado é que este STATUS nunca irá fal‐
+            har um teste.
+
+       IF-DEFINED variable-name
+            Faz com que STATUS seja aplicado apenas se a variável especificada
+            estiver definida.
+
+       IF-NOT-DEFINED variable-name
+            Faz com que STATUS seja aplicado apenas se a variável especificada
+            não estiver definida.
+
+       REPEAT-LIMIT number
+            Especifica o número máximo de vezes a repetir. O valor predefinido
+            é 1000.
+
+       REPEAT-MATCH
+
+       REPEAT-NO-MATCH
+            Especifica que o teste actual deve ser repetido quando a  resposta
+            do  código  de  estado corresponde ou não corresponde ao valor es‐
+            pecificado pela directiva STATUS.
+
+   CÓDIGOS DE OPERAÇÃO
+       Códigos de operação correspondem aos números  hexadecimais  (0xHHHH)  e
+       nomes  de  RFC 8011 e outras especificações da extensão  IPP. Aqui está
+       uma lista completa dos nomes suportados pelo ipptool(8):
+
+           Acknowledge-Document
+           Acknowledge-Identify-Printer
+           Acknowledge-Job
+           Activate-Printer
+           Add-Document-Images
+           Allocate-Printer-Resources
+           Cancel-Current-Job
+           Cancel-Job
+           Cancel-Jobs
+           Cancel-My-Jobs
+           Cancel-Resource
+           Cancel-Subscription
+           Close-Job
+           Create-Job
+           Create-Job-Subscriptions
+           Create-Printer
+           Create-Printer-Subscriptions
+           Create-Resource
+           Create-Resource-Subscriptions
+           Create-System-Subscriptions
+           CUPS-Accept-Jobs
+           CUPS-Accept-Jobs
+           CUPS-Add-Modify-Class
+           CUPS-Add-Modify-Printer
+           CUPS-Authenticate-Job
+           CUPS-Create-Local-Printer
+           CUPS-Delete-Class
+           CUPS-Delete-Printer
+           CUPS-Get-Classes
+           CUPS-Get-Default
+           CUPS-Get-Devices
+           CUPS-Get-Document
+           CUPS-Get-PPD
+           CUPS-Get-PPDs
+           CUPS-Get-Printers
+           CUPS-Move-Job
+           CUPS-Reject-Jobs
+           CUPS-Set-Default
+           Deactivate-Printer
+           Deallocate-Printer-Resources
+           Delete-Printer
+           Deregister-Output-Device
+           Disable-All-Printers
+           Disable-Printer
+           Enable-All-Printers
+           Enable-Printer
+           Fetch-Document
+           Fetch-Job
+           Get-Job-Attributes
+           Get-Jobs
+           Get-Next-Document-Data
+           Get-Notifications
+           Get-Output-Device-Attributes
+           Get-Printer-Attributes
+           Get-Printer-Support-Files
+           Get-Printer-Supported-Values
+           Get-Printers
+           Get-Subscription-Attributes
+           Get-Subscriptions
+           Get-System-Attributes
+           Get-System-Supported-Values
+           Hold-Job
+           Hold-New-Jobs
+           Identify-Printer
+           Install-Resource
+           Pause-All-Printers
+           Pause-All-Printers-After-Current-Job
+           Pause-Printer
+           Pause-Printer-After-Current-Job
+           Print-Job
+           Print-URI
+           Promote-Job
+           Purge-Jobs
+           Register-Output-Device
+           Release-Held-New-Jobs
+           Release-Job
+           Renew-Subscription
+           Reprocess-Job
+           Restart-Job
+           Restart-Printer
+           Restart-System
+           Resubmit-Job
+           Resume-All-Printers
+           Resume-Job
+           Resume-Printer
+           Schedule-Job-After
+           Send-Document
+           Send-Hardcopy-Document
+           Send-Notifications
+           Send-Resource-Data
+           Send-URI
+           Set-Job-Attributes
+           Set-Printer-Attributes
+           Set-Resource-Attributes
+           Set-System-Attributes
+           Shutdown-All-Printers
+           Shutdown-One-Printer
+           Shutdown-Printer
+           Startup-All-Printers
+           Startup-One-Printer
+           Startup-Printer
+           Suspend-Current-Job
+           Update-Active-Jobs
+           Update-Document-Status
+           Update-Job-Status
+           Update-Output-Device-Attributes
+           Validate-Document
+           Validate-Job
+
+   CÓDIGOS DE ESTADO
+       Códigos de estado correspondem  aos  números  hexadecimais  (0xHHHH)  e
+       nomes  de  RFC 8011 e outras especificações da extensão  IPP. Aqui está
+       uma lista completa dos nomes suportados pelo ipptool(8):
+
+           client-error-account-authorization-failed
+           client-error-account-closed
+           client-error-account-info-needed
+           client-error-account-limit-reached
+           client-error-attributes-not-settable
+           client-error-attributes-or-values-not-supported
+           client-error-bad-request
+           client-error-charset-not-supported
+           client-error-compression-error
+           client-error-compression-not-supported
+           client-error-conflicting-attributes
+           client-error-document-access-error
+           client-error-document-format-error
+           client-error-document-format-not-supported
+           client-error-document-password-error
+           client-error-document-permission-error
+           client-error-document-security-error
+           client-error-document-unprintable-error
+           client-error-forbidden
+           client-error-gone
+           client-error-ignored-all-notifications
+           client-error-ignored-all-subscriptions
+           client-error-not-authenticated
+           client-error-not-authorized
+           client-error-not-fetchable
+           client-error-not-found
+           client-error-not-possible
+           client-error-print-support-file-not-found
+           client-error-request-entity-too-large
+           client-error-request-value-too-long
+           client-error-timeout
+           client-error-too-many-subscriptions
+           client-error-uri-scheme-not-supported
+           cups-error-account-authorization-failed
+           cups-error-account-closed
+           cups-error-account-info-needed
+           cups-error-account-limit-reached
+           cups-see-other
+           redirection-other-site
+           server-error-busy
+           server-error-device-error
+           server-error-internal-error
+           server-error-job-canceled
+           server-error-multiple-document-jobs-not-supported
+           server-error-not-accepting-jobs
+           server-error-operation-not-supported
+           server-error-printer-is-deactivated
+           server-error-service-unavailable
+           server-error-temporary-error
+           server-error-version-not-supported
+           successful-ok
+           successful-ok-but-cancel-subscription
+           successful-ok-conflicting-attributes
+           successful-ok-events-complete
+           successful-ok-ignored-notifications
+           successful-ok-ignored-or-substituted-attributes
+           successful-ok-ignored-subscriptions
+           successful-ok-too-many-events
+
+   ETIQUETAS
+       Etiquetas de valor e grupo correspondem aos nomes de RFC 8011 e  outras
+       especificações da extensão  IPP. Aqui estão as etiquetas de grupo:
+
+           document-attributes-tag
+           event-notification-attributes-tag
+           job | job-attributes-tag
+           operation | operation-attributes-tag
+           printer | printer-attributes-tag
+           resource-attributes-tag
+           subscription-attributes-tag
+           system-attributes-tag
+           unsupported-attributes-tag
+
+       Aqui estão as etiquetas de valor:
+
+           admin-define
+           boolean
+           charset
+           collection | begCollection
+           dateTime
+           default
+           delete-attribute
+           enum
+           integer
+           keyword
+           language | naturalLanguage
+           mimetype | mimeMediaType
+           name | nameWithLanguage | nameWithoutLanguage
+           no-value
+           not-settable
+           octetString
+           rangeOfInteger
+           resolution
+           text | textWithLanguage | textWithoutLanguage
+           unknown
+           unsupported
+           uri
+           uriScheme
+
+   VARIÁVEIS
+       O  programa  ipptool(8) mantém uma lista de variáveis que podem ser us‐
+       adas em qualquer string literal ou valor  de  atributo  ao  especificar
+       "$variable-name".  à parte das variáveis definidas usando a opção -d ou
+       a  directiva  DEFINE,  as  seguintes  variáveis   pré-definidas   estão
+       disponíveis:
+
+       $$   Insere um único caractere "$".
+
+       $ENV[name]
+            Insere  o  valor  da  variável  de ambiente nomeada, ou uma string
+            vazia se a variável de ambiente não estiver definida.
+
+       $date-current
+            Insere  a  data  e  hora  actuais  usando   o   formato   ISO-8601
+            ("yyyy-mm-ddThh:mm:ssZ").
+
+       $date-start
+            Insere   a   data  e  hora  iniciais  usando  o  formato  ISO-8601
+            ("yyyy-mm-ddThh:mm:ssZ").
+
+       $filename
+            Insere o nome de ficheiro fornecido ao ipptool(8)  com a opção -f.
+
+       $filetype
+            Insere o tipo de media MIME para o nome de ficheiro  fornecido  ao
+            ipptool(8)  com a opção -f.
+
+       $hostname
+            Insere o nome-de-máquina a partir do URI fornecido ao ipptool(8).
+
+       $job-id
+            Insere  último  valor do atributo "job-id" retornado numa resposta
+            de teste ou 0 se nenhum atributo "job-id" foi visto.
+
+       $job-uri
+            Insere último valor do atributo "job-uri" retornado numa  resposta
+            de  teste  ou  uma  string  vazia se nenhum atributo "job-uri" foi
+            visto.
+
+       $notify-subscription-id
+            Insere último valor do atributo "notify-subscription-id" retornado
+            numa  resposta  de teste ou 0 se nenhum atributo "notify-subscrip‐
+            tion-id" foi visto.
+
+       $port
+            Insere o número de porto a partir do URI fornecido ao ipptool(8).
+
+       $resource
+            Inserts the resource path from the URI provided to ipptool(8).
+
+       $scheme
+            Insere o esquema a partir do URI fornecido ao ipptool(8).
+
+       $uri Insere o URI fornecido para ipptool(8).
+
+       $uriuser
+            Insere o nome-de-utilizador a partir  do  URI  fornecido  ao  ipp‐
+            tool(8). Se algum.
+
+       $user
+            Insere o nome de login do utilizador actual.
+
+VEJA TAMBÉM
+       ipptool(1),    IANA    IPP    Registry    (https://www.iana.org/assign‐
+       ments/ipp-registrations),  PWG  Internet  Printing  Protocol  Workgroup
+       (https://www.pwg.org/ipp),        RFC        8011        (https://data‐
+       tracker.ietf.org/doc/html/rfc8011)
+
+COPYRIGHT
+       Copyright © 2021-2022 de OpenPrinting.
+
+2021-09-20                           CUPS                       ipptoolfile(5)

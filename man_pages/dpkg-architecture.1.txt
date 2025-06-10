@@ -1,0 +1,394 @@
+dpkg-architecture(1)              dpkg suite              dpkg-architecture(1)
+
+NAMN
+       dpkg-architecture - ställ in och bestäm arkitektur för paket som byggs
+
+SYNOPS
+       dpkg-architecture [flagga...] [åtgärd]
+
+BESKRIVNING
+       dpkg-architecture innehåller en funktion för att bestämma och ställa in
+       bygg- och värdarkitekturerna för att bygga paket.
+
+       Byggarkitekturen bestäms alltid av antingen variabeln DEB_BUILD_ARCH om
+       den är satt (och --force inte anges) eller genom ett externt anrop till
+       dpkg(1) och kan inte väljas från kommandoraden.
+
+       Du kan ange värdarkitektur genom att ange en av, eller båda, flaggorna
+       --host-arch och --host-type, annars används variabeln DEB_HOST_ARCH om
+       den är satt (och --force inte anges). Förvalet bestäms av ett externt
+       anrop till gcc(1), eller är detsamma som byggarkitekturen varken CC
+       eller gcc är tillgängliga. Det räcker att ange en av --host-arch och
+       -host-type, värdet på den andra kommer ställas in till ett fungerande
+       förval. Det är faktiskt oftast bättre att bara ange den ena eftersom
+       dpkg-architecture kommer varna dig om ditt val inte överensstämmer med
+       förvalet.
+
+KOMMANDON
+       -l, --list
+           Skriv miljövariabler, en per rad, på formatet VARIABEL=värde. Detta
+           är förvald åtgärd.
+
+       -e, --equal arkitektur
+           Kontrollera arkitektur för likhet (sedan dpkg 1.13.13). Det jämför
+           den aktuella eller angivna Debian-värdarkitekturen mot arkitektur,
+           för att se om de är lika. Åtgärden expanderar inte jokertecken i
+           arkitekturer. Kommandot avslutar med status 0 om det är en träff, 1
+           om det inte är en träff.
+
+       -i, --is arkitektur-jokertecken
+           Kontrollera arkitekturens identitet (sedan dpkg 1.13.13). Det
+           jämför den aktuella eller angivna Debian-värdarkitekturen mot
+           arkitektur-jokertecken efter att ha expanderat det som ett
+           arkitektur-jokertecken, för att se om de är lika. Kommandot
+           avslutar med status 0 om det är en träff, 1 om det inte är en
+           träff.
+
+       -q, --query variabelnamn
+           Skriv värdet på en enkel variabel.
+
+       -s, --print-set
+           Visar ett exportkommando. Detta kan användas för att sätta
+           miljövariabler med POSIX-skalet eller make eval, beroende på
+           utdataformatet.
+
+       -u, --print-unset
+           Visar ett kommando liknande --print-set men för att ta bort värdet
+           för alla variabler.
+
+       -c, --command kommandosträng
+           Exekvera en kommandosträng i en miljö som har alla variabler satta
+           till det bestämda värdet.
+
+           If the command-string contains shell metacharacters, then it will
+           be invoked through the system bourne shell.
+
+       -L, --list-known
+           Visar en lista över giltiga arkitekturnamn. Möjligen begränsad av
+           en eller flera av träffvalen --match-wildcard, --match-bits eller
+           --match-endian (sedan dpkg 1.17.14).
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+FLAGGOR
+       -a, --host-arch arkitektur
+           Sätter värd-Debianarkitekturen.
+
+       -t, --host-type gnu-system-typ
+           Sätter värd-GNU-systemtypen.
+
+       -A, --target-arch arkitektur
+           Sätt mål-Debian-arkitekturen (sedan dpkg 1.17.14).
+
+       -T, --target-type gnu-system-typ
+           Sätt mål-GNU-systemtypen (sedan dpkg 1.17.14).
+
+       -W, --match-wildcard arkitektur-jokertecken
+           Begränsa arkitekturerna som visas med --list-known till en som
+           motsvarar det angivna arkitektur-jokertecknet (sedan dpkg 1.17.14).
+
+       -B, --match-bits arkitektur-bitar
+           Begränsa arkitekturerna som visas med --list-known till en med
+           angivet antal CPU-bitar (sedan dpkg 1.17.14). Antingen 32 eller 64.
+
+       -E, --match-endian architecture-endian
+           Begränsa arkitekturerna som visas med --list-known till en som har
+           angiven endian (sedan dpkg 1.17.14). Antingen little (liten endian)
+           eller big (stor endian).
+
+       --print-format format
+           Väljer utdataformatet för --print-set och --print-unset (sedan dpkg
+           1.20.6), till antingen shell (förval) eller make.
+
+       -f, --force
+           Värden som sätts av befintliga miljövariabler med samma namn som de
+           som används av skriptet används (t.ex av dpkg-architecture), såvida
+           inte denna tvingande flagga anges. Det gör det möjligt för
+           användaren att överstyra ett värde även om anropet till dpkg-
+           architecture är begravt djupt inuti ett annat skript (till exempel
+           dpkg-buildpackage(1)).
+
+TERMINOLOGI
+       byggmaskin
+           Maskinen paketet byggs på.
+
+       värdmaskin
+           Maskinen paketet byggs för.
+
+       målmaskin
+           Maskinen kompilatorn bygger för, eller emulatorn kör kod för.
+           Endast nödvändigt för att bygga en korsverktygskedja (eller
+           emulator), en som byggs på byggarkitekturen och körs på
+           målarkitekturen, och för att bygga (eller köra under emulering) kod
+           för målarkitekturen.
+
+       Debianarkitektur
+           Debianarkitektursträngen, vilken anger binärträdet i FTP-arkivet.
+           Exempel: i386, sparc, hurd-i386.
+
+       Debianarkitektur-tupel
+           En Debianarkitektur-tupel är den fullt kvalificerade arkitekturen
+           med alla dess komponenter detaljerat redogjort för. Den skiljer sig
+           från Debianarkitekturen i det att åtminstone cpu-komponenten inte
+           innehåller abi. Den nuvarande tupeln har formen abi-libc-os-cpu.
+           Exempel: base-gnu-linux-amd64, eabihf-musl-linux-arm.
+
+       Debianarkitektursökmönster
+           Ett Debianarkitektursökmönster är en speciell arkitektursträng som
+           matchar alla äkta arkitekturer som finns i den. Den genella formen
+           är en Debianarkitektur-tupel med fyra eller färre element, och där
+           åtminstone ett av dem är any. Saknade element i tupeln läggs till i
+           början implicit som any, och följande par är därmet ekvivalenta:
+
+           any-any-any-any = any
+           any-any-os-any = os-any
+           any-libc-any-any = libc-any-any
+
+           Exempel: linux-any, any-i386, hurd-any, eabi-any-any-arm, musl-any-
+           any.
+
+       GNU-systemtyp
+           En arkitekturspecificeringssträng som består av två delar, avdelade
+           med bindestreck: processor och system. Exempel: i586-linux-gnu,
+           sparc-linux-gnu, i386-gnu, x86_64-netbsd.
+
+       multiark-triplett
+           Den förtydligade GNU-systemtypen, använd i filsystemssökväg.
+           Tripletten förändras inte när baslinje-ISA:en uppdateras, vilket
+           innebär att de resulterande sökvägarna är stabila över tid. De enda
+           skillnaderna mot GNU-systemtypen är förnärvarande att CPU-delen för
+           i386-baserade system alltid är i386. Exempel: i386-linux-gnu,
+           x86_64-linux-gnu. Exempel på sökvägar: /lib/powerpc64le-linux-gnu/,
+           /usr/lib/i386-kfreebsd-gnu/.
+
+VARIABLER
+       Följande variabler läses från miljön (med mindre --force har angivits)
+       och sätts av dpkg-architecture (se stycket TERMINOLOGI för en
+       beskrivning av hur namngivningen är uppbyggd):
+
+       DEB_BUILD_ARCH
+           Debianarkitekturen för byggmaskinen.
+
+       DEB_BUILD_ARCH_ABI
+           Debian-ABI-namnet för byggmaskinen (sedan dpkg 1.18.11).
+
+       DEB_BUILD_ARCH_LIBC
+           Debian-libc-namnet för byggmaskinen (sedan dpkg 1.18.11).
+
+       DEB_BUILD_ARCH_OS
+           Debiansystemnamnet på byggmaskinen (sedan dpkg 1.13.2).
+
+       DEB_BUILD_ARCH_CPU
+           Debian-processornamnet för byggmaskinen (sedan dpkg 1.13.2).
+
+       DEB_BUILD_ARCH_BITS
+           Pekarstorleken för byggmaskinen (i bitar; sedan dpkg 1.15.4).
+
+       DEB_BUILD_ARCH_ENDIAN
+           Endian för byggmaskinen (little / big; sedan dpkg 1.15.4).
+
+       DEB_BUILD_GNU_CPU
+           GNU CPU-delen av DEB_BUILD_GNU_TYPE.
+
+       DEB_BUILD_GNU_SYSTEM
+           GNU-systemdelen av DEB_BUILD_GNU_TYPE.
+
+       DEB_BUILD_GNU_TYPE
+           GNU-systemtypen för byggmaskinen.
+
+       DEB_BUILD_MULTIARCH
+           Den förtydligade GNU-systemtypen för byggmaskinen, används för
+           sökvägar i filsystemet.
+
+       DEB_HOST_ARCH
+           Debianarkitekturen för värdmaskinen.
+
+       DEB_HOST_ARCH_ABI
+           Debian-ABI-namnet för värdmaskinen (sedan dpkg 1.18.11).
+
+       DEB_HOST_ARCH_LIBC
+           Debian-libc-amnet för värdmaskinen (sedan dpkg 1.18.11).
+
+       DEB_HOST_ARCH_OS
+           Debiansystemnamnet för värdmaskinen (sedan dpkg 1.13.2).
+
+       DEB_HOST_ARCH_CPU
+           Debian-processornamnet för värdmaskinen (sedan dpkg 1.13.2).
+
+       DEB_HOST_ARCH_BITS
+           Pekarstorleken för värdmaskinen (i bitar; sedan dpkg 1.15.4).
+
+       DEB_HOST_ARCH_ENDIAN
+           Endian för värdmaskinen (little / big; sedan dpkg 1.15.4).
+
+       DEB_HOST_GNU_CPU
+           GNU-processordelen av DEB_HOST_GNU_TYPE.
+
+       DEB_HOST_GNU_SYSTEM
+           GNU-systemdelen av DEB_HOST_GNU_TYPE.
+
+       DEB_HOST_GNU_TYPE
+           GNU-systemtypen för värdmaskinen.
+
+       DEB_HOST_MULTIARCH
+           Den förtydligade GNU-systemtypen för värdmaskinen, används för
+           sökvägar i filsystemet (sedan dpkg 1.16.0).
+
+       DEB_TARGET_ARCH
+           Debianarkitekturen för målmaskinen (sedan dpkg 1.17.14).
+
+       DEB_TARGET_ARCH_ABI
+           Debian-ABI-namnet för målmaskinen (sedan dpkg 1.18.11).
+
+       DEB_TARGET_ARCH_LIBC
+           Debian-libc-namnet för målmaskinen (sedan dpkg 1.18.11).
+
+       DEB_TARGET_ARCH_OS
+           Debiansystemnamnet för målmaskinen (sedan dpkg 1.17.14).
+
+       DEB_TARGET_ARCH_CPU
+           Debian-processornamnet för målmaskinen (sedan dpkg 1.17.14).
+
+       DEB_TARGET_ARCH_BITS
+           Pekarstorleken för målmaskinen (i bitar; sedan dpkg 1.17.14).
+
+       DEB_TARGET_ARCH_ENDIAN
+           Endian för målmaskinen (little / big; sedan dpkg 1.17.14).
+
+       DEB_TARGET_GNU_CPU
+           GNU CPU-delen av DEB_TARGET_GNU_TYPE (sedan dpkg 1.17.14).
+
+       DEB_TARGET_GNU_SYSTEM
+           GNU-systemdelen av DEB_TARGET_GNU_TYPE (sedan dpkg 1.17.14).
+
+       DEB_TARGET_GNU_TYPE
+           GNU-systemnamnet för målmaskinen (sedan dpkg 1.17.14).
+
+       DEB_TARGET_MULTIARCH
+           Den förtydligade GNU-systemtypen för målmaskinen, används för
+           sökvägar i filsystemet (sedan dpkg 1.17.14).
+
+FILER
+   Arkitekturtabeller
+       Alla dessa filer måste finnas för att dpkg-architecture ska fungera.
+       Deras placering kan överstyras vid körning med miljövariabeln
+       DPKG_DATADIR. Tabellerna innehåller ett pseudo-fält med format-Version
+       på första raden för att ange format, så att tolkar kan kontrollera om
+       de förstår det, såsom "# Version=1.0".
+
+       /usr/share/dpkg/cputable
+           Tabell över kända processornamn och deras motsvarande GNU-namn.
+           Formatversion 1.0 (sedan dpkg 1.13.2).
+
+       /usr/share/dpkg/ostable
+           Tabell över kända operativsystemsnamn och deras motsvarande GNU-
+           namn. Formatversion 2.0 (sedan dpkg 1.18.11).
+
+       /usr/share/dpkg/tupletable
+           Mappning mellan Debianarkitektur-tuplar och Debianarkitekturnamn.
+           Formatversion 1.0 (sedan dpkg 1.18.11).
+
+       /usr/share/dpkg/abitable
+           Tabell över Debianarkitektur-ABI-attributöverstyrningar.
+           Formatversion 2.0 (sedan dpkg 1.18.11).
+
+   Paketeringsstöd
+       /usr/share/dpkg/architecture.mk
+           Makefile-utklipp som sätter alla variabler dpkg-architecture
+           skriver (sedan dpkg 1.16.1):
+
+EXEMPEL
+       dpkg-architecture godtar flaggan -a och sänder den vidare till dpkg-
+       architecture. Andra exempel:
+
+        CC=i386-gnu-gcc dpkg-architecture -c debian/rules build
+
+        eval $(dpkg-architecture -u)
+
+       Kontrollera om aktuell eller angiven värdarkitektur är identisk till en
+       arkitektur:
+
+           dpkg-architecture -elinux-alpha
+
+           dpkg-architecture -amips -elinux-mips
+
+       Se om den aktuella eller angivna arkitekturen är ett Linuxsystem:
+
+           dpkg-architecture -ilinux-any
+
+           dpkg-architecture -ai386 -ilinux-any
+
+   Använda i debian/rules
+       Miljövariablerna som sätts av dpkg-architecture sänds till debian/rules
+       som make-variabler (se dokumentationen för make). Du bör dock inte bero
+       på dem eftersom detta förhindrar manuella anrop till skriptet. Du bör
+       istället alltid initiera dem med dpkg-architecture med -q-flaggan. Här
+       är några exempel, vilka även visar hur du kan förbättra stödet för
+       korskompilering i ditt paket:
+
+       Hämta GNU-systemtypen och vidaresänd den till ./configure:
+
+        DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+        DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+        [...]
+        ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+          confflags += --build=$(DEB_HOST_GNU_TYPE)
+        else
+          confflags += --build=$(DEB_BUILD_GNU_TYPE) \
+                       --host=$(DEB_HOST_GNU_TYPE)
+        endif
+        [...]
+        ./configure $(confflags)
+
+       Gör något endast för en specifik arkitektur:
+
+        DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+        ifeq ($(DEB_HOST_ARCH),alpha)
+          [...]
+        endif
+
+       eller, om du bara vill testa på processor- eller OS-typ, använd
+       variablerna DEB_HOST_ARCH_CPU eller DEB_HOST_ARCH_OS.
+
+       Observera att du även kan bero på att ett externt Makefile-utklipp
+       sätter alla variabler dpkg-architecture kan tillhandahålla:
+
+           include /usr/share/dpkg/architecture.mk
+
+            ifeq ($(DEB_HOST_ARCH),alpha)
+              [...]
+            endif
+
+       Oavsett bör du aldrig använda dpkg --print-architecture för att hämta
+       arkitekturinformation när paketet byggs.
+
+MILJÖVARIABLER
+       DPKG_DATADIR
+           Om satt, används som datakatalog för dpkg, där arkitekturtabellerna
+           ligger (sedan dpkg 1.14.17). Förval är ”/usr/share/dpkg”.
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_NLS
+           Om satt, används för att bestämma om lokalt språkstöd ska
+           aktiveras, även känt som internationaliseringsstöd (eller i18n)
+           (sedan dpkg 1.19.0). Tillåtna värden är: 0 och 1 (förval).
+
+ANTECKNINGAR
+       De långa kommando- och flaggnamnen är endast tillgängliga sedan dpkg
+       1.17.17.
+
+SE ÄVEN
+       dpkg-buildpackage(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06              dpkg-architecture(1)

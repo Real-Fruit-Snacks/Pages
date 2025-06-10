@@ -1,0 +1,147 @@
+APT-TRANSPORT-HTTP(1)                 APT                APT-TRANSPORT-HTTP(1)
+
+NOME
+       apt-transport-http - Transporte do APT para descarregar via Hypertext
+       Transfer Protocol (HTTP)
+
+DESCRIÇÃO
+       Este transporte do APT permite o uso de repositórios acedidos via
+       Hypertext Transfer Protocol (HTTP). Está disponível por predefinição e
+       é provavelmente o mais usado de todos os transportes. Note que um
+       transporte nunca chamado directamente por um utilizador mas é usado
+       pelas ferramentas do APT baseadas na configuração do utilizador.
+
+       HTTP é um protocolo de transporte não encriptado o que significa que
+       toda a comunicação com o servidor remoto (ou proxy) pode ser observada
+       por um atacante com capacidades suficientes que geralmente é referido
+       por "man in the middle" (MITM). No entanto, tal atacante não consegue
+       modificar a comunicação para comprometer a segurança do seu sistema,
+       pois o modelo de segurança dos dados do APT é independente do método de
+       transporte escolhido. Isto está explicado em detalhe em apt-secure(8).
+       Uma visão geral dos métodos de transporte disponíveis é dada em
+       sources.list(5).
+
+OPÇÕES
+       Várias opções podem ser definidas num ficheiro apt.conf(5) para
+       modificar este comportamento, indo de configuração de proxy até
+       maneiras de contornar limitações específicas de servidores.
+
+   Configuração do Proxy
+       A variável de ambiente http_proxy é suportada pela configuração de todo
+       o sistema. Proxies específicos para o APT podem ser configurados via
+       opção Acquire::http::Proxy. Proxies que devem ser usados apenas para
+       certas máquinas podem ser especificados via
+       Acquire::http::Proxy::máquina. Até um controle mais afinado pode ser
+       obtido via auto-detecção de proxy, detalhado mais abaixo. Todas estas
+       opções usam o formato URI
+       esquema://[[utilizador][:palavra-passe]@]maquina[:porto]/. OS esquemas
+       URI suportados são socks5h (SOCKS5 com resolução DNS remota), http e
+       https. Os detalhes de autenticação podem ser fornecidos via
+       apt_auth.conf(5) em vez de os incluir directamente no URI.
+
+       as várias opções de configuração do APT suportam o valor especial
+       DIRECT significando que nenhum proxy deverá ser usado. A variável de
+       ambiente no_proxy é também suportada para o mesmo objectivo.
+
+       Mais ainda, existem três definições disponibilizadas para controle de
+       cache como caches de proxy compatíveis com HTTP/1.1.
+       Acquire::http::No-Cache diz ao proxy para não usar a sua resposta em
+       cache sob nenhumas circunstâncias, Acquire::http::Max-Age define a
+       idade máxima permitida (em segundos) de um ficheiro índice na cache do
+       proxy.  Acquire::http::No-Store especifica que o proxy não deve
+       armazenar os ficheiros de arquivo pedidos na sua cache, o que pode ser
+       usado para prevenir que o proxy polua a sua cache com (grandes)
+       ficheiros .deb.
+
+   Configuração do Proxy Automática
+       Acquire::http::Proxy-Auto-Detect pode ser usado para especificar um
+       comando externo para descobrir o proxy HTTP a usar. O primeiro e único
+       parâmetro é um URL que aponta para a máquina a contactar para permitir
+       uma configuração específica para essa máquina. O APT espera que o
+       comando forneça o resultado do proxy no stdout numa única linha no
+       formato URI anteriormente especificado ou a palavra DIRECT se não
+       deverá ser usado nenhum proxy. Nenhum resultado fornecido indica que
+       devem ser usadas as definições de proxy genéricas.
+
+       Note que a auto-detecção não será usada para uma máquina se uma
+       configuração de proxy específica de máquina já estiver definida via
+       Acquire::http::Proxy::máquina.
+
+       Veja os pacotes squid-deb-proxy-client(1) e auto-apt-proxy(1) para
+       exemplos de implementações.
+
+       Esta opção toma precedência sobre a opção antiga de nome
+       Acquire::http::ProxyAutoDetect.
+
+   Configuração de Ligação
+       A opção Acquire::http::Timeout define o tempo limite usado por este
+       método, este valor aplica-se à ligação assim como os tempos de limite
+       de dados.
+
+       A largura de banda usada pode ser limitada com Acquire::http::Dl-Limit
+       que aceita valores inteiros em kilobytes por segundo. O valor
+       predefinido é 0 que desactiva o limite e tenta usar toda a largura de
+       banda disponível. Note que esta opção implicitamente desactiva a
+       descarga a partir de múltiplos servidores ao mesmo tempo.
+
+       A definição Acquire::http::Pipeline-Depth pode ser usada para activar o
+       'pipelining' de HTTP (RFC 2616 secção 8.1.2.2) a qual pode ser benéfica
+       por exemplo em ligações de alta latência. Especifica quantos pedidos
+       são enviados num pipeline. O APT tenta detectar e contornar servidores
+       web e proxies com comportamentos impróprios durante a sua execução, mas
+       se você sabe que o seu não está em conformidade com a especificação
+       HTTP/1.1, a ligação via pipe pode ser desactivada ao definir o valor
+       para 0. Por predefinição está activado com o valor 10.
+
+       Acquire::http::AllowRedirect controla se o APT irá seguir os
+       redirecionamentos, o que está activo por predefinição.
+
+       Acquire::http::User-Agent pode ser usado para definir um
+       Utilizador-Agente diferente para o método de download por http, porque
+       alguns proxies apenas permitem acesso a clientes se o cliente usar um
+       identificador conhecido.
+
+       Acquire::http::SendAccept está activa por predefinição e envia um campo
+       de cabeçalho Accept: text/* para o servidor para pedidos sem extensão
+       do ficheiro para prevenir que o servidor tente negociação de conteúdo.
+
+EXEMPLOS
+           Acquire::http {
+                Proxy::example.org "DIRECT";
+                Proxy "socks5h://apt:pass@127.0.0.1:9050";
+                Proxy-Auto-Detect "/usr/local/bin/apt-http-proxy-auto-detect";
+                No-Cache "true";
+                Max-Age "3600";
+                No-Store "true";
+                Timeout "10";
+                Dl-Limit "42";
+                Pipeline-Depth "0";
+                AllowRedirect "false";
+                User-Agent "My APT-HTTP";
+                SendAccept "false";
+           };
+
+VEJA TAMBÉM
+       apt.conf(5) apt_auth.conf(5) sources.list(5)
+
+BUGS
+       página de bugs do APT[1]. Se deseja reportar um bug no APT, por favor
+       veja /usr/share/doc/debian/bug-reporting.txt ou o comando reportbug(1).
+
+TRADUÇÃO
+       A tradução Portuguesa foi feita por Américo Monteiro
+       <a_monteiro@netcabo.pt> de 2009 a 2012. A tradução foi revista pela
+       equipa de traduções portuguesas da Debian <traduz@debianpt.org>.
+
+       Note que este documento traduzido pode conter partes não traduzidas.
+       Isto é feito propositadamente, para evitar perdas de conteúdo quando a
+       tradução está atrasada relativamente ao conteúdo original.
+
+AUTOR
+       Equipa do APT
+
+NOTAS
+        1. página de bugs do APT
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                        04 Abril 2019           APT-TRANSPORT-HTTP(1)

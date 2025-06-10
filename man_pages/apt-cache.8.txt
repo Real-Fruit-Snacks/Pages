@@ -1,0 +1,389 @@
+APT-CACHE(8)                          APT                         APT-CACHE(8)
+
+NOME
+       apt-cache - pesquisa a cache do APT
+
+SINOPSE
+       apt-cache [-agipns] [-o=config_string] [-c=ficheiro_de_configuração]
+                 {gencaches | showpkg pkg...  | showsrc pkg...  | stats | dump
+                 | dumpavail | unmet | search regex...  |
+                 show pkg [{=número_de_versão_do_pacote | /lançamento-alvo}]...
+                 |
+                 depends pkg [{=número_de_versão_do_pacote | /lançamento-alvo}]...
+                 |
+                 rdepends pkg [{=número_de_versão_do_pacote | /lançamento-alvo}]...
+                 | pkgnames [prefixo]  |
+                 dotty pkg [{=número_de_versão_do_pacote | /lançamento-alvo}]...
+                 |
+                 xvcg pkg [{=número_de_versão_do_pacote | /lançamento-alvo}]...
+                 | policy [pkg...]  | madison pkg...  | {-v | --version} |
+                 {-h | --help}}
+
+DESCRIÇÃO
+       apt-cache executa uma variedade de operações na cache de pacotes do
+       APT.  apt-cache não manipula o estado do sistema mas fornece operações
+       para procurar e gerar resultados interessantes a partir dos metadados
+       do pacote. Os metadados são adquiridos e actualizados via comando
+       'update' de, por exemplo, apt-get, portanto podem estar desatualizados
+       se a última actualização aconteceu à muito tempo, mas em troca o
+       apt-cache funciona independentemente da disponibilidade das fontes
+       configuradas (por exemplo em offline).
+
+       A menos que a opção -h, ou --help seja fornecida, um dos comandos
+       abaixo têm que estar presentes.
+
+       gencaches
+           gencaches cria a cache de pacotes do APT. Isto é feito
+           implicitamente por todos os comandos que precisam desta cache se
+           esta estiver em falta ou desatualizada.
+
+       showpkg pkg...
+           showpkg mostra informação acerca dos pacotes listados na linha de
+           comandos. Os argumentos restantes são nomes de pacotes. São
+           listadas as versões disponíveis e dependências reversas de cada
+           pacote listado, assim como as dependências dianteiras de cada
+           versão. Dependências dianteiras (normais) são aqueles pacotes de
+           que o pacote em questão depende; dependências reversas são aqueles
+           pacotes que dependem do pacote em questão. Assim, as dependências
+           dianteiras de um pacote têm de ser satisfeitas, mas as dependências
+           reversas não precisam de ser. Por exemplo, apt-cache showpkg
+           libreadline2 deverá produzir resultados semelhantes ao seguinte:
+
+               Pacote: libreadline2
+               Versões: 2.1-12(/var/state/apt/lists/foo_Packages),
+               Dependências Reversas Depends:
+                 libreadlineg2,libreadline2
+                 libreadline2-altdev,libreadline2
+               Dependências:
+               2.1-12 - libc5 (2 5.4.0-0) ncurses3.0 (0 (null))
+               Fornecimentos:
+               2.1-12 -
+               Fornecimentos Reversos:
+           Assim pode-se ver que libreadline2, versão 2.1-12, depende de libc5
+           e ncurses3.0 que têm que ser instalados para que libreadline2
+           funcione. Por sua vez, libreadlineg2 e libreadline2-altdev dependem
+           de libreadline2. Se libreadline2 for instalado, libc5 e ncurses3.0
+           (e ldso) também têm que ser instalados; libreadlineg2 e
+           libreadline2-altdev não precisam de ser instalados. Para o
+           significado específico do lembrete da saída é melhor consultar o
+           código fonte do apt.
+
+       stats
+           stats mostra algumas estatísticas acerca da cache. Não são
+           esperados mais argumentos. As estatísticas reportadas são:
+
+           •   Total package names é o número de nomes de pacotes encontrados
+               na cache.
+
+           •   Normal packages é o número de nomes de pacotes regulares e
+               ordinários; estes são pacotes que têm uma correspondência de
+               um-para-um entre os seus nomes e os nomes usados por outros
+               pacotes para eles nas dependências. A maioria dos pacotes caem
+               nesta categoria.
+
+           •   Pure virtual packages é o número de pacotes que existem apenas
+               como nome de pacote virtual; isto é, os pacotes apenas
+               "disponibilizam" o nome do pacote virtual, e nenhum pacote usa
+               realmente o nome. Por exemplo, "mail-transport-agent" no
+               sistema Debian é um pacote puramente virtual; vários pacotes
+               disponibilizam "mail-transport-agent", mas não existe um existe
+               um pacote chamado "mail-transport-agent".
+
+           •   Single virtual packages é o número de pacotes com apenas um
+               pacote a disponibilizar um pacote virtual particular. Por
+               exemplo, no sistema Debian, "X11-text-viewer" é um pacote
+               virtual, mas apenas um pacote, xless, disponibiliza
+               "X11-text-viewer".
+
+           •   Mixed virtual packages é o número de pacotes que ou
+               disponibilizam um pacote virtual particular ou têm o nome de
+               pacote virtual como o nome de pacote. Por exemplo, no sistema
+               Debian, "debconf" é tanto um pacote real, como também
+               disponibilizado pelo pacote debconf-tiny.
+
+           •   Missing é o número de nomes de pacotes que são referenciados
+               numa dependência mas não foram disponibilizados por nenhum
+               pacote. Os pacotes em falta podem ser uma evidência de que não
+               se está a aceder ao total de uma distribuição, ou que um pacote
+               (real ou virtual) foi removido da distribuição. Normalmente são
+               referenciados a partir de declarações de Conflitos ou Breaks.
+
+           •   Total distinct versions é o número de versões de pacotes
+               encontrados na cache. Se for acedida a mais do que uma
+               distribuição (por exemplo "stable" e "unstable"), este valor
+               pode ser consideravelmente maior que o número do total de nomes
+               de pacotes.
+
+           •   Total dependencies é o número de relacionamentos com
+               dependências reivindicadas por todos os pacotes na cache.
+
+       showsrc pkg...
+           showsrc mostra todos os registos de pacotes fonte que correspondem
+           aos nomes de pacotes fornecidos. Todas as versões são mostradas,
+           assim como todos os registos que declaram o nome como sendo um
+           pacote binário. Use --only-source para mostrar apenas nomes de
+           pacotes fonte.
+
+       dump
+           dump mostra uma listagem curta de todos os pacotes na cache. É
+           principalmente para depuração.
+
+       dumpavail
+           dumpavail escreve uma lista de disponibilidades no stdout. Isto é
+           apropriado para usar com o dpkg(1) e é usado pelo método
+           dselect(1).
+
+       unmet
+           unmet mostra um sumário de todas as dependências insatisfeitas na
+           cache do pacote.
+
+       show pkg...
+           show executa uma função semelhante ao dpkg --print-avail; mostra os
+           registos do pacote para os pacotes nomeados.
+
+       search regex...
+           search executa uma busca de texto completo em todas as listas de
+           pacotes disponíveis para o padrão POSIX regex fornecido, veja
+           regex(7). Procura nos nomes de pacotes e nas descrições por uma
+           ocorrência da expressão regular e escreve o nome do pacote e a
+           descrição curta, incluindo nomes de pacotes virtuais. Se for
+           fornecido --full então são produzidos resultados idênticos ao show
+           para cada pacote correspondente, e se for fornecido --names-only
+           então não há procura na descrição longa, apenas no nome do pacote
+           dos pacotes fornecidos.
+
+           Podem ser usados argumentos separados para especificar múltiplos
+           padrões de busca os quais são lidados em conjunto.
+
+       depends pkg...
+           depends mostra uma listagem de cada dependência que um pacote tem e
+           todos os outros pacotes possíveis que podem satisfazer essa
+           dependência.
+
+       rdepends pkg...
+           rdepends mostra uma listagem de cada dependência reversa que um
+           pacote tem.
+
+       pkgnames [prefixo]
+           Este comando escreve o nome de cada pacote que o APT conhece. O
+           argumento opcional é um prefixo de correspondência para filtrar a
+           lista de nomes. O resultado é apropriado para usar numa função
+           completa de consola e o resultado é gerado com extrema rapidez.
+           Este comando fica melhor usado com a opção --generate.
+
+           Note que um pacote que o APT conheça não está necessariamente
+           disponível para download, instalável ou instalado, por exemplo, os
+           pacotes virtuais também são listados na lista gerada.
+
+       dotty pkg...
+           dotty recebe uma lista de pacotes na linha de comandos e gera
+           resultados apropriados para uso pelo dotty do pacote GraphViz[1]. O
+           resultado será um conjunto de nós e orlas que representam os
+           relacionamentos entre os pacotes. Por predefinição, os pacotes
+           fornecidos irão seguir todos os pacotes dependentes; isto pode
+           produzir um gráfico muito grande. Para limitar os resultados apenas
+           aos pacotes listados na linha de comandos, defina a opção
+           APT::Cache::GivenOnly.
+
+           Os nós resultantes irão ter várias formas; pacotes normais são
+           caixas, pacotes virtuais puros são triângulos, pacotes virtuais de
+           mistura são diamantes, pacotes desaparecidos são hexágonos. Caixas
+           cor de laranja significam que a recursão parou (pacotes leaf),
+           linhas azuis são pré-dependências, linhas verdes são conflitos.
+
+           Atenção, o dotty não consegue fazer gráficos com grandes conjuntos
+           de pacotes.
+
+       xvcg pkg...
+           O mesmo que dotty, apenas para xvcg a partir de Ferramenta VCG[2].
+
+       policy [pkg...]
+           policy destina-se a ajudar a depurar problemas relacionados com o
+           ficheiro de preferências. Sem argumentos irá escrever as
+           propriedades de cada fonte. Caso contrário escreve informação
+           detalhada acerca da selecção de prioridade do pacote nomeado.
+
+       madison pkg...
+           O comando madison do apt-cache tenta imitar o formato de saída e um
+           subconjunto das funcionalidades da ferramenta madison de gestão de
+           pacotes da Debian. Mostra versões disponíveis de um pacote num
+           formato tabular. Ao contrário do madison original, apenas pode
+           mostrar informação para a arquitectura que o APT recolheu listas de
+           pacotes (APT::Architecture).
+
+OPÇÕES
+       Todas as opções de linha de comandos podem ser definidas usando o
+       ficheiro de configuração, as descrições indicam a opção de configuração
+       a definir. Para opções booleanas você pode sobre por o ficheiro de
+       configuração usando algo como -f-,--no-f, -f=no ou várias outras
+       variantes.
+
+       -p, --pkg-cache
+           Seleciona o ficheiro para armazenar a cache do pacote. A cache do
+           pacote é a cache principal usada por todas as operações. Item de
+           Configuração: Dir::Cache::pkgcache.
+
+       -s, --src-cache
+           Seleciona o ficheiro para armazenar a cache de fonte. A fonte é
+           usada apenas pelo gencaches e armazena uma versão analisada da
+           informação do pacote a partir de fontes remotas. Ao construir a
+           cache de pacote é usada a cache fonte para evitar reanalisar todos
+           os ficheiros do pacote. Item de Configuração:
+           Dir::Cache::srcpkgcache.
+
+       -q, --quiet
+           Quiet; produz resultados apropriados para registar em logs,
+           omitindo os indicadores de progresso. Mais q's irão produzir mais
+           serenidade até um máximo de 2. Você também pode usar -q=# para
+           definir o nível de serenidade, sobrepondo o ficheiro de
+           configuração. Item de Configuração: quiet.
+
+       -i, --important
+           Escreve apenas dependências importantes; para usar com unmet e
+           depends. Separa apenas relações de Depends e Pre-Depends para serem
+           escritas. Item de Configuração: APT::Cache::Important.
+
+       --no-pre-depends, --no-depends, --no-recommends, --no-suggests,
+       --no-conflicts, --no-breaks, --no-replaces, --no-enhances
+           Por predefinição o depends and rdepends escrevem todas as
+           dependências. Isto pode ser "afinado" com estas bandeiras que irão
+           omitir o tipo de dependência especificado. Item de Configuração:
+           APT::Cache::ShowDependencyType ex.  APT::Cache::ShowRecommends.
+
+       --implicit
+           Por predefinição depends e rdepends apresentam apenas dependências
+           expressamente explícitas nos meta-dados. Com esta bandeira irá
+           também mostrar dependências adicionadas implicitamente com base nos
+           dados encontrados. Um Conflicts: foo por exemplo, expressa
+           implicitamente que este pacote também entra em conflito com o
+           pacote foo de qualquer outra arquitectura. Item de Configuração:
+           APT::Cache::ShowImplicit.
+
+       -f, --full
+           Escreve registos de pacote completos quando procura. Item de
+           Configuração: APT::Cache::ShowFull.
+
+       -a, --all-versions
+           Escreve registos completos para todas as versões disponíveis. Isto
+           é a predefinição; para a desligar, use --no-all-versions. Se
+           --no-all-versions for especificada, apenas a versão candidata será
+           mostrada (aquela que seria selecionada para instalação). Esta opção
+           é aplicável apenas ao comando show. Item de Configuração:
+           APT::Cache::AllVersions.
+
+       -g, --generate
+           Executa regeneração automática da cache de pacote, em vez de usar a
+           cache como está. Isto é a predefinição; para a desligar, use
+           --no-generate. Item de Configuração: APT::Cache::Generate.
+
+       --names-only, -n
+           Apenas procura no pacote e nos nomes dos pacotes fornecidos, e não
+           nas descrições longas. Item de Configuração: APT::Cache::NamesOnly.
+
+       --all-names
+           Faz com que o pkgnames escreva todos os nomes, incluindo pacotes
+           virtuais e dependências em falta. Item de configuração:
+           APT::Cache::AllNames.
+
+       --recurse
+           Torna depends e rdepends recursivo para que todos os pacotes
+           mencionados sejam escritos uma vez. Item de Configuração
+           APT::Cache::RecurseDepends.
+
+       --installed
+           Limita a saída de depends e rdepends aos pacotes que estão
+           actualmente instalados. Item de Configuração:
+           APT::Cache::Installed.
+
+       --with-source nome_do_ficheiro
+           Adiciona o ficheiro fornecido como a fonte para meta-dados. Pode
+           ser repetido para adicionar múltiplos ficheiros. Presentemente são
+           suportados ficheiros *.deb, *.dsc, *.changes, Sources e Packages
+           assim como directórios de pacotes fonte: A correspondência dos
+           ficheiros é baseada apenas com base no seu nome, não no seu
+           conteúdo.
+
+           Sources e Packages podem ser comprimidos em qualquer formato
+           suportado pelo apt desde de contenham a extensão correcta. Se você
+           precisar de armazenar vários ficheiros destes num directório pode
+           usar um prefixo no nome à sua escolha com um underscore no último
+           caractere ("_"). Exemplo: meu.exemplo_Packages.xz
+
+           Note que estas fontes são tratadas como de confiança (veja apt-
+           secure(8)). Item de Configuração: APT::Sources::With.
+
+       -h, --help
+           Mostra um sumário curto da utilização.
+
+       -v, --version
+           Mostra a versão do programa.
+
+       -c, --config-file
+           Ficheiro de Configuração; Especifica o ficheiro de configuração a
+           usar. O programa irá ler o ficheiro de configuração predefinido e
+           depois este ficheiro de configuração. Se as definições de
+           configuração precisarem de ser definidas antes, os ficheiros de
+           configuração predefinidos são analisados especificando um ficheiro
+           com a variável de ambiente APT_CONFIG. Veja apt.conf(5) para
+           informação de sintaxe.
+
+       -o, --option
+           Define uma Opção de Configuração; Isto irá definir uma opção de
+           configuração arbitrária. A sintaxe é -o Foo::Bar=bar.  -o e
+           --option podem ser usadas várias vezes para definir opções
+           diferentes.
+
+FICHEIROS
+       /etc/apt/sources.list
+           Localizações de onde obter pacotes. Item de Configuração:
+           Dir::Etc::SourceList.
+
+       /etc/apt/sources.list.d/
+           Ficheiros fragmentados para localizações de onde obter pacotes.
+           Item de Configuração: Dir::Etc::SourceParts.
+
+       /var/lib/apt/lists/
+           Área de armazenamento para informação de estado para cada recurso
+           de pacote especificado em sources.list(5) Tem de Configuração:
+           Dir::State::Lists.
+
+       /var/lib/apt/lists/partial/
+           Área de armazenamento para informação de estado em trânsito. Item
+           de Configuração: Dir::State::Lists será implicitamente acrescentado
+           (partial)
+
+VEJA TAMBÉM
+       apt.conf(5), sources.list(5), apt-get(8)
+
+DIAGNÓSTICO
+       apt-cache devolve zero em operação normal, 100 decimal em erro.
+
+BUGS
+       página de bugs do APT[3]. Se deseja reportar um bug no APT, por favor
+       veja /usr/share/doc/debian/bug-reporting.txt ou o comando reportbug(1).
+
+TRADUÇÃO
+       A tradução Portuguesa foi feita por Américo Monteiro
+       <a_monteiro@netcabo.pt> de 2009 a 2012. A tradução foi revista pela
+       equipa de traduções portuguesas da Debian <traduz@debianpt.org>.
+
+       Note que este documento traduzido pode conter partes não traduzidas.
+       Isto é feito propositadamente, para evitar perdas de conteúdo quando a
+       tradução está atrasada relativamente ao conteúdo original.
+
+AUTORES
+       Jason Gunthorpe
+
+       Equipa do APT
+
+NOTAS
+        1. GraphViz
+           http://www.research.att.com/sw/tools/graphviz/
+
+        2. Ferramenta VCG
+           http://rw4.cs.uni-sb.de/users/sander/html/gsvcg1.html
+
+        3. página de bugs do APT
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                        04 Abril 2019                    APT-CACHE(8)

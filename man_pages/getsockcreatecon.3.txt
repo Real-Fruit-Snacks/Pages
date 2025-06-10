@@ -1,0 +1,50 @@
+getsockcreatecon(3)        SELinux API documentation       getsockcreatecon(3)
+
+NAME
+       getsockcreatecon,  setsockcreatecon  -  get or set the SELinux security
+       context used for creating a new labeled sockets
+
+SYNOPSIS
+       #include <selinux/selinux.h>
+
+       int getsockcreatecon(char **con);
+
+       int getsockcreatecon_raw(char **con);
+
+       int setsockcreatecon(char *context);
+
+       int setsockcreatecon_raw(char *context);
+
+DESCRIPTION
+       getsockcreatecon() retrieves the context used for creating  a  new  la‐
+       beled  network  socket.   This  returned  context  should be freed with
+       freecon(3) if non-NULL.  getsockcreatecon() sets *con  to  NULL  if  no
+       sockcreate  context  has been explicitly set by the program (i.e. using
+       the default policy behavior).
+
+       setsockcreatecon() sets the context used for  creating  a  new  labeled
+       network  sockets  NULL  can be passed to setsockcreatecon() to reset to
+       the default policy behavior.  The sockcreate context  is  automatically
+       reset after the next execve(2), so a program doesn't need to explicitly
+       sanitize it upon startup.
+
+       setsockcreatecon() can be applied prior to library functions  that  in‐
+       ternally  perform  an file creation, in order to set an file context on
+       the objects.
+
+       getsockcreatecon_raw() and setsockcreatecon_raw() behave identically to
+       their non-raw counterparts but do not perform context translation.
+
+       Note:  Signal handlers that perform a setsockcreatecon() must take care
+       to save, reset, and restore the sockcreate context to avoid  unexpected
+       behavior.
+
+       Note: Contexts are thread specific.
+
+RETURN VALUE
+       On error -1 is returned.  On success 0 is returned.
+
+SEE ALSO
+       selinux(8), freecon(3), getcon(3)
+
+dwalsh@redhat.com              24 September 2008           getsockcreatecon(3)

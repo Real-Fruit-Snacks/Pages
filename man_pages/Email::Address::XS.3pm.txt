@@ -1,0 +1,362 @@
+Email::Address::XS(3pmUser Contributed Perl DocumentatiEmail::Address::XS(3pm)
+
+NAME
+       Email::Address::XS - Parse and format RFC 5322 email addresses and
+       groups
+
+SYNOPSIS
+         use Email::Address::XS;
+
+         my $winstons_address = Email::Address::XS->new(phrase => 'Winston Smith', user => 'winston.smith', host => 'recdep.minitrue', comment => 'Records Department');
+         print $winstons_address->address();
+         # winston.smith@recdep.minitrue
+
+         my $julias_address = Email::Address::XS->new('Julia', 'julia@ficdep.minitrue');
+         print $julias_address->format();
+         # Julia <julia@ficdep.minitrue>
+
+         my $users_address = Email::Address::XS->parse('user <user@oceania>');
+         print $users_address->host();
+         # oceania
+
+         my $goldsteins_address = Email::Address::XS->parse_bare_address('goldstein@brotherhood.oceania');
+         print $goldsteins_address->user();
+         # goldstein
+
+         my @addresses = Email::Address::XS->parse('"Winston Smith" <winston.smith@recdep.minitrue> (Records Department), Julia <julia@ficdep.minitrue>');
+         # ($winstons_address, $julias_address)
+
+         use Email::Address::XS qw(format_email_addresses format_email_groups parse_email_addresses parse_email_groups);
+
+         my $addresses_string = format_email_addresses($winstons_address, $julias_address, $users_address);
+         # "Winston Smith" <winston.smith@recdep.minitrue> (Records Department), Julia <julia@ficdep.minitrue>, user <user@oceania>
+
+         my @addresses = map { $_->address() } parse_email_addresses($addresses_string);
+         # ('winston.smith@recdep.minitrue', 'julia@ficdep.minitrue', 'user@oceania')
+
+         my $groups_string = format_email_groups('Brotherhood' => [ $winstons_address, $julias_address ], undef() => [ $users_address ]);
+         # Brotherhood: "Winston Smith" <winston.smith@recdep.minitrue> (Records Department), Julia <julia@ficdep.minitrue>;, user <user@oceania>
+
+         my @groups = parse_email_groups($groups_string);
+         # ('Brotherhood' => [ $winstons_address, $julias_address ], undef() => [ $users_address ])
+
+         use Email::Address::XS qw(compose_address split_address);
+
+         my ($user, $host) = split_address('julia(outer party)@ficdep.minitrue');
+         # ('julia', 'ficdep.minitrue')
+
+         my $string = compose_address('charrington"@"shop', 'thought.police.oceania');
+         # "charrington\"@\"shop"@thought.police.oceania
+
+DESCRIPTION
+       This module implements RFC 5322 <https://tools.ietf.org/html/rfc5322>
+       parser and formatter of email addresses and groups. It parses an input
+       string from email headers which contain a list of email addresses or a
+       groups of email addresses (like From, To, Cc, Bcc, Reply-To, Sender,
+       ...). Also it can generate a string value for those headers from a list
+       of email addresses objects. Module is backward compatible with RFC 2822
+       <https://tools.ietf.org/html/rfc2822> and RFC 822
+       <https://tools.ietf.org/html/rfc822>.
+
+       Parser and formatter functionality is implemented in XS and uses shared
+       code from Dovecot IMAP server.
+
+       It is a drop-in replacement for the Email::Address module which has
+       several security issues. E.g. issue CVE-2015-7686 (Algorithmic
+       complexity vulnerability) <https://cve.mitre.org/cgi-
+       bin/cvename.cgi?name=CVE-2015-7686>, which allows remote attackers to
+       cause denial of service, is still present in Email::Address version
+       1.908.
+
+       Email::Address::XS module was created to finally fix CVE-2015-7686.
+
+       Existing applications that use Email::Address module could be easily
+       switched to Email::Address::XS module. In most cases only changing "use
+       Email::Address" to "use Email::Address::XS" and replacing every
+       "Email::Address" occurrence with "Email::Address::XS" is sufficient.
+
+       So unlike Email::Address, this module does not use regular expressions
+       for parsing but instead native XS implementation parses input string
+       sequentially according to RFC 5322 grammar.
+
+       Additionally it has support also for named groups and so can be use
+       instead of the Email::Address::List module.
+
+       If you are looking for the module which provides object representation
+       for the list of email addresses suitable for the MIME email headers,
+       see Email::MIME::Header::AddressList.
+
+   EXPORT
+       None by default. Exportable functions are: "parse_email_addresses",
+       "parse_email_groups", "format_email_addresses", "format_email_groups",
+       "compose_address", "split_address".
+
+   Exportable Functions
+       format_email_addresses
+             use Email::Address::XS qw(format_email_addresses);
+
+             my $winstons_address = Email::Address::XS->new(phrase => 'Winston Smith', address => 'winston@recdep.minitrue');
+             my $julias_address = Email::Address::XS->new(phrase => 'Julia', address => 'julia@ficdep.minitrue');
+             my @addresses = ($winstons_address, $julias_address);
+             my $string = format_email_addresses(@addresses);
+             print $string;
+             # "Winston Smith" <winston@recdep.minitrue>, Julia <julia@ficdep.minitrue>
+
+           Takes a list of email address objects and returns one formatted
+           string of those email addresses.
+
+       format_email_groups
+             use Email::Address::XS qw(format_email_groups);
+
+             my $winstons_address = Email::Address::XS->new(phrase => 'Winston Smith', user => 'winston.smith', host => 'recdep.minitrue');
+             my $julias_address = Email::Address::XS->new('Julia', 'julia@ficdep.minitrue');
+             my $users_address = Email::Address::XS->new(address => 'user@oceania');
+
+             my $groups_string = format_email_groups('Brotherhood' => [ $winstons_address, $julias_address ], undef() => [ $users_address ]);
+             print $groups_string;
+             # Brotherhood: "Winston Smith" <winston.smith@recdep.minitrue>, Julia <julia@ficdep.minitrue>;, user@oceania
+
+             my $undisclosed_string = format_email_groups('undisclosed-recipients' => []);
+             print $undisclosed_string;
+             # undisclosed-recipients:;
+
+           Like "format_email_addresses" but this method takes pairs which
+           consist of a group display name and a reference to address list. If
+           a group is not undef then address list is formatted inside named
+           group.
+
+       parse_email_addresses
+             use Email::Address::XS qw(parse_email_addresses);
+
+             my $string = '"Winston Smith" <winston.smith@recdep.minitrue>, Julia <julia@ficdep.minitrue>, user@oceania';
+             my @addresses = parse_email_addresses($string);
+             # @addresses now contains three Email::Address::XS objects, one for each address
+
+           Parses an input string and returns a list of Email::Address::XS
+           objects. Optional second string argument specifies class name for
+           blessing new objects.
+
+       parse_email_groups
+             use Email::Address::XS qw(parse_email_groups);
+
+             my $string = 'Brotherhood: "Winston Smith" <winston.smith@recdep.minitrue>, Julia <julia@ficdep.minitrue>;, user@oceania, undisclosed-recipients:;';
+             my @groups = parse_email_groups($string);
+             # @groups now contains list ('Brotherhood' => [ $winstons_object, $julias_object ], undef() => [ $users_object ], 'undisclosed-recipients' => [])
+
+           Like "parse_email_addresses" but this function returns a list of
+           pairs: a group display name and a reference to a list of addresses
+           which belongs to that named group.  An undef value for a group
+           means that a following list of addresses is not inside any named
+           group. An output is in a same format as a input for the function
+           "format_email_groups".  This function preserves order of groups and
+           does not do any de-duplication or merging.
+
+       compose_address
+             use Email::Address::XS qw(compose_address);
+             my $string_address = compose_address($user, $host);
+
+           Takes an unescaped user part and unescaped host part of an address
+           and returns escaped address.
+
+           Available since version 1.01.
+
+       split_address
+             use Email::Address::XS qw(split_address);
+             my ($user, $host) = split_address($string_address);
+
+           Takes an escaped address and split it into pair of unescaped user
+           part and unescaped host part of address. If splitting input address
+           into these two parts is not possible then this function returns
+           pair of undefs.
+
+           Available since version 1.01.
+
+   Class Methods
+       new
+             my $empty_address = Email::Address::XS->new();
+             my $winstons_address = Email::Address::XS->new(phrase => 'Winston Smith', user => 'winston.smith', host => 'recdep.minitrue', comment => 'Records Department');
+             my $julias_address = Email::Address::XS->new('Julia', 'julia@ficdep.minitrue');
+             my $users_address = Email::Address::XS->new(address => 'user@oceania');
+             my $only_name = Email::Address::XS->new(phrase => 'Name');
+             my $copy_of_winstons_address = Email::Address::XS->new(copy => $winstons_address);
+
+           Constructs and returns a new "Email::Address::XS" object. Takes
+           named list of arguments: phrase, address, user, host, comment and
+           copy.  An argument address takes precedence over user and host.
+
+           When an argument copy is specified then it is expected an
+           Email::Address::XS object and a cloned copy of that object is
+           returned. All other parameters are ignored.
+
+           Old syntax from the Email::Address module is supported too. Takes
+           one to four positional arguments: phrase, address comment, and
+           original string. Passing an argument original is deprecated,
+           ignored and throws a warning.
+
+       parse
+             my $winstons_address = Email::Address::XS->parse('"Winston Smith" <winston.smith@recdep.minitrue> (Records Department)');
+             my @users_addresses = Email::Address::XS->parse('user1@oceania, user2@oceania');
+
+           Parses an input string and returns a list of an Email::Address::XS
+           objects. Same as the function "parse_email_addresses" but this one
+           is class method.
+
+           In scalar context this function returns just first parsed object.
+           If more then one object was parsed then "is_valid" method on
+           returned object returns false. If no object was parsed then empty
+           Email::Address::XS object is returned.
+
+           Prior to version 1.01 return value in scalar context is undef when
+           no object was parsed.
+
+       parse_bare_address
+             my $winstons_address = Email::Address::XS->parse_bare_address('winston.smith@recdep.minitrue');
+
+           Parses an input string as one bare email address (addr spec) which
+           does not allow phrase part or angle brackets around email address
+           and returns an Email::Address::XS object. It is just a wrapper
+           around "address" method. Method "is_valid" can be used to check if
+           parsing was successful.
+
+           Available since version 1.01.
+
+   Object Methods
+       format
+             my $string = $address->format();
+
+           Returns formatted Email::Address::XS object as a string. This
+           method throws a warning when "user" or "host" part of the email
+           address is invalid or empty string.
+
+       is_valid
+             my $is_valid = $address->is_valid();
+
+           Returns true if the parse function or method which created this
+           Email::Address::XS object had not received any syntax error on
+           input string and also that "user" and "host" part of the email
+           address are not empty strings.
+
+           Thus this function can be used for checking if Email::Address::XS
+           object is valid before calling "format" method on it.
+
+           Available since version 1.01.
+
+       phrase
+             my $phrase = $address->phrase();
+             $address->phrase('Winston Smith');
+
+           Accessor and mutator for the phrase (display name).
+
+       user
+             my $user = $address->user();
+             $address->user('winston.smith');
+
+           Accessor and mutator for the unescaped user (local/mailbox) part of
+           an address.
+
+       host
+             my $host = $address->host();
+             $address->host('recdep.minitrue');
+
+           Accessor and mutator for the unescaped host (domain) part of an
+           address.
+
+           Since version 1.03 this method checks if setting a new value is
+           syntactically valid. If not undef is set and returned.
+
+       address
+             my $string_address = $address->address();
+             $address->address('winston.smith@recdep.minitrue');
+
+           Accessor and mutator for the escaped address (addr spec).
+
+           Internally this module stores a user and a host part of an address
+           separately. Function "compose_address" is used for composing full
+           address and function "split_address" for splitting into a user and
+           a host parts. If splitting new address into these two parts is not
+           possible then this method returns undef and sets both parts to
+           undef.
+
+       comment
+             my $comment = $address->comment();
+             $address->comment('Records Department');
+
+           Accessor and mutator for the comment which is formatted after an
+           address. A comment can contain another nested comments in round
+           brackets. When setting new comment this method check if brackets
+           are balanced. If not undef is set and returned.
+
+       name
+             my $name = $address->name();
+
+           This method tries to return a name which belongs to the address. It
+           returns either "phrase" or "comment" or "user" part of the address
+           or empty string (first defined value in this order). But it never
+           returns undef.
+
+       as_string
+             my $address = Email::Address::XS->new(phrase => 'Winston Smith', address => 'winston.smith@recdep.minitrue');
+             my $stringified = $address->as_string();
+
+           This method is used for object stringification. It returns string
+           representation of object. By default object is stringified to
+           "format".
+
+           Available since version 1.01.
+
+       original
+             my $address = Email::Address::XS->parse('(Winston) "Smith"   <winston.smith@recdep.minitrue> (Minitrue)');
+             my $original = $address->original();
+             # (Winston) "Smith"   <winston.smith@recdep.minitrue> (Minitrue)
+             my $format = $address->format();
+             # Smith <winston.smith@recdep.minitrue> (Minitrue)
+
+           This method returns original part of the string which was used for
+           parsing current Email::Address::XS object. If object was not
+           created by parsing input string, then this method returns undef.
+
+           Note that "format" method does not have to return same original
+           string.
+
+           Available since version 1.01.
+
+   Overloaded Operators
+       stringify
+             my $address = Email::Address::XS->new(phrase => 'Winston Smith', address => 'winston.smith@recdep.minitrue');
+             print "Winston's address is $address.";
+             # Winston's address is "Winston Smith" <winston.smith@recdep.minitrue>.
+
+           Stringification is done by method "as_string".
+
+   Deprecated Functions and Variables
+       For compatibility with the Email::Address module there are defined some
+       deprecated functions and variables.  Do not use them in new code. Their
+       usage throws warnings.
+
+       Altering deprecated variable $Email::Address::XS::STRINGIFY changes
+       method which is called for objects stringification.
+
+       Deprecated cache functions "purge_cache", "disable_cache" and
+       "enable_cache" are noop and do nothing.
+
+SEE ALSO
+       RFC 822 <https://tools.ietf.org/html/rfc822>, RFC 2822
+       <https://tools.ietf.org/html/rfc2822>, RFC 5322
+       <https://tools.ietf.org/html/rfc5322>,
+       Email::MIME::Header::AddressList, Email::Address, Email::Address::List,
+       Email::AddressParser
+
+AUTHOR
+       Pali <pali@cpan.org>
+
+COPYRIGHT AND LICENSE
+       Copyright (C) 2015-2018 by Pali <pali@cpan.org>
+
+       This library is free software; you can redistribute it and/or modify it
+       under the same terms as Perl itself, either Perl version 5.6.0 or, at
+       your option, any later version of Perl 5 you may have available.
+
+       Dovecot parser is licensed under The MIT License and copyrighted by
+       Dovecot authors.
+
+perl v5.36.0                      2022-10-19           Email::Address::XS(3pm)

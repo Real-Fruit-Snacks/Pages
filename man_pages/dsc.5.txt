@@ -1,0 +1,213 @@
+dsc(5)                            dpkg suite                            dsc(5)
+
+NAMN
+       dsc - styrfilformat för Debians källkodspaket
+
+SYNOPS
+       filnamn.dsc
+
+BESKRIVNING
+       Alla Debian-källkodspaket består av en .dsc-styrfil, vilken består av
+       ett antal fält i deb822(5)-format.
+
+       Varje fält börjar med en etikett, såsom Source eller Binary
+       (skiftlägesoberoende), följt av ett kolontecken och fältets kropp
+       (skiftlägesberoende såvida inte annat anges). Fält avdelas endast av
+       fältetiketter. Med andra ord kan texten i fälten spänna över flera
+       rader, men installationsverktygen kommer oftast att slå samman rader
+       när kroppen tolkas (förutom när det gäller flerradsfälten Package-List,
+       Files, Checksums-Sha1 and Checksums-Sha256, se nedan).
+
+       Styrinformationen kan omges av en OpenPGP-signatur i ASCII-skal, såsom
+       beskrivs i RFC4880.
+
+FÄLT
+       Format: formatversion (krävs)
+           Värdet på det här fältet deklarerar formatversionen för
+           källkodspaketet. Fältvärdet används av program som arbetar på
+           källkodspaket för att tolka listan över filer i källkodspaketet och
+           bestämma hur det ska pakcas upp. Syntaxen för fältet är ett
+           huvudversionsnummer (”0-9”), en punkt (”.”), ett numeriskt
+           underversionsnummer (”0-9”), och därefter en valfri undertyp efter
+           ett blanksteg (” \t”), vilket, om det anges, är ett ord med små
+           alfanumeriska (”a-z0-9”) tecken i paranteser (”()”). Undetypen är
+           valfri i syntaxen men kan krävas för specifika
+           källkodsformatversioner.
+
+           De källkodsformat som för närvarande stöds av dpkg är 1.0, 2.0, 3.0
+           (native), 3.0 (quilt), 3.0 (git), 3.0 (bzr) och 3.0 (custom). Se
+           dpkg-source(1) för beskrivningar.
+
+       Source: källkodsnamn (krävs)
+           Värdet på fältet bestämmer paketets namn, och används av de flesta
+           installationsverktygen för att generera filnamnen.
+
+       Binary: binärpaketlista
+           Det här flerdelade fältet listar binärpaket som detta källkodspaket
+           kan producera, avdelade med kommatecken.
+
+           Fältet har nu ersatts av fältet Package-List, som ger tillräcklig
+           information om vilka binärpaket som skapas på vilka arkitekturer,
+           byggprofiler och andra inverkande begränsningar.
+
+       Architecture: arkitekturlista (rekommenderas)
+           En lista över arkitekturer och arkitekturmönster avdelade med
+           blanksteg som anger vilken typ av maskinvara paketet kan kompileras
+           för. Vanliga arkitekturnamn och arkitekturmönster är amd64, armel,
+           i386, linux-any, any-amd64, osv.
+
+           Observar att värdet all är tänkt för paket som är
+           plattformsoberoende, och any för paket som är arkitekturberoende.
+           Listan kan innehålla (eller enbart bestå av) specialvärdet all. När
+           listan innehåller arkitekturmönstret any är det enda andra tillåtna
+           värdet i listan all.
+
+           Fältvärdet genereras normalt från fälten Architecture i filen
+           debian/control i källkodspaketet.
+
+       Version: versionssträng (krävs)
+           Vanligtvis är detta det ursprungliga paketets versionsnummer på den
+           form programmets författare använder. Den kan även innehålla ett
+           Debianuppdateringsnummer (för paket vars källa är utanför Debian).
+           Exakt format och sorteringsalgoritm beskrivs i deb-version(7).
+
+       Origin: namn
+           Namnet på den distribution paketet härstammar från.
+
+       Maintainer: fullt-namn-epost (rekommenderas)
+           Ska vara på formatet ”Joe Bloggs <jbloggs@foo.com>” och är normalt
+           sett den person som skapat paketet, till skillnad från författaren
+           av den programvara som paketerades.
+
+       Uploaders: fullt-namn-epost-lista
+           Räknar upp namn och e-postadresser till med-underhållare av
+           paketet, i samma format som fältet Maintainer. Flera
+           med-underhållare bör avdelas med kommatecken.
+
+       Description: kort-beskrivning)
+        lång-beskrivning
+           Formatet för källkodspaketbeskrivningen är en kortfattad
+           sammanfattning på den första raden (efter fältet Description).
+           Följande rader bör användas för en längre, mer detaljerad
+           beskrivning. Varje rad i den lägre beskrivningen måste inledas med
+           ett blanksteg, och blanka rader i den långa beskrivningen måste
+           innehålla en ensam ”.” efter det inledande blanksteget.
+
+       Homepage: url
+           URL till uppströmsprojektets hemside-url.
+
+       Standards-Version: versionssträng (rekommenderas)
+           Dokumenterar den senaste versionen av distributionens
+           policystandard som paketet uppfyller.
+
+       Vcs-Browser: url
+           Url:en till ett webbgränssnitt för att bläddra i
+           versionshanteringsarkivet.
+
+       Vcs-Arch: url
+       Vcs-Bzr: url
+       Vcs-Cvs: url
+       Vcs-Darcs: url
+       Vcs-Git: url
+       Vcs-Hg: url
+       Vcs-Mtn: url
+       Vcs-Svn: url
+           Dessa fält anger url till det versionshanteringssystemakriv som
+           används för att underhålla paketet. Se deb-src-control(5) för
+           ytterligare detaljer.
+
+       Testsuite: namnlist
+           Fältet anger att källkodspaketet innehåller de angivna
+           testsviterna. Värdet är en kommaavdelad lista med testsviter. Om
+           värder autopkttest finns, förväntas det att debian/test/control
+           finns, om filen finns men inte värdet kommer dpkg-source
+           automatiskt lägga till på det och bibehålla tidigare värden.
+
+       Testsuite-Triggers: paketlista
+           Fältet anger den kommaavdelade unionen av alla testberoenden
+           (fältet Depends i filen debian/tests/control), med alla
+           begränsningar borttagna, och ELLER-beroenden tillplattade (det vill
+           säga, konverterade till separata OCH-relationer), med undantag för
+           binärar som skapas av detta källkodspaket och dess metaberoende-
+           motsvarighet @.
+
+           Rationale: this field is needed because otherwise to be able to get
+           the test dependencies, each source package would need to be
+           unpacked.
+
+       Build-Depends: paketlista
+       Build-Depends-Arch: paketlista
+       Build-Depends-Indep: paketlista
+       Build-Conflicts: paketlista
+       Build-Conflicts-Arch: paketlista
+       Build-Conflicts-Indep: paketlista
+           Dessa fält anger relationer mellan källkodspaket och de paket som
+           används för att bygga det. De diskuteras i manualsidan deb-src-
+           control(5).
+
+       Package-List:
+        paket pakettyp sektion prioritet nyckel-värde-lista
+           Det här flerradiga fältet innehåller en lista över binärpaket som
+           skapas av detta källkodspaket.
+
+           paket är namnet på binärpaketet.
+
+           pakettyp är typen på det binära paketet, vanligtvis deb, ett annat
+           vanligt värde är udeb.
+
+           sektion och prioritet motsvarar fälten med samma namn i
+           binärpaketet.
+
+           nyckel-värde-lista är en blankstegsavdelad lista på formen
+           nyckel=värde, och de för närvarande kända valfria nycklarna är:
+
+           arch
+               Arkitekturbegränsning från binärpaketets fält Architecture, med
+               blanksteg ersatta med ”,”.
+
+           profile
+               Den normaliserade byggprofil-begränsningsformeln från
+               binärpaketets fält Build-Profile, med OR (eller) ersatt med ”+”
+               och AND (och) med ”,”.
+
+           protected
+               Om binärpaketet är skyddat kommer den här nyckeln innehålla
+               värdet på fältet Protected, det vill säga värdet yes.
+
+               Stöds sedan dpkg 1.20.1.
+
+           essential
+               Om binärpaketet är systemkritiskt kommer den här nyckeln
+               innehålla värdet på fältet Essential, det vill säga värdet yes.
+
+       Files: (krävs)
+       Checksums-Sha1: (krävs)
+       Checksums-Sha256: (krävs)
+        kontrollsumma storlek filnamn
+           De här flerradsfälteten innehåller en lista med filer med en
+           kontrollsumma och storlek för var och en. Fälten har samma syntax
+           och skiljer sig bara vad gäller vilken kontrollsummealgoritm som
+           används: MD5 för Files, SHA-1 för Checksums-Sha1 och SHA-256 för
+           Checksums-Sha256.
+
+           Första raden i fältvärdet (delen av på samma rad som fältnamnet
+           följt av kolon) är alltid tom. Innehållet i fältet anges som
+           fortsättningsrader, en rad per fil. Varje rad består av
+           kontrollsumman, ett blanksteg, filstorleken, ett blanksteg och
+           filnamnet.
+
+           De här fälten visar alla filer källkodspaketet består av. Listan
+           över filer i dessa fält måste motsvara listan över filer i de andra
+           relaterade fälten.
+
+PROGRAMFEL
+       Fältet Format blandar formatet på själva .dsc-filen och formatet på det
+       extraherade källkodspaketet.
+
+SE ÄVEN
+       deb822(5), deb-src-control(5), deb-version(7), dpkg-source(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                            dsc(5)

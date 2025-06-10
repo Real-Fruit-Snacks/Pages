@@ -1,0 +1,509 @@
+APT-FTPARCHIVE(1)                     APT                    APT-FTPARCHIVE(1)
+
+NOME
+       apt-ftparchive - Utilitário para gerar ficheiros de índice
+
+SINOPSE
+       apt-ftparchive [-dsq] [--md5] [--delink] [--readonly] [--contents]
+                      [--arch architecture] [-o=config_string]
+                      [-c=ficheiro_de_configuração]
+                      {packages caminho [ficheiro_de_sobreposição [prefixo_de_caminho]]
+                      |
+                      sources caminho [ficheiro_de_sobreposição [prefixo_de_caminho]]
+                      | contents caminho  | release caminho  |
+                      generate ficheiro_de_configuração secção...  |
+                      clean ficheiro_de_configuração  | {-v | --version} |
+                      {-h | --help}}
+
+DESCRIÇÃO
+       apt-ftparchive é a ferramenta de linha de comandos que cria os
+       ficheiros índice que o APT usa para aceder a uma fonte de distribuição.
+       Os ficheiros índice devem ser gerados no site de origem baseados no
+       conteúdo desse site.
+
+       apt-ftparchive é um super conjunto do programa dpkg-scanpackages(1),
+       incorporando todas as suas funcionalidades através do comando packages.
+       Também contém um gerador de ficheiro de conteúdos, contents, e um meio
+       elaborado de colocar em script o processo de geração para um arquivo
+       completo.
+
+       Internamente o apt-ftparchive pode fazer uso de bases de dados binárias
+       para por em cache os conteúdos de um ficheiro .deb e não precisa de
+       nenhum programa externo à excepção do gzip(1). Quando faz uma geração
+       completa, executa automaticamente verificações de alterações de
+       ficheiros e constrói os ficheiros comprimidos desejados.
+
+       A menos que a opção -h, ou --help seja fornecida, um dos comandos
+       abaixo têm que estar presentes.
+
+       packages
+           O comando packages gera um ficheiro pacote a partir duma árvore de
+           directórios. Recebe um dado directório e procura recursivamente por
+           ficheiros .deb, emitindo um registo de pacote para o stdout por
+           cada um. Este comando é aproximadamente equivalente ao dpkg-
+           scanpackages(1).
+
+           A opção --db pode ser usada para especificar uma base de dados de
+           cache binária.
+
+       sources
+           O comando sources gera um índice de fonte a partir duma árvore de
+           directórios. Recebe um dado directório e procura recursivamente por
+           ficheiros .dsc, emitindo um registo de fonte para o stdout por cada
+           um. Este comando é aproximadamente equivalente ao dpkg-
+           scansources(1).
+
+           Se for especificado um ficheiro de sobreposição então será
+           procurado um ficheiro de sobreposição de fonte com uma extensão de
+           .src. A opção --source-override pode ser usada para alterar o
+           ficheiro de sobreposição de fonte que irá ser usado.
+
+       contents
+           O comandocontents gera um ficheiro de conteúdos a partir duma
+           árvore de directórios. Recebe um dado directório e procura
+           recursivamente por ficheiros .deb, e lê a lista de ficheiros de
+           cada ficheiro. Então organiza e escreve para o stdout a lista de
+           ficheiros correspondente a pacotes. Os directórios não são escritos
+           no saída. Se múltiplos pacotes possuírem o mesmo ficheiro então
+           cada pacote é separado por uma vírgula na saída.
+
+           A opção --db pode ser usada para especificar uma base de dados de
+           cache binária.
+
+       release
+           O comando release gera um ficheiro Release a partir de uma árvore
+           de directórios. Por predefinição, procura recursivamente no
+           directório fornecido por ficheiros Packages, Sources, Contents,
+           Components e icons comprimidos e não comprimidos assim como
+           ficheiros Release, Index e md5sum.txt por predefinição.
+           (APT::FTPArchive::Release::Default-Patterns). Padrões adicionais de
+           nomes de ficheiros pode ser adicionados ao lista-los em
+           APT::FTPArchive::Release::Patterns. Depois escreve para o stdout um
+           ficheiro Release que contém (por predefinição) um resultado de MD5,
+           SHA1, SHA256 e SHA512 para cada ficheiro.
+
+           Valores para os campos de metadados adicionais no ficheiro Release
+           são tomados a partir das variáveis correspondentes sob
+           APT::FTPArchive::Release, ex.  APT::FTPArchive::Release::Origin. Os
+           campos suportados são Origin, Label, Suite, Version, Codename,
+           Date, NotAutomatic, ButAutomaticUpgrades, Acquire-By-Hash,
+           Valid-Until, Signed-By, Architectures, Components e Description.
+
+       generate
+           O comando generate é desenhado para ser executado a partir dum
+           script cron e constrói índices de acordo com o ficheiro de
+           configuração fornecido. A linguagem de configuração disponibiliza
+           um meio flexível de de especificar quais ficheiros índice são
+           construídos a partir de quais directórios, assim como
+           disponibilizar um meio simples de manter as definições requeridas.
+
+       clean
+           O comando clean arruma as bases de dados usadas pelo ficheiro de
+           configuração fornecido ao remover quaisquer registos que já não são
+           necessários.
+
+A CONFIGURAÇÃO DO GENERATE
+       O comando generate usa um ficheiro de configuração para descrever os
+       arquivos que vão ser gerados. Segue o formato típico de configuração
+       ISC como visto em ferramentas ISC como o bind 8 e dhcpd.  apt.conf(5)
+       contém uma descrição da sintaxe. Note que a configuração gerada é
+       analisada de maneira seccional, mas o apt.conf(5) é analisado numa
+       maneira de árvore. Isto apenas afecta o modo de como a etiqueta scope é
+       manuseada.
+
+       A configuração do generate tem 4 secções separadas, cada uma descrita
+       mais abaixo.
+
+   Secção Dir
+       A secção Dir define os directórios standard necessários para localizar
+       os ficheiros requisitados durante o processo de geração. Estes
+       directórios precedem a certos caminhos relativos definidos em secções
+       posteriores para produzir um caminho completo e absoluto.
+
+       ArchiveDir
+           Especifica a raiz do arquivo FTP, numa configuração Debian standard
+           este é o directório que contém o ls-LR e nós da distribuição.
+
+       OverrideDir
+           Especifica a localização dos ficheiros de sobrepor.
+
+       CacheDir
+           Especifica a localização dos ficheiros de cache
+
+       FileListDir
+           Especifica a localização dos ficheiros de listas de ficheiros, se a
+           definição FileList for usada mais abaixo.
+
+   Secção Default
+       A secção Default especifica valores predefinidos, e definições que
+       controlam a operação do gerador. Outras secções podem sobrepor estas
+       predefinições em uma definição por-secção.
+
+       Packages::Compress
+           Define os esquemas de compressão predefinidos a usar para os
+           ficheiros de índice package. É uma string que contém uma lista
+           separada por espaços de pelo menos um dos compressores configurados
+           via scope de configuração APT::Compressor. A predefinição para
+           todos os esquemas de compressão é '. gzip'.
+
+       Packages::Extensions
+           Define a lista predefinida das extensões de ficheiros que são
+           ficheiros pacote. A predefinição é '.deb'.
+
+       Sources::Compress
+           Isto é semelhante a Packages::Compress excepto que controla a
+           compressão para os ficheiros das Fontes.
+
+       Sources::Extensions
+           Define a lista predefinida das extensões de ficheiros que são
+           ficheiros de fontes. A predefinição é '.dsc'.
+
+       Contents::Compress
+           Isto é semelhante a Packages::Compress excepto que controla a
+           compressão para os ficheiros de Conteúdos.
+
+       Translation::Compress
+           Isto é semelhante a Packages::Compress excepto que controla a
+           compressão para o ficheiro mestre Translation-en.
+
+       DeLinkLimit
+           Especifica o número de kilobytes para delink (e substitui com hard
+           links) por execução. Isto é usado em conjunto com a definição
+           External-Links por secção.
+
+       FileMode
+           Especifica o modo de todos os ficheiros índice criados. A
+           predefinição é 0644. Todos os ficheiros índice são definidos para
+           este modo independentemente do umask.
+
+       LongDescription
+           Define se as descrições longas devem ser incluídas no ficheiro
+           Packages ou divididas em um ficheiro Translation-en mestre.
+
+   Secção TreeDefault
+       Define predefinições específicas para as secções Tree. Todas estas
+       variáveis são variáveis de substituição e têm as strings $(DIST),
+       $(SECTION) e $(ARCH) substituídas pelos seus respectivos valores.
+
+       MaxContentsChange
+           Define o número de kilobytes dos ficheiros de conteúdo que são
+           gerados a cada dia. Os ficheiros de conteúdo são re-circulados para
+           que ao fim de alguns dias todos sejam reconstruidos.
+
+       ContentsAge
+           Controla o número de dias que se permite a um ficheiro de conteúdo
+           ser verificado sem alteração. Se este limite for ultrapassado o
+           mtime do ficheiro de conteúdo é actualizado. Este caso pode ocorrer
+           se o ficheiro de pacote é alterado num modo que não resulta num
+           novo ficheiro de conteúdo [por exemplo uma edição de sobreposição].
+           É permitido um soltar na esperança que novos .debs sejam
+           instalados, requerendo um novo ficheiro de qualquer modo. A
+           predefinição é 10, as unidades são em dias.
+
+       Directory
+           Define o topo da árvore de directórios .deb. A predefinição é
+           $(DIST)/$(SECTION)/binary-$(ARCH)/
+
+       SrcDirectory
+           Define o topo da árvore de directórios de pacotes fonte. A
+           predefinição é $(DIST)/$(SECTION)/source/
+
+       Packages
+           Define o ficheiro Packages de saída. A predefinição é
+           $(DIST)/$(SECTION)/binary-$(ARCH)/Packages
+
+       Sources
+           Define o ficheiro Sources de saída. A predefinição é
+           $(DIST)/$(SECTION)/source/Sources
+
+       Translation
+           Define se o ficheiro mestre Translation-en de saída com as
+           descrições longas não deve ser incluído no ficheiro Packages. A
+           predefinição é $(DIST)/$(SECTION)/i18n/Translation-en
+
+       InternalPrefix
+           Define o prefixo de caminho que causa que um symlink seja
+           considerado um link interno em vez de um link externo. A
+           predefinição é $(DIST)/$(SECTION)/
+
+       Contents
+           Define a saída do ficheiro Contents. A predefinição é
+           $(DIST)/Contents-$(ARCH). Se esta definição causar múltiplos
+           ficheiros Packages para mapear em um único ficheiro Contents (tal
+           como a predefinição) então o apt-ftparchive irá automaticamente
+           integrar esses ficheiros pacotes todos juntos.
+
+       Contents::Header
+           Define o ficheiro cabeçalho para prefixar a saída de conteúdos.
+
+       BinCacheDB
+           Define a base de dados de cache binária a usar para esta secção.
+           Múltiplas secções podem partilhar a mesma base de dados.
+
+       FileList
+           Especifica que em vez de navegar na árvore de directórios, o
+           apt-ftparchive deverá ler a lista de ficheiros a partir do ficheiro
+           fornecido. Nomes de ficheiros relativos são prefixados com o
+           directório de arquivo.
+
+       SourceFileList
+           Especifica que em vez de navegar na árvore de directórios, o
+           apt-ftparchive deverá ler a lista de ficheiros a partir do ficheiro
+           fornecido. Nomes de ficheiros relativos são prefixados com o
+           directório de arquivo. Isto é usado quando se processa índices de
+           fonte.
+
+   Secção Tree
+       A secção Tree define uma árvore de ficheiros Debian standard que
+       consiste de um directório base, depois múltiplas secções nesse
+       directório base e finalmente múltiplas Arquitecturas em cada secção. O
+       caminho exacto usado é definido pela variável de substituição
+       Directory.
+
+       A secção Tree recebe uma etiqueta scope que define a variável $(DIST) e
+       define a raiz da árvore (o caminho é prefixado por ArchiveDir).
+       Tipicamente esta é uma definição tal como dists/bookworm.
+
+       Todas as definições definidas na secção TreeDefault podem ser usadas na
+       secção Tree assim como as novas três variáveis.
+
+       Quando processa uma secção Tree, o apt-ftparchive executa uma operação
+       semelhante a:
+
+           for i in Sections do
+              for j in Architectures do
+                 Generate for DIST=scope SECTION=i ARCH=j
+
+       Sections
+           Isto é uma lista de secções separada por espaços que aparece sob a
+           distribuição, tipicamente isto é algo como main contrib non-free
+           non-free-firmware
+
+       Architectures
+           Esta é uma lista separada por espaços de todas as arquitecturas que
+           aparecem sob a secção de busca. A arquitectura especial 'source' é
+           usada para indicar que esta árvore tem um arquivo fonte. A
+           arquitectura 'all' assinala que ficheiros específicos de
+           arquitectura como o Packages não devem incluir informação acerca de
+           pacotes de todas as arquitecturas em todos os ficheiros pois estes
+           estarão disponíveis num ficheiro dedicado.
+
+       LongDescription
+           Define se as descrições longas devem ser incluídas no ficheiro
+           Packages ou divididas em um ficheiro Translation-en mestre.
+
+       BinOverride
+           Define o ficheiro de sobreposição binário. O ficheiro de
+           sobreposição informação de secção, prioridade e endereço do
+           responsável.
+
+       SrcOverride
+           Define o ficheiro de sobreposição fonte. O ficheiro de sobreposição
+           informação de secção.
+
+       ExtraOverride
+           Define o ficheiro de sobreposição extra binário.
+
+       SrcExtraOverride
+           Define o ficheiro de sobreposição extra fonte.
+
+   Secção BinDirectory
+       A secção bindirectory define uma árvore de directórios binários sem
+       nenhuma estrutura especial. A etiqueta scope especifica a localização
+       do directório binário e as definições são semelhantes às da secção Tree
+       sem nenhumas variáveis de substituição ou definições
+       SectionArchitecture.
+
+       Packages
+           Define a saída do ficheiro Packages.
+
+       Sources
+           Define a saída do ficheiro Sources. É necessário pelo menos um de
+           Packages ou Sources.
+
+       Contents
+           Define a saída do ficheiro Contents (opcional)
+
+       BinOverride
+           Define o ficheiro de sobreposição binário.
+
+       SrcOverride
+           Define o ficheiro de sobreposição fonte.
+
+       ExtraOverride
+           Define o ficheiro de sobreposição extra binário.
+
+       SrcExtraOverride
+           Define o ficheiro de sobreposição extra fonte.
+
+       BinCacheDB
+           Define a base de dados de cache.
+
+       PathPrefix
+           Acrescenta um caminho a todos os caminhos de saída.
+
+       FileList, SourceFileList
+           Especifica o ficheiro de lista de ficheiros.
+
+O FICHEIRO BINARY OVERRIDE
+       O ficheiro de sobreposição binário é totalmente compatível com dpkg-
+       scanpackages(1). Contém 4 campos separados por espaços. O primeiro
+       campo é o nome do pacote, o segundo é a prioridade a qual forçar esse
+       pacote, o terceiro é a secção onde forçar esse pacote e o último campo
+       é o campo de permutação do responsável.
+
+       O formato geral do campo do responsável é:
+
+           old [// oldn]* => new
+
+       ou simplesmente,
+
+           new
+
+       . O primeiro formato permite uma lista separada por um duplo slash (//)
+       de antigos endereços e email a serem especificados. Se nenhum destes
+       for encontrado então 'new' é substituído para o campo do responsável. O
+       segundo formato substitui incondicionalmente o campo do responsável.
+
+O FICHEIRO SOURCE OVERRIDE
+       O ficheiro de sobreposição de fonte é totalmente compatível com dpkg-
+       scansources(1). Contém dois campos separados por espaços. O primeiro
+       campo é o nome de pacote fonte, o segundo é a secção onde o atribuir.
+
+O FICHEIRO EXTRA OVERRIDE
+       O ficheiro de sobreposição extra permite que qualquer etiqueta
+       arbitrária seja adicionada ou substituída na saída. Tem 3 colunas, a
+       primeira é o pacote, a segunda é a etiqueta e restante da linha é o
+       novo valor.
+
+OPÇÕES
+       Todas as opções de linha de comandos podem ser definidas usando o
+       ficheiro de configuração, as descrições indicam a opção de configuração
+       a definir. Para opções booleanas você pode sobre por o ficheiro de
+       configuração usando algo como -f-,--no-f, -f=no ou várias outras
+       variantes.
+
+       --md5, --sha1, --sha256, --sha512
+           Gera o sumário de verificação dado. Estas opções estão ligadas por
+           predefinição, quando são desligadas os ficheiros de índice gerados
+           não terão os campos de sumário de verificação onde forem possíveis.
+           Items de Configuração: APT::FTPArchive::Checksum e
+           APT::FTPArchive::Index::Checksum Onde Index pode ser Packages,
+           Sources ou Release e Checksum pode ser MD5, SHA1, SHA256 ou SHA512.
+
+       -d, --db
+           Usa uma base de dados de cache binária. Isto não tem efeito no
+           comando generate. Item de configuração: APT::FTPArchive::DB.
+
+       -q, --quiet
+           Silencioso; produz saída apropriada para registar em logs, omitindo
+           indicadores de progresso. Mais q's irão produzir mais silencio até
+           um máximo de 2. Você também pode usar -q=# para definir o nível de
+           silêncio, sobrepondo o ficheiro de configuração. Item de
+           Configuração: quiet.
+
+       --delink
+           Executa Dissociação. Se é usada a definição External-Links então
+           esta opção activa a dissociação dos ficheiros. A sua predefinição é
+           ligada e e pode ser desligada com --no-delink. Item de
+           Configuração: APT::FTPArchive::DeLinkAct.
+
+       --contents
+           Executa a geração de conteúdos. Quando esta opção está definida e
+           os índices de pacotes são gerados com um base de dados cache então
+           a listagem de ficheiros também será extraída e guardada na base de
+           dados para utilização posterior. Quando se usa o comando generate,
+           esta opção também permite a criação de quaisquer ficheiros de
+           Conteúdos. A predefinição é ligado. Item de Configuração:
+           APT::FTPArchive::Contents.
+
+       -s, --source-override
+           Seleciona o ficheiro de sobreposição de fonte a usar com o comando
+           sources. Item de Configuração: APT::FTPArchive::SourceOverride.
+
+       --readonly
+           Torna as bases de dados de cache apenas de leitura. Item de
+           Configuração: APT::FTPArchive::ReadOnlyDB.
+
+       -a, --arch
+           Aceita nos comandos packages e contents apenas ficheiros de pacotes
+           que condizem com *_arch.deb ou *_all.deb em vez de todos os
+           ficheiros de pacotes presentes no caminho fornecido. Item de
+           Configuração: APT::FTPArchive::Architecture.
+
+       APT::FTPArchive::AlwaysStat
+           apt-ftparchive(1) põe em cache o máximo possível de metadados numa
+           base de dados de cache. Se os pacotes forem recompilados e/ou
+           republicados de novo com a mesma versão, irá originar problemas
+           porque serão usados os metadados desatualizados em cache como o
+           tamanho e sumários de verificação. Com esta opção activa isto não
+           irá mais acontecer porque será verificado se o ficheiro foi
+           alterado. Note que esta opção vem regulada para "false" por
+           predefinição pois não é recomendado disponibilizar múltiplas
+           versões/compilações de um pacote com o mesmo número de versão,
+           portanto em teoria ninguém irá ter estes problemas e então todas as
+           verificações extras serão desnecessárias.
+
+       APT::FTPArchive::LongDescription
+           Esta opção de configuração tem a predefinição de "true" e deve
+           apenas ser definida para "false" se o Arquivo gerado com apt-
+           ftparchive(1) também disponibilizar ficheiros Translation. Note que
+           o ficheiro mestre Translation-en só pode ser criado no comando
+           generate.
+
+       -h, --help
+           Mostra um sumário curto da utilização.
+
+       -v, --version
+           Mostra a versão do programa.
+
+       -c, --config-file
+           Ficheiro de Configuração; Especifica o ficheiro de configuração a
+           usar. O programa irá ler o ficheiro de configuração predefinido e
+           depois este ficheiro de configuração. Se as definições de
+           configuração precisarem de ser definidas antes, os ficheiros de
+           configuração predefinidos são analisados especificando um ficheiro
+           com a variável de ambiente APT_CONFIG. Veja apt.conf(5) para
+           informação de sintaxe.
+
+       -o, --option
+           Define uma Opção de Configuração; Isto irá definir uma opção de
+           configuração arbitrária. A sintaxe é -o Foo::Bar=bar.  -o e
+           --option podem ser usadas várias vezes para definir opções
+           diferentes.
+
+EXEMPLOS
+       Para criar um ficheiro Packages comprimido para um directório que
+       contém pacotes binários (.deb):
+
+           apt-ftparchive packages directório | gzip > Packages.gz
+
+VEJA TAMBÉM
+       apt.conf(5)
+
+DIAGNÓSTICO
+       apt-ftparchive devolve zero na operação normal, 100 decimal em erro.
+
+BUGS
+       página de bugs do APT[1]. Se deseja reportar um bug no APT, por favor
+       veja /usr/share/doc/debian/bug-reporting.txt ou o comando reportbug(1).
+
+TRADUÇÃO
+       A tradução Portuguesa foi feita por Américo Monteiro
+       <a_monteiro@netcabo.pt> de 2009 a 2012. A tradução foi revista pela
+       equipa de traduções portuguesas da Debian <traduz@debianpt.org>.
+
+       Note que este documento traduzido pode conter partes não traduzidas.
+       Isto é feito propositadamente, para evitar perdas de conteúdo quando a
+       tradução está atrasada relativamente ao conteúdo original.
+
+AUTORES
+       Jason Gunthorpe
+
+       Equipa do APT
+
+NOTAS
+        1. página de bugs do APT
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                       29 Janeiro 2023              APT-FTPARCHIVE(1)

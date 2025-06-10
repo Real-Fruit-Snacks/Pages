@@ -1,0 +1,653 @@
+dpkg-buildflags(1)                dpkg suite                dpkg-buildflags(1)
+
+NAMN
+       dpkg-buildflags - returnerar byggflaggor att använda för att bygga
+       paket
+
+SYNOPS
+       dpkg-buildflags [flagga...] kommando
+
+BESKRIVNING
+       dpkg-buildflags är ett verktyg för att hämta kompileringsflaggor att
+       använda för att bygga Debianpaket.
+
+       De förvalda flaggorna anges av leverantören, men de kan
+       utökas/överstyras på flera sätt:
+
+       1.  på hela systemet med /etc/dpkg/buildflags.conf;
+
+       2.  för den nuvarande användaren med
+           $XDG_CONFIG_HOME/dpkg/buildflags.conf där $XDG_CONFIG_HOME har
+           standardvärdet $HOME/.config;
+
+       3.  temporärt av användaren med miljövariabler (se stycket MILJÖ).
+
+       4.  dynamiskt av paketansvariga med miljövariabler som sätts via
+           debian/rules (se stycket MILJÖ).
+
+       Konfigurationsfilerna kan innehålla fyra sorters direktiv:
+
+       SET flagga värde
+           Överstyr flaggan flagga till att ha värdet värde.
+
+       STRIP flagga värde
+           Strip from the flag named flag all the build flags listed in value.
+           Since dpkg 1.16.1.
+
+       APPEND flagga värde
+           Utöka flaggan flagga genom att lägga till alternativen som anges i
+           värde. Ett blanksteg läggs till före värdet om flaggans nuvarande
+           värde inte är tomt.
+
+       PREPEND flagga värde
+           Extend the flag named flag by prepending the options given in
+           value. A space is appended to the prepended value if the flag's
+           current value is non-empty.  Since dpkg 1.16.1.
+
+       Konfigurationsfilerna kan innehålla kommentarer på rader som börjar med
+       ett nummertecken (#). Även tomma rader ignoreras.
+
+       This program was introduced in dpkg 1.15.7.
+
+KOMMANDON
+       --dump
+           Skriv alla kompileringsflaggor och deras värde på standard ut. En
+           flagga skrivs per rad, avdelade från sitt värde med ett
+           likamedtecken (”flagga=värde”). Detta är standardåtgärden.
+
+       --list
+           Skriv ut listan över flaggor som stöds av den aktuella leverantören
+           (en per rad). Se stycket FLAGGOR SOM STÖDS för mer information om
+           dem.
+
+       --status
+           Display any information that can be useful to explain the behavior
+           of dpkg-buildflags (since dpkg 1.16.5): relevant environment
+           variables, current vendor, state of all feature flags.  Also print
+           the resulting compiler flags with their origin.
+
+           Detta är tänkt att köras från debian/rules så att byggloggen
+           innehåller ett tydligt spår över de använda byggflaggorna. Det kan
+           vara användbart för att diagnostisera problem rörande dessa.
+
+       --export=format
+           Skriv kommandon som kan användas för att exportera alla
+           kompileringsflaggor för något specifikt verktyg. Om format inte
+           anges antas sh. Endast kompileringsflaggor som börjar med en stor
+           bokstav tas med, andra antas att inte vara lämpliga för miljön.
+           Format som stöds:
+
+           sh  Skalkommandon för att sätta och exportera alla
+               kompileringsflaggor i miljön. Flaggvärdena citeras så att
+               utdata är redo att utvärderas av ett skal.
+
+           cmdline
+               Argument att sända till byggprogrammets kommandorad för att
+               använda alla kompileringsflaggor (sedan dpkg 1.17.0).
+               Flaggornas värde citeras enligt skalsyntax.
+
+           configure
+               Detta är ett gammalt alias för cmdline.
+
+           make
+               Make-direktiv för att sätta och exportera alla
+               kompileringsflaggor i miljön. Utdata kan skrivas till ett
+               makefil-fragment och utvärderas med ett include-direktiv.
+
+       --get flagga
+           Skriv ut värdet på flaggan på standard ut. Avslutar med 0 om
+           flaggan är känd, om inte avslutar den med 1.
+
+       --origin flagga
+           Anger ursprunget till flaggan som returneras av --get. Avslutar med
+           0 om flaggan är känd, om inte avslutar med 1. Ursprunget kan vara
+           ett av följande värden:
+
+           vendor
+               originalflagga satt av leverantören returneras;
+
+           system
+               flaggan är satt/modifierad av systemkonfigurationen;
+
+           user
+               flaggan är satt/modifierad av användarkonfigurationen;
+
+           env flaggan är satt/modifierad av en miljöspecifik konfiguration.
+
+       --query
+           Print any information that can be useful to explain the behavior of
+           the program: current vendor, relevant environment variables,
+           feature areas, state of all feature flags, whether a feature is
+           handled as a builtin default by the compiler (since dpkg 1.21.14),
+           and the compiler flags with their origin (since dpkg 1.19.0).
+
+           Till exempel:
+
+            Vendor: Debian
+            Environment:
+             DEB_CFLAGS_SET=-O0 -Wall
+
+            Area: qa
+            Features:
+             bug=no
+             canary=no
+            Builtins:
+
+            Area: hardening
+            Features:
+             pie=no
+            Builtins:
+             pie=yes
+
+            Area: reproducible
+            Features:
+             timeless=no
+            Builtins:
+
+            Flag: CFLAGS
+            Value: -O0 -Wall
+            Origin: env
+
+            Flag: CPPFLAGS
+            Value: -D_FORTIFY_SOURCE=2
+            Origin: vendor
+
+       --query-features område
+           Skriv ut funktioner aktiverade för ett givet område (sedan dpkg
+           1.16.2). Om funktionen hanteras (även om bara av några
+           arkitekturer) som ett inbyggt förval av kompilatorn visas fältet
+           Bultin (sedan dpkg 1.21.14). De enda för närvarande kända områdena
+           på Debian och dess derivat är future, qa, reproducible, sanitize
+           och hardening, se avsnittet FUNKTIONSOMRÅDEN för fler detaljer.
+           Avslutar med 0 om området är känt, avslutar annars med 1.
+
+           Utdata är på RFC822-headerformat, med en sektion per funktion. Till
+           exempel:
+
+            Feature: pie
+            Enabled: yes
+            Builtin: yes
+
+            Feature: stackprotector
+            Enabled: yes
+
+       --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+FLAGGOR SOM STÖDS
+       ASFLAGS
+           Flaggor för assemblern. Förvalt värde: tomt. Sedan dpkg 1.21.0.
+
+       CFLAGS
+           Flaggor för C-kompilatorn. Standardvärdet som satts av leverantören
+           innehåller -g och den förvalda optimeringsnivån (vanligtvis -O2,
+           eller -O0 om miljövariabeln DEB_BUILD_OPTIONS definierar noopt).
+
+       CPPFLAGS
+           Flaggor för C-förprocesseraren. Förvalt värde: tomt.
+
+       CXXFLAGS
+           Flaggor för C++-kompilatorn. Samma som CFLAGS.
+
+       OBJCFLAGS
+           Options for the Objective C compiler. Same as CFLAGS.  Since dpkg
+           1.17.7.
+
+       OBJCXXFLAGS
+           Options for the Objective C++ compiler. Same as CXXFLAGS.  Since
+           dpkg 1.17.7.
+
+       GCJFLAGS
+           Flaggor för GNU Java-kompilatorn (gcj). En delmängd av CFLAGS.
+
+       DFLAGS
+           Flaggor för D-kompilatorn (ldc eller gdc). Sedan dpkg 1.20.6.
+
+       FFLAGS
+           Flaggor för Fortran 77-kompilatorn. En delmängd av CFLAGS.
+
+       FCFLAGS
+           Options for the Fortran 9x compiler. Same as FFLAGS.  Since dpkg
+           1.17.7.
+
+       LDFLAGS
+           Flaggor som sänds till kompilatorn vid länkning av binärer eller
+           delade objekt (om länkaren anropas direkt måste -Wl och , tas bort
+           från dessa flaggor). Standardvärde: tomt.
+
+       Nya flaggor kan komma att läggas till i framtiden om behovet uppstår
+       (till exempel för att stöda andra språk).
+
+FUNKTIONSOMRÅDEN
+       Varje områdesfunktion kan aktiveras och inaktiveras i områdesvärdet i
+       miljövariablerna DEB_BUILD_OPTIONS och DEB_BUILD_MAINT_OPTIONS
+       modifierarna ”+” och ”-”. Till exempel, för att aktivera
+       hardening-funktionen ”pie” och inaktivera funktionen ”fortify” genom
+       att ange detta i debian/rules:
+
+           export DEB_BUILD_MAINT_OPTIONS=hardening=+pie,-fortify
+
+       Den speciella funktionen all kan användas för att aktivera eller
+       inaktivera alla områdesfunktioner samtidigt. Du kan till exempel
+       inaktivera allt i området hardening och endast aktivera ”format” och
+       ”fortify” med:
+
+           export DEB_BUILD_MAINT_OPTIONS=hardening=-all,+format,+fortify
+
+   abi
+       Several compile-time options (detailed below) can be used to enable
+       features that can change the ABI of a package, but cannot be enabled by
+       default due to backwards compatibility reasons unless coordinated or
+       checked individually.
+
+       lfs This setting (since dpkg 1.22.0; disabled by default) enables Large
+           File Support on 32-bit architectures where their ABI does not
+           include LFS by default, by adding -D_LARGEFILE_SOURCE
+           -D_FILE_OFFSET_BITS=64 to CPPFLAGS.
+
+           When this feature is enabled it will override the value from the
+           same feature in the future feature area.
+
+       time64
+           This setting (since dpkg 1.22.0; disabled by default) enables
+           64-bit time_t support on 32-bit architectures where their ABI does
+           not include it by default, by adding -D_TIME_BITS=64 to CPPFLAGS.
+           This setting automatically enables the lfs feature as it requires
+           it.
+
+   future
+       Flera kommandoradsflaggor (beskrivna nedan) kan användas för att
+       aktivera funktioner som borde vara aktiverade som standard, men som
+       inte kan vara det på grund av bakåtkompatibilitetsorsaker.
+
+       lfs This setting (since dpkg 1.19.0; disabled by default) is now an
+           alias for the lfs feature in the abi area, use that instead.  The
+           feature from the abi area overrides this setting.
+
+   qa
+       Flera kommandoradsflaggor (beskrivna nedan) kan användas för att göra
+       det lättare att hitta problem i källkoden eller byggsystemet.
+
+       bug This setting (since dpkg 1.17.4; disabled by default) adds any
+           warning option that reliably detects problematic source code.  The
+           warnings are fatal.  The only currently supported flags are CFLAGS
+           and CXXFLAGS with flags set to -Werror=array-bounds,
+           -Werror=clobbered, -Werror=implicit-function-declaration and
+           -Werror=volatile-register-var.
+
+       canary
+           This setting (since dpkg 1.17.14; disabled by default) adds dummy
+           canary options to the build flags, so that the build logs can be
+           checked for how the build flags propagate and to allow finding any
+           omission of normal build flag settings.  The only currently
+           supported flags are CPPFLAGS, CFLAGS, OBJCFLAGS, CXXFLAGS and
+           OBJCXXFLAGS with flags set to -D__DEB_CANARY_flag_random-id__, and
+           LDFLAGS set to -Wl,-z,deb-canary-random-id.
+
+   optimize
+       Flera kommandoradsflaggor (beskrivna nedan) kan användas för att hjälpa
+       till att optimera den skapade binären (sedan dpkg 1.21.0). Observera:
+       om all aktiveras kan dessa flaggor leda till binärartifakter som inte
+       kan reproduceras.
+
+       lto Inställningen (sedan dpkg 1.2.0; inaktiverad som förval) aktiverar
+           Link Time Optimization (optimering vid länkning) genom att lägga
+           till -flto=auto -ffat-lto-objects till CFLAGS, CXXFLAGS, OBJCFLAGS,
+           OBJCXXFLAGS, GCJFLAGS, FFLAGS, FCFLAGS och LDFLAGS.
+
+   sanitize
+       Du kan använda flera kompileringsflaggor (se detaljer nedan) för att
+       sanera den färdiga binären mot minnesfördärvningsar, minnesläckor,
+       användning efter frigivning, datakapplöpningsfel i trådar och fel i
+       förbindels med odefinierat beteende. Observera: dessa flaggor bör inte
+       användas för produktionsbygg eftersom de kan minska pålitligheten för
+       korrekt kod, minska säkerheten eller till och med funktionsrikedomen.
+
+       address
+           This setting (since dpkg 1.18.0; disabled by default) adds
+           -fsanitize=address to LDFLAGS and -fsanitize=address
+           -fno-omit-frame-pointer to CFLAGS and CXXFLAGS.
+
+       thread
+           This setting (since dpkg 1.18.0; disabled by default) adds
+           -fsanitize=thread to CFLAGS, CXXFLAGS and LDFLAGS.
+
+       leak
+           This setting (since dpkg 1.18.0; disabled by default) adds
+           -fsanitize=leak to LDFLAGS. It gets automatically disabled if
+           either the address or the thread features are enabled, as they
+           imply it.
+
+       undefined
+           This setting (since dpkg 1.18.0; disabled by default) adds
+           -fsanitize=undefined to CFLAGS, CXXFLAGS and LDFLAGS.
+
+   hardening
+       Du kan använda flera kompileringsflaggor (se detaljer nedan) för att
+       härda den färdiga binären mot minnesfördärvningsangrepp, eller för att
+       ge ytterligare varningsmeddelanden under kompileringen. Förutom det som
+       anges nedan aktiveras dessa som standard för arkitekturer som stöder
+       dem.
+
+       format
+           This setting (since dpkg 1.16.1; enabled by default) adds -Wformat
+           -Werror=format-security to CFLAGS, CXXFLAGS, OBJCFLAGS and
+           OBJCXXFLAGS.  This will warn about improper format string uses, and
+           will fail when format functions are used in a way that represent
+           possible security problems. At present, this warns about calls to
+           printf and scanf functions where the format string is not a string
+           literal and there are no format arguments, as in printf(foo);
+           instead of printf("%s", foo); This may be a security hole if the
+           format string came from untrusted input and contains ‘%n’.
+
+       fortify
+           This setting (since dpkg 1.16.1; enabled by default) adds
+           -D_FORTIFY_SOURCE=2 to CPPFLAGS. During code generation the
+           compiler knows a great deal of information about buffer sizes
+           (where possible), and attempts to replace insecure unlimited length
+           buffer function calls with length-limited ones. This is especially
+           useful for old, crufty code. Additionally, format strings in
+           writable memory that contain ‘%n’ are blocked. If an application
+           depends on such a format string, it will need to be worked around.
+
+           Observera att för att den här flaggan ska ha någon funktion måste
+           källkoden också kompileras med -O1 eller högre. Om miljövariabeln
+           DEB_BUILD_OPTIONS innehåller noopt kommer stödet för fortify att
+           inaktiverats, på grund av nya varningar som ges av glibc 2.16 och
+           senare.
+
+       stackprotector
+           This setting (since dpkg 1.16.1; enabled by default if
+           stackprotectorstrong is not in use) adds -fstack-protector
+           --param=ssp-buffer-size=4 to CFLAGS, CXXFLAGS, OBJCFLAGS,
+           OBJCXXFLAGS, GCJFLAGS, FFLAGS and FCFLAGS.  This adds safety checks
+           against stack overwrites. This renders many potential code
+           injection attacks into aborting situations. In the best case this
+           turns code injection vulnerabilities into denial of service or into
+           non-issues (depending on the application).
+
+           Den här funktionen kräver länkning mot glibc (eller ett annat
+           bibliotek som tillhandahåller __stack_chk_fail), så det måste
+           inaktiveras när du bygger med -nostdlib eller -ffreestanding eller
+           liknande.
+
+       stackprotectorstrong
+           This setting (since dpkg 1.17.11; enabled by default) adds
+           -fstack-protector-strong to CFLAGS, CXXFLAGS, OBJCFLAGS,
+           OBJCXXFLAGS, GCJFLAGS, FFLAGS and FCFLAGS.  This is a stronger
+           variant of stackprotector, but without significant performance
+           penalties.
+
+           Om du inaktiverar stackprotector inaktiveras även denna
+           inställning.
+
+           Funktionen har samma krav som stackprotector, och kräver dessutom
+           gcc 4.9 eller senare.
+
+       stackclask
+           This setting (since dpkg 1.22.0; enabled by default) adds
+           -fstack-clash-protection on amd64, arm64, armhf and armel to
+           CFLAGS, CXXFLAGS, OBJCFLAGS, OBJCXXFLAGS, GCJFLAGS, FFLAGS and
+           FCFLAGS.  This adds code to prevent stack clash style attacks.
+
+       branch
+           This setting (since dpkg 1.22.0; enabled by default) adds
+           -fcf-protection on amd64 and -mbranch-protection=standard on arm64
+           to CFLAGS, CXXFLAGS, OBJCFLAGS, OBJCXXFLAGS, GCJFLAGS, FFLAGS and
+           FCFLAGS.  This adds branch protection to indirect calls, jumps and
+           returns to check whether these are valid at run-time.
+
+       relro
+           This setting (since dpkg 1.16.1; enabled by default) adds
+           -Wl,-z,relro to LDFLAGS.  During program load, several ELF memory
+           sections need to be written to by the linker. This flags the loader
+           to turn these sections read-only before turning over control to the
+           program. Most notably this prevents GOT overwrite attacks. If this
+           option is disabled, bindnow will become disabled as well.
+
+       bindnow
+           This setting (since dpkg 1.16.1; disabled by default) adds
+           -Wl,-z,now to LDFLAGS. During program load, all dynamic symbols are
+           resolved, allowing for the entire PLT to be marked read-only (due
+           to relro above). The option cannot become enabled if relro is not
+           enabled.
+
+       pie This setting (since dpkg 1.16.1; with no global default since dpkg
+           1.18.23, as it is enabled by default now by gcc on the amd64,
+           arm64, armel, armhf, hurd-i386, i386, kfreebsd-amd64,
+           kfreebsd-i386, mips, mipsel, mips64el, powerpc, ppc64, ppc64el,
+           riscv64, s390x, sparc and sparc64 Debian architectures) adds the
+           required options to enable or disable PIE via gcc specs files, if
+           needed, depending on whether gcc injects on that architecture the
+           flags by itself or not.  When the setting is enabled and gcc
+           injects the flags, it adds nothing.  When the setting is enabled
+           and gcc does not inject the flags, it adds -fPIE (via
+           /usr/share/dpkg/pie-compiler.specs) to CFLAGS, CXXFLAGS, OBJCFLAGS,
+           OBJCXXFLAGS, GCJFLAGS, FFLAGS and FCFLAGS, and -fPIE -pie (via
+           /usr/share/dpkg/pie-link.specs) to LDFLAGS.  When the setting is
+           disabled and gcc injects the flags, it adds -fno-PIE (via
+           /usr/share/dpkg/no-pie-compile.specs) to CFLAGS, CXXFLAGS,
+           OBJCFLAGS, OBJCXXFLAGS, GCJFLAGS, FFLAGS and FCFLAGS, and -fno-PIE
+           -no-pie (via /usr/share/dpkg/no-pie-link.specs) to LDFLAGS.
+
+           Positionsoberoende exekverbara program (PIE) behövs för att dra
+           fördel av slumpmässig adressrymd (ASLR), vilket stöds av vissa
+           versioner av kärnan. Medan ASLR redan kan användas för datautrymmen
+           i stacken och heap:en (brk och mmap), måste kodområden först
+           kompileras som positionsoberoende. Delade bibliotek gör redan detta
+           (-fPIC), så de drar automatiskt fördel av ASLR medan binära
+           .text-regioner måste byggas med PIE för att uppnå ASLR. När detta
+           sker är ROP-angrepp (Return Oriented Programming) mycket svårare
+           eftersom det inte finns några statiska platser att studsa från i
+           ett minnesfördärvningsangrepp.
+
+           PIE är inte kompatibelt med -fPIC, så allmän försiktighet måste tas
+           vid bygge av delade objekt. Men eftersom PIE-flaggorna som skapas
+           injiceras via gcc-specifikationsfiler bör det alltid vara säkert
+           att ovillkorligen sätta dem oberoende av typen av objekt som
+           kompileras eller länkas.
+
+           Statiska bibliotek kan användas av program eller andra delade
+           bibliotek. Beroende på vilka flaggor som används för att kompilera
+           objekten inuti ett statisk bibliotek kan dessa vara användas av
+           olika uppsättningar objekt:
+
+           inget
+               Kan varken länkas till ett PIE-program eller ett delat
+               bibliotek.
+
+           -fPIE
+               Kan länkas till alla program, men inte ett delat bibliotek
+               (rekommenderas).
+
+           -fPIC
+               Kan länkas till alla program och delade bibliotek.
+
+           If there is a need to set these flags manually, bypassing the gcc
+           specs injection, there are several things to take into account.
+           Unconditionally and explicitly passing -fPIE, -fpie or -pie to a
+           build-system using libtool is safe as these flags will get stripped
+           when building shared libraries.  Otherwise on projects that build
+           both programs and shared libraries you might need to make sure that
+           when building the shared libraries -fPIC is always passed last (so
+           that it overrides any previous -PIE) to compilation flags such as
+           CFLAGS, and -shared is passed last (so that it overrides any
+           previous -pie) to linking flags such as LDFLAGS. Note: This should
+           not be needed with the default gcc specs machinery.
+
+           Eftersom PIE i tillägg implementeras med ett generellt register kan
+           vissa arkitekturer med få register (men inte längre i386 eftersom
+           optimeringar implementerats i gcc >= 5) se prestandaförluster upp
+           till 15% i väldigt textsegment-tunga programs körning; de flesta
+           körningar ser mindre än 1%. Arkitekturer med många generella
+           register (t.ex amd64) ser inte en lika stor värsta falls-förlust.
+
+   reproducible
+       Kompileringsflaggorna som anges nedan kan användas för att göra det
+       lättare att reproducera byggbarhet eller tillhandahålla ytterligare
+       varningsflaggor under kompileringen. Förutom det som anges nedan
+       aktiveras dessa som standard för arkitekturer som stöder dem.
+
+       timeless
+           This setting (since dpkg 1.17.14; enabled by default) adds
+           -Wdate-time to CPPFLAGS.  This will cause warnings when the
+           __TIME__, __DATE__ and __TIMESTAMP__ macros are used.
+
+       fixfilepath
+           This setting (since dpkg 1.19.1; enabled by default) adds
+           -ffile-prefix-map=BUILDPATH=. to CFLAGS, CXXFLAGS, OBJCFLAGS,
+           OBJCXXFLAGS, GCJFLAGS, FFLAGS and FCFLAGS where BUILDPATH is set to
+           the top-level directory of the package being built. This has the
+           effect of removing the build path from any generated file.
+
+           Om både fixdebugpath och fixfilepath anges tar denna flagga
+           företräde, eftersom den är en övermängd av den förstnämnda.
+
+           Note: If the build process captures the build flags into the
+           resulting built objects, that will make the package unreproducible.
+           And while disabling this option might make some of the objects
+           reproducible again this would also require disabling fixdebugpath,
+           which might make any generated debug symbols objects
+           unreproducible.  The ideal fix is to stop capturing build flags.
+
+       fixdebugpath
+           This setting (since dpkg 1.18.5; enabled by default) adds
+           -fdebug-prefix-map=BUILDPATH=. to CFLAGS, CXXFLAGS, OBJCFLAGS,
+           OBJCXXFLAGS, GCJFLAGS, FFLAGS and FCFLAGS where BUILDPATH is set to
+           the top-level directory of the package being built. This has the
+           effect of removing the build path from any generated debug symbols.
+
+           Note: This feature has similar reproducible properties as
+           fixfilepath.
+
+MILJÖVARIABLER
+       Det finns två uppsättningar miljövariabler som utför samma operationer,
+       den första (DEB_flagga_op) bör aldrig användas inuti debian/rules). Den
+       är tänkt för användare som vill bygga om källkodspaketet med andra
+       byggflaggor. Den andra uppsättningen (DEB_flagga_MAINT_op) bör endast
+       användas i debian/rules av paketansvariga för att ändra de slutgiltiga
+       byggflaggorna.
+
+       DEB_flagga_SET
+       DEB_flag_MAINT_SET (since dpkg 1.16.1)
+           Denna variabel kan användas för att tvinga fram värdet som
+           returneras för given flagga.
+
+       DEB_flag_STRIP (since dpkg 1.16.1)
+       DEB_flag_MAINT_STRIP (since dpkg 1.16.1)
+           Denna variabel kan användas för att tillhandahålla en
+           blankstegsavdelad lista med flaggor som kommer att tas bort från
+           uppsättningen flaggor som ges för given flagga.
+
+       DEB_flagga_APPEND
+       DEB_flag_MAINT_APPEND (since dpkg 1.16.1)
+           Denna variabel kan användas för att lägga till ytterligare flaggor
+           till värdet som returneras för given flagga.
+
+       DEB_flag_PREPEND (since dpkg 1.16.1)
+       DEB_flag_MAINT_PREPEND (since dpkg 1.16.1)
+           Denna variabel kan användas för att lägga till ytterligare flaggor
+           först i värdet som returneras för given flagga.
+
+       DEB_BUILD_OPTIONS
+       DEB_BUILD_MAINT_OPTIONS (since dpkg 1.16.1)
+           De här variablerna kan användas av en användare eller utvecklare
+           för att slå av/på olika områdesfunktioner som påverkar
+           byggflaggorna. Variabeln DEB_BUILD_MAINT_OPTIONS-variabeln överstyr
+           alla inställningar i funktionsområden i DEB_BUILD_OPTIONS. Se
+           avsnittet FUNKTIONSOMRÅDEN för mer information.
+
+       DEB_VENDOR
+           Inställningen anger den aktuella återförsäljaren. Om den inte är
+           satt kommer återförsäljaren att identifieras genom att läsa
+           /etc/dpkg/origins/default.
+
+       DEB_BUILD_PATH
+           Den här variabeln anger byggsökvägen (sedan dpkg 1.18.8) att
+           använda i funktioner såsom fixdebugpath så att de kan styras av
+           anroparen. Variabeln är för närvarande specifik för Debian och dess
+           derivat.
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_NLS
+           Om satt, används för att bestämma om lokalt språkstöd ska
+           aktiveras, även känt som internationaliseringsstöd (eller i18n)
+           (sedan dpkg 1.19.0). Tillåtna värden är: 0 och 1 (förval).
+
+FILER
+   Konfigurationsfiler
+       /etc/dpkg/buildflags.conf
+           Konfigurationsfil för hela systemet.
+
+       $XDG_CONFIG_HOME/dpkg/buildflags.conf eller
+       $HOME/.config/dpkg-buildflags.conf
+           Användarens konfigurationsfil.
+
+   Paketeringsstöd
+       /usr/share/dpkg/buildflags.mk
+           Makefile-klipp som läser in (och eventuellt exporterar) alla
+           flaggor som stöd av dpkg-buildflags till variabler (sedan dpkg
+           1.16.1).
+
+EXEMPEL
+       För att sända byggflaggor till en byggkommandorad i en makefil:
+
+        $(MAKE) $(shell dpkg-buildflags --export=cmdline)
+
+        ./configure $(shell dpkg-buildflags --export=cmdline)
+
+       För att sätta byggflaggor i ett skalskript eller skalfragment kan eval
+       användas för att tolka utdata och exportera flaggorna i miljön:
+
+        eval "$(dpkg-buildflags --export=sh)" && make
+
+       eller för att sätta positionsparametrarna för att sända till ett
+       kommando:
+
+        eval "set -- $(dpkg-buildflags --export=cmdline)"
+        for dir in a b c; do (cd $dir && ./configure "$@" && make); done
+
+   Använda i debian/rules
+       Du bör anropa dpkg-buildflags eller inkludera buildflags.mk från filen
+       debian/rules för att hämta de byggflaggor det är nödvändigt att sända
+       till byggsystemet. Observera att äldre versioner av dpkg-buildpackages
+       (före dpkg 1.16.1) exporterade dessa flaggor automatiskt. Du bör dock
+       inte bero på detta, eftersom detta förhindrar körning av debian/rules
+       manuellt.
+
+       För paket med autoconf-liknande byggsystem kan du sända relevanta
+       flaggor direkt till configure eller make(1), som visas ovan.
+
+       I andra byggsystem, eller om du vill ha mer finkorning styrning av
+       vilka flaggor som sänds vart, kan du använda --get. Eller så kan du
+       istället inkludera buildflags.mk, som tar hand om anropet till dpkg-
+       buildflags och lagringen av byggflaggorna i make-variabler.
+
+       Om du vill exportera alla byggflaggor till miljön (där de kan fångas
+       upp av ditt byggsystem):
+
+        DPKG_EXPORT_BUILDFLAGS = 1
+        include /usr/share/dpkg/buildflags.mk
+
+       För extra styrning av vad som expoteras kan du manuellt exportera
+       variablerna (eftersom inga av dem exporteras som standard):
+
+        include /usr/share/dpkg/buildflags.mk
+        export CPPFLAGS CFLAGS LDFLAGS
+
+       Du kan naturligtvis dessutom manuellt sända flaggorna till kommandon:
+
+        include /usr/share/dpkg/buildflags.mk
+        build-arch:
+               $(CC) -o hello hello.c $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                dpkg-buildflags(1)

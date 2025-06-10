@@ -1,0 +1,370 @@
+APT-LISTCHANGES(1)                  Debian                  APT-LISTCHANGES(1)
+
+NOME
+       apt-listchanges - Mostra novas entradas em changelog a partir de
+       arquivos de pacotes Debian
+
+SINOPSE
+       apt-listchanges [[opções...]] {[--apt] | [pacote.deb...]}
+
+DESCRIÇÃO
+       apt-listchanges é uma ferramenta para mostrar o que foi alterado numa
+       nova versão de um pacote Debian, em comparação com versão instalada
+       actualmente no sistema.
+
+       Faz isto ao extrair as entradas relevantes de ambos NEWS.Debian e
+       ficheiros changelog[.Debian], normalmente encontrados em
+       /usr/share/doc/pacote, a partir de arquivos de pacotes Debian.
+
+       Por favor note que na instalação predefinida se o apt-listchanges for
+       accionado durante actualizações como um plugin do APT, apenas mostra
+       entradas de NEWS.Debian. Isto pode ser alterado com a opção --which.
+
+       Se forem mostradas entradas changelog e o pacote não conter o ficheiro
+       changelog[.Debian], o apt-listchanges chama o comando apt-get changelog
+       para descarregar o changelog da rede. Este comportamento pode ser
+       desactivado com a opção --no-network.
+
+       Dando um conjunto de nomes de ficheiros como argumentos (ou ler a
+       partir do apt usando --apt), o apt-listchanges irá sondar os ficheiros
+       (assumindo que são arquivos de pacotes Debian) pelas entradas changelog
+       relevantes, e mostrá-las todas num sumário agrupado por pacote fonte.
+       Os grupos são ordenados pela urgência da alteração mais urgente, e
+       depois pelo nome do pacote. As alterações dentro de cada grupo de
+       pacotes são mostradas pelo ordem em que aparecem nos ficheiros
+       changelog, isto é, começando pela mais recente e acabando na mais
+       antiga; pode ser usada a opção --reverse para alterar esta ordem.
+
+OPÇÕES
+       apt-listchanges fornece as seguintes opções para controlar o seu
+       comportamento. A maioria delas têm entradas equivalentes no ficheiro de
+       configuração, veja "FICHEIRO DE CONFIGURAÇÃO" em baixo para detalhes.
+
+       --apt
+           Lê nomes de ficheiros a partir de canalização especialmente
+           formatada (como fornecido pelo apt), em vez de a partir de
+           argumentos de linha de comandos, e honra certas opções específicas
+           do apt no ficheiro de configuração. Esta canalização (pipeline) tem
+           de estar no formato da "versão 2", especificado na configuração do
+           apt.
+
+       -v, --verbose
+           Mostra informação adicional (normalmente não desejada). Por
+           exemplo, mostra uma mensagem quando um pacote da mesma versão ou
+           anterior está para ser instalado, ou quando um pacote está para ser
+           instalado pela primeira vez.
+
+       -f, --frontend
+           Selecciona qual frontend a usar para mostrar informação ao
+           utilizador. Os frontends actuais incluem:
+
+           pager
+               usa o comando sensible-pager(1) para mostrar os resultados. O
+               comando usa a variável de ambiente PAGER para escolher o seu
+               pager favorito. A opção "pager" pode ser especificada no
+               ficheiro de configuração para seleccionar um pager específico
+               para usar com o apt-listchanges.
+
+           browser
+               Mostra o changelog formatado em HTML com hiperligações para
+               bugs e endereços de email usando o comando sensible-browser(1)
+               que examina a variável de ambiente BROWSER para escolher o seu
+               navegador favorito. A opção "browser" pode ser especificada no
+               ficheiro de configuração para seleccionar um navegador
+               específico para usar com o apt-listchanges.
+
+           xterm-pager
+               Usa o seu paginador favorito para mostrar resultados, mas fá-lo
+               num xterm (usando a alternativa x-terminal-emulator) nos
+               bastidores. Isto permite-lhe continuar com a actualização se
+               desejar, e continuar a navegar nos changelogs. Você pode
+               sobrepor o emulador de terminar a ser usado com a opção de
+               configuração "xterm" .
+
+           xterm-browser
+               A combinação lógica de xterm-pager e browser. Apenas apropriada
+               para navegadores de modo-de-texto.
+
+           text
+               Despeja os resultados no stdout, sem pausas.
+
+           syslog
+               Despeja os resultados para o syslog. É recomendado desactivar a
+               opção titled.
+
+           log
+               Acrescenta o resultado a um ficheiro log, com um filtro
+               opcional de processo. É recomendado desactivar a opção titled.
+
+           mail
+               Envia mail para o endereço especificado com --email-address, e
+               não mostra os changelogs.
+
+           gtk
+               Gera uma janela gtk para mostrar os changelogs. Precisa do
+               python3-gi instalado.
+
+           none
+               Não faz nada. Pode ser usado para impedir que o apt-listchanges
+               corra quando configurado para correr automaticamente a partir
+               do apt.
+
+           Por favor note que o apt-listchanges irá tentar mudar para um
+           utilizador sem privilégios antes de criar comandos nos frontends
+           "browser", "xterm-browser", e "xterm-pager". No entanto, isto
+           presentemente não se aplica ao frontend "pager". Veja também
+           "VARIÁVEIS DE AMBIENTE" em baixo.
+
+       --email-address=endereço
+           Adicionalmente a mostrá-los, envia por mail uma cópia dos dados de
+           changelog para o endereço especificado. Para apenas enviar por mail
+           as entradas de changelog, use esta opção com o frontend especial
+           'mail'.
+
+       --email-format={text|html}
+           Se o envio de cópias por mail estiver activo (veja --email-address
+           em cima), esta opção selecciona se o mail deve ser enviado nos
+           antigos e bons dados em texto simples (o que é o comportamento
+           predefinido), ou em dados html com ligações para se clicar, o que
+           pode ser mais conveniente para pessoas que usem clientes de mail
+           gráficos.
+
+       -c, --confirm
+           Após mostrar os changelogs, pergunta ao utilizador se deve ou não
+           prosseguir. Se o utilizador escolher não prosseguir, será devolvido
+           um estado de saída não-zero, e o apt irá abortar.
+
+       -a, --show-all
+           Em vez de tentar mostrar entradas changelog que sejam mais recentes
+           que a versão actualmente instalada do pacote, simplesmente mostra
+           todas as entradas changelog para todos os pacotes. Isto é útil para
+           visualizar o changelog inteiro de um .deb antes de o extrair.
+
+       -n, --no-network
+           Em casos raros quando um pacote binário (ou para ser mais preciso;
+           nenhum dos pacotes binários compilados a partir do mesmo pacote
+           fonte e que são processados juntamente em grupo) não contém um
+           ficheiro changelog, por predefinição o apt-listchanges executa
+           apt-get changelog para descarregar changelogs a partir dos
+           servidores de rede normalmente disponibilizados pela distribuição
+           do seu sistema operativo. Esta opção irá desactivar este
+           comportamento, o que pode ser útil por exemplo para sistemas atrás
+           de uma firewall.
+
+       --save-seen=ficheiro
+           Esta opção irá fazer com que o apt-listchanges acompanhe a última
+           versão de um pacote para o qual changelogs foram mostrados, para
+           evitar re-mostrar os mesmos changelogs numa futura invocação. A
+           base de dados é armazenada no ficheiro nomeado. Especifique 'none'
+           para desactivar esta funcionalidade.
+
+       --dump-seen
+           Mostra o conteúdo da base de dados vista na saída standard como uma
+           lista de linhas consistindo do nome do pacote fonte e a sua versão
+           vista mais recente, separados por espaço. Esta opção requer o
+           caminho para a base de dados vista seja conhecido: por favor ou o
+           especifique-o usando a opção --save-seen ou passe a opção
+           --profile=apt para ele ser lido a partir do ficheiro de
+           configuração.
+
+       --since=versão
+           Esta opção irá fazer com que o apt-listchanges as entradas
+           posteriores à versão especificada. Com esta opção, o único outro
+           argumento que você pode passar é o caminho para um ficheiro .deb.
+
+       --latest=N
+           Esta opção irá fazer com que o apt-listchanges apenas mostre as N
+           entradas mais recentes. Com esta opção, o único outro argumento que
+           você pode passar é o caminho para um ficheiro .deb.
+
+       --which={news|changelogs|both}
+           Esta opção selecciona se notícias (de NEWS.Debian et al.),
+           changelogs (de changelog.Debian et al.) ou ambos devem ser
+           mostrados. A predefinição é de apenas mostrar as noticias.
+
+       --help
+           Mostrar informação de sintaxe.
+
+       -h, --headers
+           estas opções irão fazer com que o apt-listchanges insira um
+           cabeçalho antes de cada changelog do pacote a mostrar o nome do
+           pacote, e os nomes dos pacotes binários que estão a ser
+           actualizados (se existir mais do que um, ou se for diferente do
+           nome do pacote fonte).
+
+       --debug
+           Mostra alguma informação de depuração.
+
+       --profile=nome
+           Selecciona um perfil de opção.  nome corresponde a uma secção em
+           /etc/apt/listchanges.conf. A predefinição quando invocada a partir
+           do apt é "apt", e caso contrário "cmdline".
+
+       --log=file
+           Seleciona o ficheiro acrescentado pelo frontend log. A predefinição
+           é /var/log/apt/listchanges.log. Pode ser usada a opção de comando
+           de filtragem para modificar os resultados antes de serem
+           acrescentados ao ficheiro log. Por favor assegure que configura a
+           rotação de log para este ficheiro.
+
+       --filter=command
+           Seleciona o comando usado para filtrar resultados antes de serem
+           acrescentados ao ficheiro log pelo frontend log. O stdin irá
+           receber o resultado de apt-listchanges e o stdout será acrescentado
+           ao ficheiro log. Separa os argumentos com espaços e cita os
+           argumentos que contém espaços. O comando não irá correr usando a
+           shell a menos que a shell seja incluída no comando: sh -c 'date ;
+           cat'
+
+       --reverse
+           Mostra as entradas do changelog em ordem inversa.
+
+       --ignore-apt-assume, --ignore-debian-frontend
+           Desactiva o forçar de frontend não-interactivo em alguns dos casos
+           descritos na secção "SOBREPOSIÇÃO AUTOMÁTICA DE FRONTEND" em baixo.
+
+       --titled, --untitled
+           Activa ou desactiva o título no inicio dos resultados.
+
+       --select-frontend
+           Escolhe o frontend interactivamente. Esta opções é principalmente
+           para objectivos de testes, por favor não a use.
+
+SOBREPOSIÇÃO AUTOMÁTICA DE FRONTEND
+       Para uma melhor integração com as ferramentas existentes de gestão de
+       pacotes, o apt-listchanges tenta detectar se as actualizações de
+       pacotes são feitas num modo não-interactivo, e muda automaticamente o
+       seu frontend para 'text' quando qualquer das seguintes condições é
+       satisfeita.
+
+       •   a saída standard não está ligada ao terminal:
+
+       •   a opção --quiet (-q) é dada ao apt-get(8) (ou aptitude(8)); note no
+           entanto que quando a opção é usada mais do que uma vez, o
+           apt-listchanges muda o frontend para 'mail';
+
+       •   a opção --assume-yes (-y) é dada ao apt-get(8);
+
+       •   a variável de ambiente DEBIAN_FRONTEND é definida para
+           "noninteractive", e APT_LISTCHANGES_FRONTED não é definida.
+
+       Por objectivos de compatibilidade com verses anteriores, as últimas
+       duas verificações de cima podem ser desactivadas com as entradas no
+       ficheiro de configuração "ignore_apt_assume=true" ou
+       "ignore_debian_frontend=true" (veja "FICHEIRO DE CONFIGURAÇÃO em baixo)
+       ou ao usar as opções de linha de comandos --ignore-apt-assume ou
+       --ignore-debian-frontend.
+
+       Por favor note também que o frontend "mail" já é um não-interactivo,
+       assim nunca é mudado para o frontend "text".
+
+       Adicionalmente o apt-listchanges sobrepões os frontends baseados em X11
+       ("gtk", "xterm-pager", "xterm-browser") com "pager" (ou "browser" no
+       caso de "xterm-browser") quando a variável de ambiente DISPLAY não está
+       definida.
+
+       Por favor note que estes frontends silenciosos não são sujeitos a
+       sobreposições: syslog log
+
+FICHEIRO DE CONFIGURAÇÃO
+       apt-listchanges lê a sua configuração a partir de
+       /etc/apt/listchanges.conf. O ficheiro consiste de secções com nomes
+       dentro de parênteses rectos. Cada secção deve conter linhas no formato
+       chave=valor. As linhas começadas com o sinal "#" são tratadas como
+       comentários e ignoradas. Os ficheiros nomeados name.conf no directório
+       /etc/apt/listchanges.conf.d são também lidos do mesmo modo e sobrepõem
+       valores definidos no ficheiro de configuração principal.
+
+       Secção é um nome de perfil que pode ser usado como parâmetro da opção
+       --profile.
+
+       A configuração da secção "apt" pode ser gerida por debconf(7), e a
+       maioria dos ajustes lá podem ser alterados com a ajuda do comando
+       dpkg-reconfigure apt-listchanges.
+
+       Chave é um nome de algumas opções de linha de comando (excepto para
+       --apt, --profile, --help) com os hífenes iniciais removidos, e os
+       hífenes restantes convertidos em underscores, por exemplo:
+       "email_format" ou "save_seen".
+
+       Valor representa o valor da opção correspondente. Para opções de linha
+       de comandos que não aceitam argumentos, como "confirm" ou "headers", o
+       valor deve ser definido ou para "1", "yes", "true", e "on" de modo a
+       activar a opção, ou para "0", "no", "false", e "off" para a desactivar.
+
+       Adicionalmente chave pode ser uma das seguintes palavras-chave:
+       "browser", "pager" ou "xterm". O valor de tal entrada de configuração
+       deve ser o nome de um comando apropriado, eventualmente seguido dos
+       seus argumentos, por exemplo : "pager=less -R".
+
+       Exemplo 1. Exemplo de ficheiro de configuração
+
+           [cmdline]
+           frontend=pager
+
+           [apt]
+           frontend=xterm-pager
+           email_address=root
+           confirm=1
+
+           [custom]
+           frontend=browser
+           browser=mozilla
+
+       O ficheiro de configuração em cima especifica que em modo de linha de
+       comandos, o frontend predefinido deve ser "pager". Em modo do apt, o
+       frontend xterm-pager é o predefinido, deve ser enviada por mail para o
+       root uma cópia dos changelogs (se algum), e o apt-listchanges deve
+       perguntar por confirmação. se o apt-listchanges for invocado com
+       --profile=custom, será usado o frontend browser, e invocar o mozilla.
+
+AMBIENTE
+       APT_LISTCHANGES_FRONTEND
+           Frontend a usar.
+
+       APT_LISTCHANGES_USER, SUDO_USER, USERNAME
+           O valor da primeira das variáveis de cima a existir será usado como
+           o nome do utilizador para o qual mudar quando corre comandos
+           gerados pelos frontends "browser", "xterm-browser", e "xterm-pager"
+           se o apt-listchanges for arrancado por um utilizador com
+           privilégios.
+
+       DEBIAN_FRONTEND
+           Se definido para "noninteractive", então pode forçar o
+           apt-listchanges a usar um frontend não-interactivo, veja a secção
+           SOBREPOSIÇÃO AUTOMÁTICA DE FRONTEND para detalhes.
+
+       BROWSER
+           usado pelo frontend browser, deve ser regulado para um comando que
+           espere um ficheiro: URL para um ficheiro HTML file a mostrar.
+
+       PAGER
+           Usado pelo frontend pager
+
+       APT_HOOK_INFO_FD
+           Descritor de ficheiro de onde ler nomes de pacotes no modo --apt.
+           (Espera-se que o apt regule esta variável para um número de
+           descritor de ficheiro apropriado).
+
+FICHEIROS
+       /etc/apt/listchanges.conf
+           Ficheiro de configuração.
+
+       /etc/apt/listchanges.conf.d/*.conf
+           Ficheiros de sobreposição ao ficheiro de configuração.
+
+       /etc/apt/apt.conf.d/20listchanges
+           Ficheiro usado para registar apt-listchanges no sistema apt.
+
+       /var/lib/apt/listchanges.db
+           Base de dados usada para save-seen.
+
+AUTOR
+       apt-listchanges foi escrito por Matt Zimmerman <mdz@debian.org>
+
+       O manutenção actual é feita por Robert Luberda <robert@debian.org>
+
+VEJA TAMBÉM
+       sensible-pager(1), sensible-browser(1), apt-get(8), aptitude(8)
+
+apt-listchanges                   2017-07-08                APT-LISTCHANGES(1)

@@ -1,0 +1,192 @@
+dpkg-parsechangelog(1)            dpkg suite            dpkg-parsechangelog(1)
+
+NAMN
+       dpkg-parsechangelog - tolka Debians ändringsloggar
+
+SYNOPS
+       dpkg-parsechangelog [flagga...]
+
+BESKRIVNING
+       dpkg-parsechangelog läser och tolkar ändringsloggen i ett uppackat
+       Debiankällkodsträd och visar informationen i den på standard ut i en
+       maskinläsbar form.
+
+FLAGGOR
+       -l, --file ändringsloggfil
+           Anger ändringsloggfilen som information ska läsas från. Ett ”-” kan
+           användas för att ange läsning från stadnard in. Standardvärdet är
+           debian/changelog.
+
+       -F ändringsloggformat
+           Anger format på ändringsloggen. Som standard läses formatet från en
+           speciell rad nära slutet av ändringsloggen, om det misslyckas
+           används formatet debian som standard. Se även FORMAT PÅ
+           ÄNDRINGSLOGGEN.
+
+       -L bibliotekskatalog
+           Föråldrad flagga utan effekt (sedan dpkg 1.18.8). En liknande
+           effekt kan uppnås för att söka perl-tolkningsmodulerna genom att
+           sätta miljövariablerna PERL5LIB eller PERLLIB
+
+       -S, --show-field fält
+           Anger namnet på ett fält att visa (sedan dpkg 1.17.0). Fältnamnet
+           visas inte, endast dess värde.
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+   Parserflaggor
+       Följande flaggor kan användas för att styra utdata från
+       ändringsloggtolken, till exempel omfånget av poster eller formatet på
+       utdata.
+
+       --format utdataformat
+           Välj utdataformat. Stödda format är för närvarande dpkg och rfc822.
+           dpkg är det klassiska utdataformatet (från innan denna flagga var
+           tillgänglig) och förvalet. Det består av ett stycke i Debians
+           control-format (se deb-control(5)). Om mer än en post önskas tas de
+           flesta fält från den första posten (vanligtvis den nyaste posten),
+           förutom om annat anges:
+
+           Source: paketnamn
+           Version: version
+           Distribution: målutgåva
+           Urgency: brådska
+               Högsta brådskan av alla de inkluderade posterna används, följt
+               av de sammanslagna (avdelade med blanksteg) kommentarerna från
+               alla de begärda versionerna.
+
+           Maintainer: författare
+           Date: datum
+               Postens datum, så som det står skrivet i ändringsloggen. Med
+               ett strptime(3)-format på "%a, %d %b %Y %T %z", men där
+               veckodagen kanske inte nödvändigtvis motsvarar den faktiska
+               dagen som hämtas från resten av datumsträngen. Om du behöver en
+               mer korrekt representation av datumet, använd fältet Timestamp,
+               men tänk på att det kanske inte är möjligt att koppla det
+               tillbaka till det exakta värdet på det här fältet.
+
+           Timestamp: tidsstämpel
+               Datumet för posten som en tidsstämpel i sekundeer sedan epoken
+               (sedan dpkg 1.18.8).
+
+           Closes: nummer-på-felrapport
+               Closes-fältet i alla inkluderade poster slås samman.
+
+           Changes: poster-från-ändringsloggen
+               Texten i alla ändringsloggposter slås samman. För att göra
+               fältet till giltigt flerradsfält i Debian-control-format
+               ersätts tomma rader med en ensam punkt och alla rader får ett
+               teckens indrag. Exakt innehåll beror på formatet på
+               ändringsloggen.
+
+           Fälten Version, Distribution, Urgency, Maintainer och Changes
+           krävs.
+
+           Ytterligare användardefinierade fält kan finnas.
+
+           rfc822-formatet använder samma fält, men ger ett separat stycke för
+           varje ändringsloggspost så att all metadata för varje post behålls.
+
+       --reverse
+           Inkludera alla ändringar i omvänd ordning (sedan dpkg 1.19.1).
+
+           Note: For the dpkg format the first entry will be the most ancient
+           entry.
+
+       --all
+           Include all changes.  Note: Other options have no effect when this
+           is in use.
+
+       -s, --since version
+       -v version
+           Ta med alla poster senare än version.
+
+       -u, --until version
+           Ta med alla ändringar tidigare än version.
+
+       -f, --from version
+           Ta med alla ändringar från och med version.
+
+       -t, --to version
+           Ta med alla ändringar till och med version.
+
+       -c, --count antal
+       -n antal
+           Ta med antal ändringar från början (eller slutet om antal är lägre
+           än 0).
+
+       -o, --offset antal
+           Ändra startpunkt för --count, räknat från början (eller slutet om
+           antal är lägre än 0).
+
+FORMAT PÅ ÄNDRINGSLOGGEN
+       Det är möjligt att använda ett annat format än standard, genom att
+       tillhandahålla en tolk för det alternativa formatet.
+
+       För att låta dpkg-parsechangelog köra den nya tolken måste en rad som
+       motsvarar det reguljära uttrycket (Perl-format)
+       “\schangelog-format:\s+([0-9a-z]+)\W” läggas in bland de 40 sista
+       raderna i ändringsloggfilen. Delen i parentes är namnet på formatet.
+       Till exempel:
+
+           @@@ changelog-format: annatformat @@@
+
+       Namn på ändringsloggformat är icke-tomma strängar med små alfanumeriska
+       tecken (”a-z0-9”).
+
+       Om en sådan rad finns kommer dpkg-parsechangelog att leta efter tolken
+       som en perlmodul Dpkg::Changelog::annatformat; det är ett fel om det
+       inte finns. Standardformatet för ändringsloggar är debian och en tolk
+       för detta format inkluderas som standard.
+
+       Tolken ska vara ett dervat av klassen Dpkg::Changelog och implementera
+       de krävda dokumenterade gränssnitten.
+
+       Om ändringsloggformatet som tolkas alltid eller nästan alltid
+       innehåller en blank rad mellan individuella ändringsposter bör dessa
+       blanka rader tas bort, så att utdataformatet blir mer kompakt.
+
+       Om ändringsloggformatet inte innehåller information om datum eller
+       paketnamn bör denna information utelämnas från utdata. Tolken bör inte
+       försöka skapa den eller hitta den i andra källor.
+
+       Om ändringsloggen inte har det förväntade formatet bör tolken avsluta
+       med en felstatus, istället för att försöka virra sig genom och möjligen
+       generera felaktiga utdata.
+
+       En ändringsloggtolk kan inte på något sätt interagera med användaren.
+
+ANTECKNINGAR
+       De olika parserflaggorna, bortsett -v, stöds enbart sedan dpkg 1.14.16.
+
+       Hantering av korta flaggor med icke-medsända värden är endast
+       tillgängligt edan dpkg 1.18.0.
+
+MILJÖVARIABLER
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_NLS
+           Om satt, används för att bestämma om lokalt språkstöd ska
+           aktiveras, även känt som internationaliseringsstöd (eller i18n)
+           (sedan dpkg 1.19.0). Tillåtna värden är: 0 och 1 (förval).
+
+FILER
+       debian/changelog
+           Ändringsloggsfilen, används för att hämta versionsberoende
+           information om källkodspaketet, till exempel brådska och utgåva för
+           en insändning, ändringarna som utförts sedan en specifik version
+           och själva versionsnumret på källkoden.
+
+SE ÄVEN
+       deb-changelog(5).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06            dpkg-parsechangelog(1)

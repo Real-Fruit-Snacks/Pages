@@ -1,0 +1,160 @@
+APT-TRANSPORT-MIRR(1)                 APT                APT-TRANSPORT-MIRR(1)
+
+NOME
+       apt-transport-mirror - Transporte do APT para selecção de mirror mais
+       automatizada
+
+DESCRIÇÃO
+       Este transporte do APT não está por si só a implementar um protocolo
+       para aceder a repositórios locais ou remotos, mas obtêm uma mirrorlist
+       e redireciona todos os pedidos para os mirro(s) retirados dessa lista,
+       acedendo a eles via outros transportes como apt-transport-http(1). A
+       funcionalidade básica esteve disponível desde o apt 0.7.24, mas não
+       esteve documentada até ao apt 1.6 o qual continha uma reconstrução do
+       transporte e das suas funcionalidades suportadas. Note que um
+       transporte nunca é chamado directamente por um utilizador mas é usado
+       pelas ferramentas do APT com base na configuração do utilizador.
+
+       Se a aquisição de um ficheiro via um mirror falhar, o método assegura
+       que outro mirror possível da lista é tentado automaticamente até que o
+       ficheiro seja obtido ou não houver mais nenhum mirror na lista lidando
+       transparentemente com servidores desligados e problemas semelhantes.
+
+       As implicações de segurança do transporte dependem das considerações de
+       segurança associadas ao transporte usado para adquirir a mirrorlist e
+       os transportes envolvidos no acesso ao(s) mirror(s) escolhidos pelo
+       transporte.
+
+OPÇÕES
+       Este transporte presentemente não tem opções de configuração. A
+       selecção do mirror é inteiramente baseada nos mirrors oferecidos na
+       mirrorlist e nos ficheiros que o APT precisa de obter.
+
+   Formato de mirrorlist
+       Uma mirrorlist contêm uma ou mais linhas cada uma especificando um URI
+       para um mirror. São ignoradas as linhas vazias e aquelas começadas com
+       um cardinal (#). Um URI começa sempre com um esquema URI que define o
+       transporte usado para esse mirror. Se por exemplo o URI começar com
+       http:, o transporte responsável é apt-transport-http(1) o qual pode ter
+       requerimentos específicos para o formato da parte restante do URI.
+
+       Podem ser fornecidos na mesma linha meta-dados acerca do mirror,
+       separados do URI por um tab. Múltiplos itens de meta-dados podem eles
+       próprios serem separados por tabs ou espaços. (Esta é uma
+       funcionalidade avançada apenas disponível no apt >= 1.6. As versões
+       anteriores do apt irão falhar ao analisar mirrorlists que usem esta
+       funcionalidade.)
+
+       Desde o apt 1.6 que é também suportado o uso de mirrorlists
+       comprimidas. Note que o nome do ficheiro da mirrorlist têm de
+       especificar o algoritmo de compressão usado, não há auto-detecção
+       baseada no conteúdo do ficheiro.
+
+   Selecção do Mirror por meta-dados
+       Como especificado no formato, um mirror pode ter meta-dados adicionais
+       acrescentados para impedir que um mirror seja selecionado para obter um
+       ficheiro que não corresponda a esses meta-dados. Deste modo a
+       mirrorlist pode por exemplo conter mirrors parciais que servem apenas
+       certas arquitecturas e o APT irá automaticamente escolher um mirror
+       diferente para ficheiros que requeiram uma arquitectura não listada.
+       São suportados limites para a arquitectura (arch), nome de código do
+       lançamento (codename), componente do repositório onde o ficheiro está
+       (component), linguagem a que o ficheiro se aplica (lang), nome de suite
+       do lançamento (suite) e o tipo do ficheiro (type).
+
+   Ordem de recurso para mirrors
+       Se nenhuma prioridade for dada para um mirror via chave de meta-dados
+       priority, a ordem em que os mirrors são contactados é aleatória. Se um
+       certo conjunto de mirrors deve ser tentado primeiro antes de qualquer
+       outro, pode ser explicitamente definida uma prioridade. Os mirrors com
+       o número menor são tentados primeiro. Os mirrors que não têm prioridade
+       explícita definida são definidos com o número mais alto possível e
+       assim são tentados em último. A escolha entre mirrors com a mesma
+       prioridade é de novo aleatória.
+
+   Transportes permitidos numa mirrorlist
+       A disponibilidade e escolha dos transportes numa mirrorlist está
+       limitada em como io cliente do APT está a aceder à mirrorlist. Se for
+       usado um transporte local como file ou copy, a mirrorlist também pode
+       incluir fontes locais, enquanto que uma mirrorlist acedida via http não
+       pode. Adicionalmente, uma mirrorlist não pode conter outra mirrorlist
+       ou outros transportes de invólucro (como apt-transport-tor). Veja a
+       documentação destes transportes em como os usar com o método de mirror.
+
+       Note que as versões do apt anteriores a 1.6 não suportam mais nenhum
+       transporte para além de http.
+
+EXEMPLOS
+   Exemplo básico
+       Um exemplo de mirrorlist básico suportado por todas as versões do apt
+       com um método de mirror (>= 0.7.24) no qual o cliente irá pegar em
+       qualquer um dos três mirrors:
+
+           http://ftp.de.debian.org/debian/
+           http://ftp.us.debian.org/debian/
+           http://deb.debian.org/debian/
+
+       Assumindo que um ficheiro com este conteúdo está armazenado em
+       /etc/apt/mirrorlist.txt na sua máquina, pode ser usado desta maneira em
+       sources.list(5) (desde o apt 1.6):
+
+           deb mirror+file:/etc/apt/mirrorlist.txt bookworm main
+
+       Todas as versões do método mirror suportam uma mirrorlist acessível via
+       HTTP, portanto assumindo que está disponível em
+       http://apt.example.org/mirror.lst a entrada sources.list de cima
+       poderá, em vez dessa, ser escrita como:
+
+           deb mirror://apt.example.org/mirror.lst bookworm main
+
+       Note que desde o apt 1.6 que o uso de mirror+http deve ser preferido a
+       mirror para uniformidade. A funcionalidade é a mesma.
+
+   Exemplo com selecção de mirror de meta-dados-avançado
+       Como explicado nas definições de formato as versões do apt anteriores a
+       1.6 não suportam isto e irão falhar ao analisar a mirrorlist. Este
+       exemplo de mirrorlist é complicada intencionalmente para mostrar alguns
+       aspectos da selecção. É assumida a seguinte configuração: O primeiro
+       mirror é um mirror local acedido via método file, mas potencialmente
+       incompleto. O segundo mirror tem uma boa ligação, mas é um mirror
+       parcial pois só contém ficheiros relacionados com as arquitecturas
+       amd64 e all. Os restantes mirrors são mirrors médios que são devem ser
+       contactados se os anteriores não funcionarem.
+
+           file:/srv/local/debian/mirror/     priority:1 type:index
+           http://partial.example.org/mirror/ priority:2 arch:amd64 arch:all type:deb
+           http://ftp.us.debian.org/debian/   type:deb
+           http://ftp.de.debian.org/debian/   type:deb
+           https://deb.debian.org/debian/
+
+       Nesta configuração com esta mirrorlist o primeiro mirror será usado
+       para descarregar todos os ficheiros de índice assumindo que a própria
+       mirrorlist é acedida via transporte local como file. Se não o for, o
+       mirror é caso contrário inacessível ou se não conter o ficheiro
+       requisitado, será usado outro mirror para obter o ficheiro, escolhido
+       dependendo do tipo de ficheiro. Um ficheiro index será servido pelo
+       último mirror da lista, enquanto um pacote da arquitectura amd64 é
+       servido pelo segundo e aqueles, por exemplo, da arquitectura i386 por
+       um dos últimos três.
+
+BUGS
+       página de bugs do APT[1]. Se deseja reportar um bug no APT, por favor
+       veja /usr/share/doc/debian/bug-reporting.txt ou o comando reportbug(1).
+
+TRADUÇÃO
+       A tradução Portuguesa foi feita por Américo Monteiro
+       <a_monteiro@netcabo.pt> de 2009 a 2012. A tradução foi revista pela
+       equipa de traduções portuguesas da Debian <traduz@debianpt.org>.
+
+       Note que este documento traduzido pode conter partes não traduzidas.
+       Isto é feito propositadamente, para evitar perdas de conteúdo quando a
+       tradução está atrasada relativamente ao conteúdo original.
+
+AUTOR
+       Equipa do APT
+
+NOTAS
+        1. página de bugs do APT
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                      09 Dezembro 2017          APT-TRANSPORT-MIRR(1)

@@ -1,0 +1,56 @@
+Mouse::Exporter(3pm)  User Contributed Perl Documentation Mouse::Exporter(3pm)
+
+NAME
+       Mouse::Exporter - make an import() and unimport() just like Mouse.pm
+
+VERSION
+       This document describes Mouse version v2.5.10
+
+SYNOPSIS
+           package MyApp::Mouse;
+
+           use Mouse ();
+           use Mouse::Exporter;
+
+           Mouse::Exporter->setup_import_methods(
+             as_is => [ 'has_rw', 'other_sugar', \&Some::Random::thing ],
+             also  => 'Mouse',
+           );
+
+           sub has_rw {
+               my $meta = caller->meta;
+               my ( $name, %options ) = @_;
+               $meta->add_attribute(
+                 $name,
+                 is => 'rw',
+                 %options,
+               );
+           }
+
+           # then later ...
+           package MyApp::User;
+
+           use MyApp::Mouse;
+
+           has 'name';
+           has_rw 'size';
+           thing;
+
+           no MyApp::Mouse;
+
+DESCRIPTION
+       This module encapsulates the exporting of sugar functions in a
+       "Mouse.pm"-like manner. It does this by building custom "import",
+       "unimport" methods for your module, based on a spec you provide.
+
+       Note that "Mouse::Exporter" does not provide the "with_meta" option,
+       but you can easily get the metaclass by "caller->meta" as "SYNOPSIS"
+       shows.
+
+METHODS
+   "setup_import_methods( ARGS )"
+   "build_import_methods( ARGS ) -> (\&import, \&unimport)"
+SEE ALSO
+       Moose::Exporter
+
+perl v5.36.0                      2022-10-20              Mouse::Exporter(3pm)

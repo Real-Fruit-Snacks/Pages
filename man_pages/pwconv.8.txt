@@ -1,0 +1,82 @@
+PWCONV(8)                        系统管理命令                        PWCONV(8)
+
+名称
+       pwconv, pwunconv, grpconv, grpunconv - 在影子密码和组以及其它直接转换
+
+大纲
+       pwconv [选项]
+
+       pwunconv [选项]
+
+       grpconv [选项]
+
+       grpunconv [选项]
+
+描述
+       The pwconv command creates shadow from passwd and an optionally
+       existing shadow.
+
+       The pwunconv command creates passwd from passwd and shadow and then
+       removes shadow.
+
+       The grpconv command creates gshadow from group and an optionally
+       existing gshadow.
+
+       The grpunconv command creates group from group and gshadow and then
+       removes gshadow.
+
+       These four programs all operate on the normal and shadow password and
+       group files: /etc/passwd, /etc/group, /etc/shadow, and /etc/gshadow.
+
+       Each program acquires the necessary locks before conversion.  pwconv
+       and grpconv are similar. First, entries in the shadowed file which
+       don't exist in the main file are removed. Then, shadowed entries which
+       don't have `x' as the password in the main file are updated. Any
+       missing shadowed entries are added. Finally, passwords in the main file
+       are replaced with `x'. These programs can be used for initial
+       conversion as well to update the shadowed file if the main file is
+       edited by hand.
+
+       pwconv will use the values of PASS_MIN_DAYS, PASS_MAX_DAYS, and
+       PASS_WARN_AGE from /etc/login.defs when adding new entries to
+       /etc/shadow.
+
+       Likewise pwunconv and grpunconv are similar. Passwords in the main file
+       are updated from the shadowed file. Entries which exist in the main
+       file but not in the shadowed file are left alone. Finally, the shadowed
+       file is removed. Some password aging information is lost by pwunconv.
+       It will convert what it can.
+
+选项
+       The options which apply to the pwconv, pwunconv, grpconv, and grpunconv
+       commands are:
+
+       -h, --help
+           显示帮助信息并退出。
+
+       -R, --root CHROOT_DIR
+           Apply changes in the CHROOT_DIR directory and use the configuration
+           files from the CHROOT_DIR directory. Only absolute paths are
+           supported.
+
+缺陷
+       Errors in the password or group files (such as invalid or duplicate
+       entries) may cause these programs to loop forever or fail in other
+       strange ways. Please run pwck and grpck to correct any such errors
+       before converting to or from shadow passwords or groups.
+
+配置文件
+       The following configuration variable in /etc/login.defs changes the
+       behavior of grpconv and grpunconv:
+
+       The following configuration variables in /etc/login.defs change the
+       behavior of pwconv:
+
+文件
+       /etc/login.defs
+           Shadow 密码套件配置。
+
+参见
+       grpck(8), login.defs(5), pwck(8).
+
+shadow-utils 4.13                 2025-04-07                         PWCONV(8)

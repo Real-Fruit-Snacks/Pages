@@ -1,0 +1,205 @@
+backend(7)                       OpenPrinting                       backend(7)
+
+NOME
+       backend - interfaces de transmissão de backen de cups
+
+RESUMO
+       backend
+       backend job user title num-copies options [ filename ]
+
+       #include <cups/cups.h>
+
+       const char *cupsBackendDeviceURI(char **argv);
+
+       void cupsBackendReport(const char *device_scheme,
+                              const char *device_uri,
+                              const char *device_make_and_model,
+                              const char *device_info,
+                              const char *device_id,
+                              const char *device_location);
+
+       ssize_t cupsBackChannelWrite(const char *buffer,
+                                    size_t bytes, double timeout);
+
+       int cupsSideChannelRead(cups_sc_command_t *command,
+                               cups_sc_status_t *status, char *data,
+                               int *datalen, double timeout);
+
+       int cupsSideChannelWrite(cups_sc_command_t command,
+                                cups_sc_status_t status, const char *data,
+                                int datalen, double timeout);
+
+DESCRIÇÃO
+       Backends  são  tipos  especiais de filter(7) que são usados para enviar
+       dados de impressão e descobrir dispositivos diferentes no seu sistema.
+
+       Tal como os filtros, os backends têm de ser capazes de ler a partir  de
+       um  nome  de ficheiro na linha de comandos ou a partir da entrada stan‐
+       dard, copiando a entrada standard para um ficheiro temporário como  re‐
+       querido pela interface física.
+
+       O nome do comando (argv[0]) é definido no URI do dispositivo da impres‐
+       sora de destino. A informação de autenticação em  argv[0]  é  removida,
+       assim  os  desenvolvedores do backend são instados a usar a variável de
+       ambiente DEVICE_URI sempre que é requerida informação de  autenticação.
+       A  função  cupsBackendDeviceURI()  pode ser usada para obter o URI cor‐
+       recto do dispositivo.
+
+       Dados do canal-traseiro a partir do dispositivo devem ser  retransmiti‐
+       dos para os filtros de trabalhos usando a função cupsBackChannelWrite.
+
+       Backends  são  responsáveis  por  ler pedidos de canal-lateral usando a
+       função cupsSideChannelRead() e respondendo com a  função  cupsSideChan‐
+       nelWrite().  A  constante CUPS_SC_FD define o descritor de ficheiro que
+       deve ser monitorizado para chegada de pedido.
+
+   DESCOBERTA DE DISPOSITIVOS
+       Quando corrido sem argumentos, o backend deve listar os dispositivos  e
+       esquemas que suporta ou anuncia na saída standard. O resultado consiste
+       de zero ou mais linhas consistindo em qualquer dos seguintes formatos:
+
+           device-class scheme "Unknown" "device-info"
+           device-class device-uri "device-make-and-model" "device-info"
+           device-class device-uri "device-make-and-model" "device-info" "device-id"
+           device-class device-uri "device-make-and-model" "device-info" "device-id" "device-location"
+
+       A função cupsBackendReport() pode ser usada para gerar estas  linhas  e
+       lidar com qualquer escape necessário de caracteres nas várias strings.
+
+       O campo device-class é um dos seguintes valores:
+
+       direct
+            O  uri-do-dispositivo  refere-se a um dispositivo de acesso-direto
+            específico sem opções, tal como dispositivo paralelo, USB ou SCSI.
+
+       file O uri-do-dispositivo refere-se a um ficheiro no disco.
+
+       network
+            O uri-do-dispositivo refere-se a um dispositivo em rede e está  em
+            conformidade com o formato geral para URIs de rede.
+
+       serial
+            O  uri-de-dispositivo refere-se a um dispositivo série com taxa de
+            transmissão configurável e outras opções. Se o dispositivo  conter
+            um  valor  baud, este representa a taxa de transmissão (baud rate)
+            máxima suportada pelo dispositivo.
+
+       O campo scheme fornece o esquema URI  que  é  suportado  pelo  backend.
+       Backends  devem usar este formato apenas quando o backend suporta qual‐
+       quer URI que use esse esquema. O campo device-uri especifica o URI com‐
+       pleto a usar quando se comunica com o dispositivo.
+
+       O  campo  device-make-and-model especifica a marca e modelo do disposi‐
+       tivo, ex. "Exemplo Foojet 2000". Se a marca e modelo não forem conheci‐
+       das, você deve reportar "Unknown".
+
+       O  campo device-info especifica informação adicional acerca do disposi‐
+       tivo. Tipicamente isto inclui a marca e modelo juntamente com o  número
+       de porto ou endereço de rede, ex. "Exemplo Foojet 2000 USB #1".
+
+       O  campo  opcional  device-id  especifica  a  string  ID de dispositivo
+       IEEE-1284 para o dispositivo, o que é usado para selecionar uma  driver
+       correspondente.
+
+       O  campo  opcional  device-location  especifica a localização física do
+       dispositivo, o que é muitas vezes usado para pré-preencher  o  atributo
+       localização-da-impressora quando se adiciona uma impressora.
+
+   PERMISSÕES
+       Backends  sem permissões de ler e executar correm como utilizador root.
+       Caso contrário, o backend corre usando  uma  conta  de  utilizador  sem
+       privilégios, tipicamente "lp".
+
+ESTADO DE SAÍDA
+       Os seguintes códigos de saída estão definidos para backends:
+
+       CUPS_BACKEND_OK
+            O ficheiro de impressão foi transmitido com sucesso para o dispos‐
+            itivo ou servidor remoto.
+
+       CUPS_BACKEND_FAILED
+            The print file was not successfully transmitted to the  device  or
+            remote  server.   The  scheduler will respond to this by canceling
+            the job, retrying the job, or stopping the queue depending on  the
+            state of the printer-error-policy attribute.
+
+       CUPS_BACKEND_AUTH_REQUIRED
+            O  ficheiro  de impressão não foi transmitido com sucesso porque é
+            necessário informação de autenticação válida. O agendador irá  re‐
+            sponder  a  isto ao segurar o trabalho e adicionar a palavra-chave
+            "cups-held-for-authentication' ao atributo "job-reasons"  Job  De‐
+            scription.
+
+       CUPS_BACKEND_HOLD
+            O ficheiro de impressão não foi transmitido com sucesso porque não
+            pode ser imprimido nesta altura. O agendador irá responder a  isto
+            ao segurar o trabalho.
+
+       CUPS_BACKEND_STOP
+            O ficheiro de impressão não foi transmitido com sucesso porque não
+            pode ser imprimido nesta altura. O agendador irá responder a  isto
+            ao parar a fila de espera.
+
+       CUPS_BACKEND_CANCEL
+            O  ficheiro de impressão não foi transmitido com sucesso porque um
+            ou mais atributos não são suportados ou o trabalho  foi  cancelado
+            na impressora. O agendador irá responder a isto ao cancelar o tra‐
+            balho.
+
+       CUPS_BACKEND_RETRY
+            O ficheiro de impressão não foi transmitido com sucesso  devido  a
+            um  problema  temporário.  O agendador irá re-tentar o trabalho no
+            futuro - outros trabalhos podem ser imprimidos antes deste.
+
+       CUPS_BACKEND_RETRY_CURRENT
+            O ficheiro de impressão não foi transmitido com sucesso  devido  a
+            um  problema temporário. O agendador irá re-tentar o trabalho ime‐
+            diatamente sem permitir trabalhos intermédios.
+
+       Todos os outros códigos de saída são reservados.
+
+AMBIENTE
+       Adicionalmente às variáveis de ambiente listadas  em  cups(1)   e  fil‐
+       ter(7),  os backends do CUPS podem esperar a seguinte variável de ambi‐
+       ente:
+
+       DEVICE_URI
+            O URI de dispositivo associado à impressora.
+
+FICHEIROS
+       /etc/cups/cups-files.conf
+
+NOTAS
+       Os backends do CUPS geralmente não são desenhados para correrem direta‐
+       mente  pelo  utilizador.  backends are not generally designed to be run
+       directly by the user.  Aparte  da  questão  do  URI  de  dispositivo  (
+       argv[0]  e  a  variável de ambiente DEVICE_URI contêm o URI do disposi‐
+       tivo), os backends do CUPS também esperam  variáveis  de  ambiente  es‐
+       pecíficas  e  descritores de ficheiro, e tipicamente correm numa sessão
+       de utilizador que (no macOS) tem restrições adicionais que afectam como
+       eles  correm.  Backends  também podem ser instalados com permissões re‐
+       stritas (0500 ou 0700) que diz ao agendador para os correr como o  uti‐
+       lizador  "root"  em  vez  de um utilizador sem privilégios (tipicamente
+       "lp") no sistema.
+
+       A menos que você seja um desenvolvedor e saiba o que está a fazer,  por
+       favor  não  corra  backends diretamente. Em vez disso, use os programas
+       lp(1) ou lpr(1) para enviar trabalhos de impressão  ou  lpinfo(8)  para
+       consultar  por impressoras disponíveis que usam o backend. A excepção é
+       o backend SNMP - veja cups-snmp(8) para mais informação.
+
+NOTAS
+       Drivers de impressoras e backends do CUPS estão  descontinuados  e  não
+       irão ser mais suportados num futuro lançamento do CUPS. Impressoras que
+       não  suportem  IPP  podem  ser  suportadas  usando  aplicações  como  a
+       ippeveprinter(1).
+
+VEJA TAMBÉM
+       cups(1),  cups-files.conf(5), cups-snmp(8), cupsd(8), filter(7), lp(1),
+       lpinfo(8), lpr(1),
+       Ajuda Online do CUPS (http://localhost:631/help)
+
+COPYRIGHT
+       Copyright © 2021-2022 de OpenPrinting.
+
+2021-02-28                           CUPS                           backend(7)

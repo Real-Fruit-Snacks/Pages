@@ -1,0 +1,625 @@
+dpkg-buildpackage(1)              dpkg suite              dpkg-buildpackage(1)
+
+NAMN
+       dpkg-buildpackage - bygg binär- eller källkodspaket från källkod
+
+SYNOPS
+       dpkg-buildpackage [flagga...]
+
+BESKRIVNING
+       dpkg-buildprogram är ett program som automatiserar processen med att
+       bygga ett Debianpaket. Det består av följande steg:
+
+       1.  It runs the preinit hook before reading any source file.  It
+           prepares the build environment by setting various environment
+           variables (see ENVIRONMENT), runs the init hook, and calls dpkg-
+           source --before-build (unless -T or --target has been used).
+
+       2.  Byggberoenden och -konflikter kontrolleras att de uppfylls (såvida
+           inte -d eller --no-check-builddeps anges).
+
+       3.  Om ett eller flera specifika mål har valts med flaggan -T eller
+           --target anropas de målen, varpå programmet avslutas. I annat fall
+           körs kroken preclean och anropas fakeroot debian/rules clean för
+           att städa byggträdet (såvida inte -nc eller  --no-pre-clean anges).
+
+       4.  Kör kroken source och anropar dpkg-source -b för att skapa
+           källkodspaketet (om ett source-bygge (källkod) har ombetts via
+           --build eller liknande flaggor).
+
+       5.  Kör kroken build och anropar debian/rules byggmål, därefter körs
+           kroken binary följt av fakeroot debian/rules binärmål (såvida inte
+           ett bygge av enbart källkod har valts med --build=source eller
+           liknande flaggor). Observera att byggmål och binärmål är ett av
+           build och binary (förval, eller om ett any- eller all-bygge har
+           valts med --build eller motsvarande flaggor), eller build-arch och
+           binary-arch (om ett any- men inte ett all-bygge har valts med
+           --build eller liknande flaggor), eller build-indep och binary-indep
+           (om ett all- men inte ett any-bygge har valts med --build eller
+           liknande flaggor).
+
+       6.  Kör kroken buildinfo och anropar dpkg-genbuildinfo för att skapa en
+           .buildinfo-fil. Många av flaggorna till dpkg-buildpackage
+           vidaresänds till dpkg-genchanges.
+
+       7.  It runs the changes hook and calls dpkg-genchanges to generate a
+           .changes file.  The name of the .changes file will depend on the
+           type of build and will be as specific as necessary but not more;
+           the name will be:
+
+           source-name_binary-version_arch.changes
+               for a build that includes any
+
+           source-name_binary-version_all.changes
+               otherwise for a build that includes all
+
+           source-name_source-version_source.changes.
+               otherwise for a build that includes source
+
+           Many dpkg-buildpackage options are forwarded to dpkg-genchanges.
+
+       8.  Kör kroken postclean och, om -tc eller --post-clean anges, anropar
+           fakeroot debian/rules clean ytterligare en gång.
+
+       9.  Anropar dpkg-source --after-build.
+
+       10. Kör kroken check och anropar en paketkontrollerare för
+           .changes-filen (om ett kommando har angivits med DEB_CHECK_COMMAND
+           eller med --check-command).
+
+       11. Kör kroken sign och signerar med OpenPGP-programmet (såvida det
+           inte är ett UNRELEASED-bygge, eller om --no-sign angavs) för att
+           signera .dsc-filen (om sådan finns, såvida inte -us eller
+           --unsigned-source anges), .buildinfo-filen (såvida inte -ui,
+           --unsigned-buildinfo, -uc eller --unsigned-changes anges) och
+           .changes-filen (såvida inte -uc eller --unsigned-changes anges).
+
+       12. Kör kroken done.
+
+FLAGGOR
+       Alla långa flaggor kan ges både på kommandoraden och i dpkg-
+       buildpackage:s system- och användarkonfigurationsfiler. En rad i
+       konfigurationsfilen är antingen en flagga (precis samma som på
+       kommandoraden, men utan inledande bindestreck) eller en kommentar (om
+       den börjar med ett ”#”).
+
+       --build=typ
+           Anger bygg-type från en kommaavdelad lista med komponenter (sedan
+           dpkg 1.18.5). Alla angivna komponenter kombineras för att välja den
+           byggtypen som ska användas i den enda körningen, vilket leder till
+           en enda byggkörning som skapar en .changes-fil. Sänds vidare till
+           dpkg-genchanges.
+
+           Tillåtna värden är:
+
+           source
+               Bygger källkodspaketet.
+
+               Note: When using this value standalone and if what you want is
+               simply to (re-)build the source package from a clean source
+               tree, using dpkg-source directly is always a better option as
+               it does not require any build dependencies to be installed
+               which are otherwise needed to be able to call the clean target.
+
+           any Bygger arkitekturspecifika binärpaket.
+
+           all Bygger de arkitekturoberoende binärpaketen.
+
+           binary
+               Bygger arkitekturspecifika och -oberoende binärpaket. Detta är
+               ett alias till any,all.
+
+           full
+               Bygger allting. Detta är ett alias för source,any,all, och är
+               detsamma som standardläget om inga byggflaggor anges.
+
+       -g  Motsvarar --build=source,all (sedan dpkg 1.17.11).
+
+       -G  Motsvarar --build=source,any (sedan dpkg 1.17.11).
+
+       -b  Motsvarar --build=binary eller --build=any,all.
+
+       -B  Motsvarar --build=any.
+
+       -A  Motsvarar --build=all.
+
+       -S  Motsvarar --build=source.
+
+       -F  Motsvarar --build=full, --build=source,binary eller
+           --build=source,any,all (sedan dpkg 1.15.8).
+
+       --target=mål[,...]
+       --target mål[,...]
+       -T, --rules-target=mål[,...]
+           Anropar debian/rules mål en gång per angivet mål, efter att ha
+           konfigurerat byggmiljön (förutom att anropa dpkg-source
+           --before-build), och avbryter byggprocessen efteråt (sedan dpkg
+           1.15.0, lång flagga sedan dpkg 1.18.8, stöd för flera mål sedan
+           dpkg 1.18.16). Om --as-root också anges körs kommandot som root (se
+           --root-command). Observera att kända mål som måste köras som root
+           inte behöver flaggan (dvs. målen clean, binary, binary-arch och
+           binary-indep).
+
+       --as-root
+           Ger endast mening tillsammans med --target (sedan dpkg 1.15.0).
+           Kräver att målet körs med root-behörighet.
+
+       -si
+       -sa
+       -sd
+       -vversion
+       -Cändringsbeskrivning
+       -mpaketansvarige-adress
+       -epaketansvarige-adress
+           Sänds vidare utan ändringar till dpkg-genchanges. Se dess
+           manualsida.
+
+       --build-by=paketansvarige-adress
+       --source-by=paketansvarige-adress (sedan dpkg 1.21.10)
+           Sänds som -m till dpkg-genchanges. Se dess manualsida.
+
+       --release-by=paketansvarige-adress
+       --changed-by=paketansvarige-adress (sedan dpkg 1.21.10)
+           Sänds som -e till dpkg-genchanges. Se dess manualsida.
+
+       -a, --host-arch arkitektur
+           Ange Debianarkitekturen vi bygger för (lång flagga sedan dpkg
+           1.17.17). Arkitekturen för maskinen vi bygger på bestäms
+           automatiskt, och är även standard för värdmaskinen.
+
+       -t, --host-type gnu-system-typ
+           Ange GNU-systemtyp vi bygger för (lång flagga sedan dpkg 1.17.17).
+           Den kan användas i stället för --host-arch eller som ett komplement
+           för att överstyra standard-GNU-systemtypen för
+           Debian-målarkitekturen.
+
+       --target-arch arkitektur
+           Ange Debianarkitekturen binärerna som byggs bygger för (sedan dpkg
+           1.17.17). Standardvärde är värdmaskinen.
+
+       --target-type gnu-system-type
+           Ange GNU-systemtyp vi binärerna vi som byggs bygger för (sedan dpkg
+           1.17.17). Den kan användas i stället för --target-arch eller som
+           ett komplement för att överstyra standard-GNU-systemtypen för
+           Debian-målarkitekturen.
+
+       -P, --build-profile=profil[,...]
+           Ange profil(er) vi bygger, som en kommaavdelad lista (sedan dpkg
+           1.17.2, lång flagga sedan dpkg 1.18.8). Standardbeteendet är att
+           inte bygga för någon specifik profil. Lägger även till dem (som en
+           blankstegsavdelad lista) till miljövariabeln DEB_BUILD_PROFILES
+           vilket, till exempel, gör det möjligt för debian/rules-filer att
+           använda informationen för villkorliga byggen.
+
+       -j, --jobs[=jobb|auto]
+           Antalet jobb som tillåts att köras samtidigt (sedan dpkg 1.14.7,
+           lång flagga sedan dpkg 1.18.8). Antal jobb motsvarande antalet
+           tillgängliga processorer om auto anges (sedan dpkg 1.17.10), eller
+           ett obegränsat antal om jobb inte anges. Förvalt beteende är auto
+           (sedan dpkg 1.18.11) i icke-tvingat läge (sedan dpkg 1.21.10), och
+           som sådant är det alltid säkrare att använda med alla paket,
+           däribland de som inte kan byggas parallellt på ett säkert sätt. Om
+           antal jobb sätts till 1 kommer seriell exekvering att återställas.
+
+           Lägger till parallel=jobb eller parallel till miljövariabeln
+           DEB_BUILD_OPTIONS, vilket gör det möjligt för debian/rules-filer
+           att använda informationen för egna ändamål om de önskar. Värdet för
+           jobb kommer att överstyra värdet parallel=jobb eller parallel i
+           miljövariabeln DEB_BUILD_OPTIONS. Observera att auto-värdet kommer
+           ersättas av det faktiska antalet för närvarande aktiva processorer,
+           och därför inte kommer sändas med till barnprocesser. Om antalet
+           tillgängliga processorer inte kan tas fram kommer koden att falla
+           tillbaka till seriell exekvering (sedan dpkg 1.18.15), även om
+           detta bara borde ske på exotiska och icke stödda system.
+
+       -J, --jobs-try[=jobb|auto]
+           Den här flaggan (sedan dpkg 1.18.2, lång flagga sedan dpkg 1.18.8)
+           motsvarar -j ovan.
+
+           Eftersom beteendet för -j ändrades i dpkg 1.21.10 till att vara
+           valfritt kan du använda den här flaggan istället om du måste
+           garantera semantiken över flera dpkg-utgivningsserier.
+
+       --jobs-force[=jobs|auto]
+           Den här flaggan (sedan dpkg 1.12.10) motsvarar flaggan --jobs med
+           undantaget att det aktiverar tvingat parallellt läge, genom att
+           lägga till make -j-flaggan med antalet beräknade parallella jobb i
+           miljövariabeln MAKEFLAGS.
+
+           Detta borde göra så att alla senare make-anrop ärver flaggan och
+           därmed påtvinga parallelliseringsinställningen i paketeringen (och
+           möjligen uppströmsbyggsystemet om det det använder make(1)),
+           oberoende av om det stöder parallella bygg, något som kan komma att
+           orsaka byggfel.
+
+           Note: Any Makefile that is not parallel-safe should be considered
+           to be buggy.  These should either be made parallel-safe, or marked
+           as not being safe with the make(1) .NOTPARALLEL target.
+
+       -D, --check-builddeps
+           Kontrollera  byggberoenden och -konflikter; avbryt om de inte
+           uppfylls (lång flagga sedan dpkg 1.18.8). Detta är
+           standardbeteendet.
+
+       -d, --no-check-builddeps
+           Kontrollera inte byggberoenden eller -konflikter (lång flagga sedan
+           dpkg 1.18.8).
+
+       --ignore-builtin-builddeps
+           Kontrollera inte inbyggda byggberoenden och -konflikter (sedan dpkg
+           1.18.2). Detta är de distributionsberoende byggberoendena som
+           vanligtvis krävs i en byggmiljö, paketuppsättningen som kallas
+           Build-Essential (”Bygg-Nödvändiga”).
+
+       --rules-requires-root
+           Följ inte fältet Rules-Requires-Root, fall tillbaka på dess gamla
+           förval (sedan dpkg 1.19.1).
+
+       -nc, --no-pre-clean
+           Städa inte upp byggträdet före bygget (lång flagga sedan dpkg
+           1.18.8). Implicerar -b om inget annat har valts bland -F, -g, -G,
+           -B, -A eller -S. Implicerar -d med -S (sedan dpkg 1.18.0).
+
+       --pre-clean
+           Städa källkodsträdet före bygget (sedan dpkg 1.18.8). Detta är
+           standardbeteendet.
+
+       -tc, --post-clean
+           Städa källkodsträdet (använder få-root-kommando debian/rules clean)
+           efter att paketet har byggts (lång flagga sedan dpkg 1.18.8).
+
+       --no-post-clean
+           Städa inte upp byggträdet efter bygget (sedan dpkg 1.19.1). Detta
+           är standardbeteendet.
+
+       --sanitize-env
+           Sanera byggmiljön (sedan dpkg 1.20.0). Detta återställer eller tar
+           bort miljövariabler, umask, och eventuella andra processattribut
+           som annars kan påverka paketbygget ogynnsamt. Eftersom den
+           officiella startpunkten för att bygga paket är debian/rules kan
+           inte paket vara beroende av att de här inställningarna är på plats,
+           och bör därför fungera även när de inte är det. Vad som saneras är
+           återförsäljarspecifikt.
+
+       -r, --root-command=gain-root-command
+           När dpkg-buildpackages behöver exekvera delar av byggprocessen som
+           root sätter den kommandot som ska exekveras efter få-root-kommando
+           om ett sådant har angivits (lång flagga sedan dpkg 1.18.8). Om inte
+           kommer fakeroot att användas som standard, om kommandot existerar.
+           få-root-kommando måste börja med namnet på det faktiska kommandot
+           som ska anropas samt de parametrar det ska anropas med.
+           få-root-kommando kan innehålla parametrar (de måste vara avdelade
+           med blanksteg) men inga skalmetatecken. få-root-kommando kan
+           typiskt vara fakeroot, sudo, super eller really. su är inte
+           lämpligt eftersom det kräver flaggan -c för att köra ett kommando
+           och även då kan det bara starta användarens skal med -c istället
+           för att sända flaggor individuellt till kommandot som ska startas.
+
+       -R, --rules-file=rules-fil
+           För att bygga ett Debianpaket körs normalt kommandot debian/rules
+           med flera olika standardparametrar (sedan dpkg 1.14.17, lång flagga
+           sedan dpkg 1.18.8). Den här flaggan gör det möjligt att använda ett
+           annat programanrop för att bygga paketet (det kan innehålla
+           blankstegsavdelade parametrar). Den kan även användas för att
+           exekvera standardregelfilen med ett annat make-program (till
+           exempel genom att använda /usr/local/bin/make -f debian/rules som
+           regelfil).
+
+       --check-command=kontrollkommando
+           Kommando som kontrollerar själva .changes-filen och byggda
+           artifakter som refereras i filen (sedan dpkg 1.17.6). Kommandot ska
+           ta sökvägen till .changes som argument. Kommandot är normalt
+           lintian.
+
+       --check-option=val
+           Sänder flaggan val till det kontrollkommando som anges med
+           DEB_CHECK_COMMAND eller --check-command (sedan dpkg 1.17.6). Kan
+           användas flera gånger.
+
+       --hook-kroknamn=krokkommando
+           Sätter den angivna skalkoden i krokkommando som kroken kroknamn,
+           vilket körs vid de tidpunkter som anges i byggstegen (sedan dpkg
+           1.17.6). Kroken kommer alltid att exekveras även om de
+           efterföljande funktionerna inte utförs (förutom kroken binary).
+           Alla krokar körs i den uppackade källkodskatalogen.
+
+           Some hooks can receive addition information through environment
+           variables (since dpkg 1.22.0).  All hooks get the hook name in the
+           DPKG_BUILDPACKAGE_HOOK_NAME environment variable (since dpkg
+           1.22.0).
+
+           Note: Hooks can affect the build process, and cause build failures
+           if their commands fail, so watch out for unintended consequences.
+
+           För närvarande stöds följande kroknamn:
+
+           preinit
+           init
+           preclean
+           source
+               Gets DPKG_BUILDPACKAGE_HOOK_SOURCE_OPTIONS with the space-
+               separated lists of options that will passed to the dpkg-source
+               call.
+
+           build
+               Gets DPKG_BUILDPACKAGE_HOOK_BUILD_TARGET with the name of the
+               debian/rules build target called, but only if called.
+
+           binary
+               Gets DPKG_BUILDPACKAGE_HOOK_BINARY_TARGET with the name of the
+               debian/rules binary target called, but only if called.
+
+           buildinfo
+               Gets DPKG_BUILDPACKAGE_HOOK_BUILDINFO_OPTIONS with the space-
+               separated lists of options that will passed to the dpkg-
+               genbuildinfo call.
+
+           changes
+               Gets DPKG_BUILDPACKAGE_HOOK_CHANGES_OPTIONS with the space-
+               separated lists of options that will passed to the dpkg-
+               genchanges call.
+
+           postclean
+           check
+               Gets DPKG_BUILDPACKAGE_HOOK_CHECK_OPTIONS with the space-
+               separated lists of options that will passed to the check
+               command call.
+
+           sign
+           done
+
+           krokkommando stöder följande substitueringsformatsträng, som
+           appliceras på den föra exekvering:
+
+           %%  Ett ensamt %-tecken.
+
+           %a  Ett booleskt värde (0 eller 1) som anger om följande funktion
+               utförs.
+
+           %p  Namnet på källkodspaketet.
+
+           %v  Version för källkodspaketet.
+
+           %s  Version för källkodspaketet (utan epoken).
+
+           %u  Uppströmsversionen.
+
+       --buildinfo-file=filnamn
+           Ange filnamn att använda för den skapade .buildinfo-filen (sedam
+           dpkg 1.21.0).
+
+       --buildinfo-option=val
+           Sänder flaggan val till dpkg-genbuildinfo (sedan dpkg 1.18.11). Kan
+           användas flera gånger.
+
+       --sign-backend=signeringsfunktion
+           Ange ett OpenPGP-funktionsgränssnitt att använda när sign-command
+           körs (sedan dpkg 1.21.10).
+
+           Förvalet är auto, där det bästa för närvarande tillgängliga
+           funktionen kommer användas. De specifika OpenPGP-funktioner som
+           stöds är, med det bästa först:
+
+           sop (any conforming Stateless OpenPGP implementation)
+
+           sq  (from Sequoia-PGP)
+
+           gpg (from GnuPG)
+
+       -p, --sign-command=signeringskommando
+           When dpkg-buildpackage needs to execute an OpenPGP backend command
+           to sign a source control (.dsc) file, a .buildinfo file or a
+           .changes file it will run sign-command (searching the PATH if
+           necessary) instead of the default or auto-detected backend command
+           (long option since dpkg 1.18.8).  sign-command will get all the
+           backend specific arguments according to the --sign-backend
+           selected.  sign-command should not contain spaces or any other
+           shell metacharacters.
+
+       -k, --sign-keyid=nyckel-id
+       --sign-key=nyckel-id
+           Ange en Open PGP-nyckel-id (antingen ett fingeravtryck eller ett
+           användar-ID) för den hemliga nyckeln att använda vid signering av
+           paket (--sign-key sedan dpkg 1.18.8, --sign-keyid sedan dpkg
+           1.21.10).
+
+       --sign-keyfile=nyckelfil
+           Ange en OpenPGP-nyckelfil som innehåller den hemliga nyckeln att
+           använda vid signering av paket (sedan dpkg 1.21-10).
+
+           Note: For security reasons the key-file is best kept locked with a
+           password.
+
+       -us, --unsigned-source
+           Signera inte källkodspaketet (lång flagga sedan dpkg 1.18.8).
+
+       -ui, --unsigned-buildinfo
+           Signera inte .buildinfo-filen (sedam dpkg 1.18.19).
+
+       -uc, --unsigned-changes
+           Signera inte .buildinfo- och .changes-filerna (lång flagga sedan
+           dpkg 1.18.8).
+
+       --no-sign
+           Signera inga filer, detta omfattar källkodspaketet,
+           .buildinfo-filen och .changes-filen (sedan dpkg 1.18.20).
+
+       --force-sign
+           Tvinga signering av de slutliga filerna (sedan dpkg 1.17.0),
+           oberoende av -us, --unsigned-source, -ui, --unsigned-buildinfo,
+           -uc, --unsigned-changes eller annan intern heuristik.
+
+       -sn
+       -ss
+       -sA
+       -sk
+       -su
+       -sr
+       -sK
+       -sU
+       -sR
+       -i, --diff-ignore[=reg.uttr]
+       -I, --tar-ignore[=mönster]
+       -z, --compression-level=nivå
+       -Z, --compression=komprimering
+           Sänds vidare utan ändringar till dpkg-source. Se dess manualsida.
+
+       --source-option=val
+           Sänd flaggan val till dpkg-source (sedan dpkg 1.15.6). Kan användas
+           flera gånger.
+
+       --changes-file=filnamn
+           Använd filnamn för den genererade .changes-filen (sedan dpkg
+           1.21.0).
+
+       --changes-option=val
+           Sänder flaggan val till dpkg-genchanges (sedan dpkg 1.15.6). Kan
+           användas flera gånger.
+
+       --admindir=kat
+       --admindir kat
+           Ändra platsen för dpkg-databasen (sedan dpkg 1.14.0). Förvald plats
+           är /var/lib/dpkg.
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+MILJÖVARIABLER
+   Extern miljö
+       DEB_CHECK_COMMAND
+           Om satt, används som kommandot för att kontrollera .changes-filen
+           (sedan dpkg 1.17.6). Överstyrs av flaggan --check-command.
+
+       DEB_SIGN_KEYID
+           Används för att signera filerna .changes, .buildinfo och
+           .dsc-filerna om satt (sedan dpkg 1.17.2). Överstyrs av flaggan
+           --sign-key.
+
+       DEB_SIGN_KEYFILE
+           Används för att signera filerna .changes, .buildinfo och
+           .dsc-filerna om satt (sedan dpkg 1.21.10). Överstyrs av flaggan
+           --sign-keyfile.
+
+       DEB_BUILD_OPTIONS
+           If set, it will contain a space-separated list of options that
+           affect the behavior of some dpkg tools involved in package
+           building, and might affect the package build process if the code in
+           debian/rules honors them.
+
+           The following are the options known and supported by dpkg tools,
+           other options honored by debian/rules might be defined by
+           distribution specific policies.
+
+           parallel=N
+               The debian/rules in the packaging might use this option to set
+               up the build process to use N parallel jobs.  It is overridden
+               by the --jobs and --jobs-force options.
+
+           nocheck
+               dpkg-buildpackage will ignore the DEB_CHECK_COMMAND variable.
+               The debian/rules in the packaging is not expected to run test
+               suites during the build.
+
+           noopt
+               If debian/rules calls dpkg-buildflags to set up the build
+               flags, those will be set to not enable any optimizations.
+
+           nostrip
+               The debian/rules in the packaging should ensure that objects do
+               not get the debugging information stripped.  If debian/rules
+               includes the mk/buildtools.mk make fragment the STRIP make
+               variable will respect this option.
+
+           terse
+               dpkg-buildpackage will append the --no-print-directory make(1)
+               flag to the MAKEFLAGS environment variable.  The debian/rules
+               in the packaging should reduce verbosity, while not being
+               completely quiet.
+
+       DEB_BUILD_PROFILES
+           Om satt, används som aktiv(a) byggprofil(er) för paketet som byggs
+           (sedan dpkg 1.17.2). Det är en blankstegsavdelad lista med
+           profilnamn. Överstyrs av flaggan -P.
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_NLS
+           Om satt, används för att bestämma om lokalt språkstöd ska
+           aktiveras, även känt som internationaliseringsstöd (eller i18n)
+           (sedan dpkg 1.19.0). Tillåtna värden är: 0 och 1 (förval).
+
+   Intern miljö
+       Även om dpkg-buildpackage exporterar några variabler bör inte
+       debian/rules vara beroende av deras närvaro och bör istället använda
+       respektive gränssnitt för att hämta de värden som behövs, eftersom
+       filen är huvudstartpunkt för att bygga paket och det även bör stödas
+       att köra den fristående.
+
+       DEB_BUILD_*
+       DEB_HOST_*
+       DEB_TARGET_*
+           dpkg-architecture anropas med flaggorna -a och -t vidaresända.
+           Variabler som skrivs ut via dess -s-flagga integreras i byggmiljön.
+
+       DEB_RULES_REQUIRES_ROOT
+           Den här variabeln sätts till värdet som hämtas från fältet Rules-
+           Requires-Root eller från kommandoraden. När satt kommer det vara
+           ett giltigt värde för fältet Rules-Requires-Root. Det används för
+           att meddela debian/rules huruvida rootless-builds.txt-specifikation
+           stöds.
+
+       DEB_GAIN_ROOT_CMD
+           Den här variabeln sätts till få-root-kommando när fältet Rules-
+           Requires-Root är satt till ett värde annat än no och binary-
+           targets.
+
+       SOURCE_DATE_EPOCH
+           Den är variabeln sätts till Unix-tidsstämpeln sedan epoken för den
+           senaste posten i debian/changelog, om den inte redan definierats.
+
+FILER
+       /etc/dpkg/buildpackage.conf
+           Konfigurationsfil för hela systemet
+
+       $XDG_CONFIG_HOME/dpkg/buildflags.conf eller
+       $HOME/.config/dpkg/buildflags.conf
+           Användarens konfigurationsfil.
+
+ANTECKNINGAR
+   Kompileringsflaggor exporteras inte längre.
+       Mellan dpkg 1.14.17 och 1.16.1 exporterade dpkg-buildpackage
+       kompilatorflaggor (CFLAGS, CXXFLAGS, CPPFLAGS och LDFLAGS) med värden
+       enligt dpkg-buildflags. Detta gäller inte längre.
+
+   Förvalda byggmål
+       dpkg-buildpackage använder målen build-archi och build-indep från dpkg
+       1.16.2. Dessa mål krävs därmed, men för att undvika att existerande
+       paket går sönder, och för att förenkla övergången, om källkodspaketet
+       inte både bygger arkitektursoberoende och -beroende binärpaket (sedan
+       dpkg 1.18.8) kommer den falla tillbaka till att använda målet build om
+       make -f debian/rules -gn byggmål returnerar statuskoden 2.
+
+SECURITY
+       Building binary or source packages should only be performed over
+       trusted source data.
+
+PROGRAMFEL
+       Det borde vara möjligt att ange blanksteg och skalmetatecken och
+       inledande argument för få-root-kommando och signeringskommando.
+
+SE ÄVEN
+       /usr/share/doc/dpkg/spec/rootless-builds.txt, dpkg-source(1), dpkg-
+       architecture(1), dpkg-buildflags(1), dpkg-genbuildinfo(1), dpkg-
+       genchanges(1), fakeroot(1), lintian(1),
+       <https://datatracker.ietf.org/doc/draft-dkg-openpgp-stateless-cli/>,
+       sq(1), gpg(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06              dpkg-buildpackage(1)

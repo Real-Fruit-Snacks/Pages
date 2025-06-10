@@ -1,0 +1,158 @@
+dpkg-statoverride(1)              dpkg suite              dpkg-statoverride(1)
+
+NAMN
+       dpkg-statoverride - överstyr ägarskap och läge för filer
+
+SYNOPS
+       dpkg-statoverride [flagga...] åtgärd
+
+BESKRIVNING
+       ”stat-överstyrningar” är ett sätt att tala om för dpkg(1) att en annan
+       ägare eller ett annat läge ska användas för en fil är ett paket
+       installeras. (detta gäller alla sorters filsystemsobjekt som hanteras
+       av dpkg, däribland kataloger, enheter osv.). Detta kan användas för att
+       tvinga program som normalt är setuid att installeras utan en setuid-
+       flagga, eller bara exekverbar av en specifik grupp.
+
+       dpkg-statoverride är ett verktyg för att hantera listan över
+       stat-överstyrningar. Det har tre grundläggande funktioner: lägga till,
+       ta bort och visa överstyrningar.
+
+KOMMANDON
+       --add användare grupp läge sökväg
+           Lägg till en överstyrning för sökväg. sökväg behöver inte existera
+           eller vara känd av dpkg när kommandot körs; överstyrningen kommer
+           lagras och användas senare. Användare och grupper kan anges med
+           namn (till exempel root eller nobody), eller med deras nummer med
+           ett ”#” (till exempel #0 eller #65534). läge måste anges oktalt.
+
+           Om --update anges och sökväg existerar kommer den omedelbart att
+           sättas till den nya användaren och läget.
+
+       --remove sökväg
+           Ta bort en överstyrning för fil, status för sökväg ändras inte av
+           detta kommando.
+
+       --list [filnamnsmönster]
+           Visa alla överstyrningar. Om ett sökmönster anges kommer utdata att
+           begränsas till överstyrningar som motsvarar mönstret.
+
+       --help
+           Visar hjälpskärm och avslutar.
+
+       --force-help
+           Ge hjälp om --force-saker-flaggorna (sedan dpkg 1.19.5).
+
+       --version
+           Visar version och avslutar.
+
+FLAGGOR
+       --admindir katalog
+           Ställ den administrativa katalogen till katalog. Det är här
+           statoverride-filen lagras. Förval är ”/var/lib/dpkg” om
+           DPKG_ADMINDIR inte har satts.
+
+       --instdir katalog
+           Sätt installationskatalogen, som anger katalogen där paket
+           installeras (sedan dpkg 1.19.2). Förval är ”/” om DPKG_ROOT inte
+           har satts.
+
+       --root katalog
+           Sätt rotkatalogen till katalog, vilket sätter
+           installationskatalogen till ”katalog” och den administrativa
+           katalogen till ”katalog/var/lib/dpkg” (sedan dpkg 1.19.2) om
+           DPKG_ROOT inte har satts.
+
+       --force-saker
+       --force-saker, --refuse-saker
+           Tvinga eller vägra (no-force och refuse betyder detsamma) att göra
+           vissa saker (sedan dpkg 1.19.5). saker är en kommaavdelad lista med
+           saker som anges nedan. --force-help visar en lista med
+           beskrivningar. Saker som markeras med (*) är tvingade som förval.
+
+           Warning: These options are mostly intended to be used by experts
+           only. Using them without fully understanding their effects may
+           break your whole system.
+
+           all:
+               Turns on (or off) all force options.
+
+           statoverride-add:
+               Overwrite an existing stat override when adding it (since dpkg
+               1.19.5).
+
+           statoverride-remove:
+               Ignore a missing stat override when removing it (since dpkg
+               1.19.5).
+
+           security-mac(*):
+               Use platform-specific Mandatory Access Controls (MAC) based
+               security when installing files into the filesystem (since dpkg
+               1.19.5).  On Linux systems the implementation uses SELinux.
+
+           not-root:
+               Try to (de)install things even when not root (since dpkg
+               1.21.8).
+
+       --force
+           Tvinga ett kommando, även om en säkerhetskontroll annars skulle
+           förhindra det. Detta behövs för att överstyra en befintlig
+           överstyrning. Flaggan avråds från (sedan dpkg 1.19.5), den har
+           ersatts av --force-all.
+
+       --update
+           Försök att omedelbart ändra sökväg,·om·den·finns, till den nya
+           ägaren och läget.
+
+       --quiet
+           Var mindre pratsom om vad som görs.
+
+RETURVÄRDE
+       0   Den önskade funktionen utfördes utan fel.
+
+       1   För --list, om det inte finns några överstyrningar eller inga
+           matchar de angivna jokertecknen.
+
+       2   Ödesdigert eller irreparabelt fel på grund av felaktig användning
+           på kommandoraden, eller interaktioner med systemet, såsom
+           databasåtkomst, minnesallokeringer, osv.
+
+MILJÖVARIABLER
+       DPKG_ROOT
+           Om satt och flaggorna --instdir och --root inte har angivits
+           används det som filsystemets rotkatalog (sedan dpkg 1.19.2).
+
+       DPKG_ADMINDIR
+           Om satt, och flaggorna --admindir eller --root inte har angivits,
+           används värdet som datakatalog för dpkg.
+
+       DPKG_DEBUG
+           Anger felsökningsmasken (sedan dpkg 1.21.10) från ett oktalt värde.
+           De flaggor som för närvarande godtas beskrivs i flaggan dpkg
+           --debug, men alla dess flaggor påverkar inte nödvändigtvis detta
+           program.
+
+       DPKG_FORCE
+           Om satt och ingen av flaggorna --force-... har angivits används det
+           som de tvingande flaggorna som ska användas (sedan dpkg 1.19.5).
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+FILER
+       /var/lib/dpkg/statoverride
+           Fil som innehåller den aktuella listan över statöverstyrningar på
+           systemet. Den finns i dpkg:s administrationskatalog, tillsammans
+           med andra filer som är viktiga för dpkg, som status och available.
+
+           Note: dpkg-statoverride preserves the old copy of this file, with
+           extension “-old”, before replacing it with the new one.
+
+SE ÄVEN
+       dpkg(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06              dpkg-statoverride(1)

@@ -1,0 +1,380 @@
+dpkg-query(1)                     dpkg suite                     dpkg-query(1)
+
+NAMN
+       dpkg-query - ett verktyg för att slå upp i dpkg-databasen
+
+SYNOPS
+       dpkg-query [flaggor...] åtgärd
+
+BESKRIVNING
+       dpkg-query är ett verktyg för att visa information om paket i
+       dpkg-databasen.
+
+KOMMANDON
+       -l, --list [paketnamnsmönster ...]
+           Lista alla kända paket som matchar ett eller flera mönster, oavsett
+           status, inbegripet äkta och virtuella paket som refereras i något
+           beroenderelationsfält (såsom Breaks, Enhances, osv.). Om inget
+           paketnamnsmönster anges listas alla paket i /var/lib/dpkg/status,
+           förutom de paket som markerats som ej installerade (dvs. de som
+           tidigare har helt tagits bort). Skalets normala jokertecken tillåts
+           i paketnamnsmönster. Observera att du sannolikt måste skriva
+           paketnamnsmönster inom citationstecken för att förhindra att skalet
+           expanderar filnamnet. Till exempel kommer följande lista alla paket
+           vars namn börjar på ”libc6”:
+
+            dpkg-query -l 'libc6*'
+
+           De första tre kolumnerna i utdata visar önskad åtgärd, paketstatus
+           och fel, i den ordningen.
+
+           Önskad åtgärd
+
+           u = Okänd
+           i = Installera
+           h = Håll
+           r = Radera
+           p = Rensa
+
+           Paketstatus:
+
+           n = Ej installerat
+           c = konfigurationsfiler
+           H = Halvt installerat
+           U = Uppackat
+           F = Halvt konfigurerat
+           W = Väntar på utlösare
+           t = Utlösare väntar
+           i = Installerat
+
+           Felflaggor:
+
+           <tom> = (ingen)
+           R = Ominstallation krävs
+
+           En versal status- eller felbokstav anger att paketet troligen
+           kommer orsaka allvarliga problem. Se dpkg(1) för information om
+           status och flaggor ovan.
+
+           Utdataformatet för den här flaggan kan inte justeras, men varieras
+           automatiskt för att passa terminalbredden. Det är avsett för
+           mänskliga läsare, och är inte enkelt maskinläsbart. Se -W (--show)
+           och --showformat för hur du konfigurerar utdataformatet.
+
+       -W, --show [paketnamnsmönster ...]
+           Precis som flaggan --list kommer paket som matchar de givna
+           mönstren att visas. Utdatat kan dock skräddarsys med flaggan
+           --showformat.
+
+           Standardutdataformatet är en rad per paket som träffas, där varje
+           rad innehåller paketnamnet och installerad version av paketet,
+           avdelat med ett tabulatortecken. Paketnamnen kommer vra utökat med
+           arkitektursbeskrivning för paket med ett Multi-Arch-fält med värdet
+           same, eller med en oegen arkitektur, det vill säga en arkitektur
+           som varken är den egna eller all.
+
+       -s, --status [paketnamn...]
+           Rapportera status om angivna paket. Detta alternativ visar helt
+           enkelt posten i statusdatabasen för installerade paket. Om inget
+           paketnamn anges kommer det visa alla paketposter i statusdatabasen
+           (sedan dpkg 1.19.1). Om flera paketnamn anges avdelas de
+           efterfrågade statusposterna med en tomrad, i samma ordningsföljd
+           som i parameterlistan.
+
+       -L, --listfiles paketnamn ...
+           Listar filer som installerats på ditt system från paketnamn. Om
+           flera paketnamn anges avdelas den efterfrågade fillistan med en
+           tomrad, i samma ordningsföljd som anges i parameterlistan.
+
+           Varje filomdirigering skrivs på en egen rad efter sin omdirigerade
+           fil, föregånget av en av följande lokalanpassade strängar:
+
+             lokalt omdirigerad till: omdirigerat-till
+             paketet omdirigerar andra till: omdirigerat-till
+             omdirigerat av paket till: omdirigerat-till
+
+           Hint: When machine parsing the output, it is customary to set the
+           locale to C.UTF-8 to get reproducible results. On some systems this
+           might also require adapting the LANGUAGE environment variable
+           appropriately if it is already set (see locale(7)).
+
+           Kommandot kommer inte att visa extrafiler som skapas av
+           paketskript, ej heller kommer det att visa alternativ.
+
+       --control-list paketnamn
+           Lista styrfiler installerade på ditt system från paketnamn (sedan
+           dpkg 1.16.5). Dessa kan användas som inargument till
+           --control-show.
+
+       --control-show paketnamn styrfil
+           Visar den styrfil som installerats på ditt system från paketnamn på
+           standard ut (sedan dpkg 1.16.5).
+
+       -c, --control-path paketnamn [control-filnamn]
+           Visar sökvägarna till styrfilerna som installerats på ditt system
+           för paketnamn (sedan dpkg 1.15.4). Om styrfil anges visas endast
+           sökvägen för den styrfilen, om den finns.
+
+           Varning: kommandot är föråldrat eftersom det ger direkt tillgång
+           till den interna dpkg-databasen, vi ber dig gå över till att
+           istället använda --control-list och --control-show för alla
+           tillfällen där dessa kommandon kan ge samma slutresultat. Så länge
+           det finns åtminstone ett tillfälle där kommandot är nödvändigt
+           (dvs. när man måste ta bort ett skadligt postrm-utvecklarskript),
+           och det inte finns någon bra lösning för det, kommer kommandot inte
+           att tas bort.
+
+       -S, --search filnamnssökmönster ...
+           Sök efter paket som äger filer som motsvarar det angivna mönstret.
+           Alla skalets vanliga jokertecken kan användas i mönstret, där
+           asterisk (*) och frågetecken (?) kommer motsvara ett snedstreck,
+           och omvänt snedstreck (\) kommer använda som ett ersättningstecken.
+
+           Om det första tecknet i filnamnssökmönster inte är ett av ”*[?/”
+           kommer det att tolkas som en delsträng och implicit omgärdas av ”*”
+           (som i *filnamnssökmönster*). Om strängen som följer innehåller
+           något av ”*[?\” så kommer det hanteras som ett jokermönster, annars
+           kommer alla avslutande ”/” eller ”b</.>” tas bort och en
+           bokstavskorrekt sökvägsuppslagning kommer utföras.
+
+           Kommandot kommer inte att visa extrafiler som skapas av
+           paketskript, ej heller kommer det att visa alternativ.
+
+           Utdataformatet består av en rad per motsvarande mönster, med en
+           lista med paket som äger sökvägsnamnet avdelad med ett komma
+           (U+002C ”,”) och ett blanksteg (U+0020 ” ”) följt av ett kolon
+           (U+003A ”:”) och ett blanksteg, följt av sökvägsnamnet. Till
+           exempel:
+
+             paketnamn1, paketnamn2: sökvägsnamn1
+             paketnamn3: sökvägsnamn2
+
+           Omdirigerade filer skrivs ut med följande lokalanpassade strängar:
+
+             omdirigering av paketnamn från: omdirigerad-från
+             omdirigering av paketnamn till: omdirigerad-till
+
+           eller för lokala omdirigeringar:
+
+             lokal omdirigering från: omdirigerad-från
+             lokal omdirigering till: omdirigerad-till Hint: When machine
+           parsing the output, it is customary to set the locale to C.UTF-8 to
+           get reproducible results.
+
+       -p, --print-avail [paketnamn...]
+           Visar information om pkaet, enligt vad som finns i
+           /var/lib/dpkg/available. Om inget paketnamn anges visas samtliga
+           paketposter i available-databasen (sedan dpkg 1.19.1). Om flera
+           paketnamn anges avdelas de efterfrågade posterna ur
+           available-databasen med en tomrad, med samma ordningsföljd som
+           anges i parameterlistan.
+
+           Använder du ett APT-baserat skal bör du istället använda apt show
+           paketnamn, då available-filen endast àjourförs om dselect används.
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+FLAGGOR
+       --admindir=kat
+           Ändra platsen för dpkg-databasen. Förval är /var/lib/dpkg.
+
+       --root=katalog
+           Sätt rotkatalogen till katalog, vilket sätter den administrativa
+           katalogen till ”katalog/var/lib/dpkg” (sedan dpkg 1.21.0).
+
+       --load-avail
+           Läs även in available-filen när kommandona --show och --list
+           används, vilka numera som standard endast läser statusfilen (sedan
+           dpkg 1.16.2).
+
+       --no-pager
+           Använd inte någon bläddrare för att visa informationen (sedan dpkg
+           1.19.2).
+
+       -f, --showformat=format
+           Flaggan används för att ange formatet på utdata som skapas av
+           --show (kort flagga sedan dpkg 1.13.1). Formatet är en sträng som
+           matas ut för varje paket i listan.
+
+           I formatsträngen inleds följande styrsekvenser med “\”:
+
+           \n radbrytning
+           \r vagnretur
+           \t tabbsteg
+
+           “\” före ett annat tecken undertrycken en speciell betydelse för
+           det efterföljande tecknet, vilket är kan användas för “\” och “$”.
+
+           Paketinformation kan läggas in genom att sätta in
+           variabelreferenser till paketfält, på syntaxen “${field[;width]}”.
+           Fält skrivs högerjusterade såvida inte bredden är negativ i vilket
+           fall vänsterjustering kommer att användas. Följande fält stöds, men
+           de är inte nödvändigtvis tillgängliga i statusfilen (endast interna
+           fält och fält som finns i binärpaketet hamnar där):
+
+           Architecture
+           Bugs
+           Conffiles (internt)
+           Config-Version (internt)
+           Conflicts
+           Breaks
+           Depends
+           Description
+           Enhances
+           Protected
+           Essential
+           Filename (internt, gäller skal)
+           Homepage
+           Installed-Size
+           MD5sum (internt, gäller skal)
+           MSDOS-Filename (internt, gäller skal)
+           Maintainer
+           Origin
+           Package
+           Pre-Depends
+           Priority
+           Provides
+           Recommends
+           Replaces
+           Revision (föråldrat)
+           Section
+           Size (internt, gäller skal)
+           Source
+           Status (internt)
+           Suggests
+           Tag (vanligtvis inte i .deb utan i arkivets Packages-filer)
+           Triggers-Awaited (internt)
+           Triggers-Pending (internt)
+           Version
+
+           Följande är virtuella fält, genererade av dpkg-query från värden
+           från adnra fält (observera att dessa inte är giltiga namn för fält
+           i styrfiler):
+
+           binary:Package
+               Innehåller binärpaketnamnet med en möjlig
+               arkitekturkvalificerare, såsom ”libc6:amd64” (sedan dpkg
+               1.16.2). En arkitekturkvalificerare kommer förekomma för att
+               göra paketnamnet otvetydigt, för paket med ett Multi-Arch-fält
+               med värdet same eller om paket kommer från en oegen arkitektur,
+               det vill säga en arkitektur som varken är den egna eller all.
+
+           binary:Synopsis
+               Innehåller paketets korta beskrivning (sedan dpkg 1.19.1).
+
+           binary:Summary
+               Detta är ett alias för binary:Synopsis (sedan dpkg 1.16.2).
+
+           db:Status-Abbrev
+               Innehåller den förkortade paketstatusen (som tre bokstäver),
+               såsom ”ii ” eller ”iHR” (sedan dpkg 1.16.2). Se beskrivningen
+               av kommandot --list för fler detaljer.
+
+           db:Status-Want
+               Innehåller paketets önskade status, del av Status-fältet (sedan
+               dpkg 1.17.11).
+
+           db:Status-Status
+               Innehåller paketets statusord, del av Status-fältet (sedan dpkg
+               1.17.11).
+
+           db:Status-Eflag
+               Innehåller paketets statusfelflagga, del av Status-fältet
+               (sedan dpkg 1.17.11).
+
+           db-fsys:Files
+               Innehåller listan över paketets filsystemsposter, avdelade av
+               nyradstecken (sedan dpkg 1.19.3).
+
+           db-fsys:Last-Modified
+               Innehåller tidsstämpeln i sekunder för senaste gången paketets
+               filsystemsposter ändrades (sedan dpkg 1.19.3).
+
+           source:Package
+               Innehåller källkodsnamnet för binärpaketet (sedan dpkg 1.16.2).
+
+           source:Version
+               Innehåller källkodsversionen för binärpaketet (sedan dpkg
+               1.16.2)
+
+           source:Upstream-Version
+               Innehåller uppströms källkodsversion för binärpaketet (sedan
+               dpkg 1.18.16)
+
+           Standardformatet är “${binary:Package}\t${Version}\n”. Alla andra
+           fält som finns i statusfilen (även användardefinierade fält) kan
+           faktiskt också hämtas. De visas dock som de är, ingen konvertering
+           eller felkorrigering görs på dem. För att hämta namnet på
+           paketansvarig och installerad version av dpkg och kan du köra:
+
+            dpkg-query -f='${binary:Package} ${Version}\t${Maintainer}\n' \
+             -W dpkg
+
+RETURVÄRDE
+       0   Den önskade frågan utfördes utan fel.
+
+       1   Den önskade frågan misslyckades helt eller delvis, på grund av att
+           ingen fil eller paket hittades (förutom för --control-path,
+           --control-list och --control-show där sådana fel är ödesdigra).
+
+       2   Ödesdigert eller irreparabelt fel på grund av felaktig användning
+           på kommandoraden, eller interaktioner med systemet, såsom
+           databasåtkomst, minnesallokeringer, osv.
+
+MILJÖVARIABLER
+   Extern miljö
+       SHELL
+           Väljer program att köra när nya kommandon startas via ett skal
+           (sedan dpkg 1.19.2).
+
+       PAGER
+       DPKG_PAGER
+           Väljer bläddrarprogram att använda (sedan dpkg 1.19.1),  vilket
+           kommer startas med ”$SHELL -c”. Om SHELL inte har valts kommer ”sh”
+           att användas istället. DPKG_PAGER överstyr miljövariabeln PAGER
+           (sedan dpkg 1.19.2).
+
+       DPKG_ROOT
+           Om satt och flaggan --root inte har angivits används det som
+           filsystemets rotkatalog (sedan dpkg 1.21.0).
+
+       DPKG_ADMINDIR
+           Om satt, och flaggan --admindir inte har angivits, används värdet
+           som datakatalog för dpkg.
+
+       DPKG_DEBUG
+           Anger felsökningsmasken (sedan dpkg 1.21.10) från ett oktalt värde.
+           De flaggor som för närvarande godtas beskrivs i flaggan dpkg
+           --debug, men alla dess flaggor påverkar inte nödvändigtvis detta
+           program.
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+   Intern miljö
+       LESS
+           Definieras av dpkg-query till ”-FRSXMQ”, om det inte redan är satt,
+           när en bläddrare startas (sedan dpkg 1.19.2). För att ändra
+           standardbeteendet kan variabeln sättas till ett annat värde,
+           däribland en tom sträng, eller så kan variablerna PAGER eller
+           DPKG_PAGER sättas för att inaktivera specifika flaggor med ”-+”,
+           till exempel DPKG_PAGER="less -+F".
+
+SECURITY
+       Query operations should never require root, and delegating their
+       execution to unprivileged users via some gain-root command can have
+       security implications (such as privilege escalation), for example when
+       a pager is automatically invoked by the tool.
+
+SE ÄVEN
+       dpkg(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                     dpkg-query(1)

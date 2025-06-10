@@ -1,0 +1,129 @@
+dpkg-gencontrol(1)                dpkg suite                dpkg-gencontrol(1)
+
+NAMN
+       dpkg-gencontrol - skapa Debians styrfiler
+
+SYNOPS
+       dpkg-gencontrol [flagga...]
+
+BESKRIVNING
+       dpkg-gencontrol läser information från ett uppackat Debiankällkodsträd
+       och genererar en binärpaketsstyrfil (som standard
+       debian/tmp/DEBIAN/control). Relationsfälten kommer att förenklas.
+
+       Fälten Pre-Depends, Depends, Recommends och Suggests förenklas därmed,
+       i den följden, genom att ta bort beroenden som programmet vet
+       tillhandahålls av starkare beroenden som redan tolkats. Det kommer även
+       ta bort eventuella egenberoenden (programmet tar bort alla beroenden
+       som är uppfyllda när den nuvarande versionen av paketet är
+       installerat). Logiskt behålls snittet av multipla beroenden på samma
+       paket. Ordningsföljden mellan beroendena behålls så långt som möjligt:
+       om ett beroende måste tas bort på grund av att ett beroende återkommer
+       senare i fältet kommer det nya beroendet att ta platsen från det som
+       ersattes.
+
+       Övriga relationsfält (Enhances, Conflicts, Breaks, Replaces och
+       Provides) förenklas även individuellt genom att beräkna unionen av de
+       olika beroendena när ett paket förekommer flera gånger i samma fält.
+
+       dpkg-gencontrol lägger dessutom till en post för binärpaketet i
+       debian/files.
+
+FLAGGOR
+       -vversion
+           Sätter versionsnumret på binärpaketet som ska skapas.
+
+       -Vnamn=värde
+           Ställer in en utdatasubstitueringsvariabel. Se deb-substvars(5) för
+           en beskrivning av utdatasubstituering.
+
+       -Tsubstvars-fil
+           Läs substitutionsvariabler från substvars-fil; standard är
+           debian/substvars. Flaggan kan användas flera gånger för att läsa
+           substitutionsvariabler från flera filer (sedan dpkg 1.15.6).
+
+       -Dfält=värde
+           Ersätt eller lägg till ett fält i den genererade control-filen.
+
+       -Ufält
+           Ta bort ett fält ur den genererade control-filen.
+
+       -ccontrol-fil
+           Anger huvudkällkodsstyrfilen som information ska läsas från.
+           Standardvärdet är debian/control.
+
+       -ländringsloggfil
+           Anger ändringsloggfilen som information ska läsas från.
+           Standardvärdet är debian/changelog.
+
+       -ffillistfil
+           Läs eller skriv listan över filer som ska sändas in här, istället
+           för att använda debian/files.
+
+       -Fändringsloggformat
+           Anger format på ändringsloggen. Se dpkg-parsechangelog(1) för
+           information om alternativa format.
+
+       -ppaket
+           Skapa information för det binära paketet paket. Om källkodens
+           control-fil bara innehåller ett binärpaket behöver inte flaggan
+           anges. I alla andra fall är det nödvändigt att välja vilket
+           binärpakets information som ska skapas.
+
+       -nfilnamn
+           Anta att filnamnet för paketet skaa vara filnamn istället för det
+           normala paket_version_ark.deb-filnamnet.
+
+       -is, -ip, -isp
+           These options are ignored for compatibility with older versions of
+           the dpkg build scripts but are now deprecated. Previously they were
+           used to tell dpkg-gencontrol to include the Section and Priority
+           fields in the control file. This is now the default behavior. If
+           you want to get the old behavior you can use the -U option to
+           delete the fields from the control file.
+
+       -Ppaketbyggkatalog
+           Sök paketbyggkatalog istället för debian/tmp, Värdet används för
+           att bestämma standardvärdet för substitueringsvariabeln och
+           control-filsfältet Installed-Size, samt för att välja
+           standardplacering av utdatafilen.
+
+       -O[filnamn]
+           Skriv control-filen på standard ut (eller filnamn, om angivet,
+           sedan dpkg 1.17.2), i stället för till debian/tmp/DEBIAN/control
+           (eller paketbyggkatalog/DEBIAN/control om -P användes).
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       --version
+           Visar version och avslutar.
+
+MILJÖVARIABLER
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_NLS
+           Om satt, används för att bestämma om lokalt språkstöd ska
+           aktiveras, även känt som internationaliseringsstöd (eller i18n)
+           (sedan dpkg 1.19.0). Tillåtna värden är: 0 och 1 (förval).
+
+FILER
+       debian/control
+           Huvudkällkodsstyrinformationsfil, vilken innehåller
+           versionsoberoende information om källkodspaketet och de binärpaket
+           som kan skapas från det.
+
+       debian/files
+           Listan över genererade filer som ingår i insändningen som skapas.
+           dpkg-gencontrol lägger till de förutsatta filnamnen på binärpaketen
+           vars control-filer det genererar här.
+
+SE ÄVEN
+       deb-substvars(5), deb-src-control(5), deb-changelog(5), deb-control(5).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                dpkg-gencontrol(1)

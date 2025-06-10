@@ -1,0 +1,203 @@
+DELUSER(8)                  System Manager's Manual                 DELUSER(8)
+
+NOME
+       deluser, delgroup - remove um utilizador ou grupo do sistema
+
+SINOPSE
+       deluser [--backup] [--backup-suffix str] [--backup-to directório]
+               [--conf ficheiro] [--debug] [--remove-all-files]
+               [--remove-home] [--quiet] [--verbose] user
+
+       deluser [--system] [--backup] [--backup-suffix str]
+               [--backup-to directório] [--conf ficheiro] [--debug]
+               [--remove-all-files] [--remove-home] [--quiet] [--verbose] user
+
+       deluser --group [--conf ficheiro] [--debug] [--only-if-empty] [--quiet]
+               [--verbose] group
+       delgroup [--system] [--conf ficheiro] [--debug] [--only-if-empty]
+                [--quiet] [--verbose] group
+
+       deluser [--conf ficheiro] [--debug] [--quiet] [--verbose] user group
+
+       deluser --help
+
+       deluser --version
+
+DESCRIÇÃO
+       O  deluser  e  o  delgroup  removem utilizadores e grupos do sistema de
+       acordo com as opções de linha de comandos e informação de  configuração
+       em /etc/deluser.conf e /etc/adduser.conf.
+
+       São frontends amigáveis para os programas userdel e groupdel, removendo
+       o directório home como opção ou até todos os ficheiros no sistema  cujo
+       dono  é o utilizador que vai ser removido, correndo um script personal‐
+       izado, e outras funcionalidades.
+
+       Para uma lista completa e explicação de todas as opções, veja a  secção
+       OPÇÕES.
+
+       deluser e delgroup podem ser executados em um de três modos:
+
+   Remove um utilizador
+       Se  chamado  com  um argumento não-opção e sem a opção --group, deluser
+       irá remover um utilizador não-sistema.
+
+       Por predefinição, o deluser irá remover o utilizador sem remover o  di‐
+       rectório home, o spool de mail ou quaisquer outros ficheiros no sistema
+       cujo dono é o utilizador em questão. Remover  o  directório  home  e  o
+       spool de mail pode ser conseguido usando a opção --remove-home.
+
+       A  opção  --remove-all-files  remove todos os ficheiros no sistema cujo
+       dono é o utilizador em questão. Note que se activar  ambas  as  opções,
+       --remove-home  não  irá  produzir  efeito  adicional  porque  todos  os
+       ficheiros incluindo o directório home e spool de mail já estão cobertos
+       pela opção --remove-all-files.
+
+       Se  deseja salvaguardar todos os ficheiros antes de os apagar, pode ac‐
+       tivar a opção --backup  a  qual  irá  criar  um  ficheiro  nome-de-uti‐
+       lizador.tar(.gz|.bz2)    no    directório   especificado   pela   opção
+       --backup-to.
+
+       Por predefinição, o arquivo de salvaguarda é  comprimido  com  gzip(1).
+       Para  mudar  isto, a opção --backup-suffix pode ser definida a qualquer
+       sufixo suportado pelo tar --auto-compress (ex. .gz, .bz2, .xz).
+
+       O deluser irá recusar remover a conta do root.
+
+       Se a opção --system for dada na linha de comandos, a operação de apagar
+       só  é realmente executada se o utilizador for um utilizador de sistema.
+       Adicionalmente, se o utilizador não existir, nenhum valor de erro é re‐
+       tornado. Os scripts de maintainer do pacote Debian podem usar esta ban‐
+       deira para remover utilizadores ou grupos de sistema  enquanto  ignoram
+       os casos onde a remoção já ocorreu.
+
+   Remover um grupo
+       Se  o  deluser  for  chamado  com  a  opção  --group, ou o delgroup for
+       chamado, será removido um grupo. O grupo primário de um utilizador  não
+       pode  ser  removido.  Se  a opção --only-if-empty for dada, o grupo não
+       será removido se ainda tiver algum membro.
+
+       A opção  --system  adiciona  a  mesma  funcionalidade  como  para  uti‐
+       lizadores, respetivamente.
+
+   Remover um utilizador de um grupo especifico
+       Se  chamado com dois argumentos não-opções. deluser irá remover um uti‐
+       lizador de um grupo especifico.
+
+OPÇÕES
+       Os diferentes modos do deluser permitem diferentes  opções.  Se  nenhum
+       modo  válido  estiver  listado para uma opção, ela é aceite em todos os
+       modos.
+
+       Versões curtas para certas opções podem existir por razões  históricas.
+       Elas  vão  continuar  a  ser  suportadas,  mas estão removidas da docu‐
+       mentação. Os são aconselhados  a  migrarem  para  a  versão  longa  das
+       opções.
+
+       --backup
+              Faz  backup de todos os ficheiros contidos na home do utilizador
+              e o ficheiro mailspool para um ficheiro chamado username.tar.bz2
+              ou username.tar.gz.  Modos Válidos: deluser, deluser --system,
+
+       --backup-suffix str
+              Seleciona o algoritmo de compressão para um backup de directório
+              home. Pode ser definido para qualquer sufixo reconhecido por tar
+              --auto-compress.   A predefinição é .gz. Modos Válidos: deluser,
+              deluser --system,
+
+       --backup-to dir
+              Coloca os ficheiros de backup não no directório  actual  mas  em
+              dir.  Isto  implicitamente  define também --backup. (predefinido
+              para o directório de trabalho actual). Modos  Válidos:  deluser,
+              deluser --system,
+
+       --conf ficheiro
+              Usa ficheiro em vez dos ficheiros predefinidos /etc/deluser.conf
+              e /etc/adduser.conf.  Podem ser dadas várias opções --conf.
+
+       --debug
+              Activa código de depuração.
+
+       --group
+              Remove um grupo. Esta é a acção predefinida se  o  programa  for
+              invocado como delgroup.  Modo Válido: deluser.
+
+       --help Mostra instruções breves.
+
+       --only-if-empty
+              Apenas  remove  se  já não existir nenhum membro. Modos Válidos:
+              deluser --group, delgroup,
+
+       --quiet
+              Suprime mensagens informativas, apenas mostra avisos e erros.
+
+       --remove-all-files
+              Remove todos os ficheiros do sistema cujo dono  seja  este  uti‐
+              lizador.  Nota:  --remove-home  não faz mais efeito. Se --backup
+              for especificado, os ficheiros são apagados após a  execução  do
+              backup. Modos Válidos: deluser, deluser --system,
+
+       --remove-home
+              Remove  o  directório  home  do utilizador e o seu mailspool. Se
+              --backup for especificado, os ficheiros são apagados após a  ex‐
+              ecução do backup. Modos Válidos: deluser, deluser --system,
+
+       --system
+              Apenas apaga se utilizador/grupo for um utilizador/grupo de sis‐
+              tema. Se o utilizador não existir, nenhum valor de  erro  é  de‐
+              volvido. Modos Válidos: deluser, deluser --system,
+
+       --verbose
+              Fica mais detalhado.
+
+       --version
+              Mostra informação de versão e copyright.
+
+VALORES DE RETORNO
+       0      Sucesso: A acção foi executada com sucesso.
+
+       1      O  utilizador  a  apagar  não  era uma conta de sistema. Nenhuma
+              acção foi executada.
+
+       2      Não existe tal utilizador. Nenhuma acção foi executada.
+
+       3      Não existe tal grupo. Nenhuma acção foi executada.
+
+       4      Erro interno. Nenhuma acção foi executada.
+
+       5      O grupo para apagar não está vazio. Nenhuma acção foi executada.
+
+       6      O utilizador não pertence ao grupo especificado.  Nenhuma  acção
+              foi executada.
+
+       7      Não  pode  remover um utilizador do seu grupo principal. Nenhuma
+              acção foi executada.
+
+       8      O pacote sugerido 'perl'  não  está  instalado.  Este  pacote  é
+              necessário  para  executar as acções requisitadas. Nenhuma acção
+              foi executada.
+
+       9      A conta do root não pode ser apagada. Nenhuma acção  foi  execu‐
+              tada.
+
+SEGURANÇA
+       O  deluser  precisa de privilégios de root e oferece via opção de linha
+       de comandos  --conf  a  utilização  de  diferentes  ficheiros  de  con‐
+       figuração.  Não  use  o  sudo(8)  ou  ferramentas  semelhantes para dar
+       privilégios parciais ao deluser com parâmetros de linha de comandos re‐
+       stritos.  Isto  é  fácil  de contornar e pode permitir que utilizadores
+       criem contas arbitrárias. Se você deseja isto, consider escrever o  seu
+       próprio script envelope e dê privilégios para executar esse script.
+
+FICHEIROS
+       /etc/deluser.conf  Ficheiro de configuração predefinido para deluser(8)
+       e delgroup(8)
+
+       /usr/local/sbin/deluser.local
+              Adições personalizadas opcionais, veja deluser.local(8)
+
+VEJA TAMBÉM
+       adduser(8),   deluser.conf(5),   deluser.local.conf(8),    groupdel(8),
+       userdel(8)
+
+Debian GNU/Linux                                                    DELUSER(8)

@@ -1,0 +1,98 @@
+dpkg-name(1)                      dpkg suite                      dpkg-name(1)
+
+NAMN
+       dpkg-name - byt namnet på Debianpaket till det fullständiga paketnamnet
+
+SYNOPS
+       dpkg-name [flagga...] [--] fil...
+
+BESKRIVNING
+       Manualsidan dokumenterar programmet dpkg-name, vilket tillhandahåller
+       ett enkelt sätt att byta namn på Debianpaket till deras fullständiga
+       paketnamn. Ett fullständigt paketnamn består av
+       paket_version_arkitektur.pakettyp och anges av control-filen i paketet.
+       Version-delen av filnamnet består av uppströmsversionsinformation och
+       kan eventuellt följas av ett bindestreck och revisionsinformationen.
+       Pakettyp-delen kommer från fältet package-type om det finns, annars
+       deb.
+
+FLAGGOR
+       -a, --no-architecture
+           Destinationsfilnamnet kommer inte att innehålla information om
+           arkitektur.
+
+       -k, --symlink
+           Skapa en symbolisk länk istället för att flytta.
+
+       -o, --overwrite
+           Befintliga filer kommer att skrivas över om de har samma namn som
+           destinationsfilnamnet.
+
+       -s, --subdir [katalog]
+           Filerna kommer att flyttas till en underkatalog. Om katalogen i
+           argumentet existerar kommer filerna att flyttas in i den katalogen,
+           om inte kommer namnet på målkatalogen att hämtas från
+           sektionsfältet i styrdelen av paketet. Målkatalogen kommer vara
+           ”unstable/binary-arkitekursektion”. Om sektionen inte hittas i
+           styrfilen antas ”no-section”, och i så fall, samt för sektionerna
+           ”non-free” och ”contrib”, är målkatalogen
+           ”sektion/binary-arkitektur”. Sektionsfältet krävs inte, så flera
+           paket hamnar i katalogen ”no-section”.
+
+           Warning: Use this option with care, it is messy.
+
+       -c, --create-dir
+           Flaggan kan användas tillsammans med -s-flaggan. Om en målkatalog
+           inte existerar kommer den att skapas automatiskt.
+
+           Warning: Use this option with care.
+
+       -?, --help
+           Visar hjälpskärm och avslutar.
+
+       -v, --version
+           Visar version och avslutar.
+
+MILJÖVARIABLER
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_NLS
+           Om satt, används för att bestämma om lokalt språkstöd ska
+           aktiveras, även känt som internationaliseringsstöd (eller i18n)
+           (sedan dpkg 1.19.0). Tillåtna värden är: 0 och 1 (förval).
+
+PROGRAMFEL
+       Vissa paket följer inte namnstrukturen paket_version_arkitektur.deb.
+       Paket vars namn ändrats med dpkg-name kommer följa denna struktur.
+       Normalt påverkar detta inte hur dselect(1)/dpkg(1) installerar paket,
+       men vissa andra installationsverktyg kan vara beroende av denna
+       namngivningsstruktur.
+
+EXEMPEL
+       dpkg-name bar-foo.deb
+           Filen bar-foo.deb kommer att få det nya namnet
+           bar-foo_1.0-2_i386.deb eller något liknande (beroende på vilken
+           information som hittas i styrdelen av bar-foo.deb).
+
+       find /root/debian/ -name '*.deb' | xargs -n 1 dpkg-name -a
+           Alla filer med ändelsen deb i katalogen /root/debian och dess
+           underkataloger kommer att få sina namn ersatta med dpkg-name, om så
+           behövs, till namn utan arkitekturinformation.
+
+       find -name '*.deb' | xargs -n 1 dpkg-name -a -o -s -c
+           Gör inte så här. Ditt arkiv kommer att röras till helt och hållet
+           eftersom många paket inte har någon sektionsinformation. Gör inte
+           så här.
+
+       dpkg-deb --build debian-tmp && dpkg-name -o -s .. debian-tmp.deb
+           Kan användas när nya paket byggs.
+
+SE ÄVEN
+       deb(5), deb-control(5), dpkg(1), dpkg-deb(1), find(1), xargs(1).
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                      dpkg-name(1)

@@ -1,0 +1,1182 @@
+dpkg(1)                           dpkg suite                           dpkg(1)
+
+NAMN
+       dpkg - en mellannivåpakethanterare för Debian
+
+SYNOPS
+       dpkg [flagga...] åtgärd
+
+VARNING
+       Manualen är avsedd för användare som vill få en mer detaljerad
+       förståelse för dpkgs kommandoradsflaggor och pakettillstånd än vad som
+       berättas med dpkg --help.
+
+       Den bör inte användas av paketansvariga som vill lära sig hur dpkg
+       kommer att installera deras paket. Beskrivningen över vad dpkg gör när
+       paket installeras och tas bort är speciellt otillräckliga.
+
+BESKRIVNING
+       dpkg är ett mellannivåverktyg för att installera, bygga, ta bort och
+       hantera Debianpaket. Det primära och mer användarvänliga skalet runt
+       dpkg som ett CLI (kommandoradsgränssnitt) är apt(8) och som ett TUI
+       (terminalanvändargränssnitt) är aptitude(8). dpkg kontrolleras helt och
+       hållet via kommandoradsparametrar, vilka består av exakt en åtgärd och
+       noll eller fler flaggor. Åtgärdsparametern talar om för dpkg vad som
+       ska göras, och flaggorna styr på vilket sätt åtgärden ska utföras.
+
+       dpkg kan också användas som ett skal runt dpkg-deb(1) och dpkg-
+       query(1). En förteckning över tillgängliga åtgärder beskrivs nedan i
+       stycket ÅTGÄRDER. Om dpkg upptäcker en sådan åtgärd anropas bara dpkg-
+       dpkg eller dpkg-query med de givna flaggorna, men inga specifika
+       flaggor sänds direkt till dem, för att använda sådana flaggor måste
+       bakgrundsprogrammen anropas direkt.
+
+INFORMATION OM PAKET
+       dpkg upprätthåller viss användbar information om tillgängliga paket.
+       Informationen delas in i tre klasser: tillstånd, markeringstillstånd
+       och flaggor. Dessa värden är avsedda att huvudsakligen ändras via
+       dselect.
+
+   Pakettillstånd
+       ej installerat (”not-installed”)
+           Paketet är inte installerat på ditt system.
+
+       konfigurationsfiler (”config-files”)
+           Endast konfigurationsfilerna eller skriptet postrm och de data det
+           behöver för att ta bort för paketet finns på systemet.
+
+       halvt installerat (”half-installed”)
+           Installationen av paketet har påbörjats, men av någon orsak inte
+           slutförts.
+
+       uppackat (”unpacked”)
+           Paketet är uppackat, men inte konfigurerat.
+
+       halvt konfigurerat (”half-configured”)
+           Paketet är uppackat och konfigurationen har påbörjats, men av någon
+           orsak inte slutförts.
+
+       väntar på utlösare (”triggers-awaited”)
+           Paketet väntar på hantering av utlösare av ett annat paket.
+
+       utlösare väntar (”triggers-pending”)
+           Paketet har utlösts.
+
+       installerat (installed)
+           Paketet är uppackat och korrekt inställt.
+
+   Paketvalstillstånd
+       installera (”install”)
+           Paketet är markerat för installation.
+
+       håll (”hold”)
+           Ett paket markerat för håll behålls i samma version, det vill säga,
+           inga automatiska nya installationer, uppgraderingar eller
+           borttagningar kommer att utföras på dem, såvida inte dessa åtgärder
+           anges explicit, eller tillåts göra automatiskt med flaggan
+           --force-hold.
+
+       ta bort (”deinstall”)
+           Paketet är markerat för avinstallation (dvs. vi vill ta bort alla
+           filer förutom konfigurationsfilerna).
+
+       rensa (”purge”)
+           Paketet är markerat för rensning (dvs. vi vill ta bort allting från
+           systemkataloger, även konfigurationsfiler).
+
+       okänt (”unknown”)
+           Paketvalet är okänt. Ett paket som också är i tillståndet ej
+           installerat, och med en ok-flagga kommer glömmas bort nästa gång
+           databasen lagras.
+
+   Paketflaggor
+       ok  Ett paket märkt ok är i ett känt tillstånd, men kan behöva
+           ytterligare behandling.
+
+       ominstallation krävs (”reinstreq”)
+           Ett paket markerat ominstallation krävs är trasigt och kräver
+           ominstallation. Dessa paket kan inte tas bort, såvida inte det
+           framtvingas med flaggan --force-remove-reinstreq.
+
+ÅTGÄRDER
+       -i, --install paketfil...
+           Installera paketet.  Om flaggan --recursive eller -R anges måste
+           paketfil istället vara en katalog.
+
+           Installationen består av följande steg:
+
+           1.  Extract the control files of the new package.
+
+           2.  If another version of the same package was installed before the
+               new installation, execute prerm script of the old package.
+
+           3.  Run preinst script, if provided by the package.
+
+           4.  Unpack the new files, and at the same time back up the old
+               files, so that if something goes wrong, they can be restored.
+
+           5.  If another version of the same package was installed before the
+               new installation, execute the postrm script of the old package.
+               Note that this script is executed after the preinst script of
+               the new package, because new files are written at the same time
+               old files are removed.
+
+           6.  Configure the package. See --configure for detailed information
+               about how this is done.
+
+       --unpack paketfil ...
+           Packa upp paketet, men konfigurera det inte. Om flaggan --recursive
+           eller -R anges måste paketfil istället vara en katalog.
+
+           Hanterar utlösare för Pre-Depends såvida inte --no-triigers har
+           angivits.
+
+       --configure paket...|-a|--pending
+           Konfigurera ett paket som har packats upp men ännu inte
+           konfigurerats. Om -a eller --pending anges istället för paket
+           konfigureras alla paket som har packats upp men ännu inte
+           konfigurerats.
+
+           To reconfigure a package which has already been configured, try the
+           dpkg-reconfigure(8) command instead (which is part of the debconf
+           project).
+
+           Konfigurering består av följande steg:
+
+           1.  Unpack the conffiles, and at the same time back up the old
+               conffiles, so that they can be restored if something goes
+               wrong.
+
+           2.  Run postinst script, if provided by the package.
+
+           Hanterar utlösare såvida inte --no-triggers har angivits.
+
+       --triggers-only paket...|-a|--pending
+           Hanterar bara utlösare (sedan dpkg 1.14.17). Alla avvaktande
+           utlösare kommer att hanteras. Om paketnamn anges kommer endast
+           dessa pakets utlösare att hanteras, precis en gång, om nödvändigt.
+           Om du använder denna flagga kan det hända att paket hamnar i
+           felaktiga väntar på utlösare- och utlösare väntar-tillstånd. Detta
+           kan rättas senare genom att köra: dpkg --configure --pending.
+
+       -r, --remove paket...|-a|--pending
+           Ta bort ett installerat paket. Detta tar bort allt utom konffiler
+           och annan data som städas upp av skriptet postrm, vilket kan göra
+           att du kan undvika att konfigurera om paketet om du ominstallerar
+           det senare (konffiler är konfigurationsfiler som listas i styrfilen
+           DEBIAN/conffiles). Om det inte finns någon styrfil DEBIAN/conffiles
+           eller något skript DEBIAN/postrm, motsvarar det här kommandot att
+           köra --purge. Om -a eller --pending anges istället för ett
+           paketnamn kommer alla paket som är uppackade, men markerade för
+           borttagning i filen /var/lib/dpkg/status, att tas bort.
+
+           Borttagning av ett paket består av följande steg:
+
+           1.  Run prerm script.
+
+           2.  Remove the installed files.
+
+           3.  Run postrm script.
+
+           Hanterar utlösare såvida inte --no-triggers har angivits.
+
+       -P, --purge paket...|-a|--pending
+           Rensa ett installerat eller redan borttaget paket. Detta tar bort
+           allting, inklusive konffiler, och allt annat som städas upp från
+           postrm. Om -a eller --pending anges instället för ett paketnamn
+           kommer alla paket som packats upp eller tagits bort, men som är
+           markerade för rensning i filen /var/lib/dpkg/status, att rensas.
+
+           Note: Some configuration files might be unknown to dpkg because
+           they are created and handled separately through the configuration
+           scripts. In that case, dpkg won't remove them by itself, but the
+           package's postrm script (which is called by dpkg), has to take care
+           of their removal during purge. Of course, this only applies to
+           files in system directories, not configuration files written to
+           individual users' home directories.
+
+           Rensning av ett paket består av följande steg:
+
+           1.  Remove the package, if not already removed. See --remove for
+               detailed information about how this is done.
+
+           2.  Run postrm script.
+
+           Hanterar utlösare såvida inte --no-triggers har angivits.
+
+       -V, --verify paketnamn ...
+           Bekräftar integriteten för paketnamn eller, om det inte anges, alla
+           paket, genom att jämföra informationen från de filer paketet
+           installerar med metadatainformationen som lagras i dpkg-databasen
+           (sedan dpkg 1.17.2). Ursprunget till filernas metadatainformation i
+           databasen är binärpaketen själva. Metadata samlas in från paketen
+           när de packas upp under installationsprocessen.
+
+           Currently the only functional check performed is an md5sum
+           verification of the file contents against the stored value in the
+           files database.  It will only get checked if the database contains
+           the file md5sum. To check for any missing metadata in the database,
+           the --audit command can be used.  This is only an integrity check
+           and should not be considered as any kind of security verification.
+
+           Utdataformatet kan väljas med flaggan --verify-format, vilket som
+           standard använder formatet rpm, men detta kan komma att ändras i
+           framtiden, varför program som tolkar kommandots utdata bör välja
+           vilket format de förväntar sig explicit.
+
+       -C, --audit [paketnamn...]
+           Utför sundhets- och konsekvenskontroll för paketnamn eller alla
+           paket om det inte anges (kontroller för enskilda paket sedan dpkg
+           1.17.10). Söker, till exempel, efter paket som endast har
+           installerats delvis på ditt system eller som har skande, trasiga
+           eller föråldrade styrdata eller filer. dpkg kommer att föreslå vad
+           du ska göra för att få dem rättade.
+
+       --update-avail [Packages-fil]
+       --merge-avail [Packages-fil]
+           Uppdatera dpkgs och dselects lista över vilka paket som finns
+           tillgängliga. Med --merge-avail kombineras den gamla informationen
+           med informationen från Packages-filen. Med --update-avail ersätts
+           den gamla informationen med informationen från Packages-filen.
+           Packages-filerna som medföljer Debian heter helt enkelt ”Packages”.
+           Om Packages-fil-argumentet saknas eller namnet ”-” anges kommer det
+           att läsas från standard in (sedan dpkg 1.17.7). dpkg skriver sin
+           lista över tillgängliga paket i /var/lib/dpkg/available.
+
+           Ett lättare enkelkommando för att hämta och uppdater
+           available-filen är dselect update. Observera att den här filen i
+           huvudsak är onödig om du använder ett APT-baserat skal istället för
+           dselect: APT har ett eget system för att hålla reda på tillgängliga
+           paket.
+
+       -A, --record-avail paketfil ...
+           Uppdatera dpkgs och dselects lista över vilka paket som finns
+           tillgängliga med information från paketet paketfil. Om flaggan
+           --recursive eller -R anges måste paketfil istället vara en katalog.
+
+       --forget-old-unavail
+           En numera föråldrad flagga som inte utför någonting, då dpkg
+           automatiskt glömmer ej installerade och ej tillgängliga paket
+           (sedan dpkg 1.15.4), men endast de som inte innehåller
+           användarinformation såsom paketval.
+
+       --clear-avail
+           Radera existerande information om vilka paket som är tillgängliga.
+
+       --get-selections [paketnamnsmönster...]
+           Hämta en lista över paketval och skriv den till standard ut. Paket
+           som inte är installerats (dvs. de som tidigare helt har tagits
+           bort) kommer inte att visas om inte ett mönster anges.
+
+       --set-selections
+           Sätt paketvalslistan med den fil som läses från standard in. Filen
+           måste vara på formatet ”paket status”, där status är en av install,
+           hold, deinstall eller purge. Tomrader och kommentarsrader som
+           börjar med ”#” är också tillåtna.
+
+           Filen available måste vara àjourförd för att kommandot ska vara av
+           något värde, annars kommer okända paket att ignoreras med en
+           varning. Se kommandona --update-avail och --merge-avail för mer
+           information.
+
+       --clear-selections
+           Sätt det önskade tillståndet för varje icke-grundläggande paket
+           till avinstallera (sedan dpkg 1.13.18). Detta är avsett att
+           användas direkt före --set-selections, för att avinstallera alla
+           paket som inte finns med i listan som anges av --set-selections.
+
+       --yet-to-unpack
+           Söker efter paket som markerats för installation men som av någon
+           anledning ännu inte har installerats.
+
+           Note: This command makes use of both the available file and the
+           package selections.
+
+       --predep-package
+           Skriv ut ett enda paket som är målet för en eller flera relevanta
+           förhandsberoenden och som själv inte har ouppfyllda förberoenden.
+
+           Om ett sådant paket finns är utdatan en post från Packages-filen,
+           som Kan hanteras som nödvändigt.
+
+           Note: This command makes use of both the available file and the
+           package selections.
+
+           Returnerar 0 om ett paket skrivs ut, 1 om inget lämpligt paket
+           finns och 2 vid fel.
+
+       --add-architecture arkitektur
+           Lägg till arkitektur i listan över arkitekturer för vilka paket kan
+           installeras utan att använda --force-architecture (sedan dpkg
+           1.16.2). Arkitekturen dpkg har byggts för (dvs. utdata från
+           --print-architecture) är alltid en del av listan.
+
+       --remove-architecture arkitektur
+           Ta bort arkitektur från listan över arkitekturer för vilka paket
+           kan installeras utan att använda --force-architectures (sedan dpkg
+           1.16.2). Om arkitekturen för närvarande används i databasen kommer
+           operationen att vägras, såvida inte --force-architectures anges.
+           Arkitekturen dpkg byggs för (dvs. utdata från --print-architecture)
+           kan aldrig tas bort från listan.
+
+       --print-architecture
+           Visa arkitektur för paketen dpkg installerar (till exempel ”i386”).
+
+       --print-foreign-architectures
+           Visa en lista, avdelad med nyradstecken, över extraarkitekturer
+           dpkg har konfigurerats att tillåta installation av paket för (sedan
+           dpkg 1.16.2).
+
+       --assert-help
+           Ge hjälp om --assert-funktion-flaggorna (sedan dpkg 1.21.0).
+
+       --assert-funktion
+           Påstå att dpkg stöder den önskade funktionen. Returnerar 0 om
+           funktionen stöds i sin helhet, 1 om funktionen är känd men dpkg
+           inte kan stöda den ännu, och 2 om funktionen är okänd. Aktuell
+           lista över funktioner som kan hävdas är:
+
+           support-predepends
+               Stöder fältet Pre-Depends (sedan dpkg 1.1.0).
+
+           working-epoch
+               Stöder epoker i versionssträngar (sedan dpkg 1.4.0.7).
+
+           long-filenames
+               Stöder långa filnamn i deb(5>)-arkiv (sedan dpkg 1.4.1.17).
+
+           multi-conrep
+               Stöder flera Conflicts och Replaces (sedan dpkg 1.4.1.19).
+
+           multi-arch
+               Stöder fält och semantik för flera arkitekturer (sedan dpkg
+               1.16.2)
+
+           versioned-provides
+               Stöder versioner i Provides (sedan dpkg 1.17.11).
+
+           protected-field
+               Stöder fältet Protected (sedan dpkg 1.20.1).
+
+       --validate-saker sträng
+           Bekräftar att saker-sträng har korrekt syntax (sedan dpkg 1.18.16).
+           Returnerar 0 om sträng är giltig, 1 om sträng är ogiltig men kan
+           tänkas godtas i slapp kontext och 2 om sträng är ogiltig. Aktuell
+           lista över saker som kan bekräftas är:
+
+           pkgname
+               Bekräftar det givna paketnamnet (sedan dpkg 1.18.16).
+
+           trigname
+               Bekräftar det givna utlösarnamnet (sedan dpkg 1.18.16).
+
+           archname
+               Bekräftar det givna arkitekturnamnet (sedan dpkg 1.18.16).
+
+           version
+               Bekräftar den givna versionen (sedan dpkg 1.18.16).
+
+       --compare-versions ver1 op ver2
+           Jämför versionsnummer, där op är en binär operator. dpkg returnerar
+           sant (0) om det angivna värdet uppfylls, och falskt (1) i annat
+           fall. Det finns två grupper operatorer, vilka endast skiljer sig i
+           hur de hanterar när ver1 eller ver2 är tom. Dessa hanterar tom
+           version som om den är tidigare än alla andra versioner: lt le eq ne
+           ge gt. Dessa hanterar tom version som om den är senare än alla
+           andra versioner: lt-nl le-nl ge-nl gt-nl. Dessa tillhandahålls
+           endast för kompatibilitet med styrfilssyntaxen: < << <= = >= >> >.
+           Operatorerna < och > är föråldrade och bör inte användas, på grund
+           av förvirrande semantik. Till exempel: 0.1 < 0.1 utvärderas som
+           sant.
+
+       -?, --help
+           Visar en kortfattad hjälptext.
+
+       --force-help
+           Get hjälp om --force-nånting-flaggorna.
+
+       -Dh, --debug=help
+           Ger hjälp om felsökningsflaggorna.
+
+       --version
+           Visar dpkgs versionsinformation.
+
+           När det används tillsammans med --robot kommer utdata vara
+           programmets versionsnummer i ett numeriskt format avdelat med
+           punkt, utan radbrytningstecken.
+
+       dpkg-deb-åtgärder
+           Se dpkg-deb(1) för ytterligare information om följande åtgärder,
+           och andra åtgärder och flaggor som inte är tillgängliga via skalet
+           dpkg.
+
+           -b, --build katalog [arkiv|katalog]
+               Bygg ett deb-paket.
+
+           -c, --contents arkiv
+               Lista innehållet i ett deb-paket.
+
+           -e, --control arkiv [katalog]
+               Extraherar styrfilsinformation från ett paket.
+
+           -x|--extract arkiv katalog
+               Extrahera filerna som finns i paketet.
+
+           -C|--vextract arkiv katalog
+               Extrahera och visa filnamnen som finns i paketet.
+
+           -f, --field arkiv [control-fält ...]
+               Visa paketets styrfilfält.
+
+           --ctrl-tarfile arkiv
+               Mata ut styr-tarfilen från ett Debianpaket.
+
+           --fsys-tarfile arkiv
+               Mata ut filsystems-tarfilen från ett Debianpaket.
+
+           -I, --info arkiv [control-fil ...]
+               Visa information om ett paket.
+
+       dpkg-query-åtgärder
+           Se dpkg-query(1) för ytterligare information om följande åtgärder,
+           och andra åtgärder och flaggor som inte är tillgängliga via skalet
+           dpkg.
+
+           -l, --list paketnamnsmönster...
+               Visa paket som motsvarar givet mönster.
+
+           -s, --status paketnamn...
+               Rapportera status för angivet paket.
+
+           -L, --listfiles paketnamn ...
+               Visa filer installerade på ditt system från paketnamn.
+
+           -S, --search filnamnssökmönster ...
+               Sök efter ett filnamn från installerade paket.
+
+           -p, --print-avail paketnamn...
+               Visar detaljer om paketnamn från /var/lib/dpkg/available.
+               Användare av APT-baserade skal bör istället använda apt show
+               paketnamn.
+
+FLAGGOR
+       Alla flaggorna kan ges både på kommandoraden och i dpkgs
+       konfigurationsfil /etc/dpkg/dpkg.cfg eller fragmentfilerna (vars namn
+       motsvarar skalmönstret '[0-9a-zA-Z_-]*') i konfigurationskatalogen
+       /etc/dpkg/dpkg.cfg.d/. En rad i konfigurationsfilen är antingen en
+       flagga (precis samma som på kommandoraden, men utan inledande
+       bindestreck) eller en kommentar (om den börjar med ett ”#”).
+
+       --abort-after=antal
+           Ställer in efter hur många fel dpkg ska avbryta. Förvalet är 50.
+
+       -B, --auto-deconfigure
+           När ett paket tas bort är det möjligt att ett annat paket beror på
+           det borttagna paketet. Om du anger flaggan kommer de paket som
+           beror på det borttagna paketet automatiskt att avkonfigureras.
+
+       -Doktalvärde, --debug=oktalvärde
+           Aktiverar felsökning. oktalvärdet skapas genom att utföra bitvis
+           logisk ”eller” av de önskade värdena från listan nedan (observera
+           att dessa värden kan ändras i framtida versioner). -Dh eller
+           --debug=help visar dessa felsökningsvärden.
+
+                  Tal   Beskrivning
+                    1   Allmänt hjälpsam förloppsinformation
+                    2   Anrop och status för utvecklarskript
+                   10   Utdata för varje fil som hanteras
+                  100   Massvis med utdata för varje fil som hanteras
+                   20   Utdata för varje konfigurationsfil
+                  200   Massvis med utdata för varje konfigurationsfil
+                   40   Beroenden och konflikter
+                  400   Massvis av beroende-/konfliktutdata
+                10000   Aktivering och hantering av utlösare
+                20000   Massvis av utdata om utlösare
+                40000   Dumma mängder utdata om utlösare
+                 1000   Massvis av pladder om till exempel dpkg/info-katalogen
+                 2000   Knäppa mängder pladder
+
+       --force-saker
+       --force-saker, --refuse-saker
+           Tvinga eller vägra (no-force och refuse betyder detsamma) att göra
+           vissa saker. saker är en kommaavdelad lista med saker som anges
+           nedan. --force-help visar en lista med beskrivningar. Saker som
+           markeras med (*) är tvingade som förval.
+
+           Warning: These options are mostly intended to be used by experts
+           only. Using them without fully understanding their effects may
+           break your whole system.
+
+           all:
+             Turns on (or off) all force options.
+
+           downgrade(*):
+             Install a package, even if newer version of it is already
+             installed.
+
+             Warning: At present dpkg does not do any dependency checking on
+             downgrades and therefore will not warn you if the downgrade
+             breaks the dependency of some other package. This can have
+             serious side effects, downgrading essential system components can
+             even make your whole system unusable. Use with care.
+
+           configure-any:
+             Configure also any unpacked but unconfigured packages on which
+             the current package depends.
+
+           hold:
+             Allow automatic installs, upgrades or removals of packages even
+             when marked to be on “hold”.  Note: When these actions are
+             requested explicitly, the “hold” package selection state always
+             gets ignored.
+
+           remove-reinstreq:
+             Remove a package, even if it's broken and marked to require
+             reinstallation. This may, for example, cause parts of the package
+             to remain on the system, which will then be forgotten by dpkg.
+
+           remove-protected:
+             Remove, even if the package is considered protected (since dpkg
+             1.20.1). Protected packages contain mostly important system boot
+             infrastructure or are used for custom system-local meta-packages.
+             Removing them might cause the whole system to be unable to boot
+             or lose required functionality to operate, so use with caution.
+
+           remove-essential:
+             Remove, even if the package is considered essential.  Essential
+             packages contain mostly very basic Unix commands, required for
+             the packaging system, for the operation of the system in general
+             or during boot (although the latter should be converted to
+             protected packages instead).  Removing them might cause the whole
+             system to stop working, so use with caution.
+
+           depends:
+             Turn all dependency problems into warnings.  This affects the
+             Pre-Depends and Depends fields.
+
+           depends-version:
+             Don't care about versions when checking dependencies.  This
+             affects the Pre-Depends and Depends fields.
+
+           breaks:
+             Install, even if this would break another package (since dpkg
+             1.14.6).  This affects the Breaks field.
+
+           conflicts:
+             Install, even if it conflicts with another package. This is
+             dangerous, for it will usually cause overwriting of some files.
+             This affects the Conflicts field.
+
+           confmiss:
+             Always install the missing conffile without prompting. This is
+             dangerous, since it means not preserving a change (removing) made
+             to the file.
+
+           confnew:
+             If a conffile has been modified and the version in the package
+             did change, always install the new version without prompting,
+             unless the --force-confdef is also specified, in which case the
+             default action is preferred.
+
+           confold:
+             If a conffile has been modified and the version in the package
+             did change, always keep the old version without prompting, unless
+             the --force-confdef is also specified, in which case the default
+             action is preferred.
+
+           confdef:
+             If a conffile has been modified and the version in the package
+             did change, always choose the default action without prompting.
+             If there is no default action it will stop to ask the user unless
+             --force-confnew or --force-confold is also been given, in which
+             case it will use that to decide the final action.
+
+           confask:
+             If a conffile has been modified always offer to replace it with
+             the version in the package, even if the version in the package
+             did not change (since dpkg 1.15.8).  If any of --force-confnew,
+             --force-confold, or --force-confdef is also given, it will be
+             used to decide the final action.
+
+           overwrite:
+             Overwrite one package's file with another's file.
+
+           overwrite-dir:
+             Overwrite one package's directory with another's file.
+
+           overwrite-diverted:
+             Overwrite a diverted file with an undiverted version.
+
+           statoverride-add:
+             Overwrite an existing stat override when adding it (since dpkg
+             1.19.5).
+
+           statoverride-remove:
+             Ignore a missing stat override when removing it (since dpkg
+             1.19.5).
+
+           security-mac(*):
+             Use platform-specific Mandatory Access Controls (MAC) based
+             security when installing files into the filesystem (since dpkg
+             1.19.5).  On Linux systems the implementation uses SELinux.
+
+           unsafe-io:
+             Do not perform safe I/O operations when unpacking (since dpkg
+             1.15.8.6). Currently this implies not performing file system
+             syncs before file renames, which is known to cause substantial
+             performance degradation on some file systems, unfortunately the
+             ones that require the safe I/O on the first place due to their
+             unreliable behaviour causing zero-length files on abrupt system
+             crashes.
+
+             Observera: För ext4, den värsta syndaren, kan det vara värt att
+             istället använda monteringsflaggan nodelalloc, vilken både
+             korrigerar prestandaförlusten och datasäkerhetsproblemen, det
+             sistnämnda genom att inte låta filsystemet skapa tomma filer vid
+             tvära krascher för programvara som inte utför synkronisering före
+             atomära namnbyten.
+
+             Warning: Using this option might improve performance at the cost
+             of losing data, use with care.
+
+           script-chrootless:
+             Run maintainer scripts without chroot(2)ing into instdir even if
+             the package does not support this mode of operation (since dpkg
+             1.18.5).
+
+             Warning: This can destroy your host system, use with extreme
+             care.
+
+           architecture:
+             Process even packages with wrong or no architecture.
+
+           bad-version:
+             Process even packages with wrong versions (since dpkg 1.16.1).
+
+           bad-path:
+             PATH is missing important programs, so problems are likely.
+
+           not-root:
+             Try to (de)install things even when not root.
+
+           bad-verify:
+             Install a package even if it fails authenticity check.
+
+       --ignore-depends=paket,...
+           Ignorera beroendekontroll för angivna paket (i verkligheten utförs
+           kontrollen, men det ges endast varningar, ingenting annat). Detta
+           påverkar fälten Pre-Depends, Depends och Breaks.
+
+       --no-act, --dry-run, --simulate
+           Gör allting som efterfrågas, men skriv inte några ändringar. Detta
+           används för att se vad som skulle ha hänt med åtgärden utan att
+           faktiskt ändra något.
+
+           Se till att du anger --no-act före åtgärdsflaggan, annars kan du få
+           oönskade biverkningar (t.ex så kommer dpkg --purge foo --no-act
+           först att rensa ut paketet ”foo” för att sedan försöka rensa ut
+           paketet ”--no-act”, trots att du troligen förväntade dig att
+           ingenting skulle utföras)
+
+       -R, --recursive
+           Hantera alla vanliga filer som matchar sökmönstret *.deb rekursivt
+           i de kataloger som anges, med alla sina underkataloger. Flaggan kan
+           användas tillsammans med åtgärderna -i, -A, --install, --unpack och
+           --record-avail.
+
+       -G  Installera inte paketet om en nyare version av samma paket redan är
+           installerat. Detta är ett alias för --refuse-downgrade.
+
+       --admindir=kat
+           Ställ in administrationskatalogen till katalog. Katalogen
+           innehåller flera filer som beskriver status för installerade eller
+           avinstallerade paket, osv. Standardvärde är ”/var/lib/dpkg” om
+           DPKG_ADMINDIR inte har satts.
+
+       --instdir=katalog
+           Ställ in installationskatalogen, vilket anger katalogen där paket
+           ska installeras. instdir är även katalogen som skickas som argument
+           till chroot(2) innan paketets installationsfiler körs, vilket
+           betyder att skripten ser instdir som rotkatalog. (Förval är ”/”)
+
+       --root=katalog
+           Ställ in rotkatalogen till katalog, vilket sätter
+           installationskatalogen till ”katalog” och den administrativa
+           katalogen till ”katalog/var/lib/dpkg”.
+
+       -O, --selected-only
+           Hantera endast paket som markerats för installation. Själva
+           markeringen utförs med dselect eller av dpkg när paketen hanteras.
+           Till exempel kommer paket som tas bort att markeras för
+           installation.
+
+       -E, --skip-same-version
+           Installera inte paketet om samma version och arkitektur av paketet
+           redan är installerat.
+
+           Sedan dpkg 1.21.10 tar även arkitekturen med i beräkningen, vilket
+           gör det möjligt att korsgradera paket eller installera ytterligare
+           sidoinstallerbara instanser med samma version, men olika
+           arkitektur.
+
+       --pre-invoke=kommando
+       --post-invoke=kommando
+           Sätter en anropskrok kommando som körs via ”sh -c” före eller efter
+           dpkg körs för åtgärderna unpack, configure, install, triggers-only,
+           remove, purge, add-architecture och remove-architecture (sedan dpkg
+           1.15.4; åtgärderna add-architecture och remove-architecture sedan
+           dpkg 1.17.19). Flaggan kan anges flera gånger. Ordningen på
+           flaggorna som anges behålls och de som anges i konfigurationsfilen
+           har företräde. Miljövariabeln DPKG_HOOK_ACTION sätts för hakar i
+           den nuvarande dpkg-åtgärden.
+
+           Note: Front-ends might call dpkg several times per invocation,
+           which might run the hooks more times than expected.
+
+       --path-exclude=filnamnsmönster
+       --listfilnamnsmönster
+           Sätt filnamnsmönster som ett sökvägsfilter, antingen genom att
+           exkludera eller åter inkludera tidigare exkluderade sökvägar som
+           motsvarar det angivna mönstret under installationen (sedan dpkg
+           1.15.8).
+
+           Warning: Take into account that depending on the excluded paths you
+           might completely break your system, use with caution.
+
+           The glob patterns use the same wildcards used in the shell, were
+           ‘*’ matches any sequence of characters, including the empty string
+           and also ‘/’.  For example, «/usr/*/READ*» matches
+           «/usr/share/doc/package/README».  As usual, ‘?’ matches any single
+           character (again, including ‘/’).  And ‘[’ starts a character
+           class, which can contain a list of characters, ranges and
+           complementations. See glob(7) for detailed information about
+           globbing. Note: The current implementation might re-include more
+           directories and symlinks than needed, in particular when there is a
+           more specific re-inclusion, to be on the safe side and avoid
+           possible unpack failures; future work might fix this.
+
+           Detta kan användas för att ta bort alla sökvägar förutom några
+           specifika; ett typiskt användningsområde är:
+
+            --path-exclude=/usr/share/doc/*
+            --path-include=/usr/share/doc/*/copyright
+
+           för att ta bort alla dokumentationsfiler förutom
+           upphovsrättsinformation.
+
+           Dessa två flaggor kan anges flera gånger, och kan interfolieras med
+           varandra. De hanteras båda i den givna ordningen och det är den
+           sista regeln som motsvarar ett filnamn som fäller avgörandet.
+
+           Filtren appliceras när binärpaketen packas upp, och därför har de
+           bara information om vilken sorts objekt som filtreras just nu
+           (t.ex. en normal fil eller en katalog) och kan inte se vilka objekt
+           som kommer härnäst. Eftersom filtren har sidoeffekter (i motsats
+           till find(1)-filter), får inte det att exkludera exakta sökvägsnamn
+           som råkar vara ett katalogobjekt som /usr/share/doc önskat
+           resultat, och endast sökvägsnamnet kommer att exkluderas (vilket
+           kan komma att automatiskt tas med igen om koden ser behovet).
+           Eventuella senare filer som finns i den katalogen kommer inte att
+           kunna packas upp.
+
+           Hint: make sure the globs are not expanded by your shell.
+
+       --verify-format formatnamn
+           Väljer utdataformat för kommandot --verify (sedan dpkg 1.17.2).
+
+           Det enda utdataformatet som stöds är för närvarande rpm, som består
+           av en rad för varje sökväg där ett test misslyckas. Dessa rader har
+           följande format:
+
+            missing   [c] sökvägsnamn [(felmeddelande)]
+            ??5?????? [c] sökvägsnamn
+
+           De första 9 tecknen används för att rapportera resultaten från
+           testerna, antingen ett bokstavligt missing (saknas) om filen inte
+           finns eller dess metadata inte kan hämtas, eller ett av följande
+           specialtecken som rapporterar resultatet från varje enskilt test:
+
+           ”?” Anger at testet inte kunde utföras (stöd saknas,
+               filbehörigheter, osv).
+
+           ”.” Antyder att testet lyckades.
+
+           ”A-Za-z0-9”
+               Antyder att testet misslyckades. Följande positioner och
+               alfanumeriska tecken stöds för närvarande:
+
+               1 ”?”
+                   Dessa test stöds för närvarande inte och är alltid ”?”.
+
+               2 ”M”
+                   Testet för filens läge misslyckades (sedan dpkg 1.21.0).
+                   Eftersom metadata för sökvägsnamn för närvarande inte
+                   spåras kan testet endast delvis emuleras genom en väldigt
+                   enkel heuristik för sökvägsnamn som har ett känt kondensat,
+                   vilket antyder att de bör vara vanliga filer, där testet
+                   misslyckas om sökvägsnamnet inte är en vanlig fil i
+                   filsystemet. Testet kan för närvarande aldrig lyckas
+                   eftersom tillräcklig information inte är tillgänglig.
+
+               3 ”5”
+                   The digest check failed, which means the file contents have
+                   changed.  This is only an integrity check and should not be
+                   considered as any kind of security verification.
+
+               4-9 ”?”
+                   Dessa test stöds för närvarande inte och är alltid ”?”.
+
+           Raden följs av ett blanksteg och ett attributtecken. Följande
+           attributtecken stöds:
+
+           ”c” Sökvägsnamnet är en konffil
+
+           Slutligen följs det av ytterligare ett blanksteg och sökvägsnamnet.
+
+           Om posten var av typen missing och filen faktiskt inte finns i
+           filsystemet komemrr aden följas av ett blanksteg och felmeddelandet
+           inom parenteser.
+
+       --status-fd n
+           Sänd maskinläsbar paketstatus och förloppsinformation till
+           filhandtag n. Flaggan kan anges flera gånger. Informationen lagras
+           vanligtvis rad för rad, i följande format:
+
+           status: paket: status
+               Paketstatus ändrad; status är som i statusfilen.
+
+           status: paket : error : utökat-felmeddelande
+               Ett fel uppstod. Eventuella nyradstecken i
+               utökat-felmeddelanden kommer ersättas med blanksteg innan de
+               skrivs ut.
+
+           status: fil : conffile-prompt : 'riktig-gammal' 'riktig-ny'
+           användarredigerad distredigerad
+               Användaren får en fråga om konfigurationsfiler.
+
+           processing: skede: paket
+               Sänds precis innan ett hanteringsskede påbörjas. Skede är något
+               av upgrade, install (båda sänds innan paketet packas upp),
+               configure, trigproc, disappear, remove, purge.
+
+       --status-logger=kommando
+           Sänd maskinläsbar paketstatus och förloppsinformation till
+           skal-kommandots standard in, som körs via ”sh -c” (sedan dpkg
+           1.16.0). Flaggan kan anges flera gånger. Utdataformatet som används
+           är detsamma som för --status-fd.
+
+       --log=filnamn
+           Logga uppdateringar av statusändringar och åtgärder till filnamn,
+           istället för den förvalda /var/log/dpkg.log. Om flaggan anges flera
+           gånger används det sista filnamnet. Loggmeddelanden är på formen:
+
+           ÅÅÅÅ-MM-DD HH:MM:SS startup typ kommando
+               För varje dpkg-körning där typ är archives (med kommandot
+               unpack eller install) eller packages (med kommandot configure,
+               b<triggers-only>, remove eller purge).
+
+           ÅÅÅÅ-MM-DD HH:MM:SS status tillstånd paket installerad-version
+               För uppdateringar om statusändringar.
+
+           ÅÅÅÅ-MM-DD HH:MM:SS åtgärd paket installerad-version
+           tillgänglig-version
+               För åtgärder där åtgärd är en av install, upgrade, configure,
+               trigproc, disappear, remove eller purge.
+
+           ÅÅÅÅ-MM-DD HH:MM:SS conffile filnamn val
+               För konffil-ändringar där val är antingen install (installera)
+               eller keep (behåll).
+
+       --robot
+           Använd ett maskinläsbart utdataformat. Detta tillhandahåller ett
+           gränssnitt för program som behöver tolka utdata från några av de
+           kommandon som annars inte skriver ut ett maskinläsbart
+           utdataformat. Ingen lokalanpassning kommer att användas och utdata
+           kommer att modifieras så att det är lättare att tolka.
+
+           Det enda kommando som för närvarande stöds är --version.
+
+       --no-pager
+           Använd inte någon bläddrare för att visa informationen (sedan dpkg
+           1.19.2).
+
+       --no-debsig
+           Försök inte verifiera paketsignaturer.
+
+       --no-triggers
+           Utför inte utlösare i denna körning (sedan dpkg 1.14.17), men
+           aktiveringar kommer fortfarande att antecknas. Om det används
+           tillsammans med --configure paket eller --triggers-only paket
+           kommer det namngivna paketets postinst fortfarande att köras även
+           om det enda som behövdes var en körning av utlösare. Om du använder
+           denna flagga kan det hända att paket hamnar i felaktiga väntar på
+           utlösare- och utlösare väntar-tillstånd. Detta kan rättas senare
+           genom att köra: dpkg --configure --pending.
+
+       --triggers
+           Annullerar ett tidigare --no-triggers (sedan dpkg 1.14.17).
+
+RETURVÄRDE
+       0   Den önskade funktionen utfördes utan fel. Eller ett test eller ett
+           påstående returnerade sant.
+
+       1   Ett test eller ett påstående returnerade falskt.
+
+       2   Ödesdigert eller irreparabelt fel på grund av felaktig användning
+           på kommandoraden, eller interaktioner med systemet, såsom
+           databasåtkomst, minnesallokeringer, osv.
+
+MILJÖVARIABLER
+   Extern miljö
+       PATH
+           Den här variabeln förväntas vara angiven i miljön och peka på de
+           systemsökvägar där flera krävda program hittas. Om den inte är satt
+           eller programmen inte hittas kommer dpkg att avbryta.
+
+       HOME
+           Om satt så kommer dpkg att använda det som den katalog från vilken
+           det ska läsa den användarspecifika konfigurationsfilen.
+
+       TMPDIR
+           Om satt så kommer dpkg att använda det som den katalog där det
+           skapar temporära filer och kataloger.
+
+       SHELL
+           Programmet dpkg kommer att exekveras när ett nytt skal startas,
+           eller när ett kommando startas via ett skal.
+
+       PAGER
+       DPKG_PAGER
+           Programmet dpkg kommer att köra när en bläddrare körs, vilken
+           kommer att köras med ”$SHELL -c”, till exempel när skillnader i
+           konffiler ska visas. Om SHELL inte är satt kommer ”sh” att användas
+           istället. DPKG_PAGER överstyr miljövariabeln PAGER (sedan dpkg
+           1.19.2).
+
+       DPKG_COLORS
+           Väljer färgläge (sedan dpkg 1.18.5). För närvarande godtas följande
+           värden: auto (förval), always och never.
+
+       DPKG_DEBUG
+           Anger felsökningsmasken (sedan dpkg 1.21.10) från ett oktalt värde.
+           De flaggor som för närvarande godtas beskrivs i flaggan --debug.
+
+       DPKG_FORCE
+           Ställer in de tvingande flaggorna (sedan dpkg 1.19.5). När
+           variabeln är satt kommer inte de inbyggda förvalda tvingande
+           flaggorna att användas. Om variabeln är närvarande men tom kommer
+           alla tvingande flaggor att inaktiverats.
+
+       DPKG_ADMINDIR
+           Om satt, och flaggorna --admindir och -root inte har angivits,
+           används värdet som administrativ katalog för dpkg (sedan dpkg
+           1.20.0).
+
+       DPKG_FRONTEND_LOCKED
+           Ställer in ett pakethanterarskal att meddela dpkg att det inte ska
+           ta skal-låset (sedan dpkg 1.19.1).
+
+   Intern miljö
+       LESS
+           Definieras av dpkg till ”-FRSXMQ” om det inte redan har satts, när
+           en bläddrare startas (sedan dpkg 1.19.2). För att ändra det
+           förvalda beteendet kan den här variabeln ställas in på förhand till
+           ett annat värde, däribland en tom sträng, eller så kan variablerna
+           PAGER eller DPKG_PAGER ställas in till att inaktivera specifika
+           flaggor med ”-+”, till exempel DPKG_PAGER="less -+F".
+
+       DPKG_ROOT
+           Definieras av dpkg i utvecklarskriptets miljö till att ange vilken
+           installation det ska utföras på (sedan dpkg 1.18.5). Värdet är
+           tänkt att läggas till först i alla sökvägar utvecklarskripten
+           opererar på. Under vanlig körning är den här variabeln tom. När
+           paket installeras i ett annat instdir startar dpkg normalt
+           utecklarskipten med chroot(2) och lämnar variabeln tom, men om
+           --force-script-chrootless anges kommer chroot(2)-anropet att hoppas
+           över och instdir är icke-tomt.
+
+       DPKG_ADMINDIR
+           Definieras av dpkg i utvecklarskriptets miljö för att ange vilket
+           administrativ dpkg-katalog som ska användas (sedan dpkg 1.16.0).
+           Den här variabeln är alltid satt till aktuellt värde för
+           --admindir.
+
+       DPKG_FORCE
+           Definieras av dpkg i underprocessmiljöer till namnen på alla för
+           närvarande aktiverade tvingande flaggor, avdelade med komma (sedan
+           dpkg 1.19.5).
+
+       DPKG_SHELL_REASON
+           Definieras av dpkg i skalet som startas för att undersöka
+           situationen efter konfigurationsfilsfrågan (sedan dpkg 1.15.6).
+           Tillåtet värde är för närvarande: conffile-prompt.
+
+       DPKG_CONFFILE_OLD
+           Definieras av dpkg i skalet som startas för att undersöka
+           situationen efter konfigurationsfilsfrågan (sedan dpkg 1.15.6).
+           Innehåller sökvägen till den gamla konfigurationsfilen.
+
+       DPKG_CONFFILE_NEW
+           Definieras av dpkg i skalet som startas för att undersöka
+           situationen efter konfigurationsfilsfrågan (sedan dpkg 1.15.6).
+           Innehåller sökvägen till den nya konfigurationsfilen.
+
+       DPKG_HOOK_ACTION
+           Definieras av dpkg i skalet som startas när en krokåtgärd exekveras
+           (sedan dpkg 1.15.49. Innehåller aktuell dpkg-åtgärd.
+
+       DPKG_RUNNING_VERSION
+           Definieras av dpkg i utvecklarskriptets miljö till versionen av den
+           instans av dpkg som körs för tillfället (sedan dpkg 1.14.17).
+
+       DPKG_MAINTSCRIPT_PACKAGE
+           Definieras av dpkg i utvecklarskriptets miljö till (det icke
+           arkitekturkvalificerade) namnet på paketet som hanteras (sedan dpkg
+           1.14.17).
+
+       DPKG_MAINTSCRIPT_PACKAGE_REFCOUNT
+           Definieras av dpkg i utvecklarskriptets miljö till paketets
+           referensräknare, dvs. antalet paketinstanser med ett tillstånd
+           högre än not-installed (sedan dpkg 1.17.2).
+
+       DPKG_MAINTSCRIPT_ARCH
+           Definieras av dpkg i utvecklarskriptets miljö till arkitekturen
+           paketet byggdes för (sedan dpkg 1.15.4).
+
+       DPKG_MAINTSCRIPT_NAME
+           Definieras av dpkg i utvecklarskriptets miljö till namnet på det
+           skript som körs, en av preinst, postinst, prerm eller postrm (sedan
+           dpkg 1.15.7).
+
+       DPKG_MAINTSCRIPT_DEBUG
+           Definieras av dpkg i utvecklarskriptets miljö till ett värde (”0”
+           eller ”1”) som anger huruvida felsökning har efterfrågats (sedan
+           dpkg 1.18.4).
+
+FILER
+       /etc/dpkg/dpkg.cfg.d/[0-9a-zA-Z_-]*
+           Konfigurationsfragmentfiler (sedan dpkg 1.15.4).
+
+       /etc/dpkg/dpkg.cfg
+           Konfigurationsfil med förvalda inställningar.
+
+       /var/log/dpkg.log
+           Förvald loggfil (se /etc/dpkg/dpkg.cfg och flaggan --log).
+
+       Övriga filer som listas här finns i sina förvalda kataloger, se flaggan
+       --admindir för information om hur du ändrar placeringen av dessa filer.
+
+       /var/lib/dpkg/available
+           Lista över tillgängliga paket.
+
+       /var/lib/dpkg/status
+           Status för tillgängliga paket. Filen innehåller information om
+           huruvida ett paket är markerat för borttagning eller ej, om det är
+           installerat eller ej, osv. Se sektionen INFORMATION OM PAKET för
+           ytterligare information.
+
+           Statusfilen säkerhetskopieras dagligen i /var/backups. Det kan vara
+           nyttigt om den går förlorad eller skrivs sönder på grund av problem
+           med filsystemet.
+
+       Formatet och innehållet i ett binärpaket beskrivs i deb(5).
+
+SECURITY
+       Any operation that needs write access to the database or the filesystem
+       is considered a privileged operation that might allow root escalation.
+       These operations must never be delegated to an untrusted user or be
+       done on untrusted packages, as that might allow root access to the
+       system.
+
+       Some operations (such as package verification) might need root
+       privileges to be able to access files on the filesystem that would
+       otherwise be inaccessible due to restricted permissions, but should
+       otherwise work normally and produce appropriate messages in those
+       cases.
+
+       Query operations should never require root, and delegating their
+       execution to unprivileged users via some gain-root command can have
+       security implications (such as privilege escalation), for example when
+       a pager is automatically invoked by the tool.
+
+       See also the SECURITY section of the dpkg-deb(1) and dpkg-split(1)
+       manual pages.
+
+PROGRAMFEL
+       --no-act ger oftast mindre information än vad som vore hjälpsamt.
+
+EXEMPEL
+       För att lista paket relaterade till textredigeringsprogrammet vi(1)
+       (observera att dpkg-query inte längre läser in available-filen som
+       standard, och att flaggan dpkg-query --load-avail istället bör användas
+       för det):
+
+        dpkg -l '*vi*'
+
+       För att se posterna i /var/lib/dpkg/available för två paket:
+
+        dpkg --print-avail elvis vim | less
+
+       För att själv söka i paketlistan:
+
+        less /var/lib/dpkg/available
+
+       För att ta bort det installerade paketet elvis:
+
+        dpkg -r elvis
+
+       För att installera ett paket måste du först leta på det i ett arkiv
+       eller på en cd-rom. Filen available visar att vim-paketet finns i
+       sektionen editors (textredigeringsprogram):
+
+        cd /media/cdrom/pool/main/v/vim
+        dpkg -i vim_4.5-3.deb
+
+       För att göra en lokal kopia av paketmarkeringarna:
+
+        dpkg --get-selections >myselections
+
+       Du kan överföra filen till en annan dator, och efter att du har
+       uppdaterat available-filen där med ditt önskade pakethanterarskal (se
+       <https://wiki.debian.org/Teams/Dpkg/FAQ#set-selections> för mer
+       information), till exempel:
+
+        apt-cache dumpavail | dpkg --merge-avail
+
+       eller med dpkg 1.17.6 eller tidigare:
+
+        avail=$(mktemp)
+        apt-cache dumpavail >"$avail"
+        dpkg --merge-avail "$avail"
+        rm "$avail"
+
+       så kan du installera den med:
+
+        dpkg --clear-selections
+        dpkg --set-selections <mitturval
+
+       Observera att detta faktiskt inte kommer installera eller ta bort
+       någonting, utan bara sätta valstatus på de efterfrågade paketen. Du
+       måste använda ett annat program för att faktiskt hämta och installera
+       de efterfrågade paketen. Till exempel kan du köra apt-get dselect-
+       upgrade.
+
+       För normalt bruk kommer du att upptäcka att dselect(1) tillhandahåller
+       ett bekvämare sätt att ändra paketmarkeringarna.
+
+YTTERLIGARE FUNKTIONER
+       Ytterligare funktioner kan erhållas genom att installera något av
+       följande paket: apt, aptitude och debsums.
+
+SE ÄVEN
+       aptitude(8), apt(8), dselect(1), dpkg-deb(1), dpkg-query(1), deb(5),
+       deb-control(5), dpkg.cfg(5), och dpkg-reconfigure(8).
+
+FÖRFATTARE
+       Se /usr/share/doc/dpkg/THANKS för listan över personer som har bidragit
+       till dpkg.
+
+ÖVERSÄTTNING
+       Peter Krefting och Daniel Nylander.
+
+1.22.0                            2023-09-06                           dpkg(1)
