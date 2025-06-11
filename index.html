@@ -11,6 +11,16 @@
     <link rel="stylesheet" href="themes/dracula.css">
     <link rel="stylesheet" href="themes/monokai.css">
     <link rel="stylesheet" href="themes/high-contrast.css">
+    <link rel="stylesheet" href="themes/nord.css">
+    <link rel="stylesheet" href="themes/gruvbox.css">
+    <link rel="stylesheet" href="themes/one-dark.css">
+    <link rel="stylesheet" href="themes/tokyo-night.css">
+    <link rel="stylesheet" href="themes/neon-noir.css">
+    <link rel="stylesheet" href="themes/cyber-frost.css">
+    <link rel="stylesheet" href="themes/retro-wave.css">
+    <link rel="stylesheet" href="themes/miami-sunrise.css">
+    <link rel="stylesheet" href="themes/forest-dawn.css">
+    <link rel="stylesheet" href="themes/ocean-depth.css">
     <style>
         * {
             margin: 0;
@@ -847,6 +857,148 @@
             display: none;
         }
 
+        /* Theme Modal - Isolated from theme styles */
+        .theme-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white !important;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            z-index: 500;
+            display: none;
+            overflow: hidden;
+            color: #333 !important;
+            border: none !important;
+        }
+
+        .theme-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0 !important;
+            background: white !important;
+        }
+
+        .theme-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #333 !important;
+            text-shadow: none !important;
+        }
+
+        .theme-modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(85vh - 80px);
+            background: white !important;
+        }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .theme-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+            box-sizing: border-box;
+            border: 2px solid #e0e0e0 !important;
+            background: #f8f8f8 !important;
+        }
+
+        .theme-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+            background: #f0f0f0 !important;
+        }
+
+        .theme-option.active {
+            box-shadow: 0 0 0 3px #4285f4 !important;
+            border-color: #4285f4 !important;
+            background: #e8f0fe !important;
+        }
+
+        .theme-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #4285f4;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .theme-option-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            filter: none !important;
+        }
+
+        .theme-option-name {
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333 !important;
+            text-shadow: none !important;
+        }
+
+        .theme-option-preview {
+            width: 100%;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            height: 60px;
+            overflow: hidden;
+        }
+        
+        /* Consistent preview styling */
+        .theme-option-preview > div {
+            flex: 1;
+            min-height: 0;
+        }
+        
+        /* Ensure close button stays consistent */
+        .theme-modal .close-button {
+            background: transparent !important;
+            border: 1px solid #999 !important;
+            color: #666 !important;
+            padding: 4px 12px !important;
+            border-radius: 4px !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        .theme-modal .close-button:hover {
+            background: #f0f0f0 !important;
+            border-color: #666 !important;
+            color: #333 !important;
+        }
+
         @media (max-width: 1024px) {
             .content-wrapper {
                 flex-direction: column;
@@ -1182,6 +1334,18 @@
                 <td>Show this help</td>
             </tr>
         </table>
+    </div>
+
+    <div class="theme-modal" id="themeModal">
+        <div class="theme-modal-header">
+            <h3>Choose Theme</h3>
+            <button class="close-button" id="themeModalClose">&times;</button>
+        </div>
+        <div class="theme-modal-content">
+            <div class="theme-options" id="themeOptions">
+                <!-- Theme options will be populated by JavaScript -->
+            </div>
+        </div>
     </div>
 
     <div class="overlay" id="overlay"></div>
@@ -2615,10 +2779,7 @@
             overlay.style.display = shortcutsHelp.style.display;
         });
         
-        overlay.addEventListener('click', () => {
-            shortcutsHelp.style.display = 'none';
-            overlay.style.display = 'none';
-        });
+        // Removed - consolidated with the overlay handler below
 
         // Hide suggestions when clicking outside
         document.addEventListener('click', (e) => {
@@ -2629,31 +2790,44 @@
 
         // Theme toggle handling
         const themes = [
-            { name: 'Light', class: '', icon: '☀️' },
+            { name: 'Cyber Frost', class: 'cyber-frost', icon: '❄️' },
             { name: 'Dark', class: 'dark-mode', icon: '🌙' },
-            { name: 'Solarized', class: 'solarized-dark', icon: '🌅' },
             { name: 'Dracula', class: 'dracula', icon: '🧛' },
+            { name: 'Forest Dawn', class: 'forest-dawn', icon: '🌲' },
+            { name: 'Gruvbox', class: 'gruvbox', icon: '🍂' },
+            { name: 'High Contrast', class: 'high-contrast', icon: '⚡' },
+            { name: 'Light', class: '', icon: '☀️' },
+            { name: 'Miami Sunrise', class: 'miami-sunrise', icon: '🌺' },
             { name: 'Monokai', class: 'monokai', icon: '🎨' },
-            { name: 'High Contrast', class: 'high-contrast', icon: '⚡' }
+            { name: 'Neon Noir', class: 'neon-noir', icon: '🌆' },
+            { name: 'Nord', class: 'nord', icon: '🏔️' },
+            { name: 'Ocean Depth', class: 'ocean-depth', icon: '🌊' },
+            { name: 'One Dark', class: 'one-dark', icon: '🌑' },
+            { name: 'Retro Wave', class: 'retro-wave', icon: '🌴' },
+            { name: 'Solarized', class: 'solarized-dark', icon: '🌅' },
+            { name: 'Tokyo Night', class: 'tokyo-night', icon: '🌃' }
         ];
         
-        let currentThemeIndex = 0;
+        let currentThemeIndex = 11; // Ocean Depth as default
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = themeToggle.querySelector('.theme-icon');
         
-        // Add theme name tooltip
-        const themeName = document.createElement('span');
-        themeName.className = 'theme-name';
-        themeToggle.appendChild(themeName);
+        // Theme name tooltip removed - using modal instead
         
-        // Load saved theme
+        // Load saved theme or apply default
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             const themeIndex = themes.findIndex(t => t.class === savedTheme);
             if (themeIndex !== -1) {
                 currentThemeIndex = themeIndex;
                 applyTheme(currentThemeIndex);
+            } else {
+                // Saved theme not found, apply default
+                applyTheme(currentThemeIndex);
             }
+        } else {
+            // No saved theme, apply default
+            applyTheme(currentThemeIndex);
         }
         
         function applyTheme(index) {
@@ -2670,17 +2844,277 @@
                 document.body.classList.add(theme.class);
             }
             
-            // Update icon and name
+            // Update icon
             themeIcon.textContent = theme.icon;
-            themeName.textContent = theme.name;
             
             // Save preference
             localStorage.setItem('theme', theme.class || '');
         }
         
-        themeToggle.addEventListener('click', () => {
-            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-            applyTheme(currentThemeIndex);
+        // Theme modal elements
+        const themeModal = document.getElementById('themeModal');
+        const themeModalClose = document.getElementById('themeModalClose');
+        const themeOptions = document.getElementById('themeOptions');
+        
+        // Populate theme options
+        function populateThemeOptions() {
+            themeOptions.innerHTML = '';
+            themes.forEach((theme, index) => {
+                const option = document.createElement('div');
+                option.className = 'theme-option';
+                if (index === currentThemeIndex) {
+                    option.classList.add('active');
+                }
+                
+                // Apply theme-specific styling to the card
+                applyThemeCardStyle(option, theme);
+                
+                const icon = document.createElement('div');
+                icon.className = 'theme-option-icon';
+                icon.textContent = theme.icon;
+                
+                const name = document.createElement('div');
+                name.className = 'theme-option-name';
+                name.textContent = theme.name;
+                
+                const preview = document.createElement('div');
+                preview.className = 'theme-option-preview';
+                preview.innerHTML = createThemePreview(theme);
+                
+                option.appendChild(icon);
+                option.appendChild(name);
+                option.appendChild(preview);
+                
+                option.addEventListener('click', () => {
+                    currentThemeIndex = index;
+                    applyTheme(currentThemeIndex);
+                    populateThemeOptions(); // Update active state
+                    closeThemeModal();
+                });
+                
+                themeOptions.appendChild(option);
+            });
+        }
+        
+        function applyThemeCardStyle(card, theme) {
+            const cardStyles = {
+                '': {
+                    background: '#ffffff',
+                    color: '#333333',
+                    border: '2px solid #e0e0e0'
+                },
+                'dark-mode': {
+                    background: '#1e1e1e',
+                    color: '#e0e0e0',
+                    border: '2px solid #444'
+                },
+                'nord': {
+                    background: '#3b4252',
+                    color: '#eceff4',
+                    border: '2px solid #4c566a'
+                },
+                'one-dark': {
+                    background: '#282c34',
+                    color: '#abb2bf',
+                    border: '2px solid #3e4451'
+                },
+                'tokyo-night': {
+                    background: '#24283b',
+                    color: '#c0caf5',
+                    border: '2px solid #3b4261'
+                },
+                'gruvbox': {
+                    background: '#3c3836',
+                    color: '#ebdbb2',
+                    border: '2px solid #665c54'
+                },
+                'solarized-dark': {
+                    background: '#002b36',
+                    color: '#93a1a1',
+                    border: '2px solid #073642'
+                },
+                'dracula': {
+                    background: '#282a36',
+                    color: '#f8f8f2',
+                    border: '2px solid #44475a'
+                },
+                'monokai': {
+                    background: '#272822',
+                    color: '#f8f8f2',
+                    border: '2px solid #3e3d32'
+                },
+                'high-contrast': {
+                    background: '#000000',
+                    color: '#ffffff',
+                    border: '2px solid #ffffff'
+                },
+                'neon-noir': {
+                    background: '#1a1a24',
+                    color: '#e4e4f0',
+                    border: '2px solid #ea00d9'
+                },
+                'cyber-frost': {
+                    background: '#ffffff',
+                    color: '#1a1f36',
+                    border: '2px solid #00d4ff'
+                },
+                'retro-wave': {
+                    background: '#1a0b2e',
+                    color: '#ffeef8',
+                    border: '2px solid #f222ff'
+                },
+                'miami-sunrise': {
+                    background: '#fff5f8',
+                    color: '#2d1b69',
+                    border: '2px solid #ff71ce'
+                },
+                'forest-dawn': {
+                    background: '#fefef9',
+                    color: '#2b3e1f',
+                    border: '2px solid #90a955'
+                },
+                'ocean-depth': {
+                    background: '#14273e',
+                    color: '#e9f5f2',
+                    border: '2px solid #0a9396'
+                }
+            };
+            
+            const style = cardStyles[theme.class] || cardStyles[''];
+            Object.assign(card.style, style);
+        }
+        
+        function createThemePreview(theme) {
+            const previewHTML = {
+                '': `
+                    <div style="background: #f5f5f5; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #4285f4; font-weight: bold;">SECTION</div>
+                        <div style="color: #333;">man <span style="color: #0066cc;">command</span></div>
+                    </div>
+                `,
+                'dark-mode': `
+                    <div style="background: #2d2d2d; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #4a9eff; font-weight: bold;">SECTION</div>
+                        <div style="color: #d4d4d4;">man <span style="color: #79b8ff;">command</span></div>
+                    </div>
+                `,
+                'nord': `
+                    <div style="background: #2e3440; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #88c0d0; font-weight: bold;">SECTION</div>
+                        <div style="color: #d8dee9;">man <span style="color: #81a1c1;">command</span></div>
+                    </div>
+                `,
+                'one-dark': `
+                    <div style="background: #21252b; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #61afef; font-weight: bold;">SECTION</div>
+                        <div style="color: #abb2bf;">man <span style="color: #61afef;">command</span></div>
+                    </div>
+                `,
+                'tokyo-night': `
+                    <div style="background: #1f2335; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #7aa2f7; font-weight: bold;">SECTION</div>
+                        <div style="color: #a9b1d6;">man <span style="color: #7dcfff;">command</span></div>
+                    </div>
+                `,
+                'gruvbox': `
+                    <div style="background: #282828; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #b8bb26; font-weight: bold;">SECTION</div>
+                        <div style="color: #ebdbb2;">man <span style="color: #83a598;">command</span></div>
+                    </div>
+                `,
+                'solarized-dark': `
+                    <div style="background: #073642; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #268bd2; font-weight: bold;">SECTION</div>
+                        <div style="color: #93a1a1;">man <span style="color: #2aa198;">command</span></div>
+                    </div>
+                `,
+                'dracula': `
+                    <div style="background: #44475a; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #bd93f9; font-weight: bold;">SECTION</div>
+                        <div style="color: #f8f8f2;">man <span style="color: #8be9fd;">command</span></div>
+                    </div>
+                `,
+                'monokai': `
+                    <div style="background: #3e3d32; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #a6e22e; font-weight: bold;">SECTION</div>
+                        <div style="color: #f8f8f2;">man <span style="color: #66d9ef;">command</span></div>
+                    </div>
+                `,
+                'high-contrast': `
+                    <div style="background: #000; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #fff;">
+                        <div style="color: #ffff00; font-weight: bold;">SECTION</div>
+                        <div style="color: #ffffff;">man <span style="color: #00ff00;">command</span></div>
+                    </div>
+                `,
+                'neon-noir': `
+                    <div style="background: #0a0a0f; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; box-shadow: 0 0 10px rgba(234, 0, 217, 0.3);">
+                        <div style="color: #00ffff; font-weight: bold; text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);">SECTION</div>
+                        <div style="color: #e4e4f0;">man <span style="color: #0abdc6; text-shadow: 0 0 3px rgba(10, 189, 198, 0.3);">command</span></div>
+                    </div>
+                `,
+                'cyber-frost': `
+                    <div style="background: #ffffff; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #00d4ff;">
+                        <div style="color: #00bcd4; font-weight: bold; text-shadow: 0 0 5px rgba(0, 188, 212, 0.2);">SECTION</div>
+                        <div style="color: #1a1f36;">man <span style="color: #4fc3f7; font-weight: 500;">command</span></div>
+                    </div>
+                `,
+                'retro-wave': `
+                    <div style="background: #0f0613; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; box-shadow: 0 0 15px rgba(255, 41, 117, 0.3);">
+                        <div style="color: #01cdfe; font-weight: bold; text-shadow: 0 0 10px rgba(1, 205, 254, 0.6);">SECTION</div>
+                        <div style="color: #ffeef8;">man <span style="color: #00bfff; text-shadow: 0 0 5px rgba(0, 191, 255, 0.5);">command</span></div>
+                    </div>
+                `,
+                'miami-sunrise': `
+                    <div style="background: #ffffff; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #ff71ce;">
+                        <div style="color: #00d4cc; font-weight: bold;">SECTION</div>
+                        <div style="color: #2d1b69;">man <span style="color: #01cdfe; font-weight: 500;">command</span></div>
+                    </div>
+                `,
+                'forest-dawn': `
+                    <div style="background: #f9f7f1; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #2d5016; font-weight: bold;">SECTION</div>
+                        <div style="color: #2b3e1f;">man <span style="color: #4a6741; font-weight: 500;">command</span></div>
+                    </div>
+                `,
+                'ocean-depth': `
+                    <div style="background: #0a1628; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; box-shadow: 0 0 10px rgba(0, 212, 204, 0.2);">
+                        <div style="color: #00d4cc; font-weight: bold; text-shadow: 0 0 10px rgba(0, 212, 204, 0.4);">SECTION</div>
+                        <div style="color: #e9f5f2;">man <span style="color: #41b3ff; text-shadow: 0 0 5px rgba(65, 179, 255, 0.3);">command</span></div>
+                    </div>
+                `
+            };
+            
+            return previewHTML[theme.class] || previewHTML[''];
+        }
+        
+        function openThemeModal() {
+            populateThemeOptions();
+            themeModal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+        
+        function closeThemeModal() {
+            themeModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+        
+        themeToggle.addEventListener('click', openThemeModal);
+        
+        themeModalClose.addEventListener('click', closeThemeModal);
+        
+        // Close modals when clicking overlay
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                // Close theme modal if open
+                if (themeModal.style.display === 'block') {
+                    closeThemeModal();
+                }
+                // Close shortcuts help if open
+                if (shortcutsHelp.style.display === 'block') {
+                    shortcutsHelp.style.display = 'none';
+                    overlay.style.display = 'none';
+                }
+            }
         });
 
         // Handle direct linking via hash
