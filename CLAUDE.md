@@ -4,30 +4,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a self-contained web application for searching and viewing Linux manual pages, designed for static hosting on GitHub Pages or GitLab Pages. The entire application is contained in a single `index.html` file with inline CSS and JavaScript, making it easy to deploy anywhere.
+Linux Man Pages is a fully self-contained, offline-capable web application for searching and viewing Linux manual pages. Designed for static hosting on GitHub Pages or GitLab Pages, it provides instant access to 1,838 official Linux man pages and TLDR summaries without requiring any internet connection after deployment.
 
-## Key Architecture & Data Loading
+## Key Architecture
 
-### Data Files Structure
-The application uses a modular data loading system:
-- `data/manifest.js` - Declares `window.manFiles` array listing all data files
-- `data/index.js` - Declares `window.searchIndex` array with all searchable commands
-- `data/man_1.js` - Contains `window.manData_1` object with actual man page content
+### Single-Page Application
+- Complete application in `index.html` with inline CSS and JavaScript
+- No build process required - just static files
+- 16 modular theme CSS files in `themes/` directory
+- Ocean Depth theme is the default (index 11 in themes array)
 
-### Critical Data Loading Mechanism
-The `loadDataFile()` function in index.html dynamically loads man page data:
-```javascript
-const dataVarName = `manData_${fileNumber}`;
-data = window[dataVarName];  // Must use window[varName], NOT eval()
+### Data Architecture
+```
+data/
+├── index.js         # Search index (window.searchIndex)
+└── tldr_index.js    # TLDR pages index
+
+man_pages/           # 1,838 man page files
+├── [command].[section].txt
+
+tldr_pages/          # TLDR summaries
+├── common/          # Cross-platform commands
+└── linux/           # Linux-specific commands
 ```
 
-**Important**: All data files must use `window.variableName` instead of `const variableName` to ensure global accessibility when loaded dynamically.
+### Theme System
+- 16 themes with isolated styles to prevent conflicts
+- Theme modal uses `!important` declarations for consistency
+- Each theme includes styles for:
+  - Search input, button, and section dropdown
+  - Man page content and formatting
+  - UI elements (bookmarks, history, etc.)
 
-### Previous GitHub Pages Issues (Resolved)
-Man page content was failing to load with "Data not found in file 1" error. Fixes applied:
-1. Changed all data file declarations from `const` to `window.`
-2. Replaced `eval(dataVarName)` with `window[dataVarName]`
-3. Fixed syntax error in `data/man_1.js` - missing comma after zip_1 entry (line 323)
+### Storage & Caching
+- History: `localStorage.manPageHistory`
+- Bookmarks: `localStorage.manPageBookmarks` 
+- Theme preference: `localStorage.selectedTheme`
+- TLDR cache: Built into distribution (no fetching needed)
 
 ## Development Commands
 
@@ -41,107 +54,101 @@ python3 -m http.server 8000
 npx http-server -p 8000
 ```
 
-### Man Page Data Management
+### Creating Distribution Archives
 ```bash
-# Collect and generate man page data from system
-./collect_man_pages.sh
+# Create tar and zip files for offline deployment
+mkdir -p dist
+tar -czf dist/linux-man-pages-v5.1.0.tar.gz \
+  index.html data/ themes/ man_pages/ tldr_pages/ \
+  package.json README.md LICENSE .gitlab-ci.yml .nojekyll
 
-# Data now contains 1,838 official Linux man pages
-# No placeholder management needed
+# Generate checksums
+cd dist && sha256sum *.tar.gz *.zip > checksums-v5.1.0.txt
 ```
 
-### Testing with Puppeteer
+### Testing
 ```bash
-# Install dependencies (only puppeteer needed for testing)
-npm install
+# Install test dependencies
+npm install puppeteer
 
-# Run specific test suites
-node test_puppeteer.js                       # Basic functionality tests
-node test_github_pages.js                   # GitHub Pages deployment tests
-node test_error_detail.js                   # Error handling tests
-
-# Visual testing (generates screenshots)
-# Results saved to test_screenshots/
+# Run visual tests (if test scripts exist)
+# Screenshots saved to test_screenshots/
 ```
 
-### Validation Before Push
+### GitHub Release
 ```bash
-# Run validation script before pushing
-./validate.sh
-
-# This checks:
-# - JavaScript syntax in all .js files
-# - Required files exist
-# - Data files use window. declarations
-# - No const declarations in data files
-```
-
-### Deployment
-```bash
-# GitHub Pages - automatic via GitHub Actions on push to main
-git push origin main
-
-# Manual deployment - just push files, no build needed
+# Create and publish release with distribution files
+gh release create v5.1.0 \
+  --title "Release v5.1.0: Enhanced theme system and offline distribution" \
+  --notes-file RELEASE_NOTES_5.1.0.md \
+  dist/linux-man-pages-v5.1.0.tar.gz
 ```
 
 ## Key Implementation Details
 
-### TLDR Integration
-- Fetches from `https://raw.githubusercontent.com/tldr-pages/tldr/main/pages/`
-- Caches in localStorage with 7-day expiration
-- Falls back gracefully if unavailable
+### Man Page Loading
+- Man pages stored as individual `.txt` files in `man_pages/` directory
+- Direct file loading via fetch() - no dynamic data files needed
+- Format: `[command].[section].txt` (e.g., `ls.1.txt`)
+
+### TLDR Integration  
+- TLDR pages stored locally in `tldr_pages/common/` and `tldr_pages/linux/`
+- No external fetching required - completely offline
+- Indexed via `data/tldr_index.js` for quick lookup
 
 ### Search Implementation
-- Real-time filtering of `window.searchIndex`
+- Real-time filtering of `window.searchIndex` from `data/index.js`
 - Supports command name and description matching
-- Section filtering via dropdown
+- Section filtering via dropdown (sections 1-8)
+- Instant results with no pagination limit
 
-### Man Page Display
-- Lazy loads data files on demand
-- Formats man page content with regex-based parsing
-- Supports sections, lists, and basic formatting
+### Theme Modal Isolation
+```css
+/* Theme modal styles use !important to prevent theme overrides */
+.theme-modal {
+    background: white !important;
+    color: #333 !important;
+}
+.theme-option {
+    min-height: 180px;
+    border: 2px solid #e0e0e0 !important;
+}
+```
 
-### Storage
-- History: `localStorage.manPageHistory`
-- Bookmarks: `localStorage.manPageBookmarks`
-- Dark mode: `localStorage.darkMode`
-- TLDR cache: `localStorage.tldrCache_[command]`
+## Critical Files
+- `index.html` - Complete application with inline CSS/JS
+- `themes/*.css` - 16 modular theme files
+- `data/index.js` - Search index (must use window.searchIndex)
+- `.nojekyll` - Required for GitHub Pages underscore files
+- `.gitlab-ci.yml` - GitLab Pages deployment config
 
-## File Size Constraints
-- GitHub Pages: 100MB file limit
-- GitLab Pages: 100MB file limit
-- Data automatically split across multiple files if needed
+## Recent Updates (v5.1.0)
 
-## Important Files
-- `index.html` - Complete application (all CSS/JS inline)
-- `.nojekyll` - Required for GitHub Pages to serve files starting with underscore
-- `.github/workflows/deploy-pages.yml` - GitHub Actions deployment
-- `.gitlab-ci.yml` - GitLab CI/CD deployment
+### Theme System Enhancements
+- Fixed theme card layout consistency issues
+- Added search element theming to all 16 themes
+- Set Ocean Depth as default theme
+- Isolated theme modal styles with `!important` declarations
 
-## Development Patterns
+### Distribution Package
+- Created comprehensive tar.gz with all required files
+- Includes GitLab CI config for offline deployment
+- Generated SHA256 checksums for verification
+- Published to GitHub releases with `gh` CLI
 
-### Man Page Content Updates
-The project now uses official Linux man pages (1,838 commands) collected from the system.
-To update or regenerate the data:
-1. **Run collection script**: Use `./collect_man_pages.sh` to regenerate from system man pages
-2. **Validate changes**: Run `./validate.sh` to ensure no syntax errors
-3. **Test locally**: Start local server and verify man pages load correctly
+### Command Explainer Feature (New)
+- Interactive command parser for shell commands
+- Visual breakdown with color-coded tokens
+- Hover tooltips showing explanations
+- Hardcoded options database for testing (ls, grep, cat, find, tar)
+- Keyboard shortcut 'E' to open explainer
+- Integration with existing man page viewer
 
-### Data File Size Management
-The `collect_man_pages.sh` script automatically splits data when files approach 80MB:
-- Tracks current file size during generation
-- Creates new `man_N.js` files as needed
-- Updates `manifest.js` with file list
-- Each file follows the pattern: `window.manData_N = { ... }`
+## Future Development
 
-### Search Index Synchronization
-When adding/removing commands, update both:
-- `data/index.js` - Search index with command metadata
-- `data/man_N.js` - Actual man page content
-- File references in search index must match actual data file numbers
-
-### Testing Strategy
-- **Puppeteer tests**: Automated browser testing for core functionality
-- **Visual regression**: Screenshot comparisons in `test_screenshots/`
-- **Deployment testing**: Specific tests for GitHub Pages environment
-- **Error handling**: Tests for graceful degradation when data fails to load
+### Command Explainer Next Steps
+1. Create Node.js script to extract options from all man pages
+2. Generate comprehensive `data/options.js` database
+3. Add support for piped commands and complex syntax
+4. Include TLDR examples in explanations
+5. Cache parsed commands for performance
