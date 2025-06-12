@@ -1317,71 +1317,6 @@
             border-color: #4285f4;
         }
         
-        /* Command history */
-        .command-history-section {
-            margin-top: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            color: #666;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .clear-history-btn {
-            background: none;
-            border: none;
-            color: #999;
-            cursor: pointer;
-            padding: 0;
-            font-size: 16px;
-            line-height: 1;
-            transition: color 0.2s;
-        }
-        
-        .clear-history-btn:hover {
-            color: #333;
-        }
-        
-        .history-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        
-        .history-item {
-            padding: 4px 10px;
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: #555;
-            cursor: pointer;
-            transition: all 0.2s;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 100%;
-        }
-        
-        .history-item:hover {
-            white-space: normal;
-            word-break: break-all;
-            background: #e8f0fe;
-            color: #1a73e8;
-            border-color: #1a73e8;
-        }
 
         .command-breakdown {
             background: #f8f9fa;
@@ -4704,75 +4639,7 @@
             return examples[command] || '<p>No examples available for this command.</p>';
         }
 
-        // Command history management
-        const MAX_COMMAND_HISTORY = 10;
         
-        function getCommandHistory() {
-            const stored = localStorage.getItem('commandExplainerHistory');
-            return stored ? JSON.parse(stored) : [];
-        }
-        
-        function addToCommandHistory(command) {
-            if (!command || command.trim() === '') return;
-            
-            let history = getCommandHistory();
-            
-            // Remove duplicates
-            history = history.filter(item => item !== command);
-            
-            // Add to beginning
-            history.unshift(command);
-            
-            // Limit size
-            if (history.length > MAX_COMMAND_HISTORY) {
-                history = history.slice(0, MAX_COMMAND_HISTORY);
-            }
-            
-            localStorage.setItem('commandExplainerHistory', JSON.stringify(history));
-        }
-        
-        function displayCommandHistory() {
-            const history = getCommandHistory();
-            
-            if (history.length === 0) return;
-            
-            // Create history section if it doesn't exist
-            let historySection = document.querySelector('.command-history-section');
-            if (!historySection) {
-                historySection = document.createElement('div');
-                historySection.className = 'command-history-section';
-                historySection.innerHTML = `
-                    <div class="history-header">
-                        <span>Recent Commands</span>
-                        <button class="clear-history-btn" title="Clear history">✕</button>
-                    </div>
-                    <div class="history-items"></div>
-                `;
-                
-                // Insert after command input
-                commandInput.parentElement.appendChild(historySection);
-                
-                // Add clear handler
-                historySection.querySelector('.clear-history-btn').addEventListener('click', () => {
-                    localStorage.removeItem('commandExplainerHistory');
-                    historySection.remove();
-                });
-            }
-            
-            const itemsContainer = historySection.querySelector('.history-items');
-            itemsContainer.innerHTML = '';
-            
-            history.forEach(cmd => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.textContent = cmd;
-                item.addEventListener('click', () => {
-                    commandInput.value = cmd;
-                    commandInput.dispatchEvent(new Event('input'));
-                });
-                itemsContainer.appendChild(item);
-            });
-        }
 
         // Handle command input
         let parseTimeout;
@@ -4784,12 +4651,6 @@
                     const tokens = commandParser.parse(input);
                     displayParsedCommand(tokens);
                     displayExplanations(tokens);
-                    
-                    // Add to history when command is valid
-                    const commandToken = tokens.find(t => t.type === 'command');
-                    if (commandToken && input.length > 3) {
-                        addToCommandHistory(input);
-                    }
                 } else {
                     commandBreakdown.innerHTML = '<div class="no-explanation">Enter a command above to see its breakdown</div>';
                     commandExplanations.innerHTML = '';
@@ -4802,7 +4663,6 @@
             commandExplainerModal.style.display = 'block';
             overlay.style.display = 'block';
             commandInput.focus();
-            displayCommandHistory();
         }
 
         // Close command explainer
