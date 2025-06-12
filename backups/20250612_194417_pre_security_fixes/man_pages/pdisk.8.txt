@@ -1,0 +1,194 @@
+PDISK(8) BSD System Manager’s Manual PDISK(8)
+
+NAME
+
+pdisk — Apple
+partition table editor
+
+SYNOPSIS
+
+pdisk
+[−h | −-help]
+[−v | −-version]
+[−l | −-list] [
+
+[name ...] ]
+
+pdisk
+[r | -readonly] device ...
+
+DESCRIPTION
+
+pdisk is a menu driven
+program which partitions disks using the standard Apple disk
+partitioning scheme described in "Inside Macintosh:
+Devices". It does not support the intel/dos
+partitioning scheme supported by fdisk.
+
+device is
+of the following form:
+
+/dev/disk0s 
+/dev/disk0s1 
+etc. 
+OPTIONS 
+−v | −-version
+
+Prints version number of the
+pdisk program.
+
+−h |
+−-help
+
+Prints a rather lame set of
+help messages for the pdisk program.
+
+−l |
+−-list
+
+If no names are present
+then lists the partition tables for /dev/disk0s,
+/dev/disk0s1, /dev/disk0s2, and so on.
+Otherwise, lists the partition tables for the specified
+names.
+
+−r |
+−-readonly
+
+Prevents pdisk from
+writing to the device.
+
+Editing Partition
+Tables
+
+An argument which is simply the
+name of a device indicates that pdisk should edit the
+partition table of that device.
+
+The current top
+level editing commands are:
+
+h
+
+command
+help
+
+p
+
+print the
+partition table
+
+P
+
+(print ordered
+by base address)
+
+i
+
+initialize
+partition map
+
+s
+
+change size of
+partition map
+
+c
+
+create new
+partition
+
+C
+
+(create with
+type also specified)
+
+d
+
+delete a
+partition
+
+r
+
+reorder
+partition entry in map
+
+w
+
+write the
+partition table
+
+q
+
+quit without
+saving changes
+
+Commands which
+take arguments prompt for each argument in turn. You can
+also type any number of the arguments separated by spaces
+and those prompts will be skipped. The only exception to
+typeahead are the confirmation prompts on the i and
+w commands. The idea being that if we expect you to
+confirm the decision we shouldn’t undermine that by
+allowing you to be precipitate about it.
+
+Partitions are
+always specified by their number, which the index of the
+partition entry in the partition map. Most of the commands
+will change the index numbers of all partitions after the
+affected partition. You are advised to print the table as
+frequently as necessary.
+
+Creating more
+than fifteen partitions is not advised. There is currently a
+bug in the some (all?) of the kernels which causes access to
+the whole disk fail if more than fifteen partitions are in
+the map.
+
+The c
+(create new partition) command is the only one with
+complicated arguments. The first argument is the base
+address (in blocks) of the partition. Besides a raw number,
+you can also specify a partition number followed by the
+letter ’p’ to indicate that the first block of
+the new partition should be the same as the first block of
+that existing free space partition. The second argument is
+the length of the partition in blocks. This can be a raw
+number or can be a partition number followed by the letter
+’p’ to use the size of that partition or can be
+a number followed by ’k’, ’m’, or
+’g’ to indicate the size in kilobytes,
+megabytes, or gigabytes respectively. (These are powers of
+1024, of course, not powers of 1000.) The last argument is
+the name of the partition. This can be a single word without
+quotes, or a string surrounded by single or double
+quotes.
+
+The C
+command is identical to the c command, with the
+addition of a partition type argument after the other
+arguments.
+
+The r
+(reorder) command allows the index number of partitions to
+be changed. The index numbers are constrained to be a
+contiguous sequence.
+
+The i
+(initialize) command prompts for the size of the device.
+This was done to get around a bug in the kernel where it
+reports the wrong size for the device.
+
+The w
+(write) command does write the partition map out.
+
+BUGS
+
+pdisk should be able to
+create HFS partitions that work.
+
+Even more help
+should be available during user input.
+
+Darwin
+March 24, 2001 Darwin

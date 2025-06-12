@@ -1,0 +1,459 @@
+NAME
+
+pmlogextract
+- reduce, extract, concatenate and merge Performance
+Co-Pilot archives
+
+SYNOPSIS
+
+pmlogextract
+[-dfmwxz?] [-c configfile] [-S
+starttime] [-s samples] [-T
+endtime] [-V version] [-v
+volsamples] [-Z timezone] input
+[...] output
+
+DESCRIPTION
+
+pmlogextract
+reads one or more Performance Co-Pilot (PCP) archives
+identified by input and creates a merged and/or
+reduced PCP archive in output. Each input
+argument is either a name or a comma-separated list of
+names, and each name is the name of one file from an archive
+or the base name of an archive or the name of a directory
+containing one or more archives. The nature of merging is
+controlled by the number of input archives, while the
+nature of data reduction is controlled by the command line
+arguments. The input arguments must be archives
+created by pmlogger(1) with performance data
+collected from the same host, but usually over
+different time periods and possibly (although not usually)
+with different performance metrics being logged.
+
+If only one
+input is specified, then the default behavior simply
+copies the input PCP archive (with possible
+conversion to a newer version of the archive format, see
+-V below), into the output PCP archive. When
+two or more PCP archives are specified as input, the
+archives are merged (or concatenated) and written to
+output.
+
+In the
+output archive a  record may be
+inserted at a time just past the end of each of the
+input archive to indicate a possible temporal
+discontinuity between the end of one input archive
+and the start of the next input archive. See the
+MARK RECORDS section below for more information.
+There is no  record after the end of the
+last (in temporal order) of the records from the
+input archive(s).
+
+OPTIONS
+
+The available
+command line options are: 
+-c config, --config=config
+
+Extract only the metrics
+specified in config from the input PCP
+archive(s). The config syntax accepted by
+pmlogextract is explained in more detail in the
+CONFIGURATION FILE SYNTAX section.
+
+-d,
+--desperate
+
+Desperate mode. Normally if a
+fatal error occurs, all trace of the partially written PCP
+archive output is removed. With the -d option,
+the output archive is not removed.
+
+-f, --first
+
+For most common uses, all of
+the input archives will have been collected in the
+same timezone. But if this is not the case, then
+pmlogextract must choose one of the timezones from
+the input archives to be used as the timezone for the
+output archive. The default is to use the timezone
+from the last input archive. The -f
+option forces the timezone from the first
+input archive to be used.
+
+-m, --mark
+
+As described in the MARK
+RECORDS section below, sometimes it is possible to
+safely omit  records from the
+output archive. If the -m option is specified,
+then the epilogue and prologue test is skipped
+and a  record will always be inserted at
+the end of each input archive (except the last). This
+is the original behaviour for pmlogextract.
+
+-S starttime,
+--start=starttime
+
+Define the start of a time
+window to restrict the records processed; refer to
+PCPIntro(1). See also the -w option.
+
+-s samples,
+--samples=samples
+
+The argument samples
+defines the number of samples (or records) to be written to
+output. If samples is 0 or -s is not
+specified, pmlogextract will continue until the end
+of all the input archives or until the end of the
+time window as specified by -T, whichever comes
+first. The -s option will override the -T
+option if it occurs sooner.
+
+-T endtime,
+--finish=endtime
+
+Define the end of a time window
+to restrict the records processed; refer to
+PCPIntro(1). See also the -w option.
+
+-V version,
+--outputversion=version
+
+Each PCP archive has a version
+for the physical record format, currently 2 or 3. By
+default, the output archive is created with a version
+equal to the maximum of the version of the
+input archives. The -V option may be used to
+explicitly force the version for output, provided
+version is no smaller than the archive version that
+would have been chosen by the default rule.
+
+For example,
+specifying -V 3 may be used to produce a version
+3 output archive from input archives that
+could be a mixture of version 2 and/or version 3.
+
+-v volsamples
+
+The output archive is
+potentially a multi-volume data set, and the -v
+option causes pmlogextract to start a new volume
+after volsamples records have been written to the
+archive.
+
+Independent of
+any -v option, each volume of an archive is limited
+to no more than 2^31 bytes, so pmlogextract will
+automatically create a new volume for the archive before
+this limit is reached.
+
+-w
+
+Where -S and -T specify a time window
+within the same day, the -w flag will cause the data
+within the time window to be extracted, for every day
+in the archive. For example, the options -w -S @11:00 -T
+@15:00 specify that pmlogextract should include
+archive records only for the periods from 11am to 3pm on
+each day. When -w is used, the output archive
+will contain  records to indicate the
+temporal discontinuity between the end of one time window
+and the start of the next.
+
+-x
+
+It is expected that the metadata (name, PMID, type,
+semantics and units) for each metric will be consistent
+across all of the input PCP archive(s) in which that
+metric appears. In rare cases, e.g. in development, in QA
+and when a PMDA is upgraded, this may not be the case and
+pmlogextract will report the issue and abort without
+creating the output archive. This is done so the
+problem can be fixed with pmlogrewrite(1) before
+retrying the merge. In unattended or QA environments it may
+be preferable to force the merge and omit the metrics with
+the mismatched metadata. The -x option does this.
+
+-Z timezone,
+--timezone=timezone
+
+Use timezone when
+displaying the date and time in diagnostics. Timezone
+is in the format of the environment variable TZ as
+described in environ(7). The default is to initially
+use the timezone of the local host.
+
+-z,
+--hostzone
+
+Use the local timezone of the
+host from the input archive(s) when displaying the
+date and time in diagnostics. The default is to initially
+use the timezone of the local host.
+
+-?, --help
+
+Display usage message and
+exit.
+
+CONFIGURATION FILE SYNTAX
+
+The
+configfile contains metrics of interest - only those
+metrics (or instances) mentioned explicitly or implicitly in
+the configuration file will be included in the output
+archive. Each specification must begin on a new line, and
+may span multiple lines in the configuration file. Instances
+may also be specified, but they are optional. The format for
+each specification is
+
+metric 
+or 
+metric [ instance ... ]
+
+where
+metric may be a leaf or a non-leaf name of a metric
+in the Performance Metrics Name Space (PMNS, see
+PMNS(5)). If a metric refers to a non-leaf
+node in the PMNS, pmlogextract will recursively
+descend the PMNS and include all metrics corresponding to
+descendent leaf nodes.
+
+Instances are
+optional and are specified as a list space (or comma)
+separated of instance identifiers, with the list
+enclosed by square brackets. Each instance identifier
+may be a number or a string (enclosed in single or double
+quotes). instance identifiers that are numbers are
+assumed to be internal instance identifiers, else the string
+values are assumed to be external instance identifiers; see
+pmGetInDom(3) for more information. If no instances
+are given, then all instances of the associated
+metric(s) will be extracted.
+
+Any additional
+white space is ignored and comments may be added with a
+’#’ prefix.
+
+CONFIGURATION FILE EXAMPLE
+
+This is an
+example of a valid configfile:
+
+# 
+# config file for pmlogextract 
+#
+
+kernel.all.cpu
+
+kernel.percpu.cpu.sys ["cpu0","cpu1"]
+
+disk.dev ["dks0d1"]
+
+MARK RECORDS
+
+When more than
+one input archive contributes performance data to the
+output archive, then  records may
+be inserted to indicate a possible temporal discontinuity in
+the performance data.
+
+A
+ record contains a timestamp and no
+performance data and is used to indicate that there is a
+time period in the PCP archive where we do not know the
+values of any performance metrics, because there was
+no pmlogger(1) collecting performance data during
+this period. Since these periods are often associated with
+the restart of a service or pmcd(1) or a system
+reboot, there may be considerable doubt as to the continuity
+of performance data across this time period.
+
+Most current
+archives are created with a prologue record at the
+beginning and an epilogue record at the end. These
+records identify the state of pmcd(1) at the time,
+and may be used by pmlogextract to determine that
+there is no discontinuity between the end of one archive and
+the next output record, and as a consequence the
+ record can safely be omitted from the
+output archive.
+
+The rationale
+behind  records may be demonstrated with
+an example. Consider one input archive that starts at
+00:10 and ends at 09:15 on the same day, and another
+input archive that starts at 09:20 on the same day
+and ends at 00:10 the following morning. This would be a
+very common case for archives managed and rotated by
+pmlogger_check(1) and pmlogger_daily(1).
+
+The
+output archive created by pmlogextract would
+contain: 
+00:10.000    first record from first
+input archive 
+... 
+09:15.000    last record from first
+input archive 
+09:15.001     record 
+09:20.000    first record from second
+input archive 
+... 
+01:10.000    last record from second
+input archive
+
+The time period
+where the performance data is missing starts just after
+09:15 and ends just before 09:20. When the output
+archive is processed with any of the PCP reporting tools,
+the  record is used to indicate a period
+of missing data. For example using the output archive
+above, imagine one was reporting the average I/O rate at 30
+minute intervals aligned on the hour and half-hour. The I/O
+count metric is a counter, so the average I/O rate requires
+two valid values from consecutive sample times. There would
+be values for all the intervals ending at 09:00, then no
+values at 09:30 because of the  record,
+then no values at 10:00 because the
+’’prior’’ value at 09:30 is not
+available, then the rate would be reported again at 10:30
+and continue every 30 minutes until the last reported value
+at 01:00.
+
+The presence of
+ records in a PCP archive can be
+established using pmdumplog(1) where a timestamp and
+the annotation  is used to indicate a
+ record.
+
+METADATA CHECKS
+
+When more than
+one input archive is specified, pmlogextract
+performs a number of checks to ensure the metadata is
+consistent for metrics appearing in more than one of the
+input archives. These checks include:
+
+*
+
+metric data type is the same
+
+*
+
+metric semantics are the same
+
+*
+
+metric units are the same
+
+*
+
+metric is either always singular or always has the same
+instance domain
+
+*
+
+metrics with the same name have the same PMID
+
+*
+
+metrics with the same PMID have the same name
+
+If any of these
+checks fail, pmlogextract reports the details and
+aborts without creating the output archive.
+
+To address
+these semantic issues, use pmlogrewrite(1) to
+translate the input archives into equivalent archives
+with consistent metadata before using
+pmlogextract.
+
+Refer to the
+-x and -d command line options above for
+alternatives to the default handling of errors during
+metadata checks.
+
+CAVEATS
+
+The
+prologue metrics (pmcd.pmlogger.archive,
+pmcd.pmlogger.host, and pmcd.pmlogger.port), which are
+automatically recorded by pmlogger at the start of
+the archive, may not be present in the archive output by
+pmlogextract. These metrics are only relevant while
+the archive is being created, and have no significance once
+recording has finished.
+
+DIAGNOSTICS
+
+All error
+conditions detected by pmlogextract are reported on
+stderr with textual (if sometimes terse)
+explanation.
+
+If one of the
+input archives contains no archive records then an
+’’empty archive’’ warning is issued
+and that archive is skipped.
+
+Should one of
+the input archive(s) be corrupted (this can happen if
+the pmlogger instance writing the archive suddenly
+dies), then pmlogextract will detect and report the
+position of the corruption in the file, and any subsequent
+information from that archive will not be processed.
+
+If any error is
+detected, pmlogextract will exit with a non-zero
+status.
+
+FILES
+
+For each of the
+input and output archive, several physical
+files are used. 
+archive.meta
+
+metadata (metric descriptions,
+instance domains, etc.) for the archive
+
+archive.0
+
+initial volume of metrics
+values (subsequent volumes have suffixes 1, 2,
+...) - for input these files may have been previously
+compressed with bzip2(1) or gzip(1) and thus
+may have an additional .bz2 or .gz suffix.
+
+archive.index
+
+temporal index to support rapid
+random access to the other files in the archive.
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+For environment
+variables affecting PCP tools, see
+pmGetOptions(3).
+
+SEE ALSO
+
+PCPIntro(1),
+pmdumplog(1), pmlc(1), pmlogger(1),
+pmlogreduce(1), pmlogrewrite(1),
+pcp.conf(5), pcp.env(5) and
+PMNS(5).

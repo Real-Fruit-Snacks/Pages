@@ -1,0 +1,364 @@
+MERECAT.CONF(5) BSD File Formats Manual
+MERECAT.CONF(5)
+
+NAME
+
+merecat.conf —
+merecat httpd configuration file
+
+INTRODUCTION
+
+When merecat starts up it
+looks for its configuration file, /etc/merecat.conf.
+This manual page documents the settings available, which
+allows for more advanced setups. For simpler use-cases,
+however, you may not need a merecat.conf since the
+server runs fine with only command line parameters.
+
+DESCRIPTION
+
+The syntax of the config file is
+UNIX style key = value, separated by whitespace. The
+“#” character marks the start of a comment to
+end of line. The \ character can be used as an escape
+character.
+
+Note:
+changes to the configuration file are require a restart of
+merecat, unlike many other UNIX daemons SIGHUP
+does not reload the .conf file.
+
+Configuration
+Directives
+
+charset = "STRING"
+
+Character set to use with text
+MIME types, default "UTF-8". If the default
+unicode charset causes trouble, try
+"iso-8859-1".
+
+check-referer =
+ | false>
+
+Enable check for external sites
+referencing material on your web server. For more
+information on referrers, see merecat(8). Disabled by
+default.
+
+check-symlinks =
+ | false>
+
+For increased security, set
+this to true. Unless running chrooted in which case this is
+not really necessary. Disabled by default.
+
+chroot = 
+| false>
+
+Change web server root to
+WEBDIR, or the current directory, if no WEBDIR
+is given as argument. Chrooting is a security measure and
+means that merecat.conf cannot access files outside
+it, unless files are bind mounted, or similar into the
+chroot. Disabled by default.
+
+compression-level =
+-1..9
+
+Control the compression level
+of the built-in Apache-like mod_deflate. The default value
+is -1, which gives a reasonable compromize between speed and
+compression. To disable compression set this to 0 and
+to get maximum compression, 9.
+
+The default
+setting, -1, means all "text/*" MIME type
+files, larger than 256 bytes, are compressed before sending
+to the client.
+
+directory =
+DIR
+
+If no WEBDIR is given on the
+command line this option can be used to change the web
+server document root. Defaults to the current directory.
+When chrooting this is the root directory, see the
+data-directory directive for more help.
+
+data-directory =
+DIR
+
+This setting is only relevant
+when chrooting, it adjusts the web server document root
+relative to the directory directive.
+
+global-passwd =
+ | false>
+
+Set this to true to protect the
+entire directory tree with a single .htpasswd and/or
+.htaccess file. When unset, which is the default,
+merecat.conf looks for a local .htpasswd and
+.htaccess file, or serves the file without
+password.
+
+hostname =
+HOSTNAME
+
+The hostname to bind to when
+multihoming. For more details on this, see below
+discussion.
+
+list-dotfiles =
+ | false>
+
+If dotfiles should be skipped
+in directory listings. Disabled by default.
+
+local-pattern =
+"PATTERN"
+
+Used with check-referer,
+see merecat(8) for more details.
+
+max-age = SEC
+
+Controls the global max-age
+setting, in seconds, set in the HTTP/1.1
+"Cache-Control: max-age" header, returned
+with all responses. The default setting is disabled since
+v2.32 and the user is recommended to use per-resource cache
+control. See the server location directive for details.
+
+port = PORT
+
+The web server Internet port to
+listen to, defaults to 80, or 443 when HTTPS is enabled. See
+the ssl section below for more on configuring an
+HTTPS server.
+
+url-pattern =
+"PATTERN"
+
+Used with check-referer,
+see merecat(8) for more details.
+
+username =
+"NAME"
+
+Set username to drop privileges
+to after startup. Defaults to "nobody" which
+usually is defined on all UNIX systems.
+
+virtual-host =
+ | false>
+
+Enable virtual hosting,
+disabled by default. For more information on this, see
+merecat(8).
+
+user-agent-deny =
+"PATTERN"
+
+Wildcard pattern to deny access
+to illicit hammering bots. When set a matching user-agent
+will receive a 403 for all its requests. Use for instance
+"**SemrushBot**" or
+"**SemrushBot**|**MJ12Bot**|**DotBot**" to match
+multiple user-agents.
+
+The default is
+disabled, i.e. all user-agents are allowed.
+
+cgi " 
+PATTERN" {
+
+Wildcard pattern for CGI
+programs, for instance "**.cgi" or
+"**.cgi|/cgi-bin/*". See the dedicated CGI section
+in merecat(8) for more on this.
+
+enabled = 
+| false>
+
+The CGI module is disabled by
+default.
+
+limit = NUM
+
+Maximum number of allowed
+simultaneous CGI programs. Default 1.
+
+} 
+php " 
+PATTERN" {
+
+Wildcard pattern for PHP
+scripts, for instance "**.php*" or
+"**.php5*|**.php4*|**.php*". Notice the trailing
+*, it is very important otherwise any HTTP GET
+request with arguments will fail.
+
+enabled = 
+| false>
+
+The PHP module is disabled by
+default.
+
+cgi-path =
+"/path/to/php-cgi"
+
+Default is
+"/usr/bin/php-cgi"
+
+} 
+ssi " 
+PATTERN" {
+
+Wildcard pattern for triggering
+SSI, for instance "**.shtml" or
+"**.shtml|**.stm|**.shtm".
+
+enabled = 
+| false>
+
+The SSI module is disabled by
+default.
+
+cgi-path = "/path/to/ssi"
+
+Default is
+"cgi-bin/ssi". See ssi(8) for more
+information.
+
+silent =  | false>
+
+This setting can be used to
+silence “[an error occurred while processing the
+directive]”, shown when an error occurrs during SSI
+processing. Default disabled (false).
+
+} 
+ssl { 
+protocol = "PROTOCOL"
+
+Minimum SSL/TLS protocol level
+to enable. Can be one of: SSLv3, TLSv1, TLSv1.1, TLSv1.2,
+TLSv1.3. The default minimum protocol is TLSv1.1.
+Note, some (Linux) distributions have SSLv3 disabled
+by default in their OpenSSL packages.
+
+ciphers = "CIPHERS"
+
+The preferred list of ciphers
+the server supports. For a list of available ciphers, see
+the ciphers(1) man page. The default covers both TLSv1.3
+(new ciphersuite) and older cipher list:
+
+TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:
+\ 
+
+HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!DHE-RSA-CAMELLIA256-SHA:
+\ 
+!DHE-RSA-CAMELLIA128-SHA:!ECDHE-RSA-CHACHA20-POLY1305: \
+
+!DHE-RSA-CHACHA20-POLY1305:!DHE-RSA-AES256-CCM8:!DHE-RSA-AES256-CCM:
+\ 
+!DHE-RSA-AES128-CCM8:!DHE-RSA-AES128-CCM
+
+certfile =
+/path/to/cert.pem
+
+Public part of HTTPS
+certificate, optionally with full certificate chain. E.g.,
+fullchain.pem if you use Let’s Encrypt. Only
+PEM format is supported.
+
+keyfile = /path/to/key.pem
+
+Private key of HTTPS
+certificate, e.g., privkey.pem if you use Let’s
+Encrypt. Only PEM format is supported.
+
+Note:
+This file must be kept private and should not be in the
+WEBROOT directory.
+
+dhfile = /path/th/dhparam.pem
+
+Optional Diffie-Hellman
+parameters. Not secret, unlike the keyfile the
+dhfile can be published online, if necessary. Create
+one like this:
+
+openssl dhparam
+-out dhparam.pem 2048
+
+} 
+server name { 
+port = PORT
+
+Server port to listen to.
+
+ssl { ... }
+
+Same as the global settings,
+above, only for this server.
+
+location " 
+PATTERN" { 
+path = path/to/rewrite
+
+If a server location directive
+is found it has precedence over any redirect or
+virtual host. It is primarily used to rewrite, or redirect,
+requests inside the current server context.
+
+E.g., for
+handling certbot HTTP-01 renewal, use this in the
+port 80 server context. Any other path will be redirected to
+HTTPS, using the below redirect directive:
+
+location
+"/.well-known/acme-challenge/**" { 
+path = "letsencrypt/.well-known/acme-challenge/"
+
+}
+
+redirect " 
+PATTERN" { 
+code = CODE
+
+HTTP redirect code to use,
+default: 301. Supported codes are: 301, 302, 303, 307.
+
+location =
+"proto://$host:port$request_uri$args"
+
+Location to return for
+redirect, e.g. to redirect all request for HTTP to HTTPS for
+the same (virtual) host:
+
+redirect
+"/**" { 
+code = 301 
+location = "https://$host$request_uri$args" 
+}
+
+} 
+} 
+SEE ALSO
+
+merecat(8)
+
+AUTHORS
+
+Jef Poskanzer
+jef [AT] mail.com> wrote the famous thttpd
+which merecat.conf is based on. 
+Joachim Wiberg troglobit [AT] gmail.com> added the .conf
+file parser and this man page.
+
+merecat (2.32)
+Nov 28, 2021 merecat (2.32)

@@ -1,0 +1,273 @@
+NAME
+
+pamaltsat -
+increase or decrease the saturation of an image using one of
+several alternative methods.
+
+SYNOPSIS
+
+pamaltsat
+[-method name] [-strength
+number] [-linear] [infile]
+
+DESCRIPTION
+
+This program is
+part of Netpbm(1).
+
+pamaltsat
+decreases or increases the saturation of a Netpbm image by
+one of various non-standard (alternative)
+methods.
+
+The input is a
+Netpbm image from Standard Input or a file named by the
+arguments. The output is a Netpbm image in the same format
+written to Standard Output.
+
+The most
+conventional way to change the saturation of an image is
+what pambrighten does.
+
+EXAMPLES
+
+To increase
+saturation by a factor of 2.1 using the logarithmic
+method:
+
+pamaltsat
+-method log -strength 2.1 test.ppm
+
+To convert a
+color image to grayscale:
+
+pamaltsat
+-strength 0 test.ppm
+
+SATURATION METHODS
+
+The following
+saturation methods are available.
+
+Logarithmic
+Method 
+This saturation model is inspired by the concept of color
+integrity(1), which works with color in terms of
+intensity ratios, where intensity is a value of the
+https://en.wikipedia.org/wiki/Luminosity_function">luminosity
+function , rather than brightness, or the numerical
+value of the sample in the image file. From this viewpoint,
+it is natural to define the saturation of a color as the
+ratio of maximum and minimum intensities of its primary
+components. In order, however, to make saturation an
+additive value and to endow the -strength parameter
+with the semantics of a multiplier, it is convenient to
+operate on the logarithm of that ratio. The addition of such
+saturations acquires physical sense, and multiplication
+corresponds to the raising of intensity to the power of the
+multiplier.
+
+With this
+method, pamaltsat raises the intensity of each
+component to the power of the strength value. Since
+the total intensity of the resulting color will differ from
+that of the original, it is necessary to restore the
+intensity by multiplying the component intensities of the
+saturated color by the ratio of the intensity of the
+original color to that of the saturated color.
+
+Although it is
+always possible to decrease saturation by any given factor,
+there are two cases where it cannot be increased. When the
+total intensity (or brightness) of a color is too high for
+the desired saturation, pamaltsat applies the maximum
+possible saturation that keeps the original intensity. For
+example, any color with at least one component at the
+maxiumum is already fully saturated. When one of the primary
+components is zero, the definition of saturation given above
+no longer works because of a zero in the denominator.
+pamaltsat offers no special treatment of this
+situation because it does not create discontinuities and
+therefore produces no visible defects at reasonable strength
+levels. When, however, strength approaches infinity, each
+color tends to its primary component with the highest
+intensity.
+
+This method was
+invented by Anton Shepelev.
+
+Spectral
+Method 
+This is the default method. It treats color as a spectrum
+with three bands: one for the intensity of each primary
+component. Since neutral gray has a uniform (constant)
+spectrum, saturation can be measured as the difference of
+the spectrum of the given color from the uniform spectrum of
+the same total intensity. The spectral method uses one of
+the simplest measures of such a difference: the difference
+between the highest and lowest component intensities, which
+is an additive value and therefore amenable to
+multiplication with good physical sense. Although a complete
+hue-saturation model can be dervied from this approach,
+pamaltsat need not concern itself with it because it
+always preserves both hue and total intensity.
+
+In order to
+change saturation, pamaltsat first multiplies the
+intensity of each component by the desired strength. The
+saturation of the result is the strength times the
+saturation of the original, and likewise the total
+intensity, but it is then restored by subtraction of the
+neutral gray with a suitable intensity.
+
+The effect of
+this method on each component intensity may be expressed in
+the following equation:
+
+sat = orig *
+strength - Iorig * (strength - 1)
+
+where sat is
+the saturated sample, orig the original sample, and Iorig
+the total intensity of the original color.
+
+The method is
+also related to color integrity because both its operations
+are part of that concept: multiplication of component
+intensities by the same quotient is an important operation
+because changes brightness but keeps color balance, and
+subtraction of a constant from all component intensities is
+described by the inventor of color integrity as
+’subtraction of white.’
+
+This procedure
+may produce both negative and over-unity component
+intensities. For such samples, pamaltsat decreases
+the strength to the highest value that keeps the resulting
+color in range.
+
+This method was
+invented by Anton Shepelev.
+
+OPTIONS
+
+In addition to
+the options common to all programs based on libnetpbm (most
+notably -quiet, see
+ Common Options ),
+pamaltsat recognizes the following command line
+options: 
+-method method
+
+specifies the saturation method
+to use:
+
+The default is
+spectrum
+
+-strength
+strength
+
+This specifies a real
+nonnegative factor whereby to modify saturation. A value
+greater than unity will increase saturation, whereas a value
+less than unity will decrease it. Unity will leave the image
+unchanged, and zero will produce greyscale output according
+to Rec 709.
+
+pamaltsat
+preserves the total intensity of each pixel and never
+affects neutral gray pixels.
+
+This option is
+mandatory.
+
+-linear
+
+This tells pamaltsat
+that the input is the intensity-linear variation of a Netpbm
+image forat, in which the samples are proportional to light
+intensity rather than to brightness, as they are in true-or
+gamma-adjusted- Netpbm image formats.
+
+USAGE NOTES
+
+Since
+pamaltsat does not affect neutral colors, you should
+adjust the color balance before saturation. You can do this
+with pamlevels.
+
+EXTENSIBILITY
+
+pamaltsat
+is written with an eye to extending it with new saturation
+methods, which programmers are welcome to contribute. The
+only requirement is that every new method depend on a single
+strength parameter with the semantics described under the
+-strength command-line option.
+
+SEE ALSO
+
+pambrighten(1),
+ppmflash(1),
+
+AUTHOR
+
+This program
+was first submitted by Anton Shepelev
+(anton.txt [AT] gmail.com).
+
+HISTORY
+
+pamaltsat
+was new in Netpbm 10.84 (September 2018).
+
+Table Of Contents
+
+•
+
+SYNOPSIS 
+
+•
+
+DESCRIPTION
+
+•
+
+EXAMPLES
+
+•
+
+SATURATION METHODS
+
+•
+
+OPTIONS
+
+•
+
+USAGE NOTES
+
+•
+
+EXTENSIBILITY
+
+•
+
+SEE ALSO
+
+•
+
+AUTHOR
+
+•
+
+HISTORY
+
+DOCUMENT SOURCE
+
+This manual
+page was generated by the Netpbm tool ’makeman’
+from HTML source. The master documentation is at
+
+http://netpbm.sourceforge.net/doc/pamaltsat.html

@@ -1,0 +1,300 @@
+NAME
+
+maildropex -
+maildrop filtering language examples
+
+SYNOPSIS
+
+$HOME/.mailfilter,
+$HOME/.mailfilters/*
+
+DESCRIPTION
+
+If
+$HOME/.mailfilter exists, filtering instructions in this
+file will be carried out prior to delivering the message.
+The filtering instructions may instruct maildrop to
+discard the message, save the message in a different
+mailbox, or forward the message to another address. If
+$HOME/.mailfilter does not exist, or does not provide
+explicit delivery instructions, maildrop delivers the
+message to the user's system mailbox.
+
+The files in
+$HOME/.mailfilters are used when maildrop is invoked
+in embedded mode.
+
+EXAMPLES
+
+Take all mail
+that's sent to the 'auto' mailing list, and save it in
+Mail/auto. The 'auto' mailing list software adds a
+"Delivered-To: auto [AT] domain.com" header to all
+messages:
+
+if
+(/^Delivered-To: *auto@domain\.com$/) 
+to Mail/auto
+
+After the
+to command delivers the message, maildrop
+automatically stops filtering and terminates without
+executing the subsequent instructions in the filter
+file.
+
+Take all mail
+from boss [AT] domain.com> about the current project
+status, save it in Mail/project, then forward a copy to
+John:
+
+if (/^From:
+*boss@domain\.com/ \ 
+&& /^Subject:.*[:wbreak:]project status[:wbreak:]/)
+
+{ 
+cc "!john" 
+to Mail/project 
+}
+
+Note that it is
+necessary to use a backslash in order to continue the
+if statement on the next line.
+
+Keep copies of
+the last 50 messages that you received in the maildir
+directory 'backup'. NOTE: 'backup' must be a maildir
+directory, not a mailbox. You can create a maildir using the
+maildirmake command.
+
+cc backup 
+’cd backup/new && rm -f dummy \’ls -t |
+sed -e 1,50d\’’
+
+Put this at the
+beginning of your filter file, before any other filtering
+instructions. This is a good idea to have when you are
+learning maildrop. If you make a mistake and
+accidentally delete a message, you can recover it from the
+backup/new subdirectory.
+
+Save messages
+that are at least 100 lines long (approximately) into
+Mail/IN.Large::
+
+if ( $LINES
+> 100 ) 
+to Mail/IN.Large
+
+Send messages
+from the auto mailing list to the program 'archive', using a
+lock file to make sure that only one instance of the archive
+program will be running at the same time:
+
+if
+(/^Delivered-To: *auto@domain\.com$/) 
+dotlock "auto.lock" {
+
+to
+"|archive" 
+}
+
+Check if the
+Message-ID: header in the message is identical to the same
+header that was recently seen. Discard the message if it is,
+otherwise continue to filter the message:
+
+’reformail
+-D 8000 duplicate.cache’ 
+if ( $RETURNCODE == 0 ) 
+exit
+
+The
+reformail
+[1]
+command maintains a list of recently
+seen Message-IDs in the file duplicate.cache.
+
+Note
+
+Unlike a similar feature in the formail
+command,
+reformail
+[1]
+takes care of locking the file, so
+it's not necessary to implement your own locking mechanism
+for this option.
+
+Here's
+a more complicated example. This fragment is intended to go
+right after the message has been filtered according to your
+regular rules, and just before the message should be saved
+in your mailbox:
+
+cc
+$DEFAULT 
+xfilter "reformail -r -t" 
+/^To:.*/ 
+getaddr($MATCH) =~ /^.*/;
+
+MATCH=tolower($MATCH)
+
+flock "vacation.lock" { 
+’fgrep -iqx "$MATCH" vacation.lst
+2>/dev/null || { \ 
+echo "$MATCH" >>vacation.lst ; \ 
+exit 1 ; \ 
+} ’ 
+} 
+if ( $RETURNCODE == 0 ) 
+exit 
+to "| ( cat - ; echo ''; cat vacation.msg) |
+$SENDMAIL"
+
+This
+code maintains a list of everyone who sent you mail in the
+file called vacation.lst. When a message is received from
+anyone that is not already on the list, the address is added
+to the list, and the contents of the file vacation.msg are
+mailed back to the sender. This is intended to reply notify
+people that you will not be answering mail for a short
+period of time.
+
+The
+first statement saves the original message in your regular
+mailbox. Then,
+xfilter
+[2]
+is used to generate an autoreply
+header to the sender. The To: header in the autoreply -
+which was the sender of the original message - is extracted,
+and the getaddr
+[3]
+function is used to strip the person's
+name, leaving the address only. The file vacation.lst is
+checked, using a lock file to guarantee atomic access and
+update (overkill, probably). Note that the backslashes are
+required.
+
+If
+the address is already in the file, maildrop exits,
+otherwise the contents of vacation.msg are appended to the
+autoreply header, and mailed out.
+
+Note
+
+An easier to make a vacation script is with
+mailbot(1)
+[4]
+.
+
+Here's
+a version of the vacation script that uses a GDBM database
+file instead. The difference between this script and the
+previous script is that the previous script will send a
+vacation message to a given E-mail address only once. The
+following script will store the time that the vacation
+message was sent in the GDBM file. If it's been at least a
+week since the vacation message has been sent to the given
+address, another vacation message will be sent.
+
+Even
+though a GDBM database file is used, locking is still
+necessary because the GDBM library does not allow more than
+one process to open the same database file for
+writing:
+
+cc
+$DEFAULT 
+xfilter "reformail -r -t" 
+/^To:.*/ 
+getaddr($MATCH) =~ /^.*/; 
+MATCH=tolower($MATCH) 
+flock "vacation.lock" { 
+current_time=time; 
+if (gdbmopen("vacation.dat", "C") == 0)
+
+{ 
+if ( (prev_time=gdbmfetch($MATCH)) ne ""
+&& \ 
+$prev_time >= $current_time - 60 * 60 * 24 * 7) 
+{ 
+exit 
+} 
+gdbmstore($MATCH, $current_time) 
+gdbmclose 
+} 
+} 
+to "| ( cat - ; echo ''; cat vacation.msg) |
+$SENDMAIL"
+
+This
+script requires that maildrop must be compiled with
+GDBM support enabled, which is done by default if GDBM
+libraries are present.
+
+After
+you return from vacation, you can use a simple Perl script
+to obtain a list of everyone who sent you mail (of course,
+that can also be determined by examining your
+mailbox).
+
+SEE ALSO
+
+maildrop(1)
+[5]
+,
+maildropfilter(7)
+[6]
+,
+reformail(1)
+[1]
+,
+mailbot(1)
+[4]
+, egrep(1), grep(1),
+sendmail(8).
+
+AUTHOR
+
+Sam
+Varshavchik
+
+Author
+
+NOTES
+
+1. 
+
+reformail 
+
+http://www.courier-mta.org/maildrop/reformail.html
+
+2. 
+
+xfilter 
+
+http://www.courier-mta.org/maildrop/maildropfilter.html#xfilter
+
+3. 
+
+getaddr 
+
+http://www.courier-mta.org/maildrop/maildropfilter.html#getaddr
+
+4. 
+
+mailbot(1) 
+
+http://www.courier-mta.org/maildrop/mailbot.html
+
+5. 
+
+maildrop(1) 
+
+http://www.courier-mta.org/maildrop/maildrop.html
+
+6. 
+
+maildropfilter(7) 
+
+http://www.courier-mta.org/maildrop/maildropfilter.html

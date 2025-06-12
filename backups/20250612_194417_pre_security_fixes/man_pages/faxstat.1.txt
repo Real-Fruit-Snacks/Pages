@@ -1,0 +1,834 @@
+NAME
+
+faxstat -
+display Hyla FAX status
+
+SYNOPSIS
+
+faxstat
+[ options ]
+
+DESCRIPTION
+
+faxstat
+reports the status of Hyla FAX
+servers, including (potentially) the status of the send,
+receive, done, document, and archive directories. When
+invoked without options faxstat reports only the
+status of the server; the options described below can be
+used to override this behaviour.
+
+Server status
+information indicates the state of the server (idle,
+sending, receiving, etc.) and the phone number that is
+associated with the fax modem.
+
+The job queue
+report give the status of facsimile jobs queued for
+transmission; by default:
+
+•
+
+the job identifier,
+
+•
+
+the job state (see below for the description of the
+a format in the JobFmt string),
+
+•
+
+the modem or modem class the job is bound to
+(’’any’’ if the job can be sent
+though any modem),
+
+•
+
+the destination (phone number) of the job,
+
+•
+
+the time to send the job, or a blank field if the job is
+being processed or is to be sent immediately,
+
+•
+
+the job’s owner,
+
+•
+
+and status information about the job (typically the
+reason why a previous attempt failed).
+
+The receive
+queue report lists the facsimile documents that have been
+received and are awaiting delivery; by default it
+includes:
+
+•
+
+the document protection
+mode, 
+
+•
+
+the number of pages,
+
+•
+
+the document’s owner,
+
+•
+
+the phone number of the sender (if supplied),
+
+•
+
+the date and time at which the job was received, and
+
+•
+
+the filename of the document in the recvq
+directory on the server machine.
+
+OPTIONS
+
+-a
+
+Display the contents of the
+archive directory on the server machine
+
+-d
+
+Display the status of all jobs that have completed; i.e.
+those jobs located in the doneq directory on the
+server machine. The JobFmt string defines the content
+and format of information reported with this option.
+
+-f
+
+Display the status of document files located in the
+docq directory on the server machine. The
+FileFmt string defines the content and format of
+information reported with this option (see below).
+
+-g
+
+Display times and dates in Greenwich Mean Time (
+GMT ). NB: this is the default.
+
+-h host
+
+Report the status of the server on a specific
+host. The host may be either a symbolic name
+or a network address. If no -h option is supplied,
+faxstat uses the FAXSERVER environment
+variable to identify the Hyla FAX
+server to contact. If this variable is not set, then
+faxstat checks for a setting in the configuration
+files (first in the per-user file and then in the
+system-wide file). If all of the above fails, then
+faxstat attempts to contact a server on the machine
+where it is run.
+
+-i
+
+Display additional status information for the server as
+given by /var/spool/hylafax/status/any.info. This
+status typically has information such as the Hyla
+FAX version, the physical location of the
+server machine, and an administrative contact for the
+server. See status(5).
+
+-l
+
+Display times and dates in the local timezone of the
+server. 
+
+-r
+
+Display the receive queue status for each server. The
+RcvFmt string defines the content and format of
+information reported with this option (see below).
+
+-s
+
+Display the status of jobs in the send queue on the
+server machine. The JobFmt string defines the content
+and format of information reported with this option (see
+below). 
+
+-v
+
+Trace the protocol exchanges between faxstat and
+the hfaxd processes on the standard output.
+
+CONFIGURATION PARAMETERS
+
+faxstat
+reads configuration information from the file
+/etc/hylafax/hyla.conf and then from the file
+~/.hylarc. Configuration files follow the conventions
+described in hylafax-client(1). The following
+configuration parameters are recognized: 
+Tag Type Default Description
+
+FileFmt
+
+string
+
+see below
+
+format string for file status results
+
+Host
+
+string
+
+localhost
+
+host to contact for service
+
+JobFmt
+
+string
+
+see below
+
+format string for job status results
+
+ModemFmt
+
+string
+
+see below
+
+format string for modem status results
+
+PassiveMode
+
+boolean
+
+false
+
+whether or not to use passive mode
+
+Port
+
+integer
+
+4559
+
+port to use in contacting server
+
+Protocol
+
+string
+
+tcp
+
+protocol to use in contacting server
+
+RcvFmt
+
+string
+
+see below
+
+format string for received facsimile status results
+
+TimeZone
+
+string
+
+GMT
+
+timezone to use for reporting dates and times
+
+Verbose
+
+boolean
+
+No
+
+whether or not to enable protocol tracing
+
+The
+configuration parameters are explained below:
+
+FileFmt
+
+The format string to use when
+returning file status information with the -f option.
+Formats are specified using printf(3S)-style
+conventions but using the field identifiers listed below.
+Each item can include field width, precision,
+left-justification, 0-filling, etc. just as for
+printf; e.g. %-8p for an 8-character wide,
+left-justified, blank-padded field containing the file
+protection flags.
+
+Format
+Description
+
+a
+
+Last access time
+
+c
+
+Creation time
+
+d
+
+Device number (octal)
+
+f
+
+Filename
+
+g
+
+Group identifier (decimal)
+
+i
+
+Inode number (decimal)
+
+l
+
+Link count (decimal)
+
+m
+
+Last modification time
+
+o
+
+Owner (based on file GID )
+
+p
+
+Fax-style protection flags (no group bits)
+
+q
+
+UNIX -style protection flags
+
+r
+
+Root device number (octal)
+
+s
+
+File size in bytes (decimal)
+
+u
+
+User identifier (decimal)
+
+Host
+
+The host to contact for service.
+(Equivalent to the -h option.)
+
+JobFmt
+
+The format string to use when returning job status
+information for the -s and -d options. Formats
+are specified using printf(3S)-style conventions but
+using the field identifiers listed below. Each item can
+include field width, precision, left-justification,
+0-filling, etc. just as for printf; e.g. %-3j for a
+3-character wide, left-justified, blank-padded field
+containing the job state.
+
+Format
+Description
+
+A
+
+Destination SubAddress
+
+B
+
+Destination Password
+
+C
+
+Destination company name
+
+D
+
+Total # dials/maximum # dials
+
+E
+
+Desired signalling rate
+
+F
+
+Client-specific tagline format string
+
+G
+
+Desired min-scanline time
+
+H
+
+Desired data format
+
+I
+
+Client-specified scheduling priority
+
+J
+
+Client-specified job tag string
+
+K
+
+Desired use of ECM (one-character symbol)
+
+L
+
+Destination geographic location
+
+M
+
+Notification e-mail address
+
+N
+
+Desired use of private tagline (one-character
+symbol) 
+
+O
+
+Whether to use continuation cover page (one-character
+symbol) 
+
+P
+
+# pages transmitted/total # pages to transmit
+
+Q
+
+Client-specified minimum acceptable signalling rate
+
+R
+
+Destination person (receiver)
+
+S
+
+Sender’s identity
+
+T
+
+Total # tries/maximum # tries
+
+U
+
+Page chopping threshold (inches)
+
+V
+
+Job done operation
+
+W
+
+Communication identifier
+
+X
+
+Job type (one-character symbol)
+
+Y
+
+Scheduled date and time
+
+Z
+
+Scheduled time in seconds since the UNIX epoch
+
+a
+
+Job state (one-character symbol)
+
+b
+
+# consecutive failed tries
+
+c
+
+Client machine name
+
+d
+
+Total # dials
+
+e
+
+Public (external) format of dialstring
+
+f
+
+# consecutive failed dials
+
+g
+
+Group identifier
+
+h
+
+Page chop handling (one-character symbol)
+
+i
+
+Current scheduling priority
+
+j
+
+Job identifier
+
+k
+
+Job kill time
+
+l
+
+Page length in mm
+
+m
+
+Assigned modem
+
+n
+
+E-mail notification handling (one-character symbol)
+
+o
+
+Job owner
+
+p
+
+# pages transmitted
+
+q
+
+Job retry time (MM::SS)
+
+r
+
+Document resolution in lines/inch
+
+s
+
+Job status information from last failure
+
+t
+
+Total # tries attempted
+
+u
+
+Maximum # tries
+
+v
+
+Client-specified dialstring
+
+w
+
+Page width in mm
+
+x
+
+Maximum # dials
+
+y
+
+Total # pages to transmit
+
+z
+
+Time to send job
+
+The K
+format produces: ’’D’’ if ECM is to
+be disabled, ’’ ’’ (space) if ECM
+use is enabled, ’’H’’ if T.30 Annex
+C half duplex is enabled, or ’’F’’
+if T.30 Annex C full duplex is enabled.
+
+The N
+format produces: ’’ ’’ (space) if
+the system-wide tagline format is to be used or
+’’P’’ if a private tagline format is
+to be used.
+
+The O
+format produces: ’’N’’ if no
+continuation cover page is to be used or ’’
+’’ (space) if the system default handling for
+continuation cover pages is to be used.
+
+The X
+format produces: ’’F’’ for a
+facsimile job or ’’P’’ for a pager
+job.
+
+The a
+format produces: ’’?’’ for a job in
+an undefined state, ’’T’’ for a
+suspended job (not being scheduled),
+’’P’’ for a pending job (waiting for
+its time to send to arrive), ’’S’’
+for a sleeping job (waiting for a scheduled timeout such as
+a delay between attempts to send),
+’’B’’ for a job blocked by
+concurrent activity to the same destination,
+’’W’’ for a job waiting for
+resources such as a free modem,
+’’R’’ for a job that is actively
+running, and ’’D’’ for a job that is
+done and was a success. ’’F’’ for a
+job that failed to complete.
+
+The h
+format produces: ’’D’’ if page
+chopping is disabled, ’’ ’’ (space)
+for the system default page chop handling,
+’’A’’ when all pages are to be
+chopped, or ’’L’’ if only the last
+page is to be chopped.
+
+The n
+format produces: ’’ ’’ (space) when
+no notification messages are to be delivered,
+’’D’’ when notification is to be
+sent when the job is done, ’’Q’’
+when notification is to be sent each time the job is
+requeued, or ’’A’’ when notification
+is to be sent for either the job completing or being
+requeued.
+
+It is
+recommended that all items include a field width so that the
+width of column title strings can be constrained when
+constructing headers from the format string.
+
+ModemFmt
+
+The format string to use when
+returning modem status information. Formats are specified
+using printf(3S)-style conventions but using the
+field identifiers listed below. Each item can include field
+width, precision, left-justification, 0-filling, etc. just
+as for printf; e.g. %-8h for an 8-character wide,
+left-justified, blank-padded field containing the name of
+the host the server is running on.
+
+Format
+Description
+
+h
+
+Server hostname
+
+l
+
+Local identifier string
+
+m
+
+Canonical modem name
+
+n
+
+FAX phone number
+
+r
+
+Maximum pages that can be received in a single call
+
+s
+
+Status information string
+
+t
+
+Server and session tracing levels (xxxxx:yyyyy)
+
+v
+
+Modem speaker volume as one-character symbol
+
+z
+
+A ’’*’’ if a faxgetty(8)
+process is running; otherwise ’’ ’’
+(space) 
+
+PassiveMode
+
+Whether or not to use passive
+mode in communication with the server.
+
+Port
+
+The network port to contact for service. (Equivalent to
+the -h option.)
+
+Protocol
+
+The name of the communication protocol to use when
+contacting a server. (Equivalent to the FAXSERVICE
+environment variable.)
+
+RcvFmt
+
+The format string to use when returning status
+information for the -r option. Formats are specified
+using printf(3S)-style conventions but using the
+field identifiers listed below. Each item can include field
+width, precision, left-justification, 0-filling, etc. just
+as for printf; e.g. %-3b for a 3-character wide,
+left-justified, blank-padded field containing the signalling
+rate. 
+
+Format
+Description
+
+Y
+
+Extended representation of the time when the receive
+happened 
+
+a
+
+SubAddress received from sender (if any)
+
+b
+
+Signalling rate used during receive
+
+d
+
+Data format used during receive
+
+e
+
+Error description if an error occurred during
+receive 
+
+f
+
+Document filename (relative to the recvq
+directory) 
+
+h
+
+Time spent receiving document (HH:MM:SS)
+
+i
+
+CIDName value for received fax
+
+j
+
+CIDNumber value for received fax
+
+l
+
+Page length in mm
+
+m
+
+Fax-style protection mode string
+(’’-rwxrwx’’) 
+
+n
+
+File size (number of bytes)
+
+o
+
+File owner
+
+p
+
+Number of pages in document
+
+q
+
+UNIX -style protection flags
+
+r
+
+Resolution of received data
+
+s
+
+Sender identity ( TSI )
+
+t
+
+Compact representation of the time when the receive
+happened 
+
+w
+
+Page width in mm
+
+z
+
+A ’’*’’ if receive is going on;
+otherwise ’’ ’’ (space)
+
+It is
+recommended that all items include a field width so that the
+width of column title strings can be constrained when
+constructing headers from the format string.
+
+TimeZone
+
+Control whether times and dates
+are reported in the local timezone of the server
+(’’local’’) or in GMT
+(’’gmt’’). By default times are
+reported in GMT.
+
+Verbose
+
+Control protocol tracing. (Equivalent to the -v
+option.) 
+
+NOTES
+
+The server
+login user name may be specified by the FAXUSER
+environment variable.
+
+BUGS
+
+There is no way
+to suppress the server status report. There is no way to
+control the printing of headers.
+
+FILES
+
+/etc/hylafax/hyla.conf
+system-wide configuration file
+
+~/.hylarc
+
+per-user configuration file
+
+SEE ALSO
+
+hylafax-client(1),
+sendfax(1), faxalter(1), faxrm(1),
+hfaxd(8)

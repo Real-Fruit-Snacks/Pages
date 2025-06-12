@@ -1,0 +1,199 @@
+GETOPTS(3) libbash getopts Library Manual GETOPTS(3)
+
+NAME
+
+getopts — libbash
+library for command line parameters parsing
+
+SYNOPSIS
+
+$retval
+getopt_long ⟨ Instructions⟩ ⟨
+Parameters⟩
+
+DESCRIPTION
+
+This is a documentation for
+libbash getopts library, that implements
+getopt_long function for bash(1). For documentation
+of bash getopts function, please see getopts(1) (
+getopts(1posix) on some systems).
+
+Here is a table
+for reference:
+
+getopts(1)
+
+(or 1posix on
+some systems) implemented by bash
+
+getopts(3)
+
+implemented by
+libbash.
+
+getopt(1)
+
+implemented by
+getopt utils (part of util-linux)
+
+getopt_long(1)
+
+implemented by
+libbash and installed to section 1 instead of 3 to
+prevent collision with C man pages.
+
+getopt(3)
+
+implemented by
+GNU C library.
+
+getopt_long(3)
+
+implemented by
+GNU C library.
+
+I have also seen separate getopt
+utility which part of util-linux package.
+
+The
+getopt_long function parses the command line
+arguments. It uses Instructions as the rules for
+parsing the Parameters.
+
+The
+Instructions 
+A string that specifies rules for parameters parsing. The
+instructions string is built of a group of independent
+instructions, separated by a white space. Each instruction
+must have the following structure:
+
+-|--->[:]
+
+This structure
+contains three parts:
+
+-
+
+This is the parameter
+single-letter sign. For example −h.
+
+--
+
+This is the parameter’s
+corresponding multi-letter sign. For example
+−-help.
+
+[:]
+
+This is the name of the
+variable that will contain the parameter value. For example:
+HELP.
+
+The Variable
+name can represent one of two variables types:
+
+Flag variable (not
+followed by ’:’)
+
+In this case, it will hold the
+value 1 if ’on’ (i.e. was specified on command
+line) and will not be defined if ’off’.
+
+Value variable (followed
+by ’:’)
+
+In this case, the value it will
+hold is the string that was given as the next parameter in
+the Parameters string (Separated by white-space or
+’=’ ). If input contains more then one instance
+of the considered command line option, an array of the given
+parameters will be set as the value of the variable.
+
+The
+Parameters 
+The Parameters are simply the parameters you wish to
+parse.
+
+RETURN VALUE
+
+This function returns a string
+that contains a set of variables definitions. In order to
+define the variables, this string should be given as a
+parameter to eval function. This value is returned in
+the variable $retval.
+
+EXAMPLES
+
+Parse command line parameters
+looking for the flags −h | −-help
+and −v | −-version and for the
+value −p | −-path :
+
+getopt_long
+’−h|−−help−>HELP 
+−v|−−version−>VERSION 
+−p|−−path−>PATH:’ $* 
+eval $retval
+
+In this example,
+for the parameters --help --path=/usr/ the variables
+that will be created are:
+
+HELP=1 
+PATH=/usr/
+
+for the
+parameters --help --path=/usr --path=/bin the
+variables that will be created are:
+
+HELP=1 
+PATH=(/usr /bin)
+
+BUGS
+
+Values must not contain the
+string ’__getopts__’. This string will be parsed
+as a single white-space.
+
+A value should
+not start with an already defined multi-letter sign. If such
+a value exists, it will be treated as the equivalent
+singe-letter sign. This bug only accures when using a
+single-letter sign, or a multi-letter sign that are not
+followed by a ’=’.
+
+For example: If
+we have a script named ’foo’, and we parse the
+parameters ’−d|−−dir:’ and
+’−f|−−file:’, then
+
+foo −d
+−−file
+
+and
+
+foo
+−−dir −−file
+
+will not work
+
+foo
+−−dir=−−file
+
+will work.
+
+AUTHORS
+
+Hai Zaar
+haizaar [AT] haizaar.com> 
+Gil Ran gil [AT] ran4.net>
+
+SEE ALSO
+
+ldbash(1), getopt_long(1),
+getopts(1), getopt(1), libbash(1), getopt(3),
+getopt_long(3)
+
+Linux Epoch
+Linux

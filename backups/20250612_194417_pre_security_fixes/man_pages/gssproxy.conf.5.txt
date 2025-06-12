@@ -1,0 +1,419 @@
+NAME
+
+gssproxy.conf -
+GssProxy Daemon Configuration file
+
+DESCRIPTION
+
+Optional
+configuration directives for the gssproxy daemon.
+
+GSS-Proxy conf
+files are classic ini-style configuration files. Each option
+consist of a key = value pair. Any characters behind '#'
+will be treated as comments and will be ignored. Boolean
+parameters accept "1", "true",
+"yes" and "on" as positive values. All
+other values will be considered as negative values.
+
+GSS-Proxy conf
+files must either be named "gssproxy.conf", or be
+of the form "##-foo.conf" (that is, start with two
+numbers followed by a dash, and end in ".conf").
+Files not conforming to this will be ignored unless
+specifically requested through command line parameters.
+Within a single file, any duplicate values or sections will
+be merged. Across multiple files, duplicates will generate a
+warning, and the first value encountered will take
+precedence (i.e., there is no merging).
+
+SECTIONS
+
+A section in a
+GSS-Proxy conf file is identified by the sectionname in
+square brackets ([sectionname]).
+
+There is one
+special section for global gssproxy settings, called
+[gssproxy].
+
+Services such
+as nfs, apache, ssh, etc. are represented by sections like
+[service/nfs], [service/apache], etc. and are identified by
+the "euid" setting (see below).
+
+VARIABLE SUBSTITUTIONS
+
+String
+parameters may contain substitution patterns. This allows
+gssproxy to deal with patterns for the storage location of
+keytabs or credential caches easier.
+
+The supported
+patterns are:
+
+%U
+
+substitutes to the user's
+numeric uid (e.g. 123)
+
+%u
+
+substitutes to the user's
+username (e.g. john).
+
+OPTIONS
+
+gssproxy
+supports the following options:
+
+allow_any_uid
+(boolean)
+
+Allow any process of any user
+to use this service.
+
+Note that
+absent a custom socket option this option may cause a
+service definition to mask access to following services. To
+avoid issues change the order of services in your
+configuration file so that services with allow_any_uid
+enabled are listed last, or define a custom socket for other
+services.
+
+Default:
+false
+
+allow_protocol_transition
+(boolean)
+
+Allow clients to request a
+ticket to self for an arbitrary user.
+
+This option
+controls whether s4u2self requests are allowed for the
+requesting client. The configured keytab is used as the
+service identity for which a ticket is requested. The KDC
+still needs to allow the operation for it to succeed.
+
+Default:
+false
+
+allow_constrained_delegation
+(boolean)
+
+Allow clients to request a
+ticket to another service using an evidence ticket.
+
+This option
+controls whether s4u2proxy requests are allowed for the
+requesting client. The KDC still needs to allow the
+operation for it to succeed.
+
+Default:
+false
+
+allow_client_ccache_sync
+(boolean)
+
+Allow clients to request
+credentials to be sent back for better caching.
+
+This option
+allows the proxy, in certain circumstances, to send back an
+additional option in the response structure of certain calls
+when it determines that a new ticket may have been added to
+the internal ccache. Clients can then replace their
+(encrypted) copy with the updated ccache.
+
+Default:
+false
+
+cred_store
+(string)
+
+This parameter allows one to
+control in which way gssproxy should use the cred_store
+interface provided by GSSAPI. The parameter can be defined
+multiple times per service.
+
+The syntax of
+the cred_store parameter is as follows: cred_store =
+:
+
+Currently this
+interface supports the following options:
+
+keytab
+
+Defines the keytab the service
+should use. Example: cred_store = keytab:/path/to/keytab
+
+client_keytab
+
+Defines a client keytab the
+service should use. Example: cred_store =
+client_keytab:/path/to/client_keytab.
+
+ccache
+
+Defines a credential cache the
+service should use. Example: cred_store =
+ccache:/path/to/ccache.
+
+Notably the
+client_keytab and the ccache setting typically are used with
+variable substitution placeholders (see above). For
+example:
+
+cred_store =
+keytab:/etc/krb5.keytab 
+cred_store = ccache:FILE:/var/lib/gssproxy/krb5cc_%U 
+cred_store =
+client_keytab:/var/lib/gssproxy/%U.keytab
+
+Default:
+cred_store =
+
+cred_usage
+(string)
+
+Allow one to restrict the kind
+of operations permitted for this service.
+
+The allowed
+options are: initiate, accept, both
+
+Default:
+cred_usage = both
+
+debug
+(boolean)
+
+Enable debugging to syslog.
+Setting to true is identical to setting debug_level to
+1.
+
+Default: debug
+= false
+
+debug_level
+(integer)
+
+Detail level at which to log
+debugging messages. 0 corresponds to no logging, while 1
+turns on basic debug logging. Level 2 increases verbosity,
+including more detailed credential verification.
+
+At level 3 and
+above, KRB5_TRACE output is logged. If KRB5_TRACE was
+already set in the execution environment, trace output is
+sent to its value instead. Refer to docs/KRB5_TRACE.md for
+more information.
+
+Default: 1 if
+debug is true, otherwise 0
+
+enforce_flags
+(string)
+
+A list of GSS Request Flags
+that are added unconditionally to every context
+initialization call. Flags can only be added to the list or
+removed from the list by prepending a +/- sign to the flag
+name or value.
+
+Recognized flag
+names: DELEGATE, MUTUAL_AUTH, REPLAY_DETECT, SEQUENCE,
+CONFIDENTIALITY, INTEGRITY, ANONYMOUS
+
+Examples:
+
+enforce_flags
+= +REPLAY_DETECT 
+enforce_flags = -0x0001
+
+Default:
+enforce_flags =
+
+euid (integer
+or string)
+
+Either the numeric (e.g., 48)
+or symbolic (e.g., apache) effective uid of a running
+process, required to identify a service.
+
+The
+"euid" parameter is imperative, any section
+without it will be discarded.
+
+Default: euid
+=
+
+filter_flags
+(string)
+
+A list of GSS Request Flags
+that are filtered unconditionally from every context
+initialization call. Flags can only be added to the list or
+removed from the list by prepending a +/- sign to the flag
+name or value.
+
+NOTE: Because
+often gssproxy is used to withhold access to credentials the
+Delegate Flag is filtered by default. To allow a service to
+delegate credentials use the first example below.
+
+Recognized flag
+names: DELEGATE, MUTUAL_AUTH, REPLAY_DETECT, SEQUENCE,
+CONFIDENTIALITY, INTEGRITY, ANONYMOUS
+
+Examples:
+
+filter_flags
+= -DELEGATE 
+filter_flags = -0x0001 +ANONYMOUS
+
+Default:
+filter_flags = +DELEGATE
+
+impersonate
+(boolean)
+
+Use impersonation (s4u2self +
+s4u2proxy) to obtain credentials
+
+Default:
+impersonate = false
+
+kernel_nfsd
+(boolean)
+
+Boolean flag that allows the
+Linux kernel to check if gssproxy is running (via
+/proc/net/rpc/use-gss-proxy).
+
+Default:
+kernel_nfsd = false
+
+krb5_principal
+(string)
+
+The krb5 principal to be used
+preferred for this service, if one isn't requested by the
+application. Note that this does not enforce use of this
+specific name; it only sets a default.
+
+Default:
+krb5_principal =
+
+mechs
+(string)
+
+Currently only krb5 is
+supported.
+
+The
+"mechs" parameter is imperative, any section
+without it will be discarded.
+
+Default: mechs
+=
+
+min_lifetime
+(integer)
+
+Minimum lifetime of a cached
+credential, in seconds.
+
+If non-zero,
+when gssproxy is deciding whether to use a cached
+credential, it will compare the lifetime of the cached
+credential to this value. If the lifetime of the cached
+credential is lower, gssproxy will treat the cached
+credential as expired and will attempt to obtain a new
+credential.
+
+Default:
+min_lifetime = 15
+
+program
+(string)
+
+If specified, this service will
+only match when the program being run is the specified
+string.
+
+Programs are
+assumed to be specified as canonical paths (i.e., no
+relative paths, no symlinks). Additionally, the '|'
+character is reserved for future use and therefore
+forbidden.
+
+run_as_user
+(string)
+
+The name of the user gssproxy
+will drop privileges to.
+
+This option is
+only available in the global section.
+
+Default:
+run_as_user =
+
+selinux_context
+(string)
+
+This option is deprecated. Use
+a custom socket or euid instead.
+
+socket
+(string)
+
+This parameter allows one to
+create a per-service socket file over which gssproxy client
+and server components communicate.
+
+When this
+parameter is not set, gssproxy will use a compiled-in
+default.
+
+syslog_status
+(boolean)
+
+Enable per-call debugging
+output to the syslog. This may be useful for investigating
+problems in applications using gssproxy.
+
+Default:
+syslog_status = false
+
+trusted
+(boolean)
+
+Defines whether this service is
+considered trusted. Use with caution, this enables
+impersonation.
+
+Default:
+trusted = false
+
+worker threads
+(integer)
+
+Defines the amount of worker
+threads gssproxy will create at startup.
+
+Default: worker
+threads =
+
+SEE ALSO
+
+gssproxy(8)
+and gssproxy-mech(8).
+
+AUTHORS
+
+GSS-Proxy -
+http://fedorahosted.org/gss-proxy

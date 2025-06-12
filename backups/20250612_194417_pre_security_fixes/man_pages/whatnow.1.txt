@@ -1,0 +1,249 @@
+NAME
+
+whatnow -
+prompting front-end for writing nmh messages
+
+SYNOPSIS
+
+whatnow
+
+[-help] [-version]
+[-draftfolder +folder] [-draftmessage
+msg] 
+
+[-nodraftfolder]
+[-editor editor] [-noedit]
+[-prompt string] [file]
+
+DESCRIPTION
+
+whatnow
+is the default program that queries the user about the
+disposition of a composed draft. It is normally
+automatically invoked by one of the nmh commands
+comp, dist, forw, or repl after
+the initial edit.
+
+When started,
+the editor is started on the draft (unless -noedit is
+given, in which case the initial edit is suppressed). Then,
+whatnow repetitively prompts the user with
+“What now?” and awaits a response. The valid
+responses are:
+
+edit
+
+Re-edit using the same editor that was used on the
+preceding round unless a profile entry
+“-next: ” names
+an alternate editor.
+
+edit editor
+
+Invoke editor for
+further editing.
+
+refile
++folder
+
+Refile the draft into folder
+.
+
+mime
+
+Process the draft as a MIME composition file using the
+buildmimeproc command which defaults to
+mhbuild(1). 
+
+display
+
+List the message being replied
+to or distributed on the terminal.
+
+list
+
+List the draft on the terminal.
+
+send
+
+Send the message.
+
+send -watch
+
+Send the message and monitor
+the delivery process.
+
+push
+
+Send the message in the background.
+
+whom
+
+List the addresses to whom the message will go.
+
+whom -check
+
+List the addresses and verify
+that they are acceptable to the transport service.
+
+quit
+
+Preserve the draft and exit.
+
+quit -delete
+
+Delete the draft and exit.
+
+delete
+
+Delete the draft and exit.
+
+cd directory
+
+Use directory when
+interpreting attachment file names. This does not change
+whatnow’s process’s current working
+directory so it and child processes, e.g.
+edit’s, do not see the change.
+
+pwd
+
+Print the working directory for attachment files.
+
+ls
+[ls-options]
+
+List files in the attachment
+working directory using ls(1).
+
+attach [-v]
+files
+
+Add the named files to the
+message as MIME attachments; -v displays the
+mhbuild(1) directive that send(1) will
+use.
+
+alist [-ln]
+
+List the MIME
+attachments’ filenames. -l gives a long listing
+showing their full path. -n numbers them for use with
+detach .
+
+detach [-n]
+files-or-numbers
+
+Remove MIME attachments, either
+by file name or by number with -n.
+
+When entering
+your response, you need only type enough characters to
+uniquely identify the response.
+
+For the
+edit response, any valid switch to the editor is
+valid.
+
+For the
+send and push responses, any valid switch to
+send(1) is valid (as push merely invokes
+send with the -push option).
+
+For the
+whom response, any valid switch to whom(1) is
+valid.
+
+For the
+refile response, any valid switch to the
+fileproc is valid.
+
+For the
+display and list responses, any valid argument
+to the lproc is valid. If any non-switch arguments
+are present, then the pathname of the draft will be excluded
+from the argument list given to the lproc (this is
+useful for listing another nmh message).
+
+See
+mh-profile(5) for further information about how
+editors are used by nmh. It also discusses how
+environment variables can be used to direct
+whatnow’s actions in complex ways.
+
+The
+-prompt string switch sets the prompting
+string for whatnow.
+
+The
+-draftfolder +folder and -draftmessage
+msg switches invoke the nmh draft folder
+facility. This is an advanced (and highly useful) feature.
+Consult mh-draft(5) for more information.
+
+If your
+nmh was configured with readline enabled,
+you’ll be able to use filename completion and other
+readline features at the prompt. These are particularly
+useful with the cd, ls, attach, and
+detach commands for managing MIME attachments.
+
+FILES
+
+$HOME/.mh_profile
+The user profile 
+/draft The draft file
+
+PROFILE COMPONENTS
+
+Path: To
+determine the user’s nmh directory 
+Draft-Folder: To specify the default draftfolder 
+Editor: To override the default editor 
+-next: To name an editor to be used after
+exit 
+from  
+buildmimeproc: Program to translate MIME composition files
+
+fileproc: Program to refile the message 
+lproc: Program to list the contents of a message 
+sendproc: Program to use to send the message 
+whomproc: Program to determine who a message would go to
+
+SEE ALSO
+
+mh-draft(5),
+send(1), whom(1)
+
+DEFAULTS
+
+’-prompt’
+defaults to “What Now? ”
+
+BUGS
+
+If the initial
+edit fails, whatnow deletes your draft (by renaming
+it with a site-dependent prefix (usually a comma); failure
+of a later edit preserves the draft.
+
+If the
+buildmimeproc fails (returns a nonzero status),
+whatnow simply prints a “What now?”
+prompt. whatnow depends on the buildmimeproc
+to tell the user that something went wrong.
+
+If
+whatnowproc is whatnow, then comp,
+dist, forw, and repl use a built-in
+whatnow, and do not actually run the whatnow
+program. Hence, if you define your own whatnowproc,
+don’t call it whatnow since it won’t be
+run.
+
+If
+sendproc is send, then whatnow uses a
+built-in send, it does not actually run the
+send program. Hence, if you define your own
+sendproc, don’t call it send since
+whatnow won’t run it.

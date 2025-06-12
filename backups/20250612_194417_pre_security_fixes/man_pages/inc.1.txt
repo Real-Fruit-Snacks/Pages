@@ -1,0 +1,297 @@
+NAME
+
+inc -
+incorporate new mail to an nmh folder
+
+SYNOPSIS
+
+inc
+
+[-help] [-version]
+[+folder] [-audit audit-file]
+[-noaudit] [-changecur | -nochangecur]
+[-form formfile] [-format
+string] [-file name] [-silent |
+-nosilent] [-truncate | -notruncate]
+[-width columns] [-host
+hostname] [-port portname/number]
+[-user username] [-proxy
+command] [-sasl | -nosasl]
+[-saslmech mechanism] [-authservice
+service] [-tls] [-initialtls]
+[-notls] [-certverify | -nocertverify]
+[-snoop] 
+
+DESCRIPTION
+
+inc
+incorporates mail from the user’s incoming mail drop
+into an nmh folder. If the mail drop is a file, it
+can be in mbox or MMDF format. If the mail
+drop is a directory it is considered to be in Maildir
+format.
+
+You may specify
+which folder to use with +folder. If no folder is
+specified, then inc will use either the folder given
+by a (non-empty) “Inbox” entry in the
+user’s profile, or the folder named
+“inbox”. If the specified (or default)
+folder doesn’t exist, the user will be queried prior
+to its creation.
+
+When the new
+messages are incorporated into the folder, they are assigned
+numbers starting with the next highest number for the
+folder. As the messages are processed, a scan listing
+of the new mail is produced.
+
+The newly
+created messages will have a mode of 0600, see chmod(1), on
+filesystems that support it. Alternatively, a
+“Msg-Protect: nnn” profile entry gives
+the mode to use, in octal. For all subsequent operations on
+these messages, this initially assigned mode will be
+preserved.
+
+If the switch
+-audit audit-file is specified (usually as a
+default switch in the user’s profile), then inc
+will append a header line and a line per message to the
+specified audit-file with the format:
+
+>
+date 
+
+This is useful
+for keeping track of volume and source of incoming mail.
+Eventually, repl, forw, comp, and
+dist may also output audit information to this (or
+another) file, perhaps with “Message-Id”
+information to keep an exact correspondence history.
+“Audit-file” is assumed to be in the
+user’s nmh directory unless a full path is
+specified.
+
+inc will
+incorporate even improperly formatted messages into the
+user’s nmh folder, inserting a blank line prior to the
+offending component and printing a comment identifying the
+bad message.
+
+In all cases,
+except the use of -file name (see below), the
+user’s mail drop will be zeroed, unless the
+-notruncate switch is given.
+
+If the profile
+entry “Unseen-Sequence” is present and
+non-empty, then inc will add each of the newly
+incorporated messages to each sequence named in the profile
+entry. inc will not zero each sequence prior to
+adding messages.
+
+The
+interpretation of the -form formatfile,
+-format string, and -width
+columns switches is the same as in
+scan(1).
+
+By using the
+-file name switch, one can direct inc
+to incorporate messages from a file other than the
+user’s mail drop. Note that the named file will
+not be zeroed, unless the -truncate switch is
+given.
+
+The
+-file switch does not support the use of standard
+input. Instead, the rcvstore command can be used to
+incorporate mail from the standard input stream.
+
+If the
+environment variable $MAILDROP is set, then
+inc uses it as the location of the user’s mail
+drop instead of the default (the -file name
+switch still overrides this, however). If this environment
+variable is not set, then inc will consult the
+profile entry “MailDrop” for this
+information. If the value found is not absolute, then it is
+interpreted relative to the user’s nmh
+directory. If the value is not found, then inc will
+look in the standard system location for the user’s
+mail drop.
+
+The
+-silent switch directs inc to be quiet and not
+ask any questions at all. This is useful for putting
+inc in the background and going on to other
+things.
+
+Using POP
+
+inc will normally check local mail drops for mail, as
+covered above. But if the option
+“pophost” is set in
+“mts.conf”, or if the -host
+hostname switch is given, or if the $MAILHOST
+environment variable is set, then inc will query this
+POP service host for mail to incorporate. If
+$MAILHOST is set and -host is specified as
+well, the command-line switch will override the environment
+variable. The -port switch specifies the port name or
+number used to connect to the POP server. If unspecified,
+the default is “pop3”.
+
+To specify a
+username for authentication with the POP server, use the
+-user username switch. The credentials profile
+entry in mh-profile(5) describes the ways to supply a
+username and password.
+
+If passed the
+-proxy command switch, inc will use the
+specified command to establish the connection to the POP
+server. The string %h in the command will be
+substituted by the hostname to connect to.
+
+For debugging
+purposes, you may give the switch -snoop, which will
+allow you to monitor the POP transaction. If -sasl
+-saslmech xoauth2 is used, the HTTP transaction is also
+shown.
+
+If nmh
+has been compiled with SASL support, the -sasl switch
+will enable the use of SASL authentication. Depending on the
+SASL mechanism used, this may require an additional password
+prompt from the user (but the netrc file can be used
+to store this password, as described in
+mh-profile(5)). The -saslmech switch can be
+used to select a particular SASL mechanism.
+
+If SASL
+authentication is successful, inc will attempt to
+negotiate a security layer for session encryption. Encrypted
+traffic is labelled with ’(encrypted)’ and
+’(decrypted)’ when viewing the POP transaction
+with the -snoop switch; see post(8)’s
+description of -snoop for its other features.
+
+If nmh
+has been compiled with OAuth support, the -sasl and
+-saslmech xoauth2 switches will enable OAuth
+authentication. The -user switch must be used, and
+the user-name must be an email address the user has
+for the service, which must be specified with the
+-authservice service switch. Before using
+this, the user must authorize nmh by running mhlogin
+and granting authorization to that account. See
+mhlogin(1) for more details.
+
+If nmh
+has been compiled with TLS support, the -tls and
+-initialtls switches will require the negotiation of
+TLS when connecting to the remote POP server. The
+-tls switch will direct inc to negotiate TLS
+as part of the normal POP protocol using the STLS command.
+The -initialtls switch will direct inc to
+negotiate TLS immediately after the connection has taken
+place, before any POP commands are sent or received. Data
+encrypted by TLS is labeled ’(tls-encrypted)’
+and ’(tls-decrypted)’ when viewing the POP
+transaction with the -snoop switch. The -notls
+switch will disable all attempts to negotiate TLS.
+
+When using TLS
+the default is to verify the remote certificate and
+SubjectName against the local trusted certificate store.
+This can be controlled by the -certverify and
+-nocertverify switches. See your OpenSSL
+documentation for more information on certificate
+verification.
+
+FILES
+
+$HOME/.mh_profile
+
+The user’s profile.
+
+/etc/nmh/mts.conf
+
+mts configuration file.
+
+/var/mail/$USER
+
+Location of the system mail drop.
+
+PROFILE COMPONENTS
+
+Path:
+
+To determine the user’s
+nmh directory.
+
+Alternate-Mailboxes:
+
+To determine the user’s
+mailboxes.
+
+Inbox:
+
+To determine the inbox.
+
+Folder-Protect:
+
+To set mode when creating a new folder.
+
+Msg-Protect:
+
+To set mode when creating a new message and
+audit-file. 
+
+Unseen-Sequence:
+
+To name sequences denoting unseen messages.
+
+SEE ALSO
+
+mhmail(1),
+scan(1), mh-mail(5), mh-profile(5),
+mhlogin(1), post(8), rcvstore(1)
+
+DEFAULTS
+
++folder
+
+defaulted by “Inbox”
+above. 
+
+-noaudit
+
+-changecur
+
+-format
+
+As described above.
+
+-nosilent
+
+-nosasl
+
+-notruncate
+
+Unless -file name is given.
+
+-width
+
+The width of the terminal.
+
+CONTEXT
+
+The folder into
+which messages are being incorporated will become the
+current folder. The first message incorporated will become
+the current message, unless the -nochangecur option
+is specified. This leaves the context ready for a
+show of the first new message.

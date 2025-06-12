@@ -1,0 +1,314 @@
+NAME
+
+geo - finite
+element mesh (rheolef-7.2)
+
+DESCRIPTION
+
+This class is a
+container for distributed finite element meshes. It is
+mainly a table of geo_element(6). Let omega
+be a geo: then, its i-th element is K
+= omega[i].
+
+In addition,
+the geo class provides accessors to nodes.
+Let jv = K[j] be the vertex index of the
+j-th vertex of the geo_element(6)
+K. Then, the physical coordinates of this vertex
+are given by omega.node(jv).
+
+Finally, the
+geo class provides a list of domains, e.g. some
+parts of the boundary. A domain named
+’left’ obtain via
+omega[’left’] and this accessor returns
+the domain as a geo object, i.e. a table of
+geo_element(6).
+
+Lower dimension
+geo_element(6) could be acceded via
+omega.get_geo_element (subdim, i). E.g. when
+subdim=1 we obtain the i-th edge of the
+mesh.
+
+EXAMPLE
+
+The following
+code lists all elements and nodes of the mesh.
+
+cout 
+for (size_t i = 0, n = omega.size(); i 
+const geo_element& K = omega[i]; 
+cout 
+for (size_t j = 0, m = K.size(); j 
+cout 
+cout 
+} 
+for (size_t jv = 0, nv = omega.n_node(); jv 
+cout 
+
+DISTRIBUTED MESH
+
+In a
+distributed environment, the accessors are similar to those
+of the disarray(4) class. Let dis_i be the
+index of an element in the global mesh. Then
+omega.dis_get_geo_element (dim, dis_i) returns the
+corresponding geo_element(6). Elements at the
+neighbour of partition boundaries are available for such a
+global access. For others elements, that belong to others
+partitions, communications should be organized as for the
+disarray(4) class.
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+main/lib/geo.h
+
+The
+geo class is an alias to the geo_basic
+class
+
+typedef
+geo_basic geo;
+
+The
+geo_basic class provides an interface, via the
+smart_pointer(7) class family, to a mesh
+container:
+
+template
+
+class geo_basic : public
+smart_pointer_clone
+> { 
+public:
+
+//
+typedefs:
+
+typedef
+sequential memory_type; 
+typedef geo_abstract_rep rep; 
+typedef geo_rep rep_geo_rep; 
+typedef smart_pointer_clone base; 
+typedef typename rep::size_type size_type; 
+typedef typename rep::node_type node_type; 
+typedef typename rep::variant_type variant_type; 
+typedef typename rep::reference reference; 
+typedef typename rep::const_reference const_reference; 
+typedef typename rep::iterator iterator; 
+typedef typename rep::const_iterator const_iterator; 
+typedef typename rep::iterator_by_variant
+iterator_by_variant; 
+typedef typename rep::const_iterator_by_variant
+const_iterator_by_variant; 
+typedef typename rep::coordinate_type coordinate_type; 
+typedef typename rep::geo_element_map_type
+geo_element_map_type;
+
+//
+allocators:
+
+geo_basic ();
+
+geo_basic (std::string name, const communicator& comm =
+communicator()); 
+void load (std::string name, const communicator& comm =
+communicator()); 
+geo_basic (const
+domain_indirect_basic& dom, const
+geo_basic& omega);
+
+// build
+from_list (for level set) 
+geo_basic ( 
+const geo_basic& lambda, 
+const disarray,sequential>&
+node_list, 
+const
+std::array
+>,sequential>, 
+reference_element::max_variant>& elt_list) 
+: base (new_macro(rep_geo_rep(lambda,node_list,elt_list)))
+{}
+
+//
+accessors:
+
+std::string
+name() const { return base::data().name(); } 
+std::string familyname() const { return
+base::data().familyname(); } 
+size_type dimension() const { return
+base::data().dimension(); } 
+size_type map_dimension() const { return
+base::data().map_dimension(); } 
+bool is_broken() const { return base::data().is_broken(); }
+
+size_type serial_number() const { return
+base::data().serial_number(); } 
+size_type variant() const { return base::data().variant(); }
+
+coordinate_type coordinate_system() const { return
+base::data().coordinate_system(); } 
+std::string coordinate_system_name() const { return
+space_constant::coordinate_system_name(coordinate_system());
+} 
+const basis_basic& get_piola_basis() const {
+return base::data().get_piola_basis(); } 
+size_type order() const { return
+base::data().get_piola_basis().degree(); } 
+const node_type& xmin() const { return
+base::data().xmin(); } 
+const node_type& xmax() const { return
+base::data().xmax(); } 
+const T& hmin() const { return base::data().hmin(); }
+
+const T& hmax() const { return base::data().hmax(); }
+
+const distributor& geo_element_ownership(size_type dim)
+const { return base::data().geo_element_ownership(dim); }
+
+const geo_size& sizes() const { return
+base::data().sizes(); } 
+const geo_size& ios_sizes() const { return
+base::data().ios_sizes(); } 
+const_reference get_geo_element (size_type dim, size_type
+ige) const { return base::data().get_geo_element (dim, ige);
+} 
+const_reference dis_get_geo_element (size_type dim,
+size_type dis_ige) const 
+{ return get_geo_element (dim, dis_ige); } 
+const geo_element& bgd2dom_geo_element (const
+geo_element& bgd_K) const { return
+base::data().bgd2dom_geo_element (bgd_K); } 
+const geo_element& dom2bgd_geo_element (const
+geo_element& dom_K) const { return
+base::data().dom2bgd_geo_element (dom_K); } 
+size_type neighbour (size_type ie, size_type loc_isid) const
+{ 
+return base::data().neighbour (ie, loc_isid); } 
+void neighbour_guard() const {
+base::data().neighbour_guard(); } 
+size_type n_node() const { return base::data().n_node(); }
+
+const node_type& node(size_type inod) const { return
+base::data().node(inod); } 
+const node_type& dis_node(size_type dis_inod) const {
+return base::data().dis_node(dis_inod); } 
+void dis_inod (const geo_element& K,
+std::vector& dis_inod) const { 
+return base::data().dis_inod(K,dis_inod); } 
+const disarray& get_nodes()
+const { return base::data().get_nodes(); } 
+size_type dis_inod2dis_iv (size_type dis_inod) const {
+return base::data().dis_inod2dis_iv(dis_inod); }
+
+size_type
+n_domain_indirect () const { return
+base::data().n_domain_indirect (); } 
+bool have_domain_indirect (const std::string& name)
+const { return base::data().have_domain_indirect (name); }
+
+const domain_indirect_basic&
+get_domain_indirect (size_type i) const { 
+return base::data().get_domain_indirect (i); } 
+const domain_indirect_basic&
+get_domain_indirect (const std::string& name) const {
+
+return base::data().get_domain_indirect (name); } 
+void insert_domain_indirect (const
+domain_indirect_basic& dom) const {
+
+base::data().insert_domain_indirect (dom); }
+
+size_type
+n_domain () const { return base::data().n_domain_indirect
+(); } 
+geo_basic get_domain (size_type i)
+const; 
+geo_basic operator[] (const
+std::string& name) const; 
+geo_basic boundary() const; 
+geo_basic internal_sides() const; 
+geo_basic sides() const;
+
+//
+modifiers:
+
+void set_name
+(std::string name); 
+void set_dimension (size_type dim); 
+void set_serial_number (size_type i); 
+void reset_order (size_type order); 
+void set_coordinate_system (coordinate_type sys_coord); 
+void set_coordinate_system (std::string sys_coord_name) {
+set_coordinate_system
+(space_constant::coordinate_system(sys_coord_name)); } 
+void set_nodes (const
+disarray& x);
+
+// extended
+accessors:
+
+const
+communicator& comm() const { return
+geo_element_ownership (0).comm(); } 
+size_type size(size_type dim) const { return
+base::data().geo_element_ownership(dim).size(); } 
+size_type dis_size(size_type dim) const { return
+base::data().geo_element_ownership(dim).dis_size(); } 
+size_type size() const { return size (map_dimension()); }
+
+size_type dis_size() const { return dis_size
+(map_dimension()); } 
+size_type n_vertex() const { return size (0); } 
+size_type dis_n_vertex() const { return dis_size (0); } 
+const_reference operator[] (size_type ie) const { return
+get_geo_element (map_dimension(), ie); } 
+const_iterator begin (size_type dim) const { return
+base::data().begin(dim); } 
+const_iterator end (size_type dim) const { return
+base::data().end (dim); } 
+const_iterator begin () const { return
+begin(map_dimension()); } 
+const_iterator end () const { return end (map_dimension());
+}
+
+//
+comparator:
+
+bool operator==
+(const geo_basic& omega2) const {
+return base::data().operator== (omega2.data()); }
+
+// i/o:
+
+void save
+(std::string filename = "") const;
+
+}; 
+template  
+idiststream& operator>> (idiststream& ips,
+geo_basic& omega);
+
+template
+
+odiststream& operator& omega);
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html>. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

@@ -1,0 +1,196 @@
+SPPP(4) BSD Kernel Interfaces Manual SPPP(4)
+
+NAME
+
+sppp — point to
+point protocol network layer for synchronous lines
+
+SYNOPSIS
+
+device sppp
+
+DESCRIPTION
+
+The sppp network layer
+implements the state machine and the Link Control Protocol
+(LCP) of the point to point protocol (PPP) as
+described in RFC 1661. Note that this layer does not provide
+network interfaces of its own, it is rather intended to be
+layered on top of drivers providing a synchronous
+point-to-point connection that wish to run a PPP stack over
+it. The corresponding network interfaces have to be provided
+by these hardware drivers.
+
+The sppp
+layer provides three basic modes of operation. The default
+mode, with no special flags to be set, is to create the PPP
+connection (administrative Open event to the LCP
+layer) as soon as the interface is taken up with the
+ifconfig(8) command. Taking the interface down again will
+terminate the LCP layer and thus all other layers on top.
+The link will also terminate itself as soon as no Network
+Control Protocol (NCP) is open anymore, indicating that the
+lower layers are no longer needed.
+
+Setting the
+link-level flag link0 with ifconfig(8) will cause the
+respective network interface to go into passive mode.
+This means, the administrative Open event to the LCP
+layer will be delayed until after the lower layers signals
+an Up event (rise of
+’’carrier’’). This can be used by
+lower layers to support a dialin connection where the
+physical layer is not available immediately at startup, but
+only after some external event arrives. Receipt of a
+Down event from the lower layer will not take the
+interface completely down in this case.
+
+Finally, setting
+the flag link1 will cause the interface to operate in
+dial-on-demand mode. This is also only useful if the
+lower layer supports the notion of a carrier. Upon
+configuring the respective interface, it will delay the
+administrative Open event to the LCP layer until
+either an outbound network packet arrives, or until the
+lower layer signals an Up event, indicating an
+inbound connection. As with passive mode, receipt of a
+Down event (loss of carrier) will not automatically
+take the interface down, thus it remains available for
+further connections.
+
+The sppp
+layer supports the debug interface flag that can be
+set with ifconfig(8). If this flag is set, the various
+control protocol packets being exchanged as well as the
+option negotiation between both ends of the link will be
+logged at level LOG_DEBUG. This can be helpful to examine
+configuration problems during the first attempts to set up a
+new configuration. Without this flag being set, only the
+major phase transitions will be logged at level
+LOG_INFO.
+
+It is possible
+to leave the local interface IP address open for negotiation
+by setting it to 0.0.0.0. This requires that the remote peer
+can correctly supply a value for it based on the identity of
+the caller, or on the remote address supplied by this side.
+Due to the way the IPCP option negotiation works, this
+address is being supplied late during the negotiation, which
+might cause the remote peer to make wrong assumptions.
+
+In a similar
+spirit the remote address can be set to the magical value
+0.0.0.* which means that we do not care what address
+the remote side will use, as long as it is not 0.0.0.0. This
+is useful if your ISP has several dial-in servers. You can
+of course route add something_or_other 0.0.0.*
+and it will do exactly what you would want it to.
+
+The PAP and CHAP
+authentication protocols as described in RFC 1334, and RFC
+1994 resp., are also implemented. Their parameters are being
+controlled by the spppcontrol(8) utility.
+
+VJ header
+compression is implemented, and enabled by default. It can
+be disabled using spppcontrol(8).
+
+DIAGNOSTICS
+
+:
+ illegal  in state
+  An event happened that should
+not happen for the current state the respective control
+protocol is in. See RFC 1661 for a description of the state
+automaton.
+
+:
+loopback  The state automaton detected a line
+loopback (that is, it was talking with itself). The
+interface will be temporarily disabled.
+
+:
+up  The LCP layer is running again, after a line
+loopback had previously been detected.
+
+:
+down  The keepalive facility detected the line
+being unresponsive. Keepalive must be explicitly requested
+by the lower layers in order to take place.
+
+SEE ALSO
+
+inet(4), intro(4), ifconfig(8),
+spppcontrol(8)
+
+W. Simpson, Editor
+
+,
+
+The Point-to-Point Protocol (PPP) , 
+RFC 1661 .
+
+G. McGregor
+
+,
+
+The PPP Internet Protocol Control Protocol (IPCP)
+, 
+RFC 1332 .
+
+B. Lloyd
+
+and
+
+W. Simpson , 
+PPP Authentication Protocols , 
+RFC 1334 .
+
+W. Simpson
+
+,
+
+PPP Challenge Handshake Authentication Protocol
+(CHAP) , 
+RFC 1994 .
+
+AUTHORS
+
+The original implementation of
+sppp was written in 1994 at Cronyx Ltd., Moscow by
+Serge Vakulenko vak [AT] cronyx.ru>. Jörg
+Wunsch joerg_wunsch [AT] uriah.de> rewrote
+a large part in 1997 in order to fully implement the state
+machine as described in RFC 1661, so it could also be used
+for dialup lines. He also wrote this man page. Serge later
+on wrote a basic implementation for PAP and CHAP, which
+served as the base for the current implementation, done
+again by Jörg Wunsch.
+
+BUGS
+
+Many.
+
+Currently, only
+the IPCP control protocol and ip(4) network protocol
+is supported. More NCPs should be implemented, as well as
+other control protocols for authentication and link quality
+reporting.
+
+Negotiation loop
+avoidance is not fully implemented. If the negotiation does
+not converge, this can cause an endless loop.
+
+The various
+parameters that should be adjustable per RFC 1661 are
+currently hard-coded into the kernel, and should be made
+accessible through spppcontrol(8).
+
+Passive
+mode has not been tested extensively.
+
+Link-level
+compression protocols should be supported.
+
+BSD May 25,
+2008 BSD

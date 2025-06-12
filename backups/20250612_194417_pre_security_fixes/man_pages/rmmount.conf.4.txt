@@ -1,0 +1,344 @@
+NAME
+
+rmmount.conf
+− removable media mounter configuration file
+
+SYNOPSIS
+
+/etc/rmmount.conf
+
+DESCRIPTION
+
+The
+rmmount.conf file contains the rmmount(1M)
+configuration information. This file describes where to find
+shared objects that perform actions on file systems after
+identifying and mounting them. The rmmount.conf file
+is also used to share file systems on removable media. It
+can also direct the rmmount utility to run
+fsck on one or more file systems before mounting
+them, with the fsck command line options specified in
+rmmount.conf.
+
+Actions are
+executed in the order in which they appear in the
+configuration file. The action function can return either
+1 or 0. If it returns 0, no further
+actions will be executed. This allows the function to
+control which applications are executed. For example,
+action_filemgr always returns 0 if the File
+Manager is running, thereby preventing subsequent actions
+from being executed.
+
+To execute an
+action after a medium has been inserted and while the File
+Manager is not running, list the action after
+action_filemgr in the rmmount.conf file. To
+execute an action before the File Manager becomes aware of
+the medium, list the action before action_filemgr in
+the rmmount.conf file.
+
+The syntax for
+the rmmount.conf file is as follows:
+
+# File system
+identification 
+ident filesystem_type shared_object media_type [media_type
+...]
+
+# Actions 
+action media_type shared_object args_to_so
+
+# File system
+sharing 
+share media_or_file_system share_command_options
+
+# Mount command
+options 
+mount media_or_file_system [file_system_spec] -o
+mount_command_options
+
+# Optionally
+fsck command options 
+fsck media_type filesystem_type -o fsck_command_options
+
+Explanations of
+the syntax for the File system identification fields
+are as follows: 
+filesystem_type
+
+An ASCII string used as
+the file system type flag of the mount command (see
+the -F option of mount(1M)). It is also used
+to match names passed to rmmount(1M) from Volume
+Management.
+
+shared_object
+
+Programs that identify file
+systems and perform actions. This shared_object is
+found at
+/usr/lib/fs/filesystem_type/shared_object.
+
+media_type
+
+The type of medium where this
+file system resides. Legal values are cdrom,
+floppy, jaz, rmdisk, and
+zip.
+
+Explanations of
+the syntax for the Actions fields are as follows.
+
+media_type
+
+Type of medium. This argument
+is passed in from Volume Management as
+VOLUME_TYPE.
+
+shared_object
+
+Programs that identify file
+systems and perform actions. If shared_object starts
+with ’/’ (slash), the full path name is used;
+otherwise, /usr/lib/rmmount is prepended to the
+name.
+
+args_to_so
+
+Arguments passed to the
+shared_object. These arguments are passed in as an
+argc and argv[].
+
+The definition
+of the interface to Actions is located in
+/usr/include/rmmount.h.
+
+Explanations of
+the syntax for the File system sharing fields are as
+follows. 
+media_or_file_system
+
+Either the type of medium or
+the specific file system to share.
+
+share_command_options
+
+Options of the share
+command. See share(1M) for more information about
+these options.
+
+Explanations of
+the syntax for the Mount command options fields are
+as follows: 
+media_or_file_system
+
+Either the type of medium or
+the specific file system to share.
+
+file_system_spec
+
+Specifies one or more file
+systems to which this line applies. Defaults to
+"all" file system types.
+
+mount_command_options
+
+One or more options to be
+passed to the mount command. Multiple options require
+a space delimiter.
+
+Explanations of
+the syntax for the fsck command options fields are as
+follows: 
+media_type
+
+The type of removable medium. A
+Bourne shell regular expression that matches names of file
+system media whose aliases are listed under
+/vol/dev/aliases. Examples include cdrom0,
+cdrom1, cdrom*, jaz0, jaz1, and
+jaz*.
+
+filesystem_type
+
+The type of file system, for
+example, ufs or hsfs, that resides on the
+medium specified in media_type.
+
+fsck_command_options
+
+One or more options to be
+passed to fsck(1M). Multiple options must be
+separated by spaces.
+
+The algorithm
+for the fsck configuration line is as follows:
+
+1.
+
+The fsck configuration line tells rmmount
+to run fsck on filesystem_type, as described
+above. The filesystem_type must be correct for the
+media_type specified.
+
+2.
+
+If filesystem_type is not present, rmmount
+runs fsck on all file systems on all media that match
+media_type. 
+
+3.
+
+If rmmount.conf contains no fsck
+configuration line or contains an fsck configuration
+line with a media_type that does not match a
+medium’s alias, rmmount does not run
+fsck on the removable medium’s file system,
+unless mount reports that the file system’s
+dirty bit is set.
+
+Default
+Values 
+The following is an example of an rmmount.conf
+file:
+
+# 
+# Removable Media Mounter configuration file. 
+#
+
+# File
+system identification 
+ident hsfs ident_hsfs.so cdrom 
+ident ufs ident_ufs.so cdrom floppy rmdisk pcmem 
+ident pcfs ident_pcfs.so floppy rmdisk pcmem 
+ident udfs ident_udfs.so cdrom floppy
+
+# Actions
+
+action cdrom action_filemgr.so 
+action floppy action_filemgr.so 
+action rmdisk action_filemgr.so
+
+EXAMPLES
+
+Example 1:
+Sharing of Various File Systems
+
+The following
+examples show how various file systems are shared using the
+share syntax for the rmmount.conf file. These lines
+are added after the Actions entries. 
+share cdrom*
+
+Shares all CD-ROMs via NFS and
+applies no access restrictions.
+
+share solaris_2.x*
+
+Shares CD-ROMs named
+solaris_2.x* with no access restrictions.
+
+share cdrom* -o
+ro=engineering
+
+Shares all CD-ROMs via
+NFS but exports only to the "engineering"
+netgroup.
+
+share solaris_2.x* -d
+distribution CD
+
+Shares CD-ROMs named
+solaris_2.x* with no access restrictions and with the
+description that it is a distribution CD-ROM.
+
+share floppy0
+
+Shares the file system of any
+floppy inserted into floppy drive 0.
+
+share jaz0
+
+Shares the file system on Jaz
+drive 0.
+
+Example 2:
+Customizing mount Operations
+
+The following
+examples show how different mount options could be
+used to customize how rmmount mounts various media:
+
+mount cdrom* hsfs -o nrr
+
+Mounts all High Sierra CD-ROMs
+with the nrr (no Rock Ridge extensions) option (see
+mount_hsfs(1M)).
+
+mount floppy1 -o ro
+
+Will always mount the second
+floppy disk read-only (for all file system types).
+
+mount floppy1 -o ro
+foldcase
+
+Will always mount the second
+floppy disk read-only (for all file system types) and pass
+the foldcase mount option.
+
+mount jaz1 -o
+ro
+
+Mounts the medium in Jaz drive
+1 read-only, for all file system types.
+
+Example 3:
+Telling rmmount to Check File Systems Before Mounting
+Them
+
+The following
+examples show how to tell rmmount to check file
+systems with fsck before mounting them, and how to
+specify the command line options to be used with
+fsck: 
+fsck floppy* ufs —o f
+
+Performs a full file system
+check on any UFS floppies, ignoring the clean flag,
+before mounting them.
+
+fsck floppy* ufs -o
+p
+
+Uses the fsck p (preen)
+flag for all UFS floppies.
+
+fsck cdrom* -o f
+
+Tells rmmount to run
+fsck before mounting any file system on CD-ROM.
+
+fsck jaz* ufs -o
+f
+
+Tells rmmount to perform a full
+file system check on any UFS Jaz media, ignoring the
+clean flag, before mounting them.
+
+SEE ALSO
+
+volcancel(1),
+volcheck(1), volmissing(1), mount(1M),
+mount_hsfs(1M), rmmount(1M), share(1M),
+vold(1M), vold.conf(4), volfs(7FS)
+
+NOTES
+
+When using the
+mount options line, verify that the specified options
+will work with the specified file system types. The
+mount command will fail if an incorrect mount
+option/file system combination is specified. Multiple
+mount options require a space delimiter.

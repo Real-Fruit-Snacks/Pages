@@ -1,0 +1,226 @@
+MDCONFIG(8) BSD System Manager’s Manual
+MDCONFIG(8)
+
+NAME
+
+mdconfig —
+configure and enable memory disks
+
+SYNOPSIS
+
+mdconfig −a
+−t type [−n] [
+
+−o [ 
+no]option ] ...
+[−f file]
+[−s size]
+[−S sectorsize]
+[−u unit]
+[−x sectors/track]
+[−y heads/cyl]
+
+mdconfig −d
+−u unit 
+mdconfig −l [−n]
+[−u unit]
+
+DESCRIPTION
+
+The mdconfig utility
+configures and enables md(4) devices.
+
+Options indicate
+an action to be performed:
+
+−a
+
+Attach a memory
+disk. This will configure and attach a memory disk with the
+parameters specified and attach it to the system.
+
+−d
+
+Detach a memory
+disk from the system and release all resources.
+
+−t type
+
+Select the type of the memory
+disk.
+
+malloc
+
+Storage for
+this type of memory disk is allocated with malloc(9). This
+limits the size to the malloc bucket limit in the kernel. If
+the −o reserve option is not set, creating and
+filling a large malloc-backed memory disk is a very easy way
+to panic a system.
+
+vnode
+
+A file
+specified with −f file becomes the
+backingstore for this memory disk.
+
+swap
+
+swapspace is
+used to back this memory disk.
+
+−f file
+
+Filename to use for the vnode
+type memory disk.
+
+−l
+
+List
+information about configured md(4) devices. If the
+−u option is used in conjuction with this, the
+output is limited to information on the specified
+device.
+
+−n
+
+When printing
+md device names, print only the unit number without the md
+prefix.
+
+−s size
+
+Size of the memory disk.
+Size is the number of 512 byte sectors unless
+suffixed with a k, m, or g which
+denotes kilobyte, megabyte and gigabyte respectively.
+
+−S
+sectorsize
+
+Sectorsize to use for malloc
+backed device.
+
+−x
+sectors/track
+
+See the description of the
+−y option below.
+
+−y
+heads/cylinder
+
+For malloc or
+vnode backed devices, the −x and
+−y options can be used to specify a synthetic
+geometry. This is useful for constructing bootable images
+for later download to other devices.
+
+−o [ 
+no]option
+
+Set or reset options.
+
+[ 
+no]async
+
+For vnode backed
+devices: avoid IO_SYNC for increased performance but at the
+risk of deadlocking the entire kernel.
+
+[ 
+no]reserve
+
+Allocate and reserve all needed
+storage from the start, rather than as needed.
+
+[ 
+no]cluster
+
+Enable clustering on this
+disk.
+
+[ 
+no]compress
+
+Enable/Disable compression
+features to reduce memory usage.
+
+[ 
+no]force
+
+Disable/Enable extra sanity
+checks to prevent the user from doing something that might
+adversely affect the system.
+
+[ 
+no]readonly
+
+Enable/Disable readonly
+mode.
+
+−u unit
+
+Request a specific unit number
+for the md(4) device instead of automatic allocation.
+
+EXAMPLES
+
+To create a 4 megabyte malloc(9)
+backed memory disk. The name of the allocated unit will be
+output on stdout like ’’md3’’:
+
+mdconfig -a -t
+malloc -s 4m
+
+To create a disk
+named /dev/md4 with /tmp/boot.flp as
+backing:
+
+mdconfig -a -t
+vnode -f /tmp/boot.flp -u 4
+
+To detach and
+free all resources used by /dev/md4:
+
+mdconfig -d -u
+4
+
+To create and
+mount a 128MByte swap backed file system on /tmp:
+
+mdconfig -a -t
+swap -s 128M -u 10 
+newfs -U /dev/md10 
+mount /dev/md10 /tmp 
+chmod 1777 /tmp
+
+To create a 5MB
+file-backed disk:
+
+dd if=/dev/zero
+of=somebackingfile bs=1k count=5k 
+mdconfig -a -t vnode -f somebackingfile -u 0 
+bsdlabel -w md0 auto 
+newfs md0c 
+mount /dev/md0c /mnt
+
+SEE ALSO
+
+md(4), bsdlabel(8), fdisk(8),
+mdmfs(8), malloc(9)
+
+HISTORY
+
+The mdconfig utility
+first appeared in FreeBSD 5.0 as a cleaner replacement
+for the vn(4) and vnconfig(8) combo.
+
+AUTHORS
+
+The mdconfig utility was
+written by Poul-Henning Kamp ⟨ phk [AT] FreeBSD.org⟩
+.
+
+BSD
+March 10, 2004 BSD

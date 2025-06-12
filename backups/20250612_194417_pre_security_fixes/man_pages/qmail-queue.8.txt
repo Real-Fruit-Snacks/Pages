@@ -1,0 +1,160 @@
+NAME
+
+qmail-queue -
+queue a mail message for delivery
+
+SYNOPSIS
+
+qmail-queue
+
+DESCRIPTION
+
+qmail-queue
+reads a mail message from descriptor 0. It then reads
+envelope information from descriptor 1. It places the
+message into the outgoing queue for future delivery by
+qmail-send.
+
+The envelope
+information is an envelope sender address followed by a list
+of envelope recipient addresses. The sender address is
+preceded by the letter F and terminated by a 0 byte. Each
+recipient address is preceded by the letter T and terminated
+by a 0 byte. The list of recipient addresses is terminated
+by an extra 0 byte. If qmail-queue sees end-of-file
+before the extra 0 byte, it aborts without placing the
+message into the queue.
+
+Every envelope
+recipient address should contain a username, an @ sign, and
+a fully qualified domain name.
+
+qmail-queue
+always adds a Received line to the top of the
+message. Other than this, qmail-queue does not
+inspect the message and does not enforce any restrictions on
+its contents. However, the recipients probably expect to see
+a proper header, as described in qmail-header(5).
+
+Programs
+included with qmail which invoke qmail-queue will
+invoke the contents of $QMAILQUEUE instead, if that
+environment variable is set.
+
+FILESYSTEM RESTRICTIONS
+
+qmail-queue
+imposes two constraints on the queue structure: each
+mess subdirectory must be in the same filesystem as
+the pid directory; and each todo subdirectory
+must be in the same filesystem as the intd
+directory.
+
+EXIT CODES
+
+qmail-queue
+does not print diagnostics. It exits 0 if it has
+successfully queued the message. It exits between 1 and 99
+if it has failed to queue the message.
+
+All
+qmail-queue error codes between 11 and 40 indicate
+permanent errors:
+
+11
+
+Address too long.
+
+31
+
+Mail server permanently refuses to send the message to
+any recipients. (Not used by qmail-queue, but can be
+used by programs offering the same interface.)
+
+All other
+qmail-queue error codes indicate temporary
+errors:
+
+51
+
+Out of memory.
+
+52
+
+Timeout.
+
+53
+
+Write error; e.g., disk full.
+
+54
+
+Unable to read the message or envelope.
+
+55
+
+Unable to read a configuration file. (Not used by
+qmail-queue.) 
+
+56
+
+Problem making a network connection from this host. (Not
+used by qmail-queue.)
+
+61
+
+Problem with the qmail home directory.
+
+62
+
+Problem with the queue directory.
+
+63
+
+Problem with queue/pid.
+
+64
+
+Problem with queue/mess.
+
+65
+
+Problem with queue/intd.
+
+66
+
+Problem with queue/todo.
+
+71
+
+Mail server temporarily refuses to send the message to
+any recipients. (Not used by qmail-queue.)
+
+72
+
+Connection to mail server timed out. (Not used by
+qmail-queue.) 
+
+73
+
+Connection to mail server rejected. (Not used by
+qmail-queue.) 
+
+74
+
+Connection to mail server succeeded, but communication
+failed. (Not used by qmail-queue.)
+
+81
+
+Internal bug; e.g., segmentation fault.
+
+91
+
+Envelope format error.
+
+SEE ALSO
+
+addresses(5),
+envelopes(5), qmail-header(5), qmail-inject(8),
+qmail-qmqpc(8), qmail-send(8), qmail-smtpd(8)

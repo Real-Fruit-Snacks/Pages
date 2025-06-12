@@ -1,0 +1,262 @@
+ATKBD(4) BSD Kernel Interfaces Manual ATKBD(4)
+
+NAME
+
+atkbd — the AT
+keyboard interface
+
+SYNOPSIS
+
+options ATKBD_DFLT_KEYMAP
+
+makeoptions ATKBD_DFLT_KEYMAP=_keymap_name_ 
+options KBD_DISABLE_KEYMAP_LOAD 
+device atkbd
+
+In
+/boot/device.hints:
+
+hint.atkbd.0.at="atkbdc"
+
+hint.atkbd.0.irq="1"
+
+DESCRIPTION
+
+The atkbd driver,
+together with the atkbdc driver, provides access to
+the AT 84 keyboard or the AT enhanced keyboard which is
+connected to the AT keyboard controller.
+
+This driver is
+required for the console driver syscons(4) or vt(4).
+
+There can be
+only one atkbd device defined in the kernel
+configuration file. This device also requires the
+atkbdc keyboard controller to be present. The
+irq number must always be 1; there is no provision of
+changing the number.
+
+Function
+Keys 
+The AT keyboard has a number of function keys. They are
+numbered as follows and can be associated with strings by
+the kbdcontrol(1) command. You can use a keyboard map file
+(see kbdmap(5)) to map them to arbitrary keys, particularly
+the functions in the range from 65 to 96 which are not used
+by default.
+
+Function Key number
+
+Function
+Key
+
+1, 2,...12
+
+F1, F2,...
+F12
+
+13, 14,...24
+
+Shift+F1,
+Shift+F2,... Shift+F12
+
+25, 26,...36
+
+Ctl+F1,
+Ctl+F2,... Ctl+F12
+
+37, 38,...48
+
+Shift+Ctl+F1,
+Shift+Ctl+F2,... Shift+Ctl+F12
+
+49
+
+Home and Numpad
+7 (without NumLock)
+
+50
+
+Up Arrow and
+Numpad 8 (without NumLock)
+
+51
+
+Page Up and
+Numpad 9 (without NumLock)
+
+52
+
+Numpad -
+
+53
+
+Left Arrow and
+Numpad 4 (without NumLock)
+
+54
+
+Numpad 5
+(without NumLock)
+
+55
+
+Right Arrow and
+Numpad 6 (without NumLock)
+
+56
+
+Numpad +
+
+57
+
+End and Numpad
+1 (without NumLock)
+
+58
+
+Down Arrow and
+Numpad 2 (without NumLock)
+
+59
+
+Page Down and
+Numpad 3 (without NumLock)
+
+60
+
+Ins and Numpad
+0 (without NumLock)
+
+61
+
+Del
+
+62
+
+Left GUI
+Key
+
+63
+
+Right GUI
+Key
+
+64
+
+Menu
+
+65, 66,...96
+
+free (not used
+by default)
+
+See the man page
+for the kbdcontrol(1) command for how to assign a string to
+the function key.
+
+DRIVER CONFIGURATION
+
+Kernel Configuration
+Options 
+The following kernel configuration options control the
+atkbd driver.
+
+ATKBD_DFLT_KEYMAP
+
+This option sets the default,
+built-in keymap of the atkbd driver to the named
+keymap. See EXAMPLES below.
+
+KBD_DISABLE_KEYMAP_LOAD
+
+The keymap can be modified by
+the kbdcontrol(1) command. This option will disable this
+feature and prevent the user from changing key
+assignment.
+
+Driver
+Flags 
+The atkbd driver accepts the following driver flags.
+They can be set either in /boot/device.hints, or else
+from within the boot loader (see loader(8)).
+
+bit 0 (FAIL_IF_NO_KBD)
+
+By default the atkbd
+driver will install even if a keyboard is not actually
+connected to the system. This option prevents the driver
+from being installed in this situation.
+
+bit 1 (NO_RESET)
+
+When this option is given, the
+atkbd driver will not reset the keyboard when
+initializing it. It may be useful for laptop computers whose
+function keys have special functions and these functions are
+forgotten when the keyboard is reset.
+
+bit 2 (ALT_SCANCODESET)
+
+Certain keyboards, such as
+those on some ThinkPad models, behave like the old XT
+keyboard and require this option.
+
+bit 3 (NO_PROBE_TEST)
+
+When this option is given, the
+atkbd driver will not test the keyboard port during
+the probe routine. Some machines hang during boot when this
+test is performed.
+
+EXAMPLES
+
+The atkbd driver requires
+the keyboard controller atkbdc. Thus, the kernel
+configuration file should contain the following lines.
+
+device atkbdc
+
+device atkbd
+
+The following
+example shows how to set the default, built-in keymap to
+jp.106.kbd.
+
+device atkbdc
+
+options ATKBD_DFLT_KEYMAP 
+makeoptions ATKBD_DFLT_KEYMAP=jp.106 
+device atkbd
+
+In both cases,
+you also need to have following lines in
+/boot/device.hints.
+
+hint.atkbdc.0.at="isa"
+
+hint.atkbdc.0.port="0x060" 
+hint.atkbd.0.at="atkbdc" 
+hint.atkbd.0.irq="1"
+
+SEE ALSO
+
+kbdcontrol(1), atkbdc(4),
+psm(4), syscons(4), vt(4), kbdmap(5), loader(8)
+
+HISTORY
+
+The atkbd driver first
+appeared in FreeBSD 3.1.
+
+AUTHORS
+
+The atkbd driver was
+written by Søren Schmidt
+sos [AT] FreeBSD.org> and Kazutaka Yokota
+yokota [AT] FreeBSD.org>. This manual page was
+written by Kazutaka Yokota.
+
+BSD
+January 29, 2008 BSD

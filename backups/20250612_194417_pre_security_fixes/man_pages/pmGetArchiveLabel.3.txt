@@ -1,0 +1,133 @@
+NAME
+
+pmGetArchiveLabel,
+pmGetHighResArchiveLabel - fetch the label record
+from a set of performance metrics archives
+
+C SYNOPSIS
+
+#include
+
+int
+pmGetArchiveLabel(pmLogLabel *lp); 
+int pmGetHighResArchiveLabel(pmHighResLogLabel
+*lp);
+
+cc ...
+-lpcp
+
+DESCRIPTION
+
+Within the
+framework of the Performance Co-Pilot (PCP), archives of
+performance metrics values may be accumulated and saved
+using the program pmlogger(1) and the
+LOGIMPORT(3) programming interface.
+
+The routines
+pmGetArchiveLabel and pmGetHighResArchiveLabel
+may be used to fetch the label record from a set of archives
+that has already been opened using pmNewContext(3),
+or pmDupContext(3), and thereby associated with the
+current Performance Metrics Application Programming
+Interface (PMAPI) context.
+
+It is
+recommended that new applications use the high resolution
+API and existing applications transition to this interface
+over time.
+
+The result
+returned via the pointer lp is a structure that must
+be pre-allocated by the caller and has one of the following
+two formats (defined in pmapi.h).
+
+typedef struct
+{ 
+int magic; /* PM_LOG_MAGIC | archive format version no. */
+
+pid_t pid; /* PID of logger */ 
+struct timespec start; /* start of this archive */ 
+char hostname[PM_MAX_HOSTNAMELEN]; /* collection host full
+name */ 
+char timezone[PM_MAX_TIMEZONELEN]; /* generic, squashed $TZ
+*/ 
+char zoneinfo[PM_MAX_ZONEINFOLEN]; /* local platform $TZ */
+
+} pmHighResLogLabel;
+
+typedef struct
+{ 
+int ll_magic; /* PM_LOG_MAGIC | archive format version no.
+*/ 
+pid_t ll_pid; /* PID of logger */ 
+struct timeval ll_start;/* start of this archive */ 
+char ll_hostname[PM_LOG_MAXHOSTLEN]; /* name of collection
+host */ 
+char ll_tz[40]; /* $TZ at collection host */ 
+} pmLogLabel;
+
+Both forms can
+be used with either version 2 or version 3 archives.
+However, the pmHighResLogLabel structure provides the higher
+resolution start time stored in the newer format, as well as
+the full timezone and extended length host name fields. For
+detailed information about the archive on-disk format, refer
+to LOGARCHIVE(5).
+
+For an
+application using pmGetHighResArchiveLabel, the most
+useful information from the archive label is likely to be in
+the fields start, hostname, timezone,
+and zoneinfo.
+
+The
+zoneinfo field contains the most detailed timezone
+information available, and should be used if present
+(non-zero length string). It will only not be present in the
+case of version 2 archives - this is a new field added as
+part of the version 3 format. The timezone field will
+always be present, however it is the ’squashed’
+timezone value and in certain situations is not the most
+accurate timezone.
+
+For older
+applications using pmGetArchiveLabel, the most useful
+information from the archive label is likely to be in the
+fields ll_start, ll_hostname or ll_tz.
+Note that the size of the ll_hostname field is
+PM_LOG_MAXHOSTLEN (64 bytes) which is less than
+MAXHOSTNAMELEN (see gethostbyname(3)) on some
+platforms. These semantics are necessary to retain backwards
+compatibility with the PCP archive file format.
+
+Both
+pmGetArchiveLabel and pmGetHighResArchiveLabel
+return zero for success.
+
+DIAGNOSTICS
+
+PM_ERR_NOCONTEXT
+
+the current PMAPI context is
+either invalid, or not associated with a set of archives
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5). Values for these
+variables may be obtained programmatically using the
+pmGetConfig(3) function.
+
+SEE ALSO
+
+pmlogger(1),
+LOGIMPORT(3), PMAPI(3),
+pmDupContext(3), pmGetConfig(3),
+pmNewContext(3), LOGARCHIVE(5),
+pcp.conf(5) and pcp.env(5).

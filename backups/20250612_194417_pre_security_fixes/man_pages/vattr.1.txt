@@ -1,0 +1,747 @@
+NAME
+
+vadm -
+manipulate and administer version object base
+
+SYNOPSIS
+
+vadm [
+version binding options ]
+[ options ] [ action ]
+name..
+
+Options:
+
+[ -?fq ] [ -cache ]
+[ -force ] [ -help ]
+[ -nomail ] [ -quiet ]
+[ -stdin ]
+[ -version ] 
+
+Actions:
+
+[ -alias version alias
+name ]
+[ -attr attribute ]
+[ -chaut user ]
+[ -chmod protection ]
+[ -chown user ]
+[ -delattr attribute name ]
+[ -d (or -delete) ]
+[ -l (or -lock) [version
+binding] ] [ -newgen ]
+[ -promote ]
+[ -set description | note | intent ]
+[ -setc comment leader ]
+[ -unlock [version binding] ]
+[ -unpromote ] 
+
+vattr [ version
+binding options ] attribute name.. 
+vrm [ version binding options ] name..
+
+sbmt [ version binding options ] name..
+
+publ [ version binding options ] name..
+
+accs [ version binding options ] name..
+
+frze [ version binding options ] name..
+
+DESCRIPTION
+
+vadm is
+a general purpose command to perform all sorts of actions
+upon parts of an AtFS object repository. It can be used to
+lock or unlock an AtFS object for modification, to delete a
+particular object instance, to associate symbolic (alias)
+names with version objects, to promote or unpromote certain
+version objects from one status to another, to modify an
+objects access permissions, to set or modify a descriptive
+entry of particular version objects, to set or modify an
+eventual change intention, and to set or unset various
+object attributes such as the author or any user defined
+attributes.
+
+vattr
+and vrm are short forms for vadm -attr and
+vadm -delete. See the descriptions of the
+-attr and the -delete options for details.
+
+sbmt,
+publ, accs, and frze are alternate
+program names for vadm that represent
+status-change operations for version objects. See the
+description of option -promote for details.
+
+The typical
+command invocation is supplemented by one or more command
+options, version binding options defining the
+versions to be acted upon, an action specifier
+indicating the sort of action to be performed, and a set of
+object names defining the initial subset of the
+object base that’s going to be manipulated.
+
+Object names
+may be given in bound version notation, i.e. a
+notation that identifies a particular version of an object
+(e.g. mkattr.c[2.4]). It is also possible to use a
+previously assigned symbolic name rather than a
+numerical version identification (e.g.
+mkattr.c[tools-V4R3]). Make sure to escape the
+bracket-symbols when using csh(1) or tcsh(1)
+because they have meaning to these shells.
+
+OPTIONS
+
+For version
+selection, any version binding option, as described
+on the vbind(1) manual page, may be given, or a version
+bind directive may be given in brackets added to the
+file name. 
+-?, -help
+
+print brief instructions about
+using vadm
+
+-cache
+
+apply the requested operation to objects residing in the
+derived object cache. The set of actions that may be
+performed on binary pool objects is limited.
+
+-f, -force
+
+don’t ask for
+confirmation when deleting versions from a history.
+
+-nomail
+
+Suppress the notification mail
+to the user who holds the lock on a history when breaking
+this lock (-unlock option).
+
+-q, -quiet
+
+suppress any prompts, informal
+messages and user dialogues. Default values are assumed for
+everything that might otherwise be inquired interactively.
+This option is useful for batch operation.
+
+-stdin
+
+forces vadm to read a descriptive text, note or
+intent from standard input if action -set is
+selected. The note is used for all specified AtFS
+objects. Otherwise your favorite editor (taken from the
+EDITOR environment variable) is invoked.
+
+-version
+
+print version information about
+the vadm program itself. No action will be performed
+on the database.
+
+vadm
+will perform all of its operations upon a specified set of
+AtFS version objects. In case no such set is specified, the
+operation will be applied to the most recently saved
+versions of the named object(s).
+
+ACTIONS
+
+The kind of
+action to be performed upon a specified set of AtFS objects
+is indicated by a keyword. The following actions are
+defined: 
+-alias version alias name
+
+assigns the version alias
+name to the specified version. The name works as an
+alias for the version number, so it must be different from
+any other symbolic name assigned to any version object in a
+particular object history. It is, however, possible to
+assign the same symbolic name to version objects in
+different object histories. An object history is
+usually denoted by a name, similarly to a files name. 
+The use of alias names is a simple but effective way to
+associate component members of a system
+configuration. Typical symbolic names will look
+something like Mysystem_Release_4.22, indicating that
+version objects with this name are part of release 4.22 of
+the system in question.
+
+-attr attrname
+
+Return rthe value of the named
+attribute. This may be a standard attribute or a
+user defined attribute. Check the list below for a
+complete list of standard attribute names.
+
+-attr attrname[+|-]=[@|^|!|*]value
+
+defines a user defined
+attribute with name attrname and sets it to the
+value value for all specified version objects. This
+option may also be used to set the value of certain
+standard attributes (see list below). If
+attrname is followed by a single equal-symbol, the
+respective value of the object is set (or reset) to the
+specified value. Any previous values will be overwritten. If
+attrname is immediately followed by the symbols
+’’plus-equal’’ (+=), the
+specified attribute value will be appended to the current
+value of the referenced attribute. Accordingly,
+’’minus-equal’’ (-=) should
+remove the specified value from the given attribute. In the
+current implementation, removal of single values is not
+supported. 
+There are four basic kinds of user defined attribute values:
+genuine values, reference values, execution
+values, and pointer values. The kind of an
+attribute value is determined when it is set. If the first
+character of value is an at character (@), the rest
+of value is taken to be the name of a file the
+contents of which will be taken as the value of the
+attribute. This substitution takes place immediately, i.e.
+the attribute has a genuine value. If the filename is
+specified as ’’-’’, the attributes
+value will be read from standard input. If the first
+character is a circumflex character (^), the rest of
+value is interpreted as the name of a file whose
+contents will be substituted for the attribute when it is
+cited. If the first character of value is an
+exclamation mark character (!), the rest of value is
+interpreted as the name of a program whose standard
+output will be substituted for the attribute when it is
+cited. Execution values can be used to generate highly
+dynamic attributes or even a primitive form of event
+triggers. An asterisk (*) as first character of value
+indicates a pointer to another version. In this case, the
+remainder of value must be a valid bound filename. 
+User defined attributes may be of arbitrary length. Any
+sequence of ASCII characters - with the exception of \01
+(control-A) - is allowed to make up an attribute value. If
+attrname was already set to some value, the previous
+value will be replaced by the newly specified one.
+
+-attr @attrfile
+
+With a @filename
+argument, the -attr option reads names and values of
+user defined attributes from the named file Each entry (each
+line) in the attribute file must have a format as described
+above. The files last character must be a newline
+character.
+
+-chaut user
+
+sets user the author of
+a particular revision. Normally, the author of a revision is
+considered the user who saved that revision. However, as
+certain permissions are tied to the author attribute of a
+revision, circumstances may occur that make it necessary to
+change the author.
+
+-chmod
+protection
+
+changes the access permission
+code of the specified version objects to the supplied
+three-octal-digit protection. Currently, the access
+permissions are centered around UNIX’ notions of
+owner, group, and world access as well as the
+access categories read, write, and execute.
+These permissions are inherited upon save from the
+permissions of the file representing the busy object
+of an AtFS history. See chmod(2) for details.
+
+-chown user
+
+sets user the owner of
+an entire object history. This option is not supported on
+BSD type systems, as only the superuser may change the owner
+of a file.
+
+-delattr
+attrname
+
+deletes the user defined
+attribute attrname from the set of attributes
+associated with the specified version objects.
+
+-d, -delete
+
+removes the specified version
+objects from the object base, provided the objects’
+status is saved. Any other status indicates that some
+kind of project interaction concerning this object might be
+in progress. If the programmer wants to delete such a
+version object anyway, he has to -unpromote the
+respective objects status to saved before it can
+actually be deleted.
+
+-l, -lock
+[version binding]
+
+tries to reserve the privilege
+to add a new version to an objects history, thus preventing
+multiple programmers working upon the same object base from
+interfering with each other by saving concurrent updates. If
+the locking operation succeeds, write permission is given
+for the corresponding files in the development directory.
+When setting a new lock on an object history, the requesting
+user is prompted for an optional description of the planned
+changes. 
+In order to lock an object history successfully, the history
+must not be locked by any other programmer, and the
+programmer requesting the lock must have write permission on
+the AtFS subdirectory hosting the object base. 
+As ShapeTools allows locking of single generations within a
+history, -lock optionally expects an argument
+denoting a generation. Default is the most recent
+generation. The argument may be a generation number (e.g.
+2), a version number (e.g. 1.4), or a version
+alias (e.g. release-4.7).
+
+-newgen
+
+opens a new generation by
+duplicating the identified version. The version must be
+locked. Any existing busy versions are ignored by this
+action. If no version binding is specified, the last saved
+version is taken by default.
+
+-promote
+
+assigns the next-better value
+to the specified objects’ state attribute.
+There are six states that an object instance can be in:
+busy, saved, proposed, published, accessed, and
+frozen. Version states are intended to relate to
+visibility and operational restrictions (see for example
+-delete) within a complex project environment. 
+Due to the current lack of project library support, the
+version states have very little actual functionality.
+Implemented to its full extent, certain state transitions
+may only be triggered by appropriately authorized users. The
+transitions busy→saved and
+saved→proposed will be triggered by regular
+programmers, whereas the remaining transitions have to be
+initiated by the project administrator. 
+Each transition corresponds to a specific action or
+interaction within a general software project communication
+scheme. As these actions/interactions will be functionally
+supported by the project support system currently under
+development, the explicit manipulation of object states will
+no longer be necessary (except, perhaps for manual adjusting
+of ill situations). 
+The following actions relate to the state transitions:
+
+save (busy→saved, performed by programmer)
+
+sbmt (saved→proposed, performed by
+programmer) 
+accpt (proposed→published, performed by
+project administrator) 
+accs (published→accessed, performed by any
+project member) 
+release (accessed→frozen, performed by
+project administrator) 
+A different interface to the status control facilities of
+vadm is provided by the program aliases sbmt,
+publ, accs, and frze. These commands
+correspond to conceptual project interactions like
+submit, publish, access, and
+freeze. 
+Submit is the operation performed by a team programmer
+when a work result (such as a completed change request) is
+proposed for inclusion into the official system
+configuration. The associated status is proposed.
+
+Publish is an operation that is typically performed by
+members of the quality assurance group, when a work result,
+as proposed by a team programmer is approved and thus
+included into the current official system configuration. The
+associated status is published. 
+Access is an operation that is performed during
+configuration identification, when component versions of a
+(sub-)product are incorporated into some other (partial)
+(sub-)system configuration. The associated status is
+accessed. 
+Freeze is an operation that is performed during
+configuration identification, when a global release of the
+entire system configuration is established. The associated
+status is frozen
+
+-set [description
+| note | intent]
+
+allows to set or modify the
+descriptive text for an AtFS history object (i.e. an
+entire version history), the note usually describing
+the differences of a version object with respect to its
+preceding version, or an entry describing a planned change.
+(Re-) setting the change intention may be appropriate, if a
+previously set change intent has been consumed by a
+sbmt command that retained the lock on an object
+history. 
+vadm will check the callers environment for the
+EDITOR variable and invoke the program identified
+therein. If the EDITOR variable is not set, the
+systems default editor will be activated. The user may write
+an arbitrary length descriptive or note entry using the
+editor. When the user leaves the editor, the resulting text
+is stored with the object history or the specified version
+objects.
+
+-setc comment_string
+
+sets commentstring as
+the (sequence of) character(s) that opens a comment line
+within the formalism of the document. This comment_string
+will be prepended to the lines of the log history when the
+$__log$ attribute is expanded within the text of a
+revision.
+
+-unlock
+
+gives up the previously
+reserved privilege to update the history of an AtFS object
+and clears the write-permission for the corresponding files.
+-unlock may be used by the owner of an object
+history to break a lock previously set by any
+programmer. This option is useful to resolve deadlock
+situations resulting from careless use of -lock, or
+exceptional circumstances that require immediate updating of
+an object history, even if the lock holder is not present.
+The previous owner of a broken lock is notified by a mail
+message. Under some circumstances mail-notifications upon
+broken locks can be annoying (e.g. when a development tree
+has been moved to another system or domain with locked
+busy-versions; in this case the owner must break the locks
+to check the busy-versions back into the version archives at
+the new site). To avoid this effect, the switch
+-nomail can be used to suppress mail notification.
+
+An eventually expressed change intention (see -lock)
+will be cleared. 
+Technically, the owner of an objects history is the owner of
+the AtFS subdirectory hosting the object base.
+
+-unpromote
+
+reverses a state transition
+carried out through a prior -promote. The same
+remarks about functional embedding (and thus hiding
+the state transitions) of state transitions made for
+-promote hold for -unpromote.
+
+PREDEFINED ATTRIBUTE NAMES
+
+Name Meaning
+Value Remarks
+
+alias
+
+version alias names
+
+list of alias names, like1,3
+
+’’vadm-4.2pre7’’ or
+’’ShapeTools-1.4’’ 
+
+atime
+
+time of last access
+
+e.g. ’’Tue Jan 14 18:47:06
+1992’’3 
+
+author
+
+user who saved a version
+
+user [AT] do.in (domain name does1,3
+
+usually not include the hostname)
+
+cachekey
+
+unique key for cached versionscompound numeric built
+from3 
+
+creation date, process id, and a serial
+
+number e.g.
+’’740148430.18469.6’’ 
+
+clead
+
+comment line leader symbol
+
+dependent on file type1
+
+e.g. ’’# ’’ for Shapefiles
+
+ctime
+
+time of last status change
+
+as atime
+
+Description
+
+descriptive text for modulemulti line text2
+
+dsize
+
+size of delta to previous
+
+numeric
+
+version in bytes
+
+generation
+
+major revision number
+
+numeric1,3
+
+Header
+
+RCS-style version header
+
+text
+
+Intent
+
+change intent
+
+multi line text
+
+2
+
+host
+
+name of current host
+
+e.g. ’’avalanche’’
+
+3
+
+Log
+
+cumulative descriptive entries
+
+multi line text
+
+of all versions from the first
+
+up to this one
+
+lock/locker
+
+user who locks a historyas author3
+
+ltime
+
+time of last lock transaction
+
+as atime3
+
+mode
+
+access pprotection
+
+e.g. ’’-rw-r--r--’’
+
+1
+
+mtime
+
+time of last modification
+
+as atime3
+
+name
+
+name part of an object identifier
+
+e.g. ’’foo’’ for
+’’foo.c’’3 
+
+note
+
+short note describing the
+
+multi line text1, 2
+
+changes in this version
+
+owner
+
+user who owns the repository in
+
+as author1,3
+
+which this version is archived
+
+pred
+
+bound version identifier of
+
+e.g. ’’foo.c[3.22]’’ or
+’’n/a’’ 
+
+preceding version
+
+revision
+
+minor revision number
+
+numeric1,3
+
+rtime
+
+last time when history was locked
+
+as atime
+
+self
+
+bound version identifier for
+
+e.g. ’’foo.c[3.23]’’
+
+this version
+
+selfpath
+
+bound version identifier fore.g.
+’’/usr/proj/sample/foo.c[3.23]’’ 
+
+this version including path
+
+size
+
+size of the version in bytes
+
+numeric3
+
+state/status
+
+version status
+
+symbolic integers (busy,1,3
+
+saved, proposed, published,
+
+accessed, and frozen)
+
+stime
+
+time when the version was saved
+
+as atime3
+
+succ
+
+bound version identifier of
+
+as pred
+
+successive version
+
+syspath
+
+pathname part of an object
+
+e.g. ’’/usr/proj/sample’’3
+
+identifier
+
+for
+’’/usr/proj/sample/foo.c’’ 
+
+type
+
+suffix part of an object
+
+e.g. ’’c’’ for
+’’foo.c’’3 
+
+identifier
+
+unixname
+
+UNIX file name of this versione.g.
+’’foo.c’’ 
+
+unixpath
+
+UNIX file name of this versione.g.
+’’/usr/proj/sample/foo.c’’ 
+
+including path
+
+version
+
+compound version number
+
+e.g. ’’3.22’’1,3
+
+consisting of generation
+
+and revision number
+
+vtime
+
+version time, modification time
+
+as atime
+
+for busy versions od save time
+
+for saved/cached versions
+
+xpoff
+
+pseudo attribute that turns
+
+none
+
+off subsequent attribute
+
+expansions
+
+xpon
+
+pseudo attribute that turns
+
+none
+
+subsequent attribute
+
+expansion on
+
+1 - may be
+modified by vadm -attr name=value. 
+2 - may be modified by vadm -set . 
+3 - recognized by attr* predicates in version bind
+rules (see bindrules(7)).
+
+ENVIRONMENT
+
+EDITOR
+
+SEE ALSO
+
+save(1),
+retrv(1), vl(1), vbind(1)
+
+AUTHORS
+
+Uli.Pralle [AT] cs.de,
+Axel.Mahler [AT] cs.de,
+Andreas.Lampen [AT] cs.de

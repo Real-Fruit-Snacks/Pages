@@ -1,0 +1,368 @@
+UGEN(4) BSD Kernel Interfaces Manual UGEN(4)
+
+NAME
+
+ugen — USB generic
+device support
+
+SYNOPSIS
+
+ugen is integrated into
+the usb(4) kernel module.
+
+DESCRIPTION
+
+The ugen driver provides
+support for all USB devices that do not have a special
+driver. It supports access to all parts of the device, but
+not in a way that is as convenient as a special purpose
+driver.
+
+There can be up
+to 127 USB devices connected to a USB bus. Each USB device
+can have up to 16 endpoints. Each of these endpoints will
+communicate in one of four different modes: control,
+isochronous, bulk, or interrupt. Each of the endpoints will
+have a different device node. The four least significant
+bits in the minor device number determine which endpoint the
+device accesses, and the rest of the bits determine which
+USB device.
+
+If an endpoint
+address is used both for input and output, the device can be
+opened for both read or write.
+
+To find out
+which endpoints exist, there are a series of ioctl(2)
+operations on the control endpoint that return the USB
+descriptors of the device, configurations, interfaces, and
+endpoints.
+
+The control
+transfer mode can only happen on the control endpoint which
+is always endpoint 0. The control endpoint accepts a request
+and may respond with an answer to such a request. Control
+requests are issued by ioctl(2) calls.
+
+The bulk
+transfer mode can be in or out depending on the endpoint. To
+perform I/O on a bulk endpoint read(2) and write(2) should
+be used. All I/O operations on a bulk endpoint are
+unbuffered.
+
+The interrupt
+transfer mode can be in or out depending on the endpoint. To
+perform I/O on an interrupt endpoint read(2) and write(2)
+should be used. A moderate amount of buffering is done by
+the driver.
+
+All endpoints
+handle the following ioctl(2) calls:
+
+USB_SET_SHORT_XFER
+(int)
+
+Allow short read transfer.
+Normally a transfer from the device which is shorter than
+the request specified is reported as an error.
+
+USB_SET_TIMEOUT (int)
+
+Set the timeout on the device
+operations The time is specified in milliseconds. The value
+0 is used to indicate that there is no timeout.
+
+The control
+endpoint (endpoint 0) handles the following ioctl(2)
+calls:
+
+USB_GET_CONFIG (int)
+
+Get the device configuration
+number.
+
+USB_SET_CONFIG (int)
+
+Set the device into the given
+configuration number.
+
+This operation
+can only be performed when the control endpoint is the sole
+open endpoint.
+
+USB_GET_ALTINTERFACE (struct
+usb_alt_interface)
+
+Get the alternative setting
+number for the interface with the given index. The
+uai_config_index is ignored in this call.
+
+struct
+usb_alt_interface {
+
+int
+
+uai_config_index;
+
+int
+
+uai_interface_index;
+
+int
+
+uai_alt_no;
+
+};
+
+USB_SET_ALTINTERFACE (struct
+usb_alt_interface)
+
+Set the alternative setting to
+the given number in the interface with the given index. The
+uai_config_index is ignored in this call.
+
+This operation
+can only be performed when no endpoints for the interface
+are open.
+
+USB_GET_NO_ALT (struct
+usb_alt_interface)
+
+Return the number of different
+alternate settings in the uai_alt_no field.
+
+USB_GET_DEVICE_DESC
+(usb_device_descriptor_t)
+
+Return the device
+descriptor.
+
+USB_GET_CONFIG_DESC (struct
+usb_config_desc)
+
+Return the descriptor for the
+configuration with the given index. For convenience, the
+current configuration can be specified by
+USB_CURRENT_CONFIG_INDEX.
+
+struct
+usb_config_desc {
+
+int
+
+ucd_config_index;
+
+usb_config_descriptor_t ucd_desc;
+
+};
+
+USB_GET_INTERFACE_DESC
+(struct usb_interface_desc)
+
+Return the interface descriptor
+for an interface specified by its configuration index,
+interface index, and alternative index. For convenience, the
+current alternative can be specified by
+USB_CURRENT_ALT_INDEX.
+
+struct
+usb_interface_desc {
+
+int
+
+uid_config_index;
+
+int
+
+uid_interface_index;
+
+int
+
+uid_alt_index;
+
+usb_interface_descriptor_t uid_desc;
+
+};
+
+USB_GET_ENDPOINT_DESC (struct
+usb_endpoint_desc)
+
+Return the endpoint descriptor
+for the endpoint specified by its configuration index,
+interface index, alternative index, and endpoint index.
+
+struct
+usb_endpoint_desc {
+
+int
+
+ued_config_index;
+
+int
+
+ued_interface_index;
+
+int
+
+ued_alt_index;
+
+int
+
+ued_endpoint_index;
+
+usb_endpoint_descriptor_t ued_desc;
+
+};
+
+USB_GET_FULL_DESC (struct
+usb_full_desc)
+
+Return all the descriptors for
+the given configuration.
+
+struct
+usb_full_desc {
+
+int
+
+ufd_config_index;
+
+u_int
+
+ufd_size;
+
+u_char
+
+*ufd_data;
+
+}; 
+The ufd_data field should point to a memory area of
+the size given in the ufd_size field. The proper size
+can be determined by first issuing a USB_GET_CONFIG_DESC and
+inspecting the wTotalLength field.
+
+USB_GET_STRING_DESC (struct
+usb_string_desc)
+
+Get a string descriptor for the
+given language ID and string index.
+
+struct
+usb_string_desc {
+
+int
+
+usd_string_index;
+
+int
+
+usd_language_id;
+
+usb_string_descriptor_t usd_desc;
+
+};
+
+USB_DO_REQUEST (struct
+usb_ctl_request)
+
+Send a USB request to the
+device on the control endpoint. Any data sent to/from the
+device is located at ucr_data. The size of the
+transferred data is determined from the ucr_request.
+The ucr_addr field is ignored in this call. The
+ucr_flags field can be used to flag that the request
+is allowed to be shorter than the requested size, and
+ucr_actlen will contain the actual size on
+completion.
+
+struct
+usb_ctl_request {
+
+int
+
+ucr_addr;
+
+usb_device_request_t ucr_request;
+
+void
+
+*ucr_data;
+
+int
+
+ucr_flags;
+
+#define USBD_SHORT_XFER_OK
+
+0x04
+
+/* allow short reads */
+
+int
+
+ucr_actlen;
+
+/* actual length transferred */
+
+}; 
+This is a dangerous operation in that it can perform
+arbitrary operations on the device. Some of the most
+dangerous (e.g., changing the device address) are not
+allowed.
+
+USB_GET_DEVICEINFO (struct
+usb_device_info)
+
+Get an information summary for
+the device. This call will not issue any USB
+transactions.
+
+Note that there
+are two different ways of addressing configurations,
+interfaces, alternatives, and endpoints: by index or by
+number. The index is the ordinal number (starting from 0) of
+the descriptor as presented by the device. The number is the
+respective number of the entity as found in its descriptor.
+Enumeration of descriptors uses the index, getting and
+setting typically uses numbers.
+
+Example: all
+endpoints (except the control endpoint) for the current
+configuration can be found by iterating the
+interface_index from 0 to
+config_desc->bNumInterface−1 and for each of
+these, iterating the endpoint_index from 0 to
+interface_desc->bNumEndpoints. The
+config_index should be set to
+USB_CURRENT_CONFIG_INDEX and alt_index should be set
+to USB_CURRENT_ALT_INDEX.
+
+SYSCTL VARIABLES
+
+The following variables are
+available as both sysctl(8) variables and loader(8)
+tunables:
+
+hw.usb.ugen.debug
+
+Debug output level, where 0 is
+debugging disabled and larger values increase debug message
+verbosity. Default is 0.
+
+FILES 
+/dev/ugenN.E
+
+Endpoint
+E of device N.
+
+SEE ALSO
+
+usb(4)
+
+HISTORY
+
+The ugen driver appeared
+in NetBSD 1.4.
+
+BSD
+April 24, 2018 BSD

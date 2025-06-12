@@ -1,0 +1,151 @@
+NAME
+
+_lwp_create
+− create a new light-weight process
+
+SYNOPSIS
+
+#include
+
+int
+_lwp_create(ucontext_t *contextp,
+uint_t flags, lwpid_t
+*new_lwp);
+
+DESCRIPTION
+
+The
+_lwp_create() function adds a lightweight process
+(LWP) to the current process. The contextp argument
+specifies the initial signal mask, stack, and machine
+context (including the program counter and stack pointer)
+for the new LWP. The new LWP inherits the scheduling class
+and priority of the caller.
+
+If
+_lwp_create() is successful and new_lwp is not
+NULL, the ID of the new LWP is stored in the location
+pointed to by new_lwp.
+
+The
+flags argument specifies additional attributes for
+the new LWP. The value in flags is constructed by the
+bitwise inclusive OR operation of the following values:
+
+LWP_DETACHED
+
+The LWP is created
+detached.
+
+LWP_DAEMON
+
+The LWP is created as a daemon
+LWP.
+
+LWP_SUSPENDED
+
+The LWP is created
+suspended.
+
+If
+LWP_DETACHED or LWP_DAEMON is specified, then
+the LWP is created in the detached state. Otherwise
+the LWP is created in the undetached state. The ID (and
+system resources) associated with a detached LWP can be
+automatically reclaimed when the LWP exits. The ID of an
+undetached LWP cannot be reclaimed until it exits and
+another LWP has reported its termination by way of
+_lwp_wait(2). This allows the waiting LWP to
+determine that the waited for LWP has terminated and to
+reclaim any process resources that it was using.
+
+If
+LWP_DAEMON is specified, then in addition to being
+created in the detached state, the LWP is created as a
+daemon LWP. Daemon LWPs do not interfere with the exit
+conditions for a process. A process will exit as though
+_exit(0) had been called when the last non-daemon LWP
+calls _lwp_exit() (see exit(2) and
+_lwp_exit(2)). Also, an LWP that is waiting in
+_lwp_wait(2) for any LWP to terminate will return
+EDEADLK when all remaining LWPs in the process are
+either daemon LWPs or other LWPs waiting in
+_lwp_wait().
+
+If
+LWP_SUSPENDED is specified, then the LWP is created
+in a suspended state. This allows the creator to change the
+LWP’s inherited attributes before it starts to
+execute. The suspended LWP can only be resumed by way of
+_lwp_continue(2). If LWP_SUSPENDED is not
+specified the LWP can begin to run immediately after it has
+been created.
+
+RETURN VALUES
+
+Upon successful
+completion, 0 is returned. A non-zero value indicates
+an error.
+
+ERRORS
+
+If any of the
+following conditions are detected, _lwp_create()
+fails and returns the corresponding value: 
+EFAULT
+
+Either the context
+parameter or the new_lwp parameter point to invalid
+addresses.
+
+EAGAIN
+
+A system limit is exceeded,
+(for example, too many LWPs were created for this real user
+ID).
+
+EINVAL
+
+The flags argument
+contains values other than those specified above.
+
+EXAMPLES
+
+Example 1:
+How a stack is allocated to a new LWP.
+
+This example
+shows how a stack is allocated to a new LWP. The
+_lwp_makecontext() function is used to set up the
+context parameter so that the new LWP begins
+executing a function.
+
+contextp = (ucontext_t *)malloc(sizeof(ucontext_t));
+stackbase = malloc(stacksize);
+_lwp_makecontext(contextp, func, arg, private, stackbase, stacksize);
+sigprocmask(SIGSETMASK, NULL, &contextp->uc_sigmask);
+error = _lwp_create(contextp, NULL, &new_lwp);
+
+USAGE
+
+Applications
+should use bound threads rather than the _lwp_*
+functions (see thr_create(3THR)). Using LWPs directly
+is not advised because libraries are only safe to use with
+threads, not LWPs.
+
+ATTRIBUTES
+
+See
+attributes(5) for descriptions of the following
+attributes:
+
+SEE ALSO
+
+_lwp_cond_timedwait(2),
+_lwp_continue(2), _lwp_detach(2),
+_lwp_exit(2), _lwp_makecontext(2),
+_lwp_wait(2), alarm(2), exit(2),
+poll(2), signal(3HEAD), sleep(3C),
+thr_create(3THR), ucontext(3HEAD),
+attributes(5)

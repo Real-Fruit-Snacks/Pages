@@ -1,0 +1,368 @@
+NAME
+
+dict - DICT
+Protocol Client
+
+SYNOPSIS
+
+dict
+word 
+dict [options] [word] 
+dict [options] dict://host:port/d:word:database
+
+dict [options]
+dict://host:port/m:word:database:strategy
+
+DESCRIPTION
+
+dict
+is a client for the Dictionary Server Protocol (DICT), a TCP
+transaction based query/response protocol that provides
+access to dictionary definitions from a set of natural
+language dictionary databases. Exit status is 0 if operation
+succeeded, or non-zero otherwise. 
+See EXIT STATUS section.
+
+OPTIONS
+
+-h
+server or --host server
+
+Specifies the hostname for the
+DICT server. Server/port combinations can be specified in
+the configuration file. If no servers are specified in the
+configuration file or on the command line, dict will
+fail. If IP lookup for a server expands to a list of IP
+addresses (as dict.org does currently), then each IP will be
+tried in the order listed.
+
+-p service or
+--port service
+
+Specifies the port (e.g., 2628)
+or service (e.g., dict) for connections. The default is
+2628, as specified in the DICT Protocol RFC. Server/port
+combinations can be specified in the configuration file.
+
+-d dbname or
+--database dbname
+
+Specifies a specific database
+to search. The default is to search all databases (a
+"*" from the DICT protocol). Note that a
+"!" in the DICT protocol means to search all of
+the databases until a match is found, and then stop
+searching.
+
+-m or --match
+
+Instead of printing a
+definition, perform a match using the specified
+strategy.
+
+-s strategy or
+--strategy strategy
+
+Specify a matching strategy. By
+default, the server default match strategy is used. This is
+usually "exact" for definitions, and some form of
+spelling-correction strategy for matches ("." from
+the DICT protocol). The available strategies are dependent
+on the server implementation. For a list of available
+strategies, see the -S or --strats option.
+
+-C or
+--nocorrect
+
+Usually, if a definition is
+requested and the word cannot be found, spelling correction
+is requested from the server, and a list of possible words
+are provided. This option disables the generation of this
+list.
+
+-c file or
+--config file
+
+Specify the configuration file.
+The default is to try ~/.dictrc and
+/etc/dictd/dict.conf, using the first file that
+exists. If a specific configuration file is specified, then
+the defaults will not be tried.
+
+-D or --dbs
+
+Query the server and display a
+list of available databases.
+
+-S or
+--strats
+
+Query the server and display a
+list of available search strategies.
+
+-H or
+--serverhelp
+
+Query the server and display
+the help information that it provides.
+
+-i dbname or
+--info dbname
+
+Request information on the
+specified database (usually the server will provide
+origination, descriptive, or other information about the
+database or its contents).
+
+-I or
+--serverinfo
+
+Query the server and display
+information about the server.
+
+-M or --mime
+
+Send OPTION MIME command
+to the server. 
+NOTE: Server’s capabilities are not checked.
+
+-f or
+--formatted
+
+Enables formatted output, i.e.
+output convenient for postprocessing by standard UNIX
+utilities. No, it is not XML ;-) Also error and warning
+messages like 
+" No matches...", " Invalid strategy..."
+etc. are sent to stderr, not to stdout. 
+Format: 
+-I, -i, -H and similar: 
+hostport 
+line1 
+line2 
+... 
+-S: 
+hostportstrategy1short
+description1 
+hostportstrategy2short
+description2 
+... 
+-D: 
+hostportdatabase1database
+description1 
+hostportdatabase2database
+description2 
+... 
+-m: 
+hostportdatabase1match1
+
+hostportdatabase2match2
+
+...
+
+-a or
+--noauth
+
+Disable authentication (i.e.,
+don’t send an AUTH command).
+
+-u user or
+--user user
+
+Specifies the username for
+authentication.
+
+-k key or
+--key key
+
+Specifies the shared secret for
+authentication.
+
+-V or
+--version
+
+Display version
+information.
+
+-L or
+--license
+
+Display copyright and license
+information.
+
+-4
+
+Forces dict to use IPv4 addresses only.
+
+-6
+
+Forces dict to use IPv6 addresses only.
+
+--help
+
+Display help information.
+
+-v or
+--verbose
+
+Be verbose.
+
+-r or --raw
+
+Be very verbose: show the raw
+client/server interaction.
+
+--pipesize
+
+Specify the buffer size for
+pipelineing commands. The default is 256, which should be
+sufficient for general tasks and be below the MTU for most
+transport media. Larger values may provide faster or slower
+throughput, depending on MTU. If the buffer is too small,
+requests will be serialized. Values less than 0 and greater
+than one million are silently changed to something more
+reasonable.
+
+--client text
+
+Specifies additional text to be
+sent using the CLIENT command.
+
+--debug flag
+
+Set a debugging flag. Valid
+flags are: 
+verbose
+
+The same as -v or
+--verbose.
+
+raw
+
+The same as -r or --raw.
+
+scan
+
+Debug the scanner for the configuration file.
+
+parse
+
+Debug the parser for the configuration file.
+
+pipe
+
+Debug TCP pipelining support (see the DICT RFC and
+RFC1854). 
+
+serial
+
+Disable pipelining support.
+
+time
+
+Perform transaction timing.
+
+CONFIGURATION
+
+The
+configuration file currently has a very simple format. Lines
+are used to specify servers, for example:
+
+server dict.org
+
+or, with options:
+
+server dict.org { port 8080 }
+
+server dict.org { user username secret } 
+server dict.org { port dict user username secret }
+
+the port and user
+options may be specified in any order. The port
+option is used to specify an optional port (e.g., 2628) or
+service (e.g., dict) for the TCP/IP connection. The
+user option is used to specify a username and shared
+secret to be used for authentication to this particular
+server.
+
+Servers are
+tried in the order listed until a connection is made.
+
+EXIT STATUS
+
+0 Successful
+completion
+
+20 No matches
+found 
+21 Approximate matches found 
+22 No databases available 
+23 No strategies available
+
+30 Unexpected
+response code from server 
+31 Server is temporarily unavailable 
+32 Server is shutting down 
+33 Syntax error, command not recognized 
+34 Syntax error, illegal parameters 
+35 Command not implemented 
+36 Command parameter not implemented 
+37 Access denied 
+38 Authentication failed 
+39 Invalid database 
+40 Invalid strategy 
+41 Connection to server failed
+
+CREDITS
+
+dict was
+written by Rik Faith (faith [AT] cs.edu) and is distributed
+under the terms of the GNU General Public License. If you
+need to distribute under other terms, write to the
+author.
+
+The main
+libraries used by this programs (zlib, regex, libmaa) are
+distributed under different terms, so you may be able to use
+the libraries for applications which are incompatible with
+the GPL -- please see the copyright notices and license
+information that come with the libraries for more
+information, and consult with your attorney to resolve these
+issues.
+
+BUGS
+
+If a
+dict: URL is given on the command line, only the
+first one is used. The rest are ignored.
+
+If a
+dict: URL contains a specifier for the nth definition
+or match of a word, it will be ignored and all the
+definitions or matches will be provided. This violates the
+RFC, and will be corrected in a future release.
+
+If a
+dict: URL contains a shared secret, it will not be
+parsed correctly.
+
+When OPTION
+MIME command is sent to the server (-M option) ,
+server’s capabilities are not checked.
+
+FILES
+
+~/.dictrc
+
+User’s dict
+configuration file
+
+/etc/dictd/dict.conf
+
+System dict
+configuration file
+
+SEE ALSO
+
+dictd(8),
+dictzip(1), http://www.dict.org, RFC 2229

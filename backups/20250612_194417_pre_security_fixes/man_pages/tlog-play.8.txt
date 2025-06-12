@@ -1,0 +1,322 @@
+NAME
+
+tlog-play -
+play back terminal I/O recorded by tlog-rec(8)
+
+SYNOPSIS
+
+tlog-play
+[OPTION...]
+
+DESCRIPTION
+
+Tlog-play
+is a playback program for terminal I/O recorded with
+tlog-rec(8). It reproduces the recording on the terminal
+it’s run under, and can’t change its size, so
+the playback terminal size needs to match the recorded
+terminal size for proper playback.
+
+Tlog-play
+loads its parameters from the system-wide configuration file
+/etc/tlog/tlog-play.conf, which can be overridden with
+command-line options described below.
+
+OPTIONS
+
+General
+options 
+-h, --help
+
+Output a command-line usage
+message and exit.
+
+-v, --version
+
+Output version information and
+exit.
+
+--configuration
+
+Output program configuration in
+JSON and exit.
+
+-s, --speed=NUMBER
+
+Set playback speed multiplier
+to NUMBER.
+
+NUMBER is a
+floating-point number to multiply playback speed by. Can be
+adjusted during playback.
+
+Value minimum:
+0
+
+-f, --follow
+
+Wait for and play back new
+messages.
+
+If specified,
+when the end of the recorded session is reached, wait for
+new messages to be added and play them back when they
+appear.
+
+-g, --goto=STRING
+
+Fast-forward to STRING time
+(start/end/HH:MM:SS.sss).
+
+STRING is a
+logical location, or a time to which recording should be
+fast-forwarded. Can be a "start", or an
+"end" string, or a timestamp formatted as
+HH:MM:SS.sss, where any part can be omitted to mean
+zero.
+
+-p, --paused
+
+Start playback paused.
+
+If specified,
+playback is started in a paused state.
+
+-r, --reader=STRING
+
+Use STRING log reader
+(file/journal/es, default file).
+
+STRING is the
+type of "log reader" to use for retrieving log
+messages. The chosen reader needs to be configured using its
+own dedicated parameters.
+
+Value should be
+one of: "file", "journal",
+"es"
+
+--persist
+
+Ignore quit key and signals
+from keyboard.
+
+If specified,
+ignore any keyboard-generated signals and the quit key.
+
+--lax
+
+Ignore missing (dropped) log messages.
+
+If specified,
+ignore missing (dropped, or lost) log messages. Otherwise
+report an error and abort when a message is missing.
+
+File reader
+options 
+-i, --file-path=FILE
+
+Read log from FILE file.
+
+FILE is the
+path to the file the "file" reader should read
+logs from.
+
+-m,
+--file-match=STRING
+
+Playback explicit recording id
+specified in STRING.
+
+STRING is the
+recording id of the recording the "file" reader
+should seek to for playback.
+
+Elasticsearch
+reader options 
+--es-baseurl=STRING
+
+Elasticsearch URL without query
+or fragment parts.
+
+STRING is the
+base URL to request Elasticsearch through. Should not
+contain query (?...) or fragment (#...) parts.
+
+--es-query=STRING
+
+Elasticsearch query.
+
+STRING is the
+query string to send to Elasticsearch
+
+--es-verbose
+
+Enable verbose output on
+Elasticsearch HTTP client.
+
+If specified,
+enable verbose output on Elasticsearch HTTP client.
+
+Systemd
+journal reader options 
+-S, --journal-since=SECONDS
+
+Start searching journal at
+SECONDS since epoch.
+
+SECONDS is the
+number of seconds since epoch to seek to before searching
+for the first matching log entry.
+
+Value minimum:
+0
+
+-U,
+--journal-until=SECONDS
+
+Stop searching journal at
+SECONDS since epoch.
+
+SECONDS is the
+number of seconds since epoch at which searching for log
+entries should stop.
+
+Value minimum:
+0
+
+-M,
+--journal-match=STRING
+
+Add STRING to journal match
+symbol list.
+
+Each STRING
+specifies a journal match symbol: either a name-value pair,
+according to sd_journal_add_match(3), or an "OR"
+or "AND" string signifying disjunction or
+conjunction, as with sd_journal_add_disjunction(3) and
+sd_journal_add_conjunction(3)
+
+-N,
+--journal-namespace=STRING
+
+Search for the records in
+STRING namespace only.
+
+STRING is the
+Specifies a specific journal namespace to use.
+
+CONTROLS
+
+Playback can be
+controlled using the following keys: 
+SPACE, p
+
+Pause/resume playback.
+
+}
+
+Double the playback speed. Maximum is 16x.
+
+{
+
+Halve the playback speed. Minimum is 1/16x.
+
+BACKSPACE
+
+Reset playback to normal, 1x
+speed.
+
+.
+
+Output the next packet immediately, without delay,
+regardless if paused or not. Press when paused to step
+through recording. Press once to skip a long pause. Hold to
+skip through recording at constant speed (the keyboard
+repeat rate).
+
+G
+
+Fast-forward the recording to the end, or to specified
+time. Works while playing and on pause. The time can be
+specified by typing in a timestamp before pressing
+’G’. The timestamp should follow the format of
+the -g/--goto option value, but without the fractions of a
+second. The command has no effect, if the specified time
+location has already been reached.
+
+E.g. pressing
+just ’G’ would fast-forward to the end, which is
+useful with following enabled. Pressing ’3’,
+’0’, ’G’ (typing "30G")
+would fast-forward to 30 seconds from the start of the
+recording. Typing "30:00G" would fast-forward to
+30 minutes, and so would "30:G", and
+"1800G". Typing "2::G" would
+fast-forward to two hours into the recording, the same as
+"120:G" and "7200G".
+
+q
+
+Stop playing and quit.
+
+FILES
+
+/etc/tlog/tlog-play.conf
+
+The system-wide configuration
+file
+
+BUGS
+
+Recordings can
+include control sequences attempting to communicate with the
+terminal, and the playback terminal would dutifully reply to
+them. Tlog-play tries to filter these responses out, but
+since it’s not a full terminal emulator itself, and
+since there’s a great variety of such control
+sequences, it can sometimes fail, and interpret some of
+these as playback control keys described above, with
+corresponding effects.
+
+This is going
+to be fixed in future releases, possibly by embedding a
+proper terminal emulator in tlog-play. For now, most
+recordings would reproduce correctly, but some might exhibit
+erratic behavior, and it is possible to e.g. make a
+recording which would skip (hide) a part of itself on
+playback. However, there are other, easier ways to hide
+actions on a terminal, of course.
+
+EXAMPLES
+
+Play back
+contents of a file written with tlog-rec’s
+"file" writer:
+
+tlog-play -r file
+--file-path=recording.log
+
+Play back a recording from
+Journal:
+
+tlog-play -r journal -M
+TLOG_REC=6071524bb44d403991a00413ab7c8596-53bd-378c5d9
+
+Play back a recording from
+Elasticsearch:
+
+tlog-play -r es
+--es-baseurl=http://localhost:9200/tlog/tlog/_search
+--es-query=session:121
+
+SEE ALSO
+
+tlog-play.conf(5),
+tlog-rec(8)
+
+AUTHOR
+
+Nikolai
+Kondrashov spbnick [AT] gmail.com>

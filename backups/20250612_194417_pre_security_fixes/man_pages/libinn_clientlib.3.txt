@@ -1,0 +1,82 @@
+NAME
+
+clientlib -
+NNTP clientlib part of InterNetNews library
+
+SYNOPSIS
+
+#include
+
+extern FILE *ser_rd_fp; 
+extern FILE *ser_wr_fp; 
+extern char ser_line[]; 
+extern char *getserverbyfile(char *file UNUSED); 
+extern int server_init(char *host, int port); 
+extern int handle_server_response(int response, char *host);
+
+extern void put_server(const char *text); 
+extern int get_server(char *buff, int buffsize); 
+extern void close_server(void);
+
+DESCRIPTION
+
+The routines
+described in this manual page are part of the InterNetNews
+library, libinn(3). They are replacements for the
+clientlib part of the NNTP distribution, and are
+intended to be used in building news clients.
+
+The
+getserverbyfile function retrieves the value of the
+server parameter in inn.conf (or the value of
+the "NNTPSERVER" environment variable if set) as
+the name of the local NNTP server. It returns a pointer to
+static space. The file parameter is ignored
+(inn.conf is forced).
+
+The
+server_init function opens a connection to the NNTP
+server at the specified host, in reader mode. It
+returns the server’s response code or "-1"
+on error. If a connection was made, then ser_rd_fp
+and ser_wr_fp can be used to read from and write to
+the server, respectively, and ser_line will contain
+the server’s response (though you should use the more
+convenient put_server and get_server functions
+instead).
+
+The
+handle_server_response function decodes the
+response code, which comes from the server on
+host. If the client is authorized, it returns
+"0". A client that is only allowed to read is
+authorized, but handle_server_response will print a
+message on the standard output. If the client is not
+authorized to talk to the server, then a message is printed
+and the routine returns "-1".
+
+The
+put_server function sends text to the server,
+adding the necessary NNTP line terminators, and flushing the
+I/O buffer.
+
+The
+get_server function reads a line of text from the
+server into buff, reading at most buffsize
+characters. Any trailing "\r\n" terminators are
+stripped off. get_server returns "-1" on
+error, "0" on success.
+
+The
+close_server function sends a "QUIT"
+command to the server and closes the connection.
+
+HISTORY
+
+Written by Rich
+$alz rsalz [AT] uunet.net> for InterNetNews. Rewritten
+into POD by Julien Elie.
+
+SEE ALSO
+
+libinn(3).

@@ -1,0 +1,458 @@
+NAME
+
+nbd-client -
+connect to a server running nbd-server(1), to use its
+exported block device
+
+SYNOPSIS
+
+nbd-client
+host [ port ] nbd-device [
+-connections num ] [ -sdp ] [
+-swap ] [ -persist ] [ -nofork ] [
+-nonetlink ] [ -systemd-mark ] [
+-readonly ] [ -preinit ] [ -block-size
+block size ] [ -size bytes ] [
+-timeout seconds ] [ -name name
+] [ -certfile certfile ] [ -keyfile
+keyfile ] [ -cacertfile cacertfile ] [
+-tlshostname hostname ]
+
+nbd-client
+-unix path nbd-device [ -connections
+num ] [ -sdp ] [ -swap ] [
+-persist ] [ -nofork ] [ -nonetlink ] [
+-systemd-mark ] [ -readonly ] [
+-preinit ] [ -block-size block size ] [
+-size bytes ] [ -timeout seconds
+] [ -name name ]
+
+nbd-client
+nbd-device
+
+nbd-client
+-d nbd-device
+
+nbd-client
+-c nbd-device
+
+nbd-client
+-l host [ port ]
+
+nbd-client
+[ -netlink ] -l host
+
+DESCRIPTION
+
+With
+nbd-client, you can connect to a server running
+nbd-server, thus using raw diskspace from that server
+as a blockdevice on the local client.
+
+To do this,
+support from the Linux Kernel is necessary, in the form of
+the Network Block Device (NBD). When you have that, either
+in the kernel, or as a module, you can connect to an NBD
+server and use its exported file through a block special
+file with major mode 43.
+
+Optionally,
+long options can also be specified with two leading
+dashes.
+
+OPTIONS
+
+The following
+options are supported: 
+-block-size block size
+
+-b
+
+Use a blocksize of "block size". Default is
+512; allowed values are either 512, 1024, 2048 or 4096
+
+-connections
+num
+
+-C
+
+Use num connections to the server, to allow
+speeding up request handling, at the cost of higher resource
+usage on the server. Use of this option requires kernel
+support available first with Linux 4.9.
+
+host
+
+The hostname or IP address of the machine running
+nbd-server. Since 2.9.15, the NBD utilities support
+IPv6. 
+
+-timeout
+seconds
+
+-t
+
+Set the connection timeout to "seconds". For
+this to work, you need a kernel with support for the
+NBD_SET_TIMEOUT ioctl; this was introduced into Linus’
+tree on 2007-10-11, and will be part of kernel 2.6.24.
+
+port
+
+The TCP port on which nbd-server is running at
+the server.
+
+The port number
+defaults to 10809, the IANA-assigned port number for the NBD
+protocol.
+
+Previous
+versions of the nbd tools supported an older version of the
+negotiation protocol known as "oldstyle". This
+protocol version is no longer supported as of version 3.11
+of the nbd support tools.
+
+nbd-device
+
+The block special file
+(/dev entry) which this nbd-client should connect to,
+specified as a full path.
+
+When the mode
+is used wherein no hostname or export name is specified,
+nbd-client will look up the necessary configuration in the
+nbdtab file. For more information, see nbdtab(5).
+
+-check
+
+-c
+
+Check whether the specified nbd device is connected.
+
+If the device
+is connected, nbd-client will exit with an exit state of 0
+and print the PID of the nbd-client instance that connected
+it to stdout.
+
+If the device
+is not connected or does not exist (for example because the
+nbd module was not loaded), nbd-client will exit with an
+exit state of 1 and not print anything on stdout.
+
+If an error
+occurred, nbd-client will exit with an exit state of 2, and
+not print anything on stdout either.
+
+-disconnect
+
+-d
+
+Disconnect the specified nbd device from the server
+
+-list
+
+-l
+
+Ask the server for a list of available exports. If the
+server is exporting over IPv6 as well as over IPv4, this
+will list all exports twice; otherwise, it should list them
+all only once.
+
+Note that this
+option only works with nbd-server processes running
+version 3.1 or above, and must be enabled in server
+configuration (with the "allowlist" option) before
+it can be used.
+
+-nonetlink
+
+-L
+
+Starting with version 3.17, nbd-client will default to
+using the netlink interface to configure an NBD device. This
+option allows to use the older ioctl() interface to
+configure the device.
+
+This option is
+only available if nbd-client was compiled against
+libnl-genl. If that is not the case, nbd-client will only be
+able to use the ioctl interface (and the option will not be
+available).
+
+Note that a
+future version of nbd-client will require the use of
+netlink, but it has not yet been decided when that will be
+the case.
+
+-persist
+
+-p
+
+When this option is specified, nbd-client will
+immediately try to reconnect an nbd device if the connection
+ever drops unexpectedly due to a lost server or something
+similar. 
+
+-preinit
+
+-P
+
+When this option is specified, nbd-client will skip the
+usual negotiation with the server, and hand the socket to
+the kernel immediately after connecting. Only use this when
+connecting to specialized NBD servers specifically designed
+for it. This requires specifying the size of the device via
+the -B option, and does not support TLS.
+
+-readonly
+
+-R
+
+When this option is specified, nbd-client will tell the
+kernel to treat the device as read-only, even if the server
+would allow writes.
+
+-size bytes
+
+-B bytes
+
+Force the device size to the
+specified number of bytes, rather than using the value from
+server negotiation. Must be a multiple of the block size. If
+using preinit (-P) to skip negotiation, this option is
+required.
+
+-sdp
+
+-S
+
+Connect to the server using the Socket Direct Protocol
+(SDP), rather than IP. See nbd-server(5) for details.
+
+-swap
+
+-s
+
+Specifies that this NBD device will be used as
+swapspace. This option attempts to prevent deadlocks by
+performing mlockall() and adjusting the oom-killer score at
+an appropriate time. It does not however guarantee that such
+deadlocks can be avoided.
+
+-systemd-mark
+
+-m
+
+The systemd init system requires that processes which
+should not be killed at shutdown time be marked
+appropriately by replacing the first letter of their argv[0]
+with an ’@’ sign.
+
+This option
+will cause nbd-client to do so.
+
+Note that this
+only works if nbd-client is run from an initrd; i.e.,
+systemd will ignore such a mark if run from a systemd unit
+file or from the command line.
+
+-nofork
+
+-n
+
+Specifies that the NBD client should not detach and
+daemonize itself. This is mostly useful for debugging.
+
+Note that
+nbd-client will still fork once to trigger an update to the
+device node’s partition table. It is not possible to
+disable this.
+
+-no-optgo
+
+-g
+
+Disable the use of the NBD_OPT_GO protocol message, and
+force the use of NBD_OPT_EXPORT_NAME instead.
+
+The NBD
+protocol has two phases: the negotiation phase, and the
+transmission phase. To move from negotation to transmission,
+older clients sent the NBD_OPT_EXPORT_NAME message, for
+which the server could not produce an error message in case
+the export name did not exist (or the client had
+insufficient permissions to access it). Due to those
+limitations, a replacement message NBD_OPT_GO was created
+instead, which allows the server to reply with an error in
+case of any problems.
+
+The protocol
+allows for a server to discard a message which it does not
+understand; however, unfortunately some implementations
+(including older versions of nbd-server) did not handle that
+situation correctly and would get out of sync with the
+client when it sent a message which the server did not
+understand.
+
+When sending
+NBD_OPT_GO, nbd-client will try to do the right thing and
+fall back to NBD_OPT_EXPORT_NAME. However, when the server
+has the above-described bug, then this does not work. In
+such a situation, the client will issue a diagnostic
+suggesting the use of this option.
+
+Note that there
+is a corresponding option for nbdtab, too.
+
+-name
+
+-N
+
+Specifies the name of the export that we want to use. If
+not specified, nbd-client will ask for a "default"
+export, if one exists on the server.
+
+-unix
+
+-u
+
+Connect to the server over a unix domain socket at
+path, rather than to a server over a TCP socket. The
+server must be listening on the given socket.
+
+-certfile
+file
+
+-F
+
+Use the specified file as the client certificate for TLS
+authentication to the server.
+
+-keyfile file
+
+-K
+
+Use the specified file as the private key for the client
+cerificate. 
+
+-cacertfile
+file
+
+-A
+
+Use the specified file as the CA certificate for TLS
+authentication to the server.
+
+-tlshostname
+hostname
+
+-H
+
+Use the specified hostname for the TLS context. If not
+specified, the hostname used to connect to the server will
+be used.
+
+TLS
+SUPPORT 
+Enabling any of the TLS-related options causes the client to
+use the NBD_OPT_STARTTLS command to upgrade the connection
+to TLS. Since negotiating TLS support from userspace for a
+kernel socket would be very involved (if passing keys to
+kernel space were even possible, which it isn’t), the
+way this is implemented is that the nbd-client process
+creates a socketpair, one side of which it hands to the
+kernel, and the other side of which is handed to an
+encrypting/decrypting proxy. This has the effect that all
+communication will be encrypted before being sent over the
+wire; however, doing so is not safe in combination with
+swapping over an NBD device:
+
+In order to
+free memory by swapping, the kernel needs to be sure that
+the write to the nbd device has finalized. For this, it
+needs to be able to receive an NBD_CMD_WRITE reply which
+informs it that the write has completed successfully and
+that the memory may be released. Receiving data over the
+network, however, requires that the kernel allocate
+memory first, which is impossible if we’re low on
+memory (a likely situation when trying to swap). This is
+likely to cause a deadlock when we’re low on memory
+and there are high amounts of network traffic.
+
+To remedy this
+situation, the kernel sets the PF_MEMALLOC option on the nbd
+socket; when low on memory, it will throw away all packets
+except for those destined to a socket with that option set,
+relying on the normal TCP retransmit system to ensure that
+data is not lost. This avoids the deadlock described
+above.
+
+However, the
+PF_MEMALLOC option is set on the socket that is connected to
+the nbd device, not the encrypted socket connected to the
+encrypting/decrypting proxy. As such, when using TLS, the
+PF_MEMALLOC option is not set on the socket that actually
+receives data from the network, which means that the
+deadlock reappears.
+
+For this
+reason, if the -swap option is used when TLS is in
+use, nbd-client will issue an appropriate warning.
+
+EXAMPLES
+
+Some examples
+of nbd-client usage:
+
+•
+
+To connect to a server running
+on port 2000 at host "server.domain.com", using
+the client’s block special file
+"/dev/nbd0": 
+
+nbd-client
+server.domain.com 2000 /dev/nbd0
+
+•
+
+To connect to a server running
+on port 2001 at host "swapserver.domain.com",
+using the client’s block special file
+"/dev/nbd1", for swap purposes:
+
+nbd-client
+swapserver.domain.com 2001 /dev/nbd1 -swap
+
+•
+
+To disconnect the above
+connection again (after making sure the block special file
+is not in use anymore):
+
+nbd-client
+-d /dev/nbd1
+
+SEE ALSO
+
+nbd-server
+(1).
+
+AUTHOR
+
+The NBD kernel
+module and the NBD tools have been written by Pavel Macheck
+(pavel [AT] ucw.cz).
+
+The kernel
+module is now maintained by Paul Clements
+(Paul.Clements [AT] steeleye.com), while the userland tools are
+maintained by Wouter Verhelst (wouter [AT] debian.org)
+
+This manual
+page was written by Wouter Verhelst
+(wouter [AT] debian.org>) for the Debian GNU/Linux system
+(but may be used by others). Permission is granted to copy,
+distribute and/or modify this document under the terms of
+the GNU General Public License, version 2, as published by
+the Free Software Foundation.

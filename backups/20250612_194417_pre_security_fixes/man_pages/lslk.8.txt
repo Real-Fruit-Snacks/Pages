@@ -1,0 +1,514 @@
+NOTICE
+
+!!!NOTICE!!!
+!!!NOTICE!!! !!!NOTICE!!! !!!NOTICE!!! !!!NOTICE!!!! 
+! ! 
+! Revision 1.29 represents the end of life for lslk. I
+don’t have time ! 
+! to support it. Please don’t report bugs to me. I
+will politely ! 
+! decline to work on them. ! 
+! ! 
+! Vic Abell abe [AT] purdue.edu>, July 11, 2001 ! 
+! ! 
+!!!NOTICE!!! !!!NOTICE!!! !!!NOTICE!!! !!!NOTICE!!!
+!!!NOTICE!!!!
+
+NAME
+
+lslk −
+list local locks
+
+SYNOPSIS
+
+lslk [
+−abhnOvw ] [ −i i ] [
+−k k ] [ −p p ] [
+−S [t] ] [ paths ]
+
+DESCRIPTION
+
+Lslk
+revision 1.29 lists information about locks held on files
+with local inodes on systems running the following UNIX
+dialects:
+
+AIX 3.2.5, 4.1.4, 4.2[.1], and AIX 4.3[.[12]]
+
+DEC OSF/1, Digital UNIX, and Tru64 UNIX [2345].[01] and
+3.2 
+
+Linux
+
+SCO OpenDesktop or OpenServer 3.0 and 5.0.[0245]
+
+Sequent PTX 2.1.9, 4.2.1, 4.3, and 4.4
+
+Solaris 2.[345], 2.5.1, 2.6, 7, and 8 (excluding
+Veritas 
+
+VxFS local files)
+
+SunOS 4.1.3
+
+The lock may
+belong to a process on the local system or to a process on
+an NFS client system to which the local system is an NFS
+server. Notes: Linux and PTX 2.1.9 lslk don’t
+report on locks held by NFS clients; Solaris lslk
+won’t report locks held on local Veritas VxFS
+files.
+
+OPTIONS
+
+In the absence
+of any options, lslk lists all locks associated with
+the local files of the system.
+
+When selection
+options are specified, the listing of all locks is disabled,
+and the selection options are ORed together. Only locks
+meeting any selection criterion are listed.
+
+When the
+−a option is specified, the listing of all
+locks is disabled, and the selection options are ANDed
+together. Only locks that meet all selection criteria are
+listed.
+
+−a
+
+This option causes list selection options to be ANDed,
+as described above.
+
+−b
+
+This option causes lslk to avoid kernel functions
+that might block − lstat(2),
+readlink(2), and stat(2).
+
+See the
+BLOCKS AND TIMEOUTS and AVOIDING KERNEL BLOCKS
+sections for information on using this option.
+
+−i i
+
+This option selects the listing
+of locks whose owning process is on the Internet host whose
+name or network address is i.
+
+Multiple
+addresses may be declared with multiple −i
+i options.
+
+−k k
+
+This option specifies k
+as an alternate to the default kernel name list file path.
+The default kernel name list file path is listed in the
+−h help output.
+
+It may be
+necessary to specify an alternate kernel name list path when
+the file at the default path isn’t the booted kernel
+-- e.g., the default is /vmunix, but the booted
+kernel file is /vmunix.new.
+
+Unless
+lslk accesses the correct kernel name list file, it
+may derive incorrect addresses for symbols in kernel memory,
+causing it to fail.
+
+−n
+
+This option inhibits the
+conversion of network host names to network addresses and
+the conversion of network addresses to network host
+names. 
+
+This option may
+be useful when the host name to address translation service
+(e.g., the Domain Name Server) is slow or inoperative.
+
+If you use this
+option on hosts whose kernel lock table contains only host
+names − e.g., SCO or Solaris − or you use this
+option and also select the listing of locks by an Internet
+network address with the −i i option,
+lslk will not be able to locate any locks with the
+specified network address, nor will it be able to report
+network addresses in its output. The −n option
+inhibits the necessary conversion of kernel lock table host
+names to network addresses.
+
+−O
+
+This option directs lslk
+to bypass the strategy it uses to avoid being blocked by
+some kernel operations − i.e., doing them in forked
+child processes. See the BLOCKS AND TIMEOUTS and
+AVOIDING KERNEL BLOCKS sections for more information
+on kernel operations that may block lslk.
+
+−p p
+
+This option selects the listing of locks whose owning
+process IDentification (PID) numbers are in the
+comma−separated list, p.
+
+−S [t]
+
+This option specifies an optional time-out seconds value
+for kernel functions − lstat(2),
+readlink(2), and stat(2) − that might
+otherwise deadlock. The minimum for t is two; the
+default, fifteen; when no value is specified, the default is
+used. 
+
+See the
+BLOCKS AND TIMEOUTS section for more information.
+
+−v
+
+When this option is specified,
+lslk lists version information − i.e., where,
+when and how it was constructed.
+
+−w
+
+This option suppresses non−fatal warning
+messages. 
+
+paths
+
+This option specifies a list of file path names for
+which lslk is to list lock information.
+
+OUTPUT
+
+Lslk
+lists the information for each lock on a separate line in
+the following columns. (The columns are dynamically
+sized.)
+
+SRC
+
+indicates the source of the
+process holding the lock.
+
+If the source
+is a local process, its command name is displayed, or
+’’(unknown)’’ if the command name
+can’t be determined.
+
+If the source
+is a remote process, the host name or network number where
+the remote process executes is displayed.
+
+PID
+
+is the Process IDentification
+number of the process holding the lock.
+
+DEV
+
+is the device (major and minor numbers) on which the
+locked file resides.
+
+INUM
+
+is the inode number of the locked file.
+
+SZ
+
+is the size of the locked file.
+
+TY
+
+is the lock type:
+
+r read;
+
+rw
+
+read and write;
+
+w
+
+write;
+
+?
+
+unknown.
+
+M
+
+is the mandatory state of the
+lock: 0 if none; 1 if set. (See chmod(1)).
+
+ST
+
+is the relative byte offset of the lock.
+
+WH
+
+is the starting offset
+(’’whence’’) of the lock.
+
+END
+
+is the ending offset of the lock.
+
+LEN
+
+is the length of the lock.
+
+NAME
+
+is the name of the locked file, if it was specified as a
+path argument.
+
+If there is no
+path argument name, then the mount point and device
+paths of the file system on which the locked file resides
+are displayed.
+
+BLOCKS AND TIMEOUTS
+
+Lslk can
+be blocked by some kernel functions that it uses −
+lstat(2), readlink(2), and stat(2).
+These functions are stalled in the kernel, for example, when
+the hosts where mounted NFS file systems reside become
+inaccessible.
+
+Lslk
+attempts to break these blocks with timers and child
+processes, but the techniques are not wholly reliable. When
+lslk does manage to break a block, it will report the
+break with an error message. The messages may be suppressed
+with the −w option.
+
+The default
+timeout value may be displayed with the −h
+option, and it may be changed with the −S
+[t] option. The minimum for t is two seconds,
+but you should avoid small values, since slow system
+responsiveness can cause short timeouts to expire
+unexpectedly and perhaps stop lslk before it can
+produce any output.
+
+When
+lslk has to break a block during its access of
+mounted file system information, it normally continues,
+although with less information available to display about
+open files.
+
+Lslk can
+also be directed to avoid the protection of timers and child
+processes when using the kernel functions that might block
+by specifying the −O option. While this will
+allow lslk to start up with less overhead, it exposes
+lslk completely to the kernel situations that might
+block it. Use this option cautiously.
+
+AVOIDING KERNEL BLOCKS
+
+You can use the
+−b option to tell lslk to avoid using
+kernel functions that would block. Some cautions apply.
+
+First, using
+this option usually requires that your system supply
+alternate device numbers in place of the device numbers that
+lslk would normally obtain with the lstat(2)
+and stat(2) kernel functions. See the ALTERNATE
+DEVICE NUMBERS section for more information on alternate
+device numbers.
+
+Second, you
+can’t specify the names of files you want
+lslk to locate locks for unless they’re file
+system names. This is because lslk needs to know the
+device and inode numbers of files listed with names
+in the lslk options, and the −b option
+prevents lslk from obtaining them. Moreover, since
+lslk only has device numbers for the file systems
+that have alternates, its ability to locate locks on file
+systems depends completely on the availability and accuracy
+of the alternates. If no alternates are available, or if
+they’re incorrect, lslk won’t be able to
+locate locks on the named file systems.
+
+Third, if the
+names of your file system directories that lslk
+obtains from your system’s mount table are symbolic
+links, lslk won’t be able to resolve the links.
+This is because the −b option causes
+lslk to avoid the kernel readlink(2) function
+it uses to resolve symbolic links.
+
+Finally, using
+the −b option causes lslk to issue
+warning messages when it needs to use the kernel functions
+that the −b option directs it to avoid. You can
+suppress these messages by specifying the −w
+option, but if you do, you won’t see the alternate
+device numbers reported in the warning messages.
+
+ALTERNATE DEVICE NUMBERS
+
+On some
+dialects, when lslk has to break a block because it
+can’t get information about a mounted file system via
+the lstat(2) and stat(2) kernel functions, or
+because you specified the −b option,
+lslk can obtain some of the information it needs
+− the device number and possibly the file system type
+− from the system mount table. When that is possible,
+lslk will report the device number it obtained. (You
+can suppress the report by specifying the −w
+option.)
+
+You can assist
+this process if your mount table is supported with an
+/etc/mtab or /etc/mnttab file that contains an
+options field by adding a
+’’dev=xxxx’’ field for mount points
+that do not have one in their options strings.
+
+The
+’’xxxx’’ portion of the field is the
+hexadecimal value of the file system’s device number.
+(Consult the st_dev field of the output of the
+lstat(2) and stat(2) functions for the
+appropriate values for your file systems.) Here’s an
+example from a Solaris 2.5 /etc/mnttab for a UFS file
+system:
+
+... ufs
+suid,rw,dev=80001f ...
+
+Some dialects
+that do not use an ASCII /etc/mtab or
+/etc/mnttab file for the mount table may still
+provide an alternative device number in their internal mount
+tables. This includes AIX, DEC OSF/1, Digital UNIX, and
+Tru64 UNIX. Lslk knows how to obtain the alternative
+device number for these dialects and uses it when its
+attempt to lstat(2) or stat(2) the file system
+is blocked.
+
+If you’re
+not sure your dialect supplies alternate device numbers for
+file systems from its mount table, use this lslk
+incantation to see if it reports any alternate device
+numbers:
+
+lslk -b
+
+Look for
+standard error file warning messages that begin
+’’assuming "dev=xxxx" from
+...’’.
+
+DIAGNOSTICS
+
+Errors are
+identified with messages on the standard error file.
+
+Lslk
+returns a one (1) if an error was detected or if it
+couldn’t list lock information for all the
+names that were specified.
+
+EXAMPLES
+
+To list all
+locks, use:
+
+lslk
+
+To list locks
+from the host ’’klaatu’’ in the
+local domain, use:
+
+lslk -i
+klaatu
+
+To list locks
+from the hosts helios.cc.purdue.edu and vic1.cc.purdue.edu,
+use:
+
+lslk -i
+helios.cc.purdue.edu -i vic1.cc.purdue.edu
+
+To list locks
+held by processes 1234 and 56789, use:
+
+lslk -p
+1234,56789
+
+To list all
+locks held by process 1234 on host klaatu, use:
+
+lslk -p 1234 -a
+-i klaatu
+
+PERMISSION
+
+Lslk
+must have permission to access the system memory files
+− e.g., /dev/kmem and /dev/mem.
+Permission to do that is granted when the lslk
+process is run from a root shell, or when its
+’’setgid’’ group matches the group
+(e.g., ’’sys’’) that can read the
+system memory files.
+
+BUGS
+
+Perhaps it
+should be possible to specify the host on which a search
+target PID is located.
+
+DEC OSF/1,
+Digital UNIX, and Tru64 UNIX lslk won’t find
+locks applied with the flock(2) function. It will
+find locks applied with the fcntl(2) and
+lockf(3) functions.
+
+Linux
+lslk will not report locks held by NFS clients. It
+may have difficulty reporting locks held on dynamic inodes
+(e.g., for the Win-95 file system type, smbfs).
+
+Solaris
+lslk won’t find locks held on local Veritas
+VxFS files by local or remote processes.
+
+FILES
+
+/dev/kmem
+
+kernel virtual memory device
+
+/dev/mem
+
+physical memory device
+
+AUTHORS
+
+Lslk was
+written by Victor A. Abell abe [AT] purdue.edu> of the
+Purdue University Computing Center (PUCC).
+
+Chris Eleveld
+chris [AT] sector7.com> did the DEC OSF/1, Digital UNIX,
+Linux, and Tru64 UNIX ports.
+
+SEE ALSO
+
+chmod(1),
+fcntl(2), fcntl(5), flock(3B), lockd(1M), lstat(2),
+lockf(3C), readlink(2), stat(2).

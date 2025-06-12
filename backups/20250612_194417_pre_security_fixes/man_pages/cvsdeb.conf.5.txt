@@ -1,0 +1,305 @@
+NAME
+
+cvsdeb.conf
+− site−wide configuration file for
+cvs−buildpackage and friends
+
+SYNOPSIS
+
+/etc/cvsdeb.conf
+
+DESCRIPTION
+
+The file
+/etc/cvsdeb.conf is actually a Bourne Shell
+snippet included during the package build process, and hence
+you may put any shell directive in that file (just make very
+sure you know what you are doing).
+
+All the
+variables have reasonable default values, and some maybe
+overridden on a per run or a per individual basis by using
+environment variables, and all configurable variables can be
+overridden by options to the scripts themselves.
+
+The value of a
+variable can be set so:
+
+a)
+
+Defaults exist in the rules file. These are the values
+used if no customization is done.
+
+b)
+
+Some variables can be set in the config file
+/etc/cvsdeb.conf. These values override the
+defaults. 
+
+c)
+
+Some variables can also be set by setting a
+corresponding environment variable. These values override
+the config file and the defaults.
+
+d)
+
+Using script command line options. All configurable
+variables may be set by this method, and will override the
+other methods above.
+
+Predefined variables for cvs-buildpackage
+
+The following
+variables are defined for cvs−buildpackage.
+
+package
+
+Name of the package
+
+version
+
+The raw version of the package
+
+sversion
+
+The version number stripped of epochs.
+
+uversion
+
+The upstream version.
+
+tversion
+
+Debian revision number, if any.
+
+Configuration File options
+
+At the moment,
+the user modifiable variables supported are:
+
+DEBUG
+
+Debugging information: The
+default value is 0 (no debugging information is printed). To
+enable debugging output, set the value to 1.
+
+conf_forceclean
+
+There are two things CVS may choke on:
+symbolic links and CVS directories in the
+source tree. Also, there are times when one may not want to
+honour the upstream .cvsignore files. The
+conf_forceclean. configuration variable causes the
+cvs-inject and cvs-upgrade programs to ask
+whether the offending files should be deleted, if not, the
+programs exit with an error message. Without this option,
+the programs exit with an error message without asking. This
+can be over ridden by the environment variable
+CVSDEB_FORCECLEAN. 
+
+conf_rootdir
+
+The root directory is used to set the default value of
+the cvs-buildpackage work directory, using the package name.
+The default value is /usr/src/Packages. This should
+probably not be a sub dir of CVSROOT, since cvs shall
+refuse to export packages there, and the script shall
+fail. 
+
+conf_workdir
+
+The cvs-buildpackage work directory. This directory is
+where the original sources are expected, and this is where
+the module shall be exported from CVS. If you set this
+value, the value of the root directory would be ignored.
+Please note that the cvs-buildpackage work directory
+referred to here is the scratch directory where this program
+works, not the directory that the human uses to work in.
+This should probably not be a sub dir of CVSROOT,
+since cvs shall refuse to export packages there, and the
+script shall fail.
+
+conf_dpkg_options
+
+This is where one may stash -us -uc or whatever to pass
+on to dpkg−buildpackage. This is different from
+the other variables in that this is an array variable. These
+options shall augment (not replace) dpkg-buildpackage
+options provided on the command line.
+
+Bash provides
+one-dimensional array variables. Any variable may be used as
+an array; the ’declare’ builtin will explicitly
+declare an array. There is no maximum limit on the size of
+an array, nor any requirement that members be indexed or
+assigned contiguously. Arrays are zero-based.
+
+Arrays are
+assigned to using compound assignments of the form
+conf_dpkg_options=(value1 ... valueN) or
+dpkg_options=(value1 ${dpkg_options[@]})
+
+conf_rootcommand
+
+This is where one specifies the
+default command to gain root access (usually set to
+fakeroot, sudo or super ). This is also passed
+along to dpkg−buildpackage.
+
+conf_buildpackage
+
+Sets the name of the builder program invoked, nominally
+set to dpkg-buildpackage. However, the user may
+choose to use a different build program, or a wrapper, or
+even ’chroot /opt/root dpkg-buildpackage’
+to build the package in a chroot jail, if desired.
+(Obviously, this requires that the Work directory to be a
+subdirectory of a previously set up chroot jail). One may
+also hook in pbuilder by setting this variable to
+’pdebuild --auto-debsign --buildresult
+../’. (Again, this requires that pbuilder
+has been set up correctly). This option can be over ridden
+by the environment variable CVSDEB_BUILDPACKAGE.
+
+conf_packageopts
+
+Additional arguments to give to conf_buildpackage
+that shall be appended to dpkg-buildpackage options.
+Use this variable to append to the list of options. This
+option can be over ridden by the environment variable
+CVSDEB_PACKAGEOPTS. 
+
+conf_forcetag.
+
+If this is set, then cvs−buildpackage shall
+call cvs tag -F to ensure that all files are
+re−tagged correctly.
+
+conf_prefix=prefix
+
+If this is set, then this
+prefix is prepended to the package name while looking for
+the repository. In other word, we append this to
+CVSROOT while looking for packages. Use this to group
+all your Debian package sources together in a
+subdirectory in the CVS repository
+
+conf_packageintag.
+
+If this is set, then
+cvs−buildpackage will include the package name
+and an underscore at the start of every CVS tag it generates
+or uses.
+
+conf_cvsmodule
+
+This option sets the CVS module for use with
+cvs−inject and cvs−upgrade.
+
+conf_use_changelog
+
+This option tells the
+cvs−inject and cvs−upgrade
+commands to incorporate debian changelog entries into the
+cvs changelog.
+
+conf_hook_script
+
+This option, if set, should point to a script that
+should be run just before calling
+dpkg−buildpackage. Ideally, things like this
+are done using the modules file and programs, but is still
+provided here for convenience. This is overridden by the
+environment variable CVSDEB_HOOK.
+
+conf_get_orig
+
+This option, if set, should contain a command to execute
+to get the original tarball into the current directory. This
+can then be used to allow one to get the original file
+using, for instance, wget or curl. This is
+overridden by the CVSDEB_GET_ORIG environment
+variable. 
+
+conf_use_apt
+
+If set to YES, cvs-buildpackage will use
+apt-get source to retrive the original tarball, if
+one for the correct upstream version is found in a
+Sources file known to apt. This is overridden
+by the CVSDEB_USE_APT environment variable.
+
+Environment Variables
+
+At the moment,
+the user modifiable variables supported are:
+
+CVSDEB_ROOTDIR
+
+If defined, this environment
+variable will override the value of the root directory set
+in the configuration file.
+
+CVSDEB_WORKDIR
+
+If defined, this environment variable will override the
+value of the cvs-buildpackage work directory set in the
+configuration file, and would cause the scripts to ignore
+the root directory, irrespective of where that value was
+set. 
+
+CVSDEB_MODULE
+
+If defined, this environment variable will override the
+value of the CVS module set in the configuration
+file. 
+
+CVSDEB_USE_CHANGELOG
+
+If defined, this environment
+variable will make cvs-inject and cvs-upgrade
+programs incorporate entries from the Debian changelog file
+into the CVS changelog.
+
+CVSDEB_BUILDPACKAGE.
+
+If defined, this environment
+variable will override the value of the configuration file
+variable conf_buildpackage
+
+CVSDEB_HOOK
+
+Over rides the configuration file option
+conf_hook_script. 
+
+CVSDEB_GET_ORIG
+
+Over rides the configuration
+file option conf_get_orig.
+
+Files
+
+System−wide
+defaults are placed in /etc/cvsdeb.conf, This can be
+overridden and supplemented by ~/.cvsdeb.conf file by
+each user.
+
+SEE ALSO
+
+cvs−inject(1),
+cvs−buildpackage(1),
+cvs−upgrade(1),
+dpkg−buildpackage(1), cvs(1).
+
+BUGS
+
+There are no
+bugs. Any resemblance thereof is delirium. Really.
+
+AUTHOR
+
+This manual
+page was written by Manoj Srivastava
+srivasta [AT] debian.org>, for the Debian GNU/Linux
+system.

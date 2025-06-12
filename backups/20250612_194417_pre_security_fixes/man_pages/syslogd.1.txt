@@ -1,0 +1,233 @@
+NAME
+
+syslogd −
+log system messages
+
+SYNOPSIS
+
+/usr/sbin/syslogd
+[-d] [-f configfile]
+[-m markinterval]
+[-p path] [-t | -T]
+
+DESCRIPTION
+
+syslogd
+reads and forwards system messages to the appropriate log
+files or users, depending upon the priority of a message and
+the system facility from which it originates. The
+configuration file /etc/syslog.conf (see
+syslog.conf(4)) controls where messages are
+forwarded. syslogd logs a mark (timestamp) message
+every markinterval minutes (default 20) at
+priority LOG_INFO to the facility whose name is given
+as mark in the syslog.conf file.
+
+A system
+message consists of a single line of text, which may be
+prefixed with a priority code number enclosed in
+angle-brackets (<>); priorities are defined in
+.
+
+syslogd
+reads from the STREAMS log driver, /dev/log,
+and from any transport provider specified in
+/etc/netconfig, /etc/net/transport/hosts, and
+/etc/net/transport/services.
+
+syslogd
+reads the configuration file when it starts up, and again
+whenever it receives a HUP signal (see
+signal(3HEAD), at which time it also closes all files
+it has open, re-reads its configuration file, and then opens
+only the log files that are listed in that file.
+syslogd exits when it receives a TERM
+signal.
+
+As it starts
+up, syslogd creates the file /etc/syslog.pid,
+if possible, containing its process identifier
+(PID).
+
+If message
+ID generation is enabled (see log(7D)), each
+message will be preceded by an identifier in the following
+format: [ID msgid
+facility.priority]. msgid is
+the message’s numeric identifier described in
+msgid(1M). facility and priority are
+described in syslog.conf(4). [ID 123456
+kern.notice] is an example of an identifier when message
+ID generation is enabled.
+
+If the message
+originated in a loadable kernel module or driver, the kernel
+module’s name (for example, ufs) will be
+displayed instead of unix. See EXAMPLES for
+sample output from syslogd with and without message
+ID generation enabled.
+
+In an effort to
+reduce visual clutter, message IDs are not displayed
+when writing to the console; message IDs are only
+written to the log file. See EXAMPLES.
+
+The
+/etc/default/syslogd file contains the following
+default parameter settings. See FILES. 
+LOG_FROM_REMOTE
+
+Specifies whether remote
+messages are logged. LOG_FROM_REMOTE=NO is equivalent
+to the -t command-line option. The default value for
+LOG_FROM_REMOTE is YES.
+
+OPTIONS
+
+The following
+options are supported:
+
+-d
+
+Turn on debugging. This option should only be used
+interactively in a root shell once the system is in
+multi-user mode. It should not be used in the system
+start-up scripts, as this will cause the system to hang at
+the point where syslogd is started.
+
+-f configfile
+
+Specify an alternate
+configuration file.
+
+-m
+markinterval
+
+Specify an interval, in
+minutes, between mark messages.
+
+-p path
+
+Specify an alternative log
+device name. The default is /dev/log.
+
+-T
+
+Enable the syslogd UDP port to turn on logging of
+remote messages. This is the default behavior. See
+FILES. 
+
+-t
+
+Disable the syslogd UDP port to turn off logging
+of remote messages. See FILES.
+
+EXAMPLES
+
+Example 1:
+syslogd Output Without Message ID Generation Enabled
+
+The following
+example shows the output from syslogd when message
+ID generation is not enabled:
+
+Sep 29 21:41:18 cathy unix: alloc /: file system full
+
+Example 2:
+syslogd Output with ID generation Enabled
+
+The following
+example shows the output from syslogd when message
+ID generation is enabled. The message
+ID is displayed when writing to log
+file/var/adm/messages.
+
+Sep 29 21:41:18 cathy ufs: [ID 845546 kern.notice]
+                                    alloc /: file system full
+
+Example 3:
+syslogd Output with ID Generation Enabled
+
+The following
+example shows the output from syslogd when message
+ID generation is enabled when writing to the
+console. Even though message ID is enabled, the message
+ID is not displayed at the console.
+
+Sep 29 21:41:18 cathy ufs: alloc /: file system full
+
+FILES
+
+/etc/syslog.conf
+
+Configuration file
+
+/etc/syslog.pid
+
+Process ID
+
+/etc/default/syslogd
+
+Contains default settings. You
+can override some of the settings by command-line
+options.
+
+/dev/log
+
+STREAMS log driver
+
+/etc/netconfig
+
+Transport providers available
+on the system
+
+/etc/net/transport/hosts
+
+Network hosts for each
+transport
+
+/etc/net/transport/services
+
+Network services for each
+transport
+
+ATTRIBUTES
+
+See
+attributes(5) for descriptions of the following
+attributes:
+
+SEE ALSO
+
+logger(1),
+msgid(1M),syslog(3C), syslog.conf(4),
+attributes(5), signal(3HEAD),
+log(7D)
+
+NOTES
+
+The mark
+message is a system time stamp, and so it is only defined
+for the system on which syslogd is running. It can
+not be forwarded to other systems.
+
+When
+syslogd receives a HUP signal, it attempts to close
+all log files to which it is currently logging messages. If,
+for some reason, one of these files does not close within a
+generous grace period, syslogd shuts down, logging an
+error message to the console. If the console is one of the
+files that did not successfully close, syslogd
+instead sends a mail message to the superuser on the current
+system stating that it shut down, and that the console was
+not responding.
+
+Care should be
+taken to ensure that each window displaying messages
+forwarded by syslogd (especially console windows) is
+run in the system default locale (which is
+syslogd’s locale). If this advice is not
+followed, it is possible for a syslog message to
+alter the terminal settings for that window, possibly even
+allowing remote execution of arbitrary commands from that
+window.

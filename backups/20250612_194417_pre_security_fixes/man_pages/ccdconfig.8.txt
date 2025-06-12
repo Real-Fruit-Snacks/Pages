@@ -1,0 +1,201 @@
+CCDCONFIG(8) BSD System Manager’s Manual
+CCDCONFIG(8)
+
+NAME
+
+ccdconfig —
+configuration utility for the concatenated disk driver
+
+SYNOPSIS
+
+ccdconfig
+[−cv] ccd ileave [flags]
+dev [file ...] 
+ccdconfig −C [−v]
+[−f config_file] 
+ccdconfig −u [−v] ccd
+[file ...] 
+ccdconfig −U [−v]
+[−f config_file] 
+ccdconfig −g [ccd [...]]
+
+DESCRIPTION
+
+The ccdconfig utility is
+used to dynamically configure and unconfigure concatenated
+disk devices, or ccds. For more information about the ccd,
+see ccd(4).
+
+The options are
+as follows:
+
+−c
+
+Configure a
+ccd. This is the default behavior of ccdconfig.
+
+−C
+
+Configure all
+ccd devices listed in the ccd configuration file.
+
+−f
+config_file
+
+When configuring or
+unconfiguring all devices, read the file config_file
+instead of the default /etc/ccd.conf.
+
+−g
+
+Dump the
+current ccd configuration in a format suitable for use as
+the ccd configuration file. If no arguments are specified,
+every configured ccd is dumped. Otherwise, the configuration
+of each listed ccd is dumped.
+
+−u
+
+Unconfigure a
+ccd.
+
+−U
+
+Unconfigure all
+ccd devices listed the ccd configuration file.
+
+−v
+
+Cause
+ccdconfig to be verbose.
+
+A ccd is
+described on the command line and in the ccd configuration
+file by the name of the ccd, the interleave factor, the ccd
+configuration flags, and a list of one or more devices. The
+flags may be represented as a decimal number, a hexadecimal
+number, a comma-separated list of strings, or the word
+’’none’’. The flags are as
+follows:
+
+CCDF_UNIFORM
+0x02 Use uniform interleave
+
+CCDF_MIRROR
+
+0x04
+
+Support mirroring
+
+The format in
+the configuration file appears exactly as if it were entered
+on the command line. Note that on the command line and in
+the configuration file, the flags argument is
+optional.
+
+# 
+# /etc/ccd.conf 
+# Configuration file for concatenated disk devices 
+#
+
+# ccd ileave
+flags component devices 
+ccd0 16 none /dev/da2s1 /dev/da3s1
+
+The component
+devices need to name partitions of type FS_BSDFFS (or
+’’4.2BSD’’ as shown by
+disklabel(8)).
+
+EXAMPLES
+
+A number of ccdconfig
+examples are shown below. The arguments passed to
+ccdconfig are exactly the same as you might place in
+the /etc/ccd.conf configuration file. The first
+example creates a 4-disk stripe out of four scsi disk
+partitions. The stripe uses a 64 sector interleave. The
+second example is an example of a complex stripe/mirror
+combination. It reads as a two disk stripe of da4 and da5
+which is mirrored to a two disk stripe of da6 and da7. The
+last example is a simple mirror. The 2nd slice of /dev/da8
+is mirrored with the 3rd slice of /dev/da9 and assigned to
+ccd0.
+
+# ccdconfig ccd0
+64 none /dev/da0s1 /dev/da1s1 /dev/da2s1 /dev/da3s1 
+# ccdconfig ccd0 128 CCDF_MIRROR /dev/da4 /dev/da5 /dev/da6
+/dev/da7 
+# ccdconfig ccd0 128 CCDF_MIRROR /dev/da8s2 /dev/da9s3
+
+When you create
+a new ccd disk you generally want to fdisk(8) and
+disklabel(8) it before doing anything else. Once you create
+the initial label you can edit it, adding additional
+partitions. The label itself takes up the first 16 sectors
+of the ccd disk. If all you are doing is creating file
+systems with newfs, you do not have to worry about this as
+newfs will skip the label area. However, if you intend to
+dd(1) to or from a ccd partition it is usually a good idea
+to construct the partition such that it does not overlap the
+label area. For example, if you have A ccd disk with 10000
+sectors you might create a ’d’ partition with
+offset 16 and size 9984.
+
+# disklabel ccd0
+> /tmp/disklabel.ccd0 
+# disklabel -Rr ccd0 /tmp/disklabel.ccd0 
+# disklabel -e ccd0
+
+The disklabeling
+of a ccd disk is usually a one-time affair. If you reboot
+the machine and reconfigure the ccd disk, the disklabel you
+had created before will still be there and not require
+reinitialization. Beware that changing any ccd parameters:
+interleave, flags, or the device list making up the ccd
+disk, will usually destroy any prior data on that ccd disk.
+If this occurs it is usually a good idea to reinitialize the
+label before [re]constructing your ccd disk.
+
+RECOVERY
+
+An error on a ccd disk is
+usually unrecoverable unless you are using the mirroring
+option. But mirroring has its own perils: It assumes that
+both copies of the data at any given sector are the same.
+This holds true until a write error occurs or until you
+replace either side of the mirror. This is a
+poor-man’s mirroring implementation. It works well
+enough that if you begin to get disk errors you should be
+able to backup the ccd disk, replace the broken hardware,
+and then regenerate the ccd disk. If you need more than this
+you should look into external hardware RAID SCSI boxes, RAID
+controllers (see GENERIC), or software RAID systems such as
+RAIDframe raid(4) and vinum(8).
+
+FILES 
+/etc/ccd.conf
+
+default ccd
+configuration file
+
+SEE ALSO
+
+dd(1), ccd(4), raid(4),
+disklabel(8), fdisk(8), rc(8), vinum(8)
+
+BUGS
+
+The initial disklabel returned
+by ccd(4) specifies only 3 partitions. One needs to change
+the number of paritions to 8 using
+’’disklabel −e’’ to get
+the usual BSD expectations.
+
+HISTORY
+
+The ccdconfig utility
+first appeared in NetBSD 1.0A.
+
+BSD
+July 17, 1995 BSD

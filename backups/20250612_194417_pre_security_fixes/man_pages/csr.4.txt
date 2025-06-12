@@ -1,0 +1,222 @@
+NAME
+
+csr -
+distributed compressed sparse matrix (rheolef-7.2)
+
+DESCRIPTION
+
+Sparse matrix
+are compressed by rows. In a distributed environment, the
+distribution follows the row distributor(4).
+
+ALGEBRA
+
+This class
+supports the standard linear algebra. Adding or subtracting
+two matrices simply writes a+b and a-b,
+respectively. Multiplying a matrix by a scalar writes
+lambda*a and the matrix-matrix product also writes
+a*b. Matrix-vector product expresses a*x
+where x is a vector described by the vec(4)
+class.
+
+By extension,
+trans(a) returns the transpose. Multiplying a
+vector by the transpose matrix writes
+a.trans_mult(x) and do not requires to build the
+transpose matrix.
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+linalg/lib/csr.h
+
+The
+csr class is a template class with both the
+floating type and the memory model as parameters. Here is
+the interface for the sequential memory model. The
+distributed case presents a similar interface.
+
+template 
+class csr : public
+smart_pointer > { 
+public:
+
+//
+typedefs:
+
+typedef
+csr_rep rep; 
+typedef smart_pointer base; 
+typedef typename rep::memory_type memory_type; 
+typedef typename rep::size_type size_type; 
+typedef typename rep::element_type element_type; 
+typedef typename rep::iterator iterator; 
+typedef typename rep::const_iterator const_iterator; 
+typedef typename rep::data_iterator data_iterator; 
+typedef typename rep::const_data_iterator
+const_data_iterator;
+
+//
+allocators/deallocators:
+
+csr() :
+base(new_macro(rep())) {} 
+template 
+explicit csr(const asr& a) :
+base(new_macro(rep(a))) {} 
+void resize (size_type loc_nrow1 = 0, size_type loc_ncol1 =
+0, size_type loc_nnz1 = 0) 
+{ base::data().resize(loc_nrow1, loc_ncol1, loc_nnz1); }
+
+void resize (const distributor& row_ownership, const
+distributor& col_ownership, size_type nnz1 = 0) 
+{ base::data().resize(row_ownership, col_ownership, nnz1);
+}
+
+// allocators
+from initializer list
+
+csr (const
+std::initializer_list
+>& init_list); 
+csr (const
+std::initializer_list
+>& init_list);
+
+//
+accessors:
+
+// global sizes
+
+const distributor& row_ownership() const { return
+base::data().row_ownership(); } 
+const distributor& col_ownership() const { return
+base::data().col_ownership(); } 
+size_type dis_nrow () const { return
+row_ownership().dis_size(); } 
+size_type dis_ncol () const { return
+col_ownership().dis_size(); } 
+size_type dis_nnz () const { return base::data().nnz(); }
+
+size_type dis_ext_nnz () const { return 0; } 
+bool is_symmetric() const { return
+base::data().is_symmetric(); } 
+void set_symmetry (bool is_symm) const {
+base::data().set_symmetry(is_symm); } 
+void set_symmetry_by_check (const T& tol =
+std::numeric_limits::epsilon()) const 
+{ base::data().set_symmetry_by_check(); } 
+bool is_definite_positive() const { return
+base::data().is_definite_positive(); } 
+void set_definite_positive (bool is_defpos) const {
+base::data().set_definite_positive(is_defpos); } 
+size_type pattern_dimension() const { return
+base::data().pattern_dimension(); } 
+void set_pattern_dimension(size_type dim) const {
+base::data().set_pattern_dimension(dim); } 
+T max_abs () const { return base::data().max_abs(); }
+
+// local sizes
+
+size_type nrow () const { return base::data().nrow(); } 
+size_type ncol () const { return base::data().ncol(); } 
+size_type nnz () const { return base::data().nnz(); }
+
+// range on
+local memory 
+size_type row_first_index () const { return
+base::data().row_first_index(); } 
+size_type row_last_index () const { return
+base::data().row_last_index(); } 
+size_type col_first_index () const { return
+base::data().col_first_index(); } 
+size_type col_last_index () const { return
+base::data().col_last_index(); }
+
+const_iterator
+begin() const { return base::data().begin(); } 
+const_iterator end() const { return base::data().end(); }
+
+iterator begin_nonconst() { return base::data().begin(); }
+
+iterator end_nonconst() { return base::data().end(); }
+
+// accessors,
+only for distributed (for interface compatibility) 
+size_type ext_nnz() const { return 0; } 
+const_iterator ext_begin() const { return const_iterator();
+} 
+const_iterator ext_end() const { return const_iterator(); }
+
+iterator ext_begin_nonconst() { return iterator(); } 
+iterator ext_end_nonconst() { return iterator(); } 
+size_type jext2dis_j (size_type jext) const { return 0;
+}
+
+int
+constraint_process_rank() const;
+
+// algebra:
+
+// y := a*x
+
+void mult (const vec& x,
+vec& y) const { 
+base::data().mult (x,y); 
+} 
+vec operator* (const
+vec& x) const { 
+vec y (row_ownership(),
+element_type()); 
+mult (x, y); 
+return y; 
+} 
+void trans_mult (const
+vec& x,
+vec& y) const { 
+base::data().trans_mult (x,y); 
+} 
+vec trans_mult (const
+vec& x) const { 
+vec y (col_ownership(),
+element_type()); 
+trans_mult (x, y); 
+return y; 
+} 
+// a+b, a-b, a*b 
+csr operator+ (const
+csr& b) const; 
+csr operator- (const
+csr& b) const; 
+csr operator* (const
+csr& b) const;
+
+// lambda*a
+
+csr& operator*= (const T&
+lambda) { 
+base::data().operator*= (lambda); 
+return *this; 
+} 
+// output:
+
+void dump
+(const std::string& name) const {
+base::data().dump(name); } 
+};
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html>. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

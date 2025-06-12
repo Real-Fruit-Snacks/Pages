@@ -1,0 +1,368 @@
+NAME
+
+dirmngr −
+manages certificate revocation lists
+
+SYNOPSIS
+
+dirmngr
+[options] [command [args]]
+
+DESCRIPTION
+
+dirmngr
+is a server for managing and downloading certificate
+revocation lists (CRLs) for X.509 certificates and for
+downloading the certificates themselves. dirmngr also
+handles OCSP requests as an alternative to CRLs.
+dirmngr is either invoked internally by gpgsm
+(from GnuPG 1.9) or when running as a system daemon through
+the dirmngr-client tool.
+
+OPTIONS
+
+Commands are
+not distinguished from options except for the fact that only
+one one command is allowed.
+
+Commands
+
+−−version
+
+Print the program version and
+licensing information. Note that you can abbreviate this
+command.
+
+−−help,
+−h
+
+Print a usage message
+summarizing the most useful command-line options. Note that
+you can abbreviate this command.
+
+−−server
+
+Run in server mode and wait for
+commands on the stdin. The default mode is to create
+a socket and listen for commands there.
+
+−−daemon
+
+Run in background daemon mode
+and listen for commands on a socket. Note that this also
+changes the default home directory and enables the internal
+certificate validation code.
+
+−−list−crls
+
+List the contents of the CRL
+cache on stdout. This is probably only useful for
+debugging purposes.
+
+−−load−crl
+file
+
+This command requires a file
+name as additional argument, and it will make dirmngr
+try to import the CRL in file into its cache. Note
+that this is only possible if dirmngr is able to
+retrieve the CA’s certificate directly by its own
+means. In general it is better to use gpgsm’s
+--call-dirmngr loadcrl filename command so that
+gpgsm can help dirmngr.
+
+−−fetch−crl
+url
+
+This command requires an URL as
+additional argument, and it will make dirmngr try to
+retrieve an import the CRL from that URL into its cache.
+This is mainly useful for debugging purposes.
+
+−−shutdown
+
+This commands shuts down a
+running instance of dirmngr. This command has
+currently no effect.
+
+−−flush
+
+This command removes all CRLs
+from dirmngr’s cache. Client requests will thus
+trigger reading of fresh CRLs.
+
+Options 
+−−options file
+
+Reads configuration from
+file instead of from the default per-user
+configuration file. The default configuration file is named
+gpgsm.conf and expected in the home directory.
+
+−−homedir
+dir
+
+Set the name of the home
+directory to dir. This option is only effective when
+used on the command line. The default depends on the running
+mode: 
+With −−daemon given on the
+commandline
+
+the directory named
+/etc/dirmngr for configuration files,
+/var/lib/dirmngr/ for extra data and
+/var/cache/dirmngr for cached CRLs.
+
+Without
+−−daemon given on the commandline
+
+the directory named
+.gnupg directly below the home directory of the user
+unless the environment variable GNUPGHOME has been
+set in which case its value will be used. All kind of data
+is stored below this directory.
+
+−v,
+−−verbose
+
+Outputs additional information
+while running. You can increase the verbosity by giving
+several verbose commands to dirmngr, such as
+-vv.
+
+−−log−file
+file
+
+Append all logging output to
+file. This is very helpful in seeing what the agent
+actually does.
+
+−−debug−level
+level
+
+Select the debug level for
+investigating problems. level may be one of:
+
+none
+
+no debugging at all
+
+basic
+
+some basic debug messages
+
+advanced
+
+more verbose debug messages
+
+expert
+
+even more detailed messages
+
+guru
+
+all of the debug messages you can get
+
+How these
+messages are mapped to the actual debugging flags is not
+specified and may change with newer releases of this
+program. They are however carefully selected to best aid in
+debugging.
+
+−−debug
+flags
+
+This option is only useful for
+debugging and the behaviour may change at any time without
+notice. flags are bit encoded and may be given in
+usual C syntax.
+
+−−debug−all
+
+Same as
+--debug=0xffffffff
+
+−−debug−wait
+N
+
+When running in server mode,
+wait N seconds before entering the actual processing
+loop and print the pid. This gives time to attach a
+debugger.
+
+−s,
+−−sh, −c,
+−−csh
+
+Format the info output in
+daemon mode for use with the standard Bourne shell
+respectively the C shell . The default ist to guess it based
+on the environment variable SHELL which is in almost
+all cases sufficient.
+
+−−force
+
+Enabling this option forces
+loading of expired CRLs; this is only useful for
+debugging.
+
+−−disable−ldap
+
+Entirely disables the use of
+LDAP.
+
+−−disable−http
+
+Entirely disables the use of
+HTTP.
+
+−−ignore−http−dp
+
+When looking for the location
+of a CRL, the to be tested certificate usually contains so
+called "CRL Distribution Point" (DP) entries which
+are URLs describing the way to access the URL. The first
+found DP entry is used. With this option all entries using
+the HTTP scheme are ignored when looking for a suitable
+DP.
+
+−−ignore−ldap−dp
+
+This is similar to
+−−ignore−http−dp but ignores
+entries using the LDAP scheme. Both options may be combined
+resulting in ignoring DPs entirely.
+
+−−honor−http−proxy
+
+If the environment variable
+http_proxy has been set, use its value to access HTTP
+servers.
+
+−−http−proxy
+host[:port]
+
+Use host and port
+to access HTTP servers. The use of this options overrides
+the environment variable http_proxy regardless
+whether −−honor−http−proxy
+has been set.
+
+−−ldap−proxy
+host[:port]
+
+Use host and port
+to connect to LDAP servers. If port is ommitted, port
+389 (standard LDAP port) is used. This overrides any
+specified host and port part in a LDAP URL and will also be
+used if host and port have been ommitted from the URL.
+
+−−only−ldap−proxy
+
+Never use anything else but the
+LDAP "proxy" as configured with
+−−ldap−proxy. Usually
+dirmngr tries to use other configured LDAP server if
+the connection using the "proxy" failed.
+
+−−ldapserverlist−file
+file
+
+Read the list of LDAP servers
+to consult for CRLs and certificates from file
+instead of the default per-user ldap server list file. The
+default value for file is
+dirmngr_ldapservers.conf or ldapservers.conf
+when running in −−daemon mode.
+
+This server list file contains one LDAP server per line
+in the format
+
+HOSTNAME:PORT:USERNAME:PASSWORD:BASE_DN 
+
+Lines starting with a # are comments.
+
+−−ldaptimeout
+secs
+
+Specify the number of seconds
+to wait for an LDAP query before timing out. The default is
+currently 100 seconds. 0 will never timeout.
+
+−−add−servers
+
+This options makes
+dirmngr add any servers it discovers when validating
+certificates against CRLs to the internal list of servers to
+consult for certificates and CRLs.
+
+This options is useful when trying to validate a
+certificate that has a CRL distribution point that points to
+a server that is not already listed in the ldapserverlist.
+dirmngr will always go to this server and try to
+download the CRL, but chances are high that the certificate
+used to sign the CRL is located on the same server. So if
+dirmngr doesn’t add that new server to list, it
+will often not be able to verify the signature of the CRL
+unless the −−add−servers option
+is used.
+
+Note: The current version of dirmngr has this
+option disabled by default.
+
+−−allow−ocsp
+
+This option enables OCSP
+support if requested by the client.
+
+OCSP requests are rejected by default because they may
+violate the privacy of the user; for example it is possible
+to track the time when a user is reading a mail.
+
+−−ocsp−responder
+url
+
+Use url as the default
+OCSP Responder if the certificate does not contain
+information about an assigned responder. Note, that
+−−ocsp−signer must also be set to a
+valid certificate.
+
+−−ocsp−signer
+fpr
+
+Use the certificate with the
+fingerprint fpr to check the responses of the default
+OCSP Responder. dirmngr will retrieve this
+certificate from the current client.
+
+−−max−replies
+N
+
+Do not return more that
+N items in one query. The default is 10.
+
+AUTHOR
+
+dirmngr
+was written by g10 Code GmbH and Klarälvdalens
+Datakonsult AB. Please report bugs to
+gpa-dev [AT] gnupg.org>. This manual page was transcribed
+from the Texinfo documentation by Peter Eisentraut.
+
+SEE ALSO
+
+dirmngr-client(1),
+gpgsm(1)
+
+The full
+documentation for dirmngr is maintained as a Texinfo
+manual. If the info and dirmngr programs are
+properly installed at your site, the command
+
+info
+dirmngr
+
+should give you
+access to the complete manual.

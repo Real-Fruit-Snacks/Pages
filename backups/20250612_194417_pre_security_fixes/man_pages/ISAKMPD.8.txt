@@ -1,0 +1,608 @@
+ISAKMPD(8) BSD System Manager’s Manual
+ISAKMPD(8)
+
+NAME
+
+isakmpd —
+ISAKMP/Oakley a.k.a. IKE key management daemon
+
+SYNOPSIS
+
+isakmpd [-4]
+[-6] [-c config-file] [-a]
+[-d] [-D class=level]
+[-f fifo]
+[-i pid-file] [-n]
+[-p listen-port]
+[-P local-port] [-K] [-L]
+[-l packetlog-file]
+[-r seed]
+[-R report-file] [-v]
+
+DESCRIPTION
+
+The isakmpd daemon
+establishes security associations for encrypted and/or
+authenticated network traffic. At this moment, and probably
+forever, this means ipsec(4) traffic.
+
+The way
+isakmpd goes about its work is by maintaining an
+internal configuration as well as a policy database which
+describes what kinds of SAs to negotiate, and by listening
+for different events that trigger these negotiations. The
+events that control isakmpd consist of negotiation
+initiations from a remote party, user input via a FIFO or by
+signals, upcalls from the kernel via a PF_KEY socket, and
+lastly by scheduled events triggered by timers running
+out.
+
+Most uses of
+isakmpd will be to implement so called "virtual
+private networks" or VPNs for short. The vpn(8) manual
+page describes how to set up isakmpd for a simple
+VPN. For other uses, some more knowledge of IKE as a
+protocol is required. One source of information are the RFCs
+mentioned below.
+
+On startup
+isakmpd forks into two processes for privilege
+separation. The unprivileged child jails itself with
+chroot(8) to /var/empty. The privileged process
+communicates with the child, reads configuration files and
+PKI information and binds to privileged ports on its behalf.
+See CAVEATS section below.
+
+The options are
+as follows:
+
+-4 | -6
+
+These options control what
+address family (AF_INET and/or AF_INET6) isakmpd will
+use. The default is to use both IPv4 and IPv6.
+
+-a
+
+If given,
+isakmpd does not set up flows automatically. This is
+useful when flows are configured with ipsecadm(4) or by
+other programs like bgpd(8). Thus isakmpd only takes
+care of the SA establishment.
+
+-c config-file
+
+If given, the -c option
+specifies an alternate configuration file instead of
+/etc/isakmpd/isakmpd.conf. As this file may contain
+sensitive information, it must be readable only by the user
+running the daemon. isakmpd will reread the
+configuration file when sent a SIGHUP signal.
+
+-d
+
+The -d
+option is used to make the daemon run in the foreground,
+logging to stderr.
+
+-D
+class=level
+
+Debugging class. It’s
+possible to specify this argument many times. It takes a
+parameter of the form class=level, where both
+class and level are numbers. class
+denotes a debugging class, and level the level you
+want that debugging class to limit debug printouts at (i.e.,
+all debug printouts above the level specified will not
+output anything). If class is set to ’A’,
+then all debugging classes are set to the specified
+level.
+
+Valid values
+for class are as follows:
+
+0
+
+Misc
+
+1
+
+Transport
+
+2
+
+Message
+
+3
+
+Crypto
+
+4
+
+Timer
+
+5
+
+Sysdep
+
+6
+
+SA
+
+7
+
+Exchange
+
+8
+
+Negotiation
+
+9
+
+Policy
+
+10
+
+FIFO user
+interface
+
+A
+
+All
+
+Currently used
+values for level are 0 to 99.
+
+-f fifo
+
+The -f option specifies
+the FIFO (a.k.a. named pipe) where the daemon listens for
+user requests. If the path given is a dash
+(’-’), isakmpd will listen to stdin
+instead.
+
+-i pid-file
+
+By default the PID of the
+daemon process will be written to
+/var/run/isakmpd.pid. This path can be overridden by
+specifying another one as the argument to the -i
+option.
+
+-n
+
+When the
+-n option is given, the kernel will not take part in
+the negotiations. This is a non-destructive mode, so to
+speak, in that it won’t alter any SAs in the IPsec
+stack.
+
+-p listen-port
+
+The -p option specifies
+the listen port the daemon will bind to.
+
+-P local-port
+
+On the other hand, the port
+specified to capital -P will be what the daemon binds
+its local end to when acting as initiator.
+
+-K
+
+When this
+option is given, isakmpd does not read the policy
+configuration file and no keynote(4) policy check is
+accomplished. This option can be used when policies for
+flows and SA establishment are arranged by other programs
+like ipsecadm(8) or bgpd(8).
+
+-L
+
+Enable IKE
+packet capture. When this option is given, isakmpd
+will capture to file an unencrypted copy of the negotiation
+packets it is sending and receiving. This file can later be
+read by tcpdump(8) and other utilities using pcap(3).
+
+-l
+packetlog-file
+
+As option -L above, but
+capture to a specified file.
+
+-r seed
+
+If given, a deterministic
+random number sequence will be used internally. This is
+useful for setting up regression tests.
+
+-R report-file
+
+When you signal isakmpd
+a SIGUSR1, it will report its internal state to a report
+file, normally /var/run/isakmpd.report, but this can
+be changed by feeding the file name as an argument to the
+-R flag.
+
+-v
+
+Enables verbose
+logging. Normally, isakmpd is silent and outputs only
+messages when a warning or an error occurs. With verbose
+logging isakmpd reports successful completion of
+phase 1 (Main and Aggressive) and phase 2 (Quick) exchanges
+(Information and Transaction exchanges do not generate any
+additional status information).
+
+Setting up an
+IKE public key infrastructure (a.k.a. PKI) 
+In order to use public key based authentication, there has
+to be an infrastructure managing the key signing. Either
+there is an already existing PKI isakmpd should take
+part in, or there will be a need to set one up. In the
+former case, what is needed to be done varies depending on
+the actual Certificate Authority used, and is therefore not
+covered here, other than mentioning that openssl(1) needs to
+be used to create a certificate signing request that the CA
+understands. The latter case, however, is described
+here:
+
+1.
+
+Create your own CA as root.
+
+# openssl
+genrsa -out /etc/ssl/private/ca.key 1024 
+# openssl req -new -key /etc/ssl/private/ca.key \
+
+-out /etc/ssl/private/ca.csr
+
+You are then
+asked to enter information that will be incorporated into
+your certificate request. What you are about to enter is
+what is called a Distinguished Name (DN). There are quite a
+few fields but you can leave some blank. For some fields
+there will be a default value; if you enter ’.’,
+the field will be left blank.
+
+# openssl x509
+-req -days 365 -in /etc/ssl/private/ca.csr \
+
+-signkey /etc/ssl/private/ca.key \
+
+-extfile /etc/ssl/x509v3.cnf -extensions x509v3_CA \
+
+-out /etc/ssl/ca.crt
+
+2.
+
+Create keys and certificates
+for your IKE peers. This step as well as the next one, needs
+to be done for every peer. Furthermore the last step will
+need to be done once for each ID you want the peer to have.
+The 10.0.0.1 below symbolizes that ID, in this case an IPv4
+ID, and should be changed for each invocation. You will be
+asked for a DN for each run. Encoding the ID in the common
+name is recommended, as it should be unique.
+
+# openssl
+genrsa -out /etc/isakmpd/private/local.key 1024 
+# openssl req -new -key /etc/isakmpd/private/local.key \
+
+-out /etc/isakmpd/private/10.0.0.1.csr
+
+Now take these
+certificate signing requests to your CA and process them
+like below. You have to add a subjectAltName extension field
+to the certificate in order to make it usable by
+isakmpd. There are two possible ways to add the
+extensions to the certificate. Either you have to run
+certpatch(8) or you have to make use of an OpenSSL
+configuration file, for example /etc/ssl/x509v3.cnf.
+Replace 10.0.0.1 with the IP-address which isakmpd
+will use as the certificate identity.
+
+To use
+certpatch(8), do the following
+
+# openssl x509
+-req -days 365 -in 10.0.0.1.csr -CA /etc/ssl/ca.crt \
+
+-CAkey /etc/ssl/private/ca.key -CAcreateserial \
+
+-out 10.0.0.1.crt
+
+# certpatch -i 10.0.0.1 -k
+/etc/ssl/private/ca.key \
+
+10.0.0.1.crt 10.0.0.1.crt
+
+Otherwise
+do
+
+# setenv CERTIP
+10.0.0.1 
+# openssl x509 -req -days 365 -in 10.0.0.1.csr -CA
+/etc/ssl/ca.crt \
+
+-CAkey /etc/ssl/private/ca.key -CAcreateserial \
+
+-extfile /etc/ssl/x509v3.cnf -extensions x509v3_IPAddr
+\ 
+
+-out 10.0.0.1.crt
+
+For a FQDN
+certificate, do
+
+# setenv
+CERTFQDN somehost.somedomain 
+# openssl x509 -req -days 365 -in somehost.somedomain.csr
+\
+
+-CA /etc/ssl/ca.crt -CAkey /etc/ssl/private/ca.key \
+
+-CAcreateserial \
+
+-extfile /etc/ssl/x509v3.cnf -extensions x509v3_FQDN
+\ 
+
+-out somehost.somedomain.crt
+
+or with
+certpatch(8)
+
+# certpatch -t
+fqdn -i somehost.somedomain \
+
+-k /etc/ssl/private/ca.key \
+
+somehost.somedomain.crt somehost.somedomain.crt
+
+(This assumes
+the previous steps were used to create a request for
+somehost.somedomain instead of 10.0.0.1)
+
+Put the
+certificate (the file ending in .crt) in
+/etc/isakmpd/certs/ on your local system. Also carry
+over the CA cert /etc/ssl/ca.crt and put it in
+/etc/isakmpd/ca/.
+
+To revoke
+certificates, create a Certificate Revocation List (CRL)
+file and install it in the /etc/isakmpd/crls/
+directory. See openssl(1) and the ’crl’
+subcommand for more info.
+
+It is also
+possible to store trusted public keys to make them directly
+usable by isakmpd. The keys should be saved in PEM
+format (see openssl(1)) and named and stored after this easy
+formula:
+
+For IPv4 identities
+
+/etc/isakmpd/pubkeys/ipv4/A.B.C.D
+
+For IPv6 identities
+
+/etc/isakmpd/pubkeys/ipv6/abcd:abcd::ab:bc
+
+For FQDN identities
+
+/etc/isakmpd/pubkeys/fqdn/foo.bar.org
+
+For UFQDN identities
+
+/etc/isakmpd/pubkeys/ufqdn/user [AT] foo.org
+
+The FIFO user
+interface 
+When isakmpd starts, it creates a FIFO (named pipe)
+where it listens for user requests. All commands start with
+a single letter, followed by command-specific options.
+Available commands are:
+
+c 
+
+Start the named connection, if
+stopped or inactive.
+
+C set [section]:tag=value
+
+C set [section]:tag=value force 
+C add [section]:tag=value 
+C rm [section]:tag 
+C rms [section]
+
+Update the running
+isakmpd configuration atomically. ’set’
+sets a configuration value consisting of a section, tag and
+value triplet. ’set’ will fail if the
+configuration already contains a section with the named tag;
+use the ’force’ option to change this behaviour.
+’add’ appends a configuration value to the named
+configuration list tag. ’rm’ removes a tag in a
+section. ’rms’ removes an entire section.
+
+NOTE: Sending
+isakmpd a SIGHUP or an "R" through the FIFO will
+void any updates done to the configuration.
+
+C get [section]:tag
+
+Get the configuration value of
+the specified section and tag. The result is stored in
+/var/run/isakmpd.result.
+
+d 
+
+Delete the specified SA from
+the system. Specify  as "-" to match
+a Phase 1 SA.
+
+D  
+
+D A  
+D T
+
+Set debug class
+ to level . If  is
+specified as "A", the level applies to all debug
+classes. "D T" toggles all debug classes to level
+zero. Another "D T" command will toggle them back
+to the earlier levels.
+
+p on[=] 
+p off
+
+Enable or
+disable cleartext IKE packet capture. When enabling,
+optionally specify which file isakmpd should capture
+the packets to.
+
+Q
+
+Cleanly
+shutdown the daemon, as when sent a SIGTERM signal.
+
+r
+
+Report
+isakmpd internal state to a file. See -R
+option. Same as when sent a SIGUSR1 signal.
+
+R
+
+Reinitialize
+isakmpd, as when sent a SIGHUP signal.
+
+S
+
+Report
+information on all known SAs to the
+/var/run/isakmpd.result file.
+
+t 
+
+Tear down the named connection,
+if active.
+
+T
+
+Tear down all
+active connections.
+
+FILES 
+/etc/isakmpd/ca/
+
+The directory
+where CA certificates can be found.
+
+/etc/isakmpd/certs/
+
+The directory
+where IKE certificates can be found, both the local
+certificate(s) and those of the peers, if a choice to have
+them kept permanently has been made.
+
+/etc/isakmpd/crls/
+
+The directory
+where CRLs can be found.
+
+/etc/isakmpd/isakmpd.conf
+
+The
+configuration file. As this file can contain sensitive
+information it must not be readable by anyone but the user
+running isakmpd.
+
+/etc/isakmpd/isakmpd.policy
+
+The keynote
+policy configuration file. The same mode requirements as
+isakmpd.conf.
+
+/etc/isakmpd/private/local.key
+
+A local private key for
+certificate based authentication. There has to be a
+certificate for this key in the certificate directory
+mentioned above. The same mode requirements as
+isakmpd.conf.
+
+/etc/isakmpd/pubkeys/
+
+Directory in
+which trusted public keys can be kept. The keys must be
+named in the fashion described above.
+
+/var/run/isakmpd.pid
+
+The PID of the
+current daemon.
+
+/var/run/isakmpd.fifo
+
+The FIFO used
+to manually control isakmpd.
+
+/var/run/isakmpd.pcap
+
+The default IKE
+packet capture file.
+
+/var/run/isakmpd.report
+
+The report file
+written when SIGUSR1 is received.
+
+/var/run/isakmpd.result
+
+The report file
+written when the ’S’ or ’C get’
+command is issued in the command FIFO.
+
+/usr/share/ipsec/isakmpd/
+
+A directory
+containing some sample isakmpd and keynote policy
+configuration files.
+
+SEE ALSO
+
+openssl(1), getnameinfo(3),
+pcap(3), ipsec(4), isakmpd.conf(5), isakmpd.policy(5),
+ssl(8), tcpdump(8), vpn(8)
+
+HISTORY
+
+The ISAKMP/Oakley key management
+protocol is described in the RFCs RFC 2407, RFC
+2408 and RFC 2409. This implementation was done
+1998 by Niklas Hallqvist and Niels Provos, sponsored by
+Ericsson Radio Systems.
+
+CAVEATS
+
+When storing a trusted public
+key for an IPv6 identity, the most efficient form of
+address representation, i.e "::" instead of
+":0:0:0:", must be used or the matching will fail.
+isakmpd uses the output from getnameinfo(3) for the
+address-to-name translation. The privileged process only
+allows binding to the default port 500 or unprivileged ports
+(>1024). It is not possible to change the interfaces
+isakmpd listens on without a restart.
+
+BUGS
+
+The -P flag does not do
+what we document, rather it does nothing.
+
+BSD
+August 07, 2002 BSD

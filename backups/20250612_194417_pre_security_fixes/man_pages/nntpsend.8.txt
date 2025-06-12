@@ -1,0 +1,155 @@
+NAME
+
+nntpsend - Send
+Usenet articles to remote sites
+
+SYNOPSIS
+
+nntpsend
+[-acDdlNnpr] [-P portnum] [-s
+size] [-T timelimit] [-t
+timeout] [-w delay] [sitename
+fqdn] ...
+
+DESCRIPTION
+
+nntpsend
+is a front-end that invokes innxmit to send Usenet
+articles to a remote NNTP site. The sites to be fed may be
+specified by giving sitename fqdn pairs on the
+command line. If no such pairs are given, nntpsend
+defaults to the information given in the nntpsend.ctl
+config file. The sitename should be the name of the
+site as specified in the newsfeeds file. The
+fqdn should be the hostname or IP address of the
+remote site. An innxmit is launched for sites with
+queued news. All innxmit processes are spawned in the
+background and the script waits for them all to finish
+before returning. Output is sent to the file
+nntpsend.log in pathlog. In order to keep from
+overwhelming the local system, nntpsend waits five
+seconds before spawning each child.
+
+nntpsend
+expects that the batch file for a site is named
+sitename in pathoutgoing. To prevent batch
+files corruption, shlock is used to "lock"
+these files. When sitename fqdn pairs are given on
+the command line, any flags given on the command completely
+describe how innxmit and shrinkfile operate.
+When no such pairs are given on the command line, then the
+information found in nntpsend.ctl becomes the default
+flags for that site. Any flags given on the command line
+override the default flags for the site.
+
+An alternative
+to nntpsend can be innduct, mentioned in the
+innfeed(8) man page.
+
+OPTIONS
+
+-D,
+-d
+
+The -D flag causes
+nntpsend to send output to stdout rather than the log
+file nntpsend.log in pathlog. The -d
+flag does the same and it passes -d to all
+innxmit invocations, which in turn causes
+innxmit to go into debug mode.
+
+-n
+
+If the -n flag is used,
+then nntpsend does not use shlock to lock the
+use of nntpsend. Batch files will still be
+locked.
+
+-s size
+
+If the -s flag is used,
+then shrinkfile will be invoked to perform a head
+truncation of size bytes on the batch file and the
+flag will be passed to it.
+
+-w delay
+
+If the -w flag is used,
+then nntpsend waits for delay seconds after
+flushing the site before launching innxmit.
+
+-a, -c,
+-l, -N, -P portnum, -p,
+-r, -T timelimit, -t
+timeout
+
+The -a, -c,
+-l, -P portnum, -p, -r,
+-T timelimit and -t timeout
+flags are passed on to the child innxmit program. The
+-N flag is passed as -s flag to the child
+innxmit program. See innxmit(8) for more details.
+
+Note that if
+the -p flag is used, then no connection is made and
+no articles are fed to the remote site. It is useful to have
+cron(8) invoke nntpsend with this flag in case a site
+cannot be reached for an extended period of time.
+
+EXAMPLES
+
+With the
+following nntpsend.ctl config file:
+
+nsavax:erehwon.nsavax.gov::-t60
+
+group70:group70.org:: 
+walldrug:walldrug.com:4m-1m:-T1800 -t300 
+kremvax:kremvax.cis:2m:
+
+the command
+"nntpsend" will result in the following:
+
+Sitename
+Truncation innxmit flags 
+nsavax (none) -a -t60 
+group70 (none) -a -t180 
+walldrug 1m if >4m -T1800 -t300 
+kremvax 2m -t180
+
+The command
+"nntpsend -d -T1200" will result in the
+following:
+
+Sitename
+Truncation innxmit flags 
+nsavax (none) -a -d -T1200 -t60 
+group70 (none) -a -d -T1200 -t180 
+walldrug 1m if >4m -d -T1200 -t300 
+kremvax 2m -d -T1200 -t180
+
+The command
+"nntpsend -s 5m -T1200 nsavax erehwon.nsavax.gov
+group70 group70.org" will result in the following:
+
+Sitename
+Truncation innxmit flags 
+nsavax 5m -T1200 -t180 
+group70 5m -T1200 -t180
+
+Remember that
+-a is always given when there is no size limit, and
+-t defaults to "180".
+
+HISTORY
+
+Written by
+Landon Curt Noll chongo [AT] toad.com> and Rich $alz
+rsalz [AT] uunet.net> for InterNetNews. Converted to
+POD by Julien Elie.
+
+SEE ALSO
+
+inn.conf(5),
+innxmit(8), newsfeeds(5), nntpsend.ctl(5), shlock(1),
+shrinkfile(1).

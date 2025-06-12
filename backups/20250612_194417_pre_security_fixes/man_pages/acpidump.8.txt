@@ -1,0 +1,166 @@
+ACPIDUMP(8) BSD System Manager’s Manual
+ACPIDUMP(8)
+
+NAME
+
+acpidump — dump
+ACPI tables and ASL
+
+SYNOPSIS
+
+acpidump
+[−d] [−t] [−h]
+[−v] [−f dsdt_input]
+[−o dsdt_output]
+
+DESCRIPTION
+
+The acpidump utility
+analyzes ACPI tables in physical memory and can dump them to
+a file. In addition, acpidump can call iasl(8) to
+disassemble AML (ACPI Machine Language) found in these
+tables and dump them as ASL (ACPI Source Language) to
+stdout.
+
+ACPI tables have
+an essential data block (the DSDT, Differentiated System
+Description Table) that includes information used on the
+kernel side such as detailed information about PnP hardware,
+procedures for controlling power management support, and so
+on. The acpidump utility can extract the DSDT data
+block from physical memory and store it into an output file
+and optionally also disassemble it. If any Secondary System
+Description Table (SSDT) entries exist, they will also be
+included in the output file and disassembly.
+
+When
+acpidump is invoked without the −f
+option, it will read ACPI tables from physical memory via
+/dev/mem. First it searches for the RSDP (Root System
+Description Pointer), which has the signature "RSD
+PTR ", and then gets the RSDT (Root System
+Description Table), which includes a list of pointers to
+physical memory addresses for other tables. The RSDT itself
+and all other tables linked from RSDT are generically called
+SDTs (System Description Tables) and their header has a
+common format which consists of items such as Signature,
+Length, Revision, Checksum, OEMID, OEM Table ID, OEM
+Revision, Creator ID and Creator Revision. When invoked with
+the −t flag, the acpidump utility dumps
+contents of the following tables:
+
+DSDT 
+ECDT 
+FACS 
+FADT 
+HPET 
+MADT 
+RSD PTR 
+RSDT
+
+The RSDT contains a pointer to
+the physical memory address of the FACP (Fixed ACPI
+Description Table). The FACP defines static system
+information about power management support (ACPI Hardware
+Register Implementation) such as interrupt mode (INT_MODEL),
+SCI interrupt number, SMI command port (SMI_CMD) and the
+location of ACPI registers. The FACP also has a pointer to a
+physical memory address for the DSDT. While the other tables
+are fixed format, the DSDT consists of free-formatted AML
+data.
+
+OPTIONS
+
+The following options are
+supported by acpidump:
+
+−d
+
+Disassemble the
+DSDT into ASL using iasl(8) and print the results to
+stdout.
+
+−t
+
+Dump the
+contents of the various fixed tables listed above.
+
+−h
+
+Displays usage
+and exit.
+
+−v
+
+Enable verbose
+messages.
+
+−f
+dsdt_input
+
+Load the DSDT from the
+specified file instead of physical memory. Since only the
+DSDT is stored in the file, the −t flag may not
+be used with this option.
+
+−o
+dsdt_output
+
+Store the DSDT data block from
+physical memory into the specified file.
+
+EXAMPLES
+
+This example dumps the DSDT from
+physical memory to foo.dsdt. It also prints the contents of
+various system tables and disassembles the AML contained in
+the DSDT to stdout, redirecting the output to foo.asl.
+
+# acpidump -t
+-d -o foo.dsdt > foo.asl
+
+This example
+reads a DSDT file and disassembles it to stdout. Verbose
+messages are enabled.
+
+# acpidump -v
+-d -f foo.dsdt
+
+BUGS
+
+The current implementation does
+not dump the BOOT structure or other miscellaneous
+tables.
+
+FILES 
+/dev/mem 
+SEE ALSO
+
+acpi(4), mem(4), acpiconf(8),
+acpidb(8), iasl(8)
+
+AUTHORS
+
+Doug Rabson
+dfr [AT] FreeBSD.org> 
+Mitsuru IWASAKI iwasaki [AT] FreeBSD.org> 
+Yasuo YOKOYAMA yokoyama [AT] jp.org> 
+Nate Lawson njl [AT] FreeBSD.org>
+
+Some
+contributions made by Chitoshi Ohsawa
+ohsawa [AT] catv1.jp>, Takayasu IWANASHI
+takayasu [AT] wendy.jp>, Yoshihiko
+SARUMARU mistral [AT] imasy.jp>, Hiroki Sato
+hrs [AT] FreeBSD.org>, Michael Lucas
+mwlucas [AT] blackhelicopters.org> and Michael Smith
+msmith [AT] FreeBSD.org>.
+
+HISTORY
+
+The acpidump utility
+first appeared in FreeBSD 5.0 and was rewritten to use
+iasl(8) for FreeBSD 5.2.
+
+BSD
+October 4, 2004 BSD

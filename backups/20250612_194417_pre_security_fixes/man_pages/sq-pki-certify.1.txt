@@ -1,0 +1,195 @@
+NAME
+
+sq pki certify
+- Certify a User ID for a Certificate
+
+SYNOPSIS
+
+sq pki
+certify [OPTIONS] CERTIFIER-KEY
+KEY_ID|FINGERPRINT|FILE USERID
+
+DESCRIPTION
+
+Certify a User
+ID for a Certificate.
+
+Using a
+certification a keyholder may vouch for the fact that
+another certificate legitimately belongs to a user id. In
+the context of emails this means that the same entity
+controls the key and the email address. These kind of
+certifications form the basis for the Web of Trust.
+
+This command
+emits the certificate with the new certification. The
+updated certificate has to be distributed, preferably by
+sending it to the certificate holder for attestation. See
+also ’sq key attest-certifications’.
+
+By default a
+certification expires after 5 years. Using the
+’--expiry’ argument specific validity periods
+may be defined. It allows for providing a point in time for
+validity to end or a validity duration.
+
+’sq pki
+certify’ respects the reference time set by the
+top-level ’--time’ argument. It sets the
+certification’s creation time to the reference
+time.
+
+OPTIONS
+
+Subcommand
+options 
+-B, --binary
+
+Emit binary data
+
+-a,
+--amount=AMOUNT
+
+Set the amount of trust. Values
+between 1 and 120 are meaningful. 120 means fully trusted.
+Values less than 120 indicate the degree of trust. 60 is
+usually used for partially trusted.
+
+--add-userid
+
+Add the given user ID if it
+doesn’t exist in the certificate.
+
+--allow-not-alive-certifier
+
+Allow the key to make a
+certification even if the current time is prior to its
+creation time or the current time is at or after its
+expiration time.
+
+--allow-revoked-certifier
+
+Don’t fail if the
+certificate making the certification is revoked.
+
+-d,
+--depth=TRUST_DEPTH
+
+Set the trust depth (sometimes
+referred to as the trust level). 0 means a normal
+certification of . 1 means
+CERTIFICATE is also a trusted introducer, 2 means
+CERTIFICATE is a meta-trusted introducer, etc.
+
+--email
+
+Treat the given user ID as an
+email address. If more than one user ID contain the given
+email address, all are certified.
+
+--expiry=EXPIRY
+
+Define EXPIRY for the
+certification as ISO 8601 formatted string or custom
+duration. If an ISO 8601 formatted string is provided, the
+validity period reaches from the reference time (may be set
+using ’--time’) to the provided time. Custom
+durations starting from the reference time may be set using
+’N[ymwds]’, for N years, months, weeks, days, or
+seconds. The special keyword ’never’ sets an
+unlimited expiry.
+
+-l, --local
+
+Make the certification a local
+certification. Normally, local certifications are not
+exported.
+
+--non-revocable
+
+Mark the certification as being
+non-revocable. That is, you cannot later revoke this
+certification. This should normally only be used with an
+expiration.
+
+--notation NAME
+VALUE
+
+Add a notation to the
+certification. A user-defined notation’s name must be
+of the form ’name [AT] a.org’. If
+the notation’s name starts with a !, then the notation
+is marked as being critical. If a consumer of a signature
+doesn’t understand a critical notation, then it will
+ignore the signature. The notation is marked as being human
+readable.
+
+-o,
+--output=FILE
+
+Write to FILE or stdout if
+omitted
+
+--private-key-store=KEY_STORE
+
+Provide parameters for private
+key store
+
+-r,
+--regex=REGEX
+
+Add a regular expression to
+constrain what a trusted introducer can certify. The regular
+expression must match the certified User ID in all
+intermediate introducers, and the certified certificate.
+Multiple regular expressions may be specified. In that case,
+at least one must match.
+
+CERTIFIER-KEY
+
+Create the certification using
+CERTIFIER-KEY.
+
+KEY_ID|FINGERPRINT|FILE
+
+Certify CERTIFICATE.
+
+USERID
+
+Certify USERID for
+CERTIFICATE.
+
+Global
+options 
+See sq(1) for a description of the global
+options.
+
+EXAMPLES
+
+Juliet
+certifies that Romeo controls romeo.pgp and
+romeo [AT] example.org
+
+sq pki certify
+juliet.pgp romeo.pgp
+’romeo [AT] example.org>’
+
+Certify the
+User ID Ada, and set the certification time to July 21, 2013
+at midnight UTC:
+
+sq pki certify
+--time 20130721 neal.pgp ada.pgp Ada
+
+SEE ALSO
+
+sq(1),
+sq-pki(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org>.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

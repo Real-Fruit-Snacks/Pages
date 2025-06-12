@@ -1,0 +1,384 @@
+NAME
+
+vbind - bind
+name to version
+
+SYNOPSIS
+
+vbind [
+options ] filenames .. 
+General version binding options:
+
+[ -bind version binding ]
+[ -before baseline ]
+[ -since baseline ]
+[ -last ] [ -lastsaved ]
+[ -uniq ] [ -nonuniq ]
+[ -rule rulebody | rulename ]
+[ -rulefile filename ]
+[ -trace ]
+
+vbind command specific
+options:
+
+[ -? (or -help) ]
+[ -alias version alias ]
+[ -date date ]
+[ -vnum version number ]
+[ -nomsg ] [ -ruledump ]
+[ -ruleerr ] [ -rulelist ]
+[ -ruletest ]
+[ -version ]
+
+OVERVIEW
+
+This manual
+page describes the ShapeTools Version Binding
+mechanism, available in most commands of the toolkit. The
+general version binding options described on this page are
+available in many commands such like vl(1), vcat(1),
+vadm(1), save(1) and retrv(1) (just to name the most
+important ones). The vbind command specific options are
+private to the vbind command (see below).
+
+Version binding
+is the process of selecting one or more versions from a
+filenames history in order to provides access to these
+version(s). This is conducted by version bind directives (or
+just version bindings), which may be one of the
+following: 
+version numbers
+
+"1.2"
+(version), "1." (generation),
+".2" (revision)
+
+version alias names
+
+"ShapeTools-1.4",
+or "AtFS-2.0" 
+Version alias names are symbolic names tagged to single
+versions. They must be unique throughout a history.
+
+date specifications
+
+"10.2.93" or
+"4.3." (European), "Feb 10,
+1993" or "Mar 4{ (American) 
+A date may additionally contain a time in the form
+hh:mm or hh:mm:ss. See sttime(3) for a
+complete list of recognized date formats.
+
+bind rule names
+
+"most_recent:"
+(plain), "from_release(VC-4.0):" (with
+argument) 
+The colon is not part of the rule name. See the bindrules(7)
+manual page for a description on how to define version bind
+rules.
+
+By default,
+version binding selects all versions fulfilling the given
+version bind requirements. The -uniq option changes
+this behavior and treats only unique identification as
+success. With this option given, version bind ignores all
+histories with more than one selected version. The
+-last and -lastsaved options unify a non
+unique selection by choosing the last version
+(modification/saving time) or the last saved version (saving
+time) from the bind hit set of each name.
+
+The file
+$SHAPETOOLS/lib/shape/BindRules contains predefined
+rules for various cases. You may also define your own rule
+file and invoke this by either the -rulefile option
+or by extending the search space defined by the SHAPETOOLS
+environment variable. For information on how to write
+version bind rules, see the bindrules(7) manual page.
+
+VERSION BINDING IN ACTION
+
+Version bind
+directives can be given either in brackets, directly
+following the name to be bound, or as option arguments.
+Options may be user to set version bindings to be applied to
+all name arguments (-bind and -rule options)
+or to define version ranges (-since and
+-before options).
+
+Version
+identification by version number or version alias
+either results in a unique selection or fails, when no
+appropriate version was found.
+
+foo[1.2]
+
+Identifies a specific version by it’s version
+number. 
+
+foo[release-2]
+
+Is interpreted as identification by version alias
+name. 
+
+Version
+identification by date selects the versions from a
+history that have been the most recently saved versions at
+the given date. Identification by date may lead to multiple
+versions when development work in multiple generations
+happened simultaneously at the given date. Vbind understands
+various date formats such as in the list below. The
+sttime(3) manual page lists all recognized date formats.
+
+foo[Jan 31, 1992] 
+foo[92/01/31] 
+foo[10.5.92 7:00:00]
+
+Version bind
+rules describe general version binding policies. They
+are usually not dependent on particular file histories and
+may be applied to all histories. Version bind rules may have
+arguments enclosed in parentheses following the name.
+
+foo[bind_rule:] 
+foo[bind_rule(arg1,arg2,...argN):]
+
+When the colon
+at the end of the rule name in brackets is omitted, vbind
+first interprets the given string as version alias. When no
+version with this alias name was found, vbind treats the
+string as rule name and gives it a second try.
+
+Plain
+filenames are those not followed by any version bind
+directive in square brackets. Without a rule given with the
+-rule option on the command line, plain filenames are bound
+using the default version bind rule. It selects the
+busy version if there is one, or the most recent non busy
+version otherwise. 
+eq (state, busy); max (version).
+
+The default
+version binding may also be indicated by an empty pair
+of brackets: foo[]
+
+NAME PATTERNS
+
+The ShapeTools
+version binding mechanism performs filename substitution for
+given name patterns similar to sh(1). This is necessary, as
+shell filename substitution does not recognize the names of
+saved versions. Magic cookies are are:
+
+*
+
+matching any string, including the empty string,
+
+?
+
+matching any single character,
+
+[c...]
+
+matching any one of the characters enclosed in the
+square brackets,
+
+[l-r]
+
+matching any character lexically between the left
+(l) and the right (r) character, inclusive,
+and 
+
+[!c...]
+
+[!l-r]
+
+matching any character not recognized by their
+counterparts above.
+
+As square
+brackets on the command line may either be part of a pattern
+(e.g. *.[ch]) or a version binding (e.g.
+*[release-2]), this may lead to some confusion. The
+leftmost pair of brackets is always interpreted as
+version binding. Hence, in the first case, the string will
+be misinterpreted and you must add an explicit version
+binding to avoid this (e.g. *.[ch][], default
+version binding added).
+
+GENERAL VERSION BINDING OPTIONS
+
+-before baseline
+
+Define the lower boundary of a
+time interval for selecting all versions evolved in this
+interval. Baseline can be any version bind directive
+uniquely selecting a version (e.g. version number, version
+alias, or date). The saving date of the baseline version is
+the interval start time. The boundary version (exactly
+matching the time given) is not included in the
+result set.
+
+-bind version
+binding
+
+Use version binding for
+binding each name on the command line, that has no explicit
+version binding in brackets.
+
+-last
+
+Select the last (modification/saving time) version of
+each nonunique selection. This causes the resulting version
+list to contain at most one version of each history.
+-last may be combined with other version
+bindings. 
+
+-lastsaved
+
+Like -last, but busy
+versions are ignored.
+
+-nonuniq
+
+Force non-unique version
+identification. This option can be used to swich off the
+default behavior of some commands (e.g. vadm) that suggests
+unique version identification.
+
+-rule rulename | rulebody
+
+With a name argument, this
+option sets the named rule as default rule for binding all
+names on the command line. Alternatively, a rule body (a
+version selection rule without a name) may be given as
+argument, which will be evaluated for each name on the
+command line. This option disables any previous -bind or
+-rule definition. It does not affect names with a version
+binding in brackets.
+
+-rulefile filename
+
+Read in the named rule file and
+add all contained rules to the list of known rules. A
+syntactical error, detected while parsing a rule causes the
+according rule to be skipped. Use vbind(1) with the
+-ruleerr option for inspecting bind rule files.
+Multiple rule files may be specified on the command
+line.
+
+-since baseline
+
+Define the upper boundary of a
+time interval for selecting all versions evolved in this
+interval. Baseline can be any version bind directive
+uniquely selecting a version (e.g. version number, version
+alias, or date. The saving date of the baseline version is
+the interval end time. The boundary version (exactly
+matching the time given) is not included in the
+result set.
+
+-trace
+
+Trace the evaluation. Each evaluated predicate is
+reported to standard output. Additionally, the set of
+versions fulfilling the expressed (the hits set) is
+displayed after evaluation of each predicate.
+
+-uniq
+
+Require unique version identification. All history names
+on the command line, where multiple versions meet the
+version bind requirements are ignored.
+
+THE VBIND COMMAND
+
+Vbind
+performs a version binding and returns a bound
+filename for each selected version. A bound filename is
+a filename followed by a version number enclosed in brackets
+(e.g. foo[1.2]). 
+-?, -help
+
+Display a short usage
+description.
+
+-alias version
+alias
+
+Use version alias for binding
+all names on the command line. This disables any previous
+-alias, -bind, -date, -rule or -vnum definition. It does not
+affect names in pseudo bound version notation.
+
+-date date
+
+Use date for binding all names
+occurring on the command line. This disables any previous
+-alias, -bind, date, -rule or -vnum definition. It does not
+affect names in pseudo bound version notation.
+
+-nomsgSuppress output
+produced by version bind rules. 
+-ruledump
+
+The -ruledump option causes all
+known version bind rules to be written to standard output.
+The generated output contains all rule definitions in
+regular format and may be used as input rulefile for
+subsequent calls of vbind.
+
+-ruleerr
+
+This option makes sense, when
+testing a new, hand written file containing bind rules. The
+-ruleerr option causes syntax errors detected in the rule
+file to be reported to standard error. Make sure, that this
+option occurs on the command line prior to the rulefile to
+be inspected.
+
+-rulelist
+
+Write a list of all known rule
+names to standard output.
+
+-ruletest
+
+Interpret all names on the
+command line as rule names and test the existence of equally
+named rules in the list of known rules.
+
+-version
+
+Print version identification of
+vbind command and used libraries.
+
+-vnum version
+number
+
+Use version number for binding
+all names on the command line. This disables any previous
+-alias, -bind, -date, -rule or -vnum definition. It does not
+affect names in pseudo bound version notation.
+
+ENVIRONMENT
+
+SHAPETOOLS
+- list of path names as search space for files containing
+version bind rules. The bind rule files must be named
+BindRules. Default path is
+/usr/local/lib/shape.
+
+FILES
+
+$SHAPETOOLS/lib/shape/BindRules
+
+SEE ALSO
+
+vl(1),
+sttime(3), bindrules(7)
+
+AUTHOR
+
+Andreas.Lampen [AT] cs.de

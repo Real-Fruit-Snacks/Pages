@@ -1,0 +1,190 @@
+NAME
+
+pamgauss
+- create a two-dimensional Gaussian function as a PAM
+image
+
+SYNOPSIS
+
+pamgauss
+width height -sigma=number
+[-maxval=number]
+[-tupletype=string] [-maximize]
+[-oversample=number]
+
+Minimum unique
+abbreviation of option is acceptable. You may use double
+hyphens instead of single hyphen to denote options. You may
+use white space in place of the equals sign to separate an
+option name from its value.
+
+EXAMPLES
+
+pamgauss 7 7
+-sigma=.5 -maximize -tupletype=GRAYSCALE | pamtopnm
+>gauss.pgm 
+pnmconvol -nooffset -normalize gauss.pgm myimage.ppm
+>blurred.ppm
+
+DESCRIPTION
+
+This program is
+part of Netpbm(1).
+
+pamgauss
+generates a one-plane PAM image whose samples are a Gaussian
+function of their distance from the center of the image.
+I.e. the sample value is highest in the center and goes
+down, in a bell curve shape, as you move away from the
+center.
+
+You can use
+this image as a convolution kernel with pnmconvol to
+blur an image. (This technique is known as Gaussian
+blurring).
+
+width
+and height are the dimensions of the image that
+pamgauss generates. Mathematically speaking, they are
+the domain of the two-dimensional Gaussian function. If you
+want to be sure you get a whole Gaussian function, make sure
+that you choose a standard deviation and image dimensions so
+that if you made it any larger, the sample values at the
+edges would be zero.
+
+The output
+image is PAM. To make it usable with pnmconvol,
+specify -tupletype=GRAYSCALE so pnmconvol can
+use it as if it were PGM. You must use the -nooffset
+option on pnmconvol because zero means zero in the
+PAM that pamgauss generates.
+
+Without
+-maximize, the sum of all the samples is equal to the
+image’s maxval (within rounding error). This is true
+even if you clip the Gaussian function by making the image
+too small. This is what is normally required of a
+convolution kernel.
+
+pamgauss
+oversamples and averages to represent the continuous
+Gaussian function in discrete samples in the PAM output.
+Consider an image 11 samples wide and an oversampling factor
+of 10. The samples can be thought of as contiguous squares
+one unit wide. The center of the image is thus the center of
+the 6th sample from the left. The 3rd sample from the left
+covers a range of distances from 3 to 4 units from the
+center of the image. Because the oversampling factor is 10,
+pamgauss computes the value of the Gaussian function
+at 10 points evenly spaced between 3 and 4 units from the
+center of the image and assigns the 3rd sample from the left
+the mean of those 10 values.
+
+OPTIONS
+
+In addition to
+the options common to all programs based on libnetpbm (most
+notably -quiet, see
+ Common Options ),
+pamgauss recognizes the following command line
+options: 
+-sigma=number
+
+This is the standard deviation
+of the Gaussian function. The higher the number, the more
+spread out the function is. Normally, you want to make this
+number low enough that the function reaches zero value
+before the edge of your image.
+
+number
+is in units of samples.
+
+This option is
+required. There is no default.
+
+-maximize
+
+Causes pamgauss to use
+the whole dynamic range available in the output PAM image by
+choosing an amplitude for the Gaussian function that causes
+the maximum value in the image to be the maxval of the
+image.
+
+If you select
+this, you probably want to normalize the output (scale the
+samples down so the volume under the surface of the
+two-dimensional Gaussian function is the maxval) before you
+use it, for example with pnmconvol’s
+-normalize option. The reason this is different from
+just not using -maximize is that this subsequent
+normalization can be done with much more precision than can
+be represented in a PAM image.
+
+Without this
+option, pamgauss uses an amplitude that makes the
+volume under the surface of the two-dimensional Gaussian
+function the maxval of the image. This means all the samples
+in the image are normally considerably less than the
+maxval.
+
+This option was
+new in Netpbm 10.79 (June 2017).
+
+-maxval=number
+
+This is the maxval for the
+output image. 65535 is almost always the best value to use.
+But there may be some programs (not part of Netpbm) that
+can’t handle a maxval greater than 255.
+
+The default is
+255.
+
+-tupletype=string
+
+This is the value of the
+"tuple_type" attribute of the created PAM image.
+It can be any string up to 255 characters.
+
+If you
+don’t specify this, pamgauss generates a PAM
+with unspecified tuple type.
+
+-oversample=number
+
+This sets the oversampling
+factor. pamgauss samples the Gaussian function this
+many times, both horizontally and vertically, to get the
+value of each sample in the output.
+
+An oversampling
+factor of 1 means no oversampling, which means each sample
+is based only on the value of the Gaussian function at the
+center of the sample.
+
+The default is
+5 divided by the standard deviation, rounded up to a whole
+number.
+
+This option was
+new in Netpbm 10.79 (June 2017). Before that, it is
+essentially 1 - there is no oversampling.
+
+SEE ALSO
+
+pnmconvol(1),
+pamtopnm(1), pgmkernel(1), pamseq(1),
+pam(1)
+
+HISTORY
+
+pamgauss
+was new in Netpbm 10.23 (July 2004).
+
+DOCUMENT SOURCE
+
+This manual
+page was generated by the Netpbm tool ’makeman’
+from HTML source. The master documentation is at
+
+http://netpbm.sourceforge.net/doc/pamgauss.html

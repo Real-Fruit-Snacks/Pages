@@ -1,0 +1,183 @@
+NAME
+
+passwd −
+password file
+
+SYNOPSIS
+
+/etc/passwd
+
+DESCRIPTION
+
+The file
+/etc/passwd is a local source of information about
+users’ accounts. The password file can be used in
+conjunction with other password sources, such as the
+NIS maps passwd.byname and passwd.bygid
+and the NIS+ table passwd. Programs use the
+getpwnam(3C) routines to access this information.
+
+Each
+passwd entry is a single line of the form:
+
+username:password:uid:
+
+gid:gcos-field:home-dir:
+
+login-shell
+
+where 
+username
+
+is the user’s login name.
+It is recommended that this field conform to the checks
+performed by pwck(1M).
+
+password
+
+is an empty field. The
+encrypted password for the user is in the corresponding
+entry in the /etc/shadow file. pwconv(1M)
+relies on a special value of ’x’ in the
+password field of /etc/passwd. If this value of
+’x’ exists in the password field of
+/etc/passwd, this indicates that the password for the
+user is already in /etc/shadow and should not be
+modified.
+
+uid
+
+is the user’s unique numerical ID for the
+system. 
+
+gid
+
+is the unique numerical ID of the group that the
+user belongs to.
+
+gcos-field
+
+is the user’s real name,
+along with information to pass along in a mail-message
+heading. (It is called the gcos-field for historical
+reasons.) An ’’&’’
+(ampersand) in this field stands for the login name (in
+cases where the login name appears in a user’s real
+name).
+
+home-dir
+
+is the pathname to the
+directory in which the user is initially positioned upon
+logging in.
+
+login-shell
+
+is the user’s initial
+shell program. If this field is empty, the default shell is
+/usr/bin/sh.
+
+The maximum
+value of the uid and gid fields is
+2147483647. To maximize interoperability and
+compatibility, administrators are recommended to assign
+users a range of UIDs and GIDs below
+60000 where possible.
+
+The password
+file is an ASCII file. Because the encrypted
+passwords are always kept in the shadow file,
+/etc/passwd has general read permission on all
+systems and can be used by routines that map between
+numerical user IDs and user names.
+
+Blank lines are
+treated as malformed entries in the passwd file and
+cause consumers of the file , such as getpwnam(3C),
+to fail.
+
+Previous
+releases used a password entry beginning with a
+’+’ (plus sign) or ’−’ (minus
+sign) to selectively incorporate entries from NIS
+maps for password. If still required, this is supported by
+specifying ’’passwd : compat’’ in
+nsswitch.conf(4). The "compat" source might
+not be supported in future releases. The preferred sources
+are files followed by the identifier of a name
+service, such as nis or ldap. This has the
+effect of incorporating the entire contents of the name
+service’s passwd database after the
+passwd file.
+
+EXAMPLES
+
+Example 1:
+Sample passwd file
+
+Here is a
+sample passwd file:
+
+root:q.mJzTnu8icF.:0:10:God:/:/bin/csh
+
+fred:6k/7KCFRPNVXg:508:10:&
+Fredericks:/usr2/fred:/bin/csh
+
+and the sample
+password entry from nsswitch.conf:
+
+passwd: files
+nisplus
+
+In this
+example, there are specific entries for users root
+and fred to assure that they can login even when the
+system is running single-user. In addition, anyone in the
+NIS+ table passwd will be able to login with
+their usual password, shell, and home directory.
+
+If the password
+file is:
+
+root:q.mJzTnu8icF.:0:10:God:/:/bin/csh
+
+fred:6k/7KCFRPNVXg:508:10:&
+Fredericks:/usr2/fred:/bin/csh 
++
+
+and the
+password entry from nsswitch.conf is:
+
+passwd:
+compat
+
+then all the
+entries listed in the NIS passwd.byuid and
+passwd.byname maps will be effectively incorporated
+after the entries for root and fred.
+
+FILES
+
+/etc/nsswitch.conf
+
+/etc/passwd 
+/etc/shadow
+
+SEE ALSO
+
+chgrp(1),
+chown(1), finger(1), groups(1),
+login(1), newgrp(1), nispasswd(1),
+passwd(1), sh(1), sort(1),
+chown(1M), domainname(1M), getent(1M),
+in.ftpd(1M), passmgmt(1M), pwck(1M),
+pwconv(1M), su(1M), useradd(1M),
+userdel(1M), usermod(1M), a64l(3C),
+crypt(3C), getpw(3C), getpwnam(3C),
+getspnam(3C), putpwent(3C), group(4),
+hosts.equiv(4), nsswitch.conf(4),
+shadow(4), environ(5),
+unistd(3HEAD)
+
+System
+Administration Guide: Basic Administration

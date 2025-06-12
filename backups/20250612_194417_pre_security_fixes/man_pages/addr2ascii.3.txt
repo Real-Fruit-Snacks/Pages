@@ -1,0 +1,186 @@
+ADDR2ASCII(3) BSD Library Functions Manual
+ADDR2ASCII(3)
+
+NAME
+
+addr2ascii,
+ascii2addr — Generic address formatting
+routines
+
+LIBRARY
+
+Standard C Library (libc,
+−lc)
+
+SYNOPSIS
+
+#include 
+
+#include  
+#include 
+
+char
+*
+
+addr2ascii(int af,
+const void *addrp, int len,
+char *buf);
+
+int
+
+ascii2addr(int af,
+const char *ascii,
+void *result);
+
+DESCRIPTION
+
+The routines addr2ascii()
+and ascii2addr() are used to convert network
+addresses between binary form and a printable form
+appropriate to the address family. Both functions take an
+af argument, specifying the address family to be used
+in the conversion process. (Currently, only the AF_INET and
+AF_LINK address families are supported.)
+
+The
+addr2ascii() function is used to convert binary,
+network-format addresses into printable form. In addition to
+af, there are three other arguments. The addrp
+argument is a pointer to the network address to be
+converted. The len argument is the length of the
+address. The buf argument is an optional pointer to a
+caller-allocated buffer to hold the result; if a null
+pointer is passed, addr2ascii() uses a
+statically-allocated buffer.
+
+The
+ascii2addr() function performs the inverse operation
+to addr2ascii(). In addition to af, it takes
+two arguments, ascii and result. The
+ascii argument is a pointer to the string which is to
+be converted into binary. The result argument is a
+pointer to an appropriate network address structure for the
+specified family.
+
+The following
+gives the appropriate structure to use for binary addresses
+in the specified family:
+
+AF_INET
+
+struct in_addr
+(in ⟨ netinet/in.h⟩ )
+
+AF_LINK
+
+struct
+sockaddr_dl (in ⟨ net/if_dl.h⟩ )
+
+RETURN VALUES
+
+The addr2ascii() function
+returns the address of the buffer it was passed, or a static
+buffer if the a null pointer was passed; on failure, it
+returns a null pointer. The ascii2addr() function
+returns the length of the binary address in bytes, or -1 on
+failure.
+
+EXAMPLES
+
+The inet(3) functions
+inet_ntoa() and inet_aton() could be
+implemented thusly:
+
+#include
+
+#include  
+#include  
+#include 
+
+char * 
+inet_ntoa(struct in_addr addr) 
+{
+
+return addr2ascii(AF_INET, &addr, sizeof addr,
+0); 
+
+}
+
+int 
+inet_aton(const char *ascii, struct in_addr *addr) 
+{
+
+return (ascii2addr(AF_INET, ascii, addr)
+
+== sizeof(*addr));
+
+}
+
+In actuality,
+this cannot be done because addr2ascii() and
+ascii2addr() are implemented in terms of the inet(3)
+functions, rather than the other way around.
+
+ERRORS
+
+When a failure is returned,
+errno is set to one of the following values:
+
+[ENAMETOOLONG]
+
+The
+addr2ascii() routine was passed a len argument
+which was inappropriate for the address family given by
+af.
+
+[EPROTONOSUPPORT]
+
+Either routine
+was passed an af argument other than AF_INET or
+AF_LINK.
+
+[EINVAL]
+
+The string
+passed to ascii2addr() was improperly formatted for
+address family af.
+
+SEE ALSO
+
+inet(3), linkaddr(3),
+inet(4)
+
+HISTORY
+
+An interface close to this one
+was originally suggested by Craig Partridge. This particular
+interface originally appeared in the INRIA IPv6
+implementation.
+
+AUTHORS
+
+Code and documentation by
+Garrett A. Wollman, MIT Laboratory for Computer Science.
+
+BUGS
+
+The original implementations
+supported IPv6. This support should eventually be
+resurrected. The NRL implementation also included support
+for the AF_ISO and AF_NS address families.
+
+The genericity
+of this interface is somewhat questionable. A truly generic
+interface would provide a means for determining the length
+of the buffer to be used so that it could be dynamically
+allocated, and would always require a ’’struct
+sockaddr’’ to hold the binary address.
+Unfortunately, this is incompatible with existing practice.
+This limitation means that a routine for printing network
+addresses from arbitrary address families must still have
+internal knowledge of the maximum buffer length needed and
+the appropriate part of the address to use as the binary
+address.
+
+BSD
+June 13, 1996 BSD

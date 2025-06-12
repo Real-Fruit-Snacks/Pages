@@ -1,0 +1,106 @@
+TTYSNOOP(8) BSD System Manager’s Manual
+TTYSNOOP(8)
+
+NAME
+
+ttysnoop — snoop on
+a user’s tty
+
+SYNOPSIS
+
+ttysnoop [pty]
+
+ttysnoops
+
+DESCRIPTION
+
+The ttysnoop /
+ttysnoops client-server combo can be used to snoop
+(watch) on a user’s login tty. The server
+(ttysnoops) is usually started by getty(8) or
+telnetd(8) and reads the file /etc/snooptab to find
+out which tty’s should be cloned and which programs to
+run on them (usually /bin/login). A tty may be snooped
+through a pre-determined (ie. fixed) device, or through a
+dynamically allocated pseudo-tty (pty). This is also
+specified in the /etc/snooptab file. To connect to
+the pty, the client ttysnoop should be used. The
+available pseudo terminals pty are present as sockets
+in the directory /var/spool/ttysnoop/.
+
+Format of
+/etc/snooptab 
+The /etc/snooptab file may contain comment lines
+(starting with a ’#’), empty lines, or entries
+for tty’s that should be snooped upon. The format of
+such an entry is as follows:
+
+tty
+snoop-device type program
+
+where tty
+is the leaf-name of the tty that should be snooped upon (eg.
+ttyS2, not /dev/ttyS2) OR the wildcard ’*’,
+which matches ANY tty. snoop-device is the device
+through which tty should be snooped (eg. /dev/tty8)
+OR the literal constant "socket". The latter is
+used to tell ttysnoops that the snoop-device will be
+a dynamically allocated pty. type specifies the type
+of program that should be run, currently recognized types
+are "init", "user" and "login"
+although the former two aren’t really needed. Finally,
+program is the full pathname to the program to run
+when ttysnoops has cloned tty onto
+snoop-device.
+
+EXAMPLE
+
+The following example
+/etc/snooptab file should illustrate the typical use
+of ttysnoop / ttysnoops:
+
+# 
+# example /etc/snooptab 
+# 
+ttyS0 /dev/tty7 login /bin/login 
+ttyS1 /dev/tty8 login /bin/login 
+# 
+# the wildcard tty should always be the last one in the file
+
+# 
+* socket login /bin/login 
+# 
+# example end 
+#
+
+With the above
+example, whenever a user logs in on /dev/ttyS0 or
+/dev/ttyS1, either tty will be snooped through /dev/tty7 or
+/dev/tty8 respectively. Any other tty’s will be
+snooped through a pty that will be allocated at the time of
+login. The system-administrator can then run ttysnoop
+pty to snoop through the pty. Note that it is up to the
+system-administrator to setup getty and/or telnetd so that
+they execute ttysnoops instead of /bin/login.
+
+SEE ALSO
+
+getty(8), telnetd(8)
+
+FILES
+
+/etc/snooptab
+
+BUGS
+
+The program is unable to do any
+terminal control-code translations for the original tty and
+the snoop-device. I doubt it will ever do this.
+
+AUTHOR
+
+Carl Declerck,
+carl [AT] miskatonic.net
+
+BSD
+August 8 1994 BSD

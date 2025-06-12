@@ -1,0 +1,486 @@
+NAME
+
+libinn -
+InterNetNews library routines
+
+SYNOPSIS
+
+#include
+"inn/libinn.h" 
+#define ISWHITE(c) ... 
+/* Headers-related routines. */ 
+extern char *GenerateMessageID(char *domain); 
+extern void HeaderCleanFrom(char *from); 
+extern struct _DDHANDLE *DDstart(FILE *FromServer, FILE
+*ToServer); 
+extern void DDcheck(struct _DDHANDLE *h, char *group); 
+extern char *DDend(struct _DDHANDLE *h); 
+/* Cancel-Lock routines. */ 
+extern bool gen_cancel_lock(const char *msgid, const char
+*username, 
+char **canbuff); 
+extern bool gen_cancel_key(const char *hdrcontrol, 
+const char *hdrsupersedes, 
+const char *username, char **canbuff); 
+extern bool verify_cancel_key(const char *c_key_header, 
+const char *c_lock_header); 
+/* Opening the active file on a client. */ 
+extern FILE *CAopen(FILE *FromServer, FILE *ToServer); 
+extern FILE *CAlistopen(FILE *FromServer, FILE *ToServer,
+
+const char *request); 
+extern void CAclose(void); 
+/* File locking. */ 
+enum inn_locktype 
+{ 
+INN_LOCK_READ, 
+INN_LOCK_WRITE, 
+INN_LOCK_UNLOCK 
+}; 
+extern bool inn_lock_file(int fd, enum inn_locktype type,
+
+bool block); 
+/* NNTP functions. */ 
+extern int NNTPlocalopen(FILE **FromServerp, FILE
+**ToServerp, 
+char *errbuff, size_t len); 
+extern int NNTPremoteopen(int port, FILE **FromServerp, 
+FILE **ToServerp, char *errbuff, 
+size_t len); 
+extern int NNTPconnect(const char *host, int port, 
+FILE **FromServerp, FILE **ToServerp, 
+char *errbuff, size_t len); 
+extern int NNTPsendarticle(char *text, FILE *ToServer, 
+bool terminate); 
+extern int NNTPsendpassword(char *server, FILE *FromServer,
+
+FILE *ToServer); 
+/* Hash functions. */ 
+typedef struct { 
+char hash[16]; 
+} HASH; 
+extern HASH HashMessageID(const char *MessageID); 
+/* Other useful functions. */ 
+extern char *inn_getfqdn(const char *domain); 
+extern char *GetModeratorAddress(FILE *FromServer, FILE
+*ToServer, 
+char *group, char *moderatormailer); 
+/* Miscellaneous. */ 
+extern int GetResourceUsage(double *usertime, double
+*systime); 
+extern void Radix32(unsigned long value, char *buff); 
+extern char *ReadInDescriptor(int fd, struct stat *Sbp);
+
+extern char *ReadInFile(const char *name, struct stat *Sbp);
+
+/* Reserving file descriptors. */ 
+extern bool fdreserve(int fdnum); 
+extern FILE *Fopen(const char *name, const char *mode, int
+fdindex); 
+extern int Fclose(FILE *fp); 
+/* Determining, setting and checking the limit on open file
+
+descriptors. */ 
+extern int getfdlimit(void); 
+extern int setfdlimit(unsigned int limit); 
+extern bool isvalidfd(unsigned int fd); 
+/* Setting or clearing file descriptor flags. */ 
+#include "inn/fdflag.h" 
+bool fdflag_close_exec(int fd, bool flag); 
+bool fdflag_nonblocking(socket_type fd, bool flag);
+
+DESCRIPTION
+
+libinn
+is a library of utility routines for manipulating Usenet
+articles and related data. The whole documentation of
+libinn routines is split into several specific man
+pages besides this one: libinn_clientlib(3), libinn_dbz(3),
+libinn_inndcomm(3), libinn_list(3), libinn_qio(3),
+libinn_tst(3) and libinn_uwildmat(3).
+
+MACROS
+
+"ISWHITE" is a macro which tests whether its char
+argument is a space or a tabulation.
+
+HEADERS-RELATED
+ROUTINES 
+GenerateMessageID uses the current time,
+nnrpd’s process ID, a global static counter
+incrementing at each post in the same NNTP session, and a
+fully qualified domain name, which is passed as an argument,
+to create a Message-ID header field that is highly likely to
+be unique. The returned value points to static space that is
+reused on subsequent calls. If the argument is NULL,
+inn_getfqdn is called to find a suitable FQDN (using
+domain as set in inn.conf to qualify the local
+host name if local host cannot be resolved in DNS).
+
+HeaderCleanFrom
+removes the extraneous information from the value of a From
+or Reply-To header field and leaves just the official
+mailing address. In particular, the following
+transformations are made to the from parameter:
+
+•
+
+address --> address
+
+•
+
+address (stuff) --> address
+
+•
+
+stuff  --> address
+
+The
+transformations are simple, based on RFC 5536 which
+limits the format of the header field.
+
+DDstart,
+DDcheck, and DDend are used to set the
+Distribution header field; the "DD" stands for
+Default Distribution. The distrib.pats file is
+consulted to determine the proper value for the Distribution
+header field after all newsgroups have been checked.
+DDstart begins the parsing. It returns a pointer to
+an opaque handle that should be used on subsequent calls.
+The FromServer and ToServer parameters should
+be "FILE"’s connected to the NNTP server for
+input and output, respectively. If either parameter is NULL,
+then an empty default will ultimately be returned if the
+file is not locally available.
+
+DDcheck
+should be called with the handle, h, returned by
+DDstart and a newsgroup, group, to check. It
+can be called as often as necessary.
+
+DDend
+releases any state maintained in the handle and returns an
+allocated copy of the text that should be used for the
+Distribution header field.
+
+CANCEL-LOCK
+
+These routines are available in libinn if INN was
+built with Cancel-Lock support (otherwise they are stub
+functions which are always returning false). The
+"configure" script automatically enables that
+support if it finds libcanlock.
+
+gen_cancel_lock
+expects a Message-ID, a username (possibly NULL) and the
+address of a pointer where it will write elements suitable
+for the body of a Cancel-Lock header field.
+
+gen_cancel_key
+expects a Control header field body (possibly NULL), a
+Supersedes header field body (possibly NULL), a username
+(possibly NULL) and the address of a pointer where it will
+write elements suitable for the body of a Cancel-Key header
+field. This function extracts the Message-ID from the
+Control header field body or, if NULL, from the Supersedes
+header field body. If the header field used for that
+extraction is not correctly formatted, or they are both
+NULL, or no Message-ID is found, it will result in a
+failure.
+
+These functions
+return true if all the elements were written, false on
+failure. The canbuff string will be allocated by
+these functions, unless they return false. The caller is
+responsible for freeing it.
+
+For each admin
+secret in the canlockadmin vector set in
+inn.conf, and for each user secret set in the
+canlockuser vector set in inn.conf if
+username is not NULL, gen_cancel_lock will
+generate in canbuff both sha1 and sha256
+Base64-encoded hashes. Regarding gen_cancel_key, it
+will be for each admin secret in the canlockadmin
+vector if username is NULL or for each user secret in
+the canlockuser vector if username is not
+NULL.
+
+verify_cancel_lock
+expects pointers to Cancel-Key and Cancel-Lock header field
+bodies. This function verifies that c_key_header
+contains an element matching one of those present in
+c_lock_header. It returns true if at least one
+element matches. Otherwise, false is returned, that is to
+say the cancel or supersede request cannot be
+authenticated.
+
+CLIENT
+ACTIVE FILE 
+CAopen and CAclose provide news clients with
+access to the active file; the "CA" stands
+for Client Active. CAopen opens the
+active file for reading. It returns a pointer to an
+open "FILE", or NULL on error. If a local or
+NFS-mounted copy exists, CAopen will use that file.
+The FromServer and ToServer parameters should
+be "FILE"’s connected to the NNTP server for
+input and output, respectively. See NNTPremoteopen or
+NNTPlocalopen, below. If either parameter is NULL,
+then CAopen will just return NULL if the file is not
+locally available. If they are not NULL, CAopen will
+use them to query the NNTP server using the LIST command to
+make a local temporary copy.
+
+The
+CAlistopen sends a LIST command to the server and
+returns a temporary file containing the results. The
+request parameter, if not NULL, will be sent as an
+argument to the command. Unlike CAopen, this routine
+will never use a locally-available copy of the active
+file.
+
+CAclose
+closes the active file and removes any temporary file
+that might have been created by CAopen or
+CAlistopen.
+
+FILE LOCKING
+
+inn_lock_file tries to lock the file descriptor
+fd. If block is true, it will block until the
+lock can be made, otherwise it will return false if the file
+cannot be locked. type is one of
+"INN_LOCK_READ", "INN_LOCK_WRITE" or
+"INN_LOCK_UNLOCK". It returns false on failure or
+true on success.
+
+NNTP
+FUNCTIONS 
+NNTPlocalopen opens a connection to the private port of
+an InterNetNews server running on the local host, if
+"HAVE_UNIX_DOMAIN_SOCKETS" in
+include/config.h is defined. It returns
+"-1" on failure, or "0" on success.
+FromServerp and ToServerp will be filled in
+with "FILE"’s which can be used to
+communicate with the server. errbuff can either be
+NULL or a pointer to a buffer at least 512 bytes long. If
+not NULL, and the server refuses the connection, then it
+will be filled in with the text of the server’s reply.
+len should be the length of the errbuff
+buffer. This routine is not for general use. If
+"HAVE_UNIX_DOMAIN_SOCKETS" in
+include/config.h is not defined, this is a stub
+routine, for compatibility with systems that have
+Unix-domain stream sockets, and it then always returns
+"-1".
+
+NNTPremoteopen
+does the same, except that it uses the server
+parameter set in inn.conf as the local server, and
+opens a connection to the port. Any client program
+can use this routine. It returns "-1" on failure,
+or "0" on success.
+
+NNTPconnect
+is the same as NNTPremoteopen except that the desired
+host is given as the host parameter.
+
+NNTPsendarticle
+writes text on ToServer using NNTP conventions
+for line termination. The text should consist of one or more
+lines ending with a newline. If terminate is true,
+then the routine will also write the NNTP data-termination
+marker on the stream. It returns "-1" on failure,
+or "0" on success.
+
+NNTPsendpassword
+sends authentication information to an NNTP server by
+finding the appropriate entry in the passwd.nntp
+file. server contains the name of the host; the
+server parameter in inn.conf will be used if
+server is NULL. FromServer and ToServer
+should be "FILE"’s that are connected to the
+server. No action is taken if the specified host is not
+listed in the password file.
+
+HASHES 
+HashMessageID returns hashed Message-ID using MD5.
+
+OTHER USEFUL
+FUNCTIONS 
+inn_getfqdn returns the fully qualified domain name of
+the local host. domain is used to qualify the local
+host name if local host cannot be resolved in DNS. The
+returned value points to newly-allocated memory that the
+caller is responsible for freeing, or NULL on error.
+
+GetModeratorAddress
+returns the mailing address of the moderator for specified
+group or NULL on error. moderatormailer is
+used as its address, if there is no matched moderator. See
+moderators(5) for details on how the address is determined.
+GetModeratorAddress does no checking to see if the
+specified group is actually moderated. The returned value
+points to static space that is reused on subsequent calls.
+The FromServer and ToServer parameters should
+be "FILE"’s connected to the NNTP server for
+input and output, respectively. If either of these
+parameters is NULL, then an attempt to get the list from a
+local copy is made.
+
+MISCELLANEOUS
+
+GetResourceUsage fills in the usertime and
+systime parameters with the total user and system
+time used by the current process and any children it may
+have spawned. If "HAVE_GETRUSAGE" in
+include/config.h is defined, it gets the values by
+doing a getrusage(2) system call; otherwise it calls
+times(2). It returns "-1" on failure, or
+"0" on success.
+
+Radix32
+converts the number in value into a radix-32 string
+into the buffer pointed to by buff. The number is
+split into five-bit pieces and each piece is converted into
+a character using the alphabet "0..9a..v" to
+represent the numbers "0..32". Only the lowest 32
+bits of value are used, so buff needs only
+pointing to a buffer of eight bytes (seven characters and
+the trailing "\0").
+
+ReadInFile
+reads the file named name into allocated memory,
+appending a terminating "\0" byte. It returns a
+pointer to the space, or NULL on error. If Sbp is not
+NULL, it is taken as the address of a place to store the
+results of a stat(2) call.
+
+ReadInDescriptor
+performs the same function as ReadInFile except that
+fd refers to an already-open file.
+
+FILE
+DESCRIPTOR RESERVATION 
+fdreserve permits reserving fdnum file
+descriptors for future use. On platforms that have a stdio
+limitation, such as 64-bit Solaris versions prior to 11.0,
+all 32-bit Solaris versions and 32-bit applications running
+on 64-bit Solaris, low-numbered file descriptors can then be
+kept and re-used for stdio. Without this mechanism, some
+essential files like the history file may not have
+any file descriptor left when being reopened after a closure
+for some operations, and stdio would fail.
+
+These file
+descriptors all read "/dev/null", until
+Fopen is called on them. If fdnum is
+"0" or negative, all reserved file descriptors are
+closed. Otherwise, fdnum file descriptors are
+reserved. If this function is called again with a higher
+fdnum value, it reserves more file descriptors; with
+a lower fdnum value, it closes the supernumerary
+reserved file descriptors. It returns true when all the file
+descriptors have been successfully reserved, and false
+otherwise, in which case all the reserved file descriptors
+are closed, even if some of them were previously in use.
+
+Fopen
+opens the file name in the given mode, using
+the file descriptor in position fdindex in the
+reserved file descriptors. If fdindex is lower than
+the number of reserved file descriptors, Fopen uses
+the corresponding one. Otherwise, it just calls fopen(2)
+without re-using a reserved file descriptor. It returns a
+pointer to a FILE struct, or NULL on failure.
+
+Fclose
+closes the file descriptor used for fp without
+keeping it, unless this file descriptor was a reserved one,
+in which case it is kept (and read "/dev/null").
+It returns "0" on success. Any other value (like
+EOF) is a failure.
+
+FILE
+DESCRIPTOR LIMITS 
+getfdlimit returns the limit on open file descriptors.
+It uses the getrlimit(2) function when available. If not, it
+tries sysconf(2), then getdtablesize(2), then ulimit(2),
+then a possible hard-coded "NOFILE" constant in
+the sys/param.h system header, or then falls back to
+the POSIX-guaranteed minimum of 20.
+
+setfdlimit
+sets the limit on open file descriptors to the given
+parameter limit. It uses the setrlimit(2) function
+when available. It returns "1" on success, and
+"-1" on failure (when setrlimit(2) is not
+available or limit is higher than select(2) can
+handle, checking against "FD_SETSIZE").
+
+isvalidfd
+returns true if fd is not higher than the system
+supports, and false otherwise.
+
+FILE
+DESCRIPTOR FLAGS 
+fdflag_close_exec can make a descriptor
+close-on-exec so that it is not shared with any child
+processes. If the flag is true, the file is so marked; if
+false, the close-on-exec mode is cleared. It returns
+false on failure (or when the function is unsupported) or
+true on success.
+
+fdflag_nonblocking
+enables (if flag is true) or disables (if flag
+is false) non-blocking I/O on the indicated
+"socket_type" (which can be a non-socket file
+descriptor on UNIX systems, but a "socket_type" is
+expected on Windows). It returns false on failure or true on
+success.
+
+EXAMPLES
+
+#include
+"inn/fdflag.h" 
+#include "inn/libinn.h" 
+char *p; 
+char frombuff[256], errbuff[256]; 
+FILE *F; 
+FILE *ToServer; 
+FILE *FromServer; 
+int port = 119; 
+strlcpy(frombuff, HDR(HDR__FROM), sizeof(frombuff)); 
+HeaderCleanFrom(frombuff); 
+if ((F = CAopen(FromServer, ToServer)) == NULL) 
+Fatal("Can't open active file"); 
+/* Don't pass the file on to our children. */ 
+fdflag_close_exec(fileno(F), true); 
+/* Make a local copy. */ 
+p = ReadInDescriptor(fileno(F), (struct stat *) NULL); 
+/* Close the file. */ 
+CAclose(); 
+if (NNTPremoteopen(port, &FromServer, &ToServer,
+errbuff, 
+sizeof(errbuff)) 
+Fatal("Can't connect to server"); 
+if ((p = GetModeratorAddress(NULL, NULL,
+"comp.sources.unix", 
+"%s [AT] example.com")) == NULL) 
+Fatal("Can't find moderator's address");
+
+HISTORY
+
+Written by Rich
+$alz rsalz [AT] uunet.net> for InterNetNews. Rewritten
+into POD by Julien Elie.
+
+SEE ALSO
+
+active(5),
+inn.conf(5), libinn_clientlib(3), libinn_dbz(3),
+libinn_inndcomm(3), libinn_list(3), libinn_qio(3),
+libinn_tst(3), libinn_uwildmat(3), moderators(5),
+passwd.nntp(5).

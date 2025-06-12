@@ -1,0 +1,4818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Man Pages</title>
+    
+    <!-- Theme CSS files -->
+    <link rel="stylesheet" href="themes/dark.css">
+    <link rel="stylesheet" href="themes/solarized-dark.css">
+    <link rel="stylesheet" href="themes/dracula.css">
+    <link rel="stylesheet" href="themes/monokai.css">
+    <link rel="stylesheet" href="themes/high-contrast.css">
+    <link rel="stylesheet" href="themes/nord.css">
+    <link rel="stylesheet" href="themes/gruvbox.css">
+    <link rel="stylesheet" href="themes/one-dark.css">
+    <link rel="stylesheet" href="themes/tokyo-night.css">
+    <link rel="stylesheet" href="themes/neon-noir.css">
+    <link rel="stylesheet" href="themes/cyber-frost.css">
+    <link rel="stylesheet" href="themes/retro-wave.css">
+    <link rel="stylesheet" href="themes/miami-sunrise.css">
+    <link rel="stylesheet" href="themes/forest-dawn.css">
+    <link rel="stylesheet" href="themes/ocean-depth.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .container.search-active {
+            justify-content: flex-start;
+            padding-top: 40px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-active .logo {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-box {
+            display: flex;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .section-select {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            min-width: 140px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-button {
+            padding: 12px 24px;
+            border: none;
+            background: #4285f4;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-button:hover {
+            background: #3367d6;
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            margin-top: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+
+        .suggestion {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .suggestion:hover, .suggestion.selected {
+            background: #f8f9fa;
+        }
+
+        .suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-info {
+            flex: 1;
+        }
+
+        .suggestion-command {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .suggestion-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .section-badge {
+            background: #e8f0fe;
+            color: #1967d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 12px;
+        }
+
+        /* Main content area with navigation */
+        .content-wrapper {
+            display: none;
+            width: 100%;
+            max-width: 1600px;
+            margin-top: 20px;
+            flex-direction: row;
+            gap: 24px;
+            padding: 0 20px;
+        }
+
+        /* Section navigation sidebar */
+        .section-nav {
+            width: 220px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 0;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex-shrink: 0;
+        }
+        
+        /* Custom scrollbar for section nav */
+        .section-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .section-nav::-webkit-scrollbar-track {
+            background: #f5f7fa;
+        }
+        
+        .section-nav::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+        
+        .section-nav::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        .section-nav h3 {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+            padding: 20px 24px 16px;
+            color: #666;
+            background: #fafbfc;
+            border-bottom: 1px solid #e8eaed;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .section-nav > ul {
+            padding: 12px 0;
+        }
+        
+        .section-nav > ul > li {
+            margin-bottom: 0;
+        }
+
+        .section-nav ul {
+            list-style: none;
+        }
+
+        .section-nav li {
+            margin-bottom: 0;
+        }
+
+        .section-nav a {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .section-nav a:hover, .section-nav a.active {
+            background: #e8f0fe;
+            color: #1967d2;
+        }
+        
+        /* Section group header styling */
+        .nav-section-header {
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a1a1a;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-section-header:hover {
+            background: #f8f9fa;
+            border-left-color: #1967d2;
+        }
+        
+        .nav-section-header.active {
+            background: #e8f0fe;
+            color: #1967d2;
+            border-left-color: #1967d2;
+        }
+        
+        .nav-section-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: #e8eaed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #666;
+            flex-shrink: 0;
+        }
+        
+        .nav-section-header.active .nav-section-icon {
+            background: #1967d2;
+            color: white;
+        }
+        
+        /* Sub-navigation items */
+        .nav-sub-list {
+            display: none;
+            background: #fafbfc;
+            border-left: 3px solid #e8eaed;
+            margin-left: 24px;
+            padding: 8px 0;
+        }
+        
+        .nav-sub-list.active {
+            display: block;
+        }
+        
+        .nav-sub-list li {
+            margin: 0;
+        }
+        
+        .nav-sub-list a {
+            padding: 8px 20px;
+            font-size: 13px;
+            color: #666;
+            position: relative;
+            transition: all 0.15s;
+        }
+        
+        .nav-sub-list a:hover {
+            background: transparent;
+            color: #1967d2;
+            padding-left: 24px;
+        }
+        
+        .nav-sub-list a.active {
+            color: #1967d2;
+            font-weight: 500;
+            background: transparent;
+        }
+        
+        .nav-sub-list a.active::before {
+            content: '';
+            position: absolute;
+            left: -3px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 16px;
+            background: #1967d2;
+        }
+
+        .man-page-container {
+            flex: 1;
+            background: #f5f7fa;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
+            padding: 8px 16px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .man-page-header {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .man-page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .action-button {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            background: #f8f9fa;
+            border-color: #999;
+            color: #333;
+        }
+        
+        .command-link-button {
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .command-link-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.2);
+        }
+        
+        /* Command color coding */
+        .command-link-button.command-0 { background: #4a90e2; }
+        .command-link-button.command-1 { background: #e74c3c; }
+        .command-link-button.command-2 { background: #2ecc71; }
+        .command-link-button.command-3 { background: #f39c12; }
+        .command-link-button.command-4 { background: #9b59b6; }
+        
+        .command-header {
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #fff;
+            display: inline-block;
+        }
+        
+        .command-header.command-0 { background: #4a90e2; }
+        .command-header.command-1 { background: #e74c3c; }
+        .command-header.command-2 { background: #2ecc71; }
+        .command-header.command-3 { background: #f39c12; }
+        .command-header.command-4 { background: #9b59b6; }
+
+        .action-button.active {
+            background: #e8f0fe;
+            color: #1967d2;
+            border-color: #1967d2;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 4px 8px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover {
+            color: #333;
+        }
+
+        /* In-page search */
+        .search-in-page {
+            display: none;
+            position: sticky;
+            top: 0;
+            background: #fffbe5;
+            border-bottom: 1px solid #f0dc00;
+            padding: 8px 24px;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .search-in-page input {
+            flex: 1;
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-in-page-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .man-page-content {
+            padding: 20px 30px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            white-space: normal;
+            word-wrap: break-word;
+            color: #333;
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        /* Remove default container styling when displaying sections */
+        .man-sections-container .man-page-header {
+            display: none;
+        }
+        
+        .man-page-content pre {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            white-space: normal;
+            word-wrap: break-word;
+            margin: 0;
+            background: transparent;
+            border: none;
+            padding: 0;
+            overflow-x: auto;
+        }
+        
+        /* Handle code blocks and examples differently */
+        .man-page-content .code-block,
+        .man-page-content pre code {
+            white-space: pre;
+            background: #f6f8fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: block;
+            margin: 8px 0;
+            overflow-x: auto;
+        }
+        
+        /* Better paragraph spacing */
+        .man-page-content p {
+            margin: 0.5em 0;
+            white-space: normal;
+        }
+        
+        /* Indented content */
+        .man-page-content .indent {
+            margin-left: 2em;
+        }
+        
+        /* Collapsible sections for multiple man pages */
+        .man-sections-container {
+            padding: 0;
+        }
+        
+        .man-section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        
+        .man-section:hover {
+            border-color: #1967d2;
+        }
+        
+        .man-section-header {
+            background: white;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .man-section-header:hover {
+            background: #f8f9fa;
+        }
+        
+        .man-section-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .man-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .section-badge {
+            background: #e8f0fe;
+            color: #1967d2;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        .collapse-icon {
+            font-size: 14px;
+            color: #999;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+        
+        .man-section.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .man-section-content {
+            max-height: none;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #fafbfc;
+        }
+        
+        .man-section.collapsed .man-section-content {
+            max-height: 0;
+        }
+        
+        .man-section-content .man-page-content {
+            padding: 16px;
+            background: #fafbfc;
+            border: none;
+            box-shadow: none;
+            font-size: 13px;
+        }
+
+        /* Syntax highlighting */
+        .man-page-content .section-header {
+            font-weight: bold;
+            color: #1967d2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .man-page-content .option {
+            color: #d73a49;
+            font-weight: 600;
+        }
+
+        .man-page-content .command {
+            color: #005cc5;
+            font-weight: 600;
+        }
+        
+        /* Bold and italic text in man pages */
+        .man-page-content strong {
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .man-page-content em {
+            font-style: italic;
+            color: #333;
+        }
+
+        .man-page-content .example {
+            background: #f6f8fa;
+            border-left: 4px solid #1967d2;
+            margin: 16px 0;
+            padding: 12px 16px;
+            border-radius: 4px;
+        }
+
+        .man-page-content .highlight {
+            background: #fff3cd;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+
+        .man-page-content .placeholder {
+            color: #059669;
+            font-style: italic;
+        }
+
+        .man-page-content .cross-ref {
+            color: #1967d2;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .man-page-content .cross-ref:hover {
+            color: #0056b3;
+        }
+
+        /* History and bookmarks panel */
+        .side-panel {
+            position: fixed;
+            right: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-panel.open {
+            right: 0;
+        }
+
+        .side-panel-header {
+            padding: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .side-panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .side-panel-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .side-panel-tab.active {
+            color: #1967d2;
+            border-bottom-color: #1967d2;
+        }
+
+        .side-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .side-panel-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .side-panel-item:hover {
+            background: #f8f9fa;
+        }
+
+        .side-panel-item-command {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .side-panel-item-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Floating action buttons */
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 12px;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #1967d2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(25, 103, 210, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            background: #1557b0;
+            box-shadow: 0 6px 16px rgba(25, 103, 210, 0.4);
+        }
+
+        .fab.secondary {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+            background: #666;
+        }
+
+        /* Related commands */
+        .related-commands {
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            padding: 20px 24px;
+        }
+
+        .related-commands h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .related-commands-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .related-command {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #1967d2;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .related-command:hover {
+            background: #e8f0fe;
+            border-color: #1967d2;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #d93025;
+        }
+
+        .no-results {
+            padding: 24px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            z-index: 300;
+        }
+
+        /* Keyboard shortcuts help */
+        .shortcuts-help {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            padding: 24px;
+            z-index: 400;
+            display: none;
+        }
+
+        .shortcuts-help h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .shortcuts-help table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .shortcuts-help td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .shortcuts-help kbd {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 399;
+            display: none;
+        }
+
+        /* Theme Modal - Adapts to current theme */
+        .theme-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            z-index: 500;
+            display: none;
+            overflow: hidden;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .theme-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+        }
+
+        .theme-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+
+        .theme-modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(85vh - 80px);
+            background: white;
+        }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .theme-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+            box-sizing: border-box;
+            border: 2px solid #e0e0e0 !important;
+            background: #f8f8f8 !important;
+        }
+
+        .theme-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+            background: #f0f0f0 !important;
+        }
+
+        .theme-option.active {
+            box-shadow: 0 0 0 3px #4285f4 !important;
+            border-color: #4285f4 !important;
+            background: #e8f0fe !important;
+        }
+
+        .theme-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #4285f4;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .theme-option-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            filter: none !important;
+        }
+
+        .theme-option-name {
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333 !important;
+            text-shadow: none !important;
+        }
+
+        .theme-option-preview {
+            width: 100%;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            height: 60px;
+            overflow: hidden;
+        }
+        
+        /* Consistent preview styling */
+        .theme-option-preview > div {
+            flex: 1;
+            min-height: 0;
+        }
+        
+        /* Ensure close button stays consistent */
+        .theme-modal .close-button {
+            background: transparent !important;
+            border: 1px solid #999 !important;
+            color: #666 !important;
+            padding: 4px 12px !important;
+            border-radius: 4px !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        .theme-modal .close-button:hover {
+            background: #f0f0f0 !important;
+            border-color: #666 !important;
+            color: #333 !important;
+        }
+
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .section-nav {
+                width: 100%;
+                position: static;
+                max-height: none;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .logo {
+                font-size: 36px;
+            }
+
+            .search-active .logo {
+                font-size: 24px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                border-radius: 12px;
+            }
+
+            .section-select {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+                width: 100%;
+            }
+
+            .search-input {
+                padding: 16px;
+            }
+
+            .search-button {
+                padding: 16px;
+            }
+
+            .man-page-content {
+                font-size: 12px;
+                padding: 16px;
+            }
+
+            .fab-container {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .fab {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+
+            .fab.secondary {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+            }
+        }
+
+        /* Theme styles are now in separate CSS files */
+
+        /* TLDR Section Styles */
+        .tldr-section {
+            background: #f0f8ff;
+            border-top: 1px solid #e0e0e0;
+            padding: 20px 24px;
+        }
+
+        .tldr-section h4 {
+            color: #0066cc;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .tldr-content {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        .tldr-description {
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .tldr-examples h5 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .tldr-example {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #0066cc;
+        }
+
+        .example-description {
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .example-code {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .tldr-placeholder {
+            color: #e91e63;
+            font-weight: bold;
+            background: #fce4ec;
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+
+        .tldr-option {
+            color: #ff5722;
+            font-weight: 600;
+        }
+
+        .no-tldr {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .tldr-loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .theme-icon {
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+        
+        .theme-toggle:hover .theme-icon {
+            transform: rotate(30deg);
+        }
+        
+        
+        
+        /* Theme icon adjustments */
+        .theme-name {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        
+        .theme-toggle:hover .theme-name {
+            opacity: 1;
+        }
+
+        /* Command Explainer Styles */
+        .command-explainer-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            z-index: 500;
+            display: none;
+            overflow: hidden;
+            color: #333;
+            border: none;
+        }
+        
+        /* Responsive sizing for very long commands */
+        @media (min-width: 1400px) {
+            .command-explainer-modal {
+                max-width: 1400px;
+            }
+        }
+
+        .command-explainer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .command-explainer-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+            text-shadow: none;
+        }
+
+        .command-explainer-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(90vh - 80px);
+            background: white;
+        }
+
+        .command-input-container {
+            margin-bottom: 24px;
+        }
+
+        .command-input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #f8f9fa;
+            color: #333;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            min-height: 50px;
+            max-height: 150px;
+            overflow-y: auto;
+            resize: vertical;
+        }
+
+        .command-input:focus {
+            border-color: #4285f4;
+        }
+        
+
+        .command-breakdown {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            min-height: 60px;
+            max-height: 200px;
+            overflow-y: visible;
+            overflow-x: auto;
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+            position: relative;
+        }
+        
+
+        .command-token {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+            cursor: help;
+            transition: all 0.2s;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .command-token:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: none;
+            white-space: normal;
+            word-break: break-all;
+            z-index: 10;
+        }
+
+        .command-token.command {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+        
+        .command-token.subcommand {
+            background: #f3e5f5;
+            color: #7b1fa2;
+            border: 1px solid #e1bee7;
+            font-weight: 500;
+        }
+
+        .command-token.option {
+            background: #f3e5f5;
+            color: #6a1b9a;
+            border: 1px solid #e1bee7;
+        }
+
+        .command-token.argument {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .command-token.pipe,
+        .command-token.pipe-both,
+        .command-token.and,
+        .command-token.or,
+        .command-token.semicolon,
+        .command-token.background,
+        .command-token.case-end {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffe0b2;
+        }
+
+        .command-token.redirect,
+        .command-token.redirect-out,
+        .command-token.redirect-in,
+        .command-token.redirect-append,
+        .command-token.redirect-err,
+        .command-token.redirect-err-append,
+        .command-token.redirect-err-to-out,
+        .command-token.redirect-both,
+        .command-token.redirect-both-append,
+        .command-token.here-doc,
+        .command-token.here-doc-indent,
+        .command-token.here-string {
+            background: #fce4ec;
+            color: #c2185b;
+            border: 1px solid #f8bbd0;
+        }
+        
+        .command-token.keyword {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            font-weight: 600;
+        }
+        
+        .command-token.process-substitution {
+            background: #f3e5f5;
+            color: #5e35b1;
+            border: 1px solid #d1c4e9;
+        }
+        
+        .command-token.substitution {
+            background: #e0f2f1;
+            color: #00695c;
+            border: 1px solid #b2dfdb;
+        }
+        
+        .command-token.special {
+            background: #fafafa;
+            color: #424242;
+            border: 1px solid #e0e0e0;
+            font-weight: 600;
+        }
+
+        .command-token.unknown {
+            background: #fafafa;
+            color: #616161;
+            border: 1px solid #e0e0e0;
+        }
+
+        .token-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: 8px;
+            max-width: 400px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.4;
+            z-index: 1000;
+        }
+        
+        /* Adjust tooltip position if it would go off-screen */
+        .command-token:first-child .token-tooltip {
+            left: 0;
+            transform: none;
+        }
+        
+        .command-token:last-child .token-tooltip {
+            left: auto;
+            right: 0;
+            transform: none;
+        }
+
+        .command-token:hover .token-tooltip {
+            opacity: 1 !important;
+        }
+
+        .token-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.85);
+        }
+
+        .command-explanations {
+            margin-top: 24px;
+        }
+
+        .explanation-section {
+            margin-bottom: 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .explanation-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .explanation-header:hover {
+            background: #f0f1f3;
+        }
+
+        .explanation-header::after {
+            content: '▼';
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .explanation-section.collapsed .explanation-header::after {
+            transform: rotate(-90deg);
+        }
+
+        .explanation-content {
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: auto;
+            transition: max-height 0.3s ease;
+        }
+
+        .explanation-section.collapsed .explanation-content {
+            max-height: 0;
+            padding: 0 16px;
+            overflow: hidden;
+        }
+
+        .option-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .option-item:last-child {
+            border-bottom: none;
+        }
+
+        .option-name {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-weight: 600;
+            color: #6a1b9a;
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+
+        .option-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .example-command {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 12px;
+            border: 1px solid #e0e0e0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .no-explanation {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        /* Override theme styles for command explainer tooltips */
+        .command-explainer-modal .token-tooltip {
+            background: rgba(0, 0, 0, 0.85) !important;
+            color: white !important;
+        }
+
+    </style>
+</head>
+<body>
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span>
+    </button>
+    
+    <div class="container" id="container">
+        <h1 class="logo">Linux Man Pages</h1>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <select class="section-select" id="sectionSelect">
+                    <option value="">All Sections</option>
+                    <option value="1">1 - User Commands</option>
+                    <option value="2">2 - System Calls</option>
+                    <option value="3">3 - Library Functions</option>
+                    <option value="4">4 - Device Files</option>
+                    <option value="5">5 - File Formats</option>
+                    <option value="6">6 - Games</option>
+                    <option value="7">7 - Miscellaneous</option>
+                    <option value="8">8 - System Admin</option>
+                </select>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search for a command..." autocomplete="off">
+                <button class="search-button" id="searchButton">Search</button>
+            </div>
+            
+            
+            <div class="suggestions" id="suggestions"></div>
+        </div>
+        
+        <div class="content-wrapper" id="contentWrapper">
+            <nav class="section-nav" id="sectionNav">
+                <h3>Sections</h3>
+                <ul id="sectionNavList"></ul>
+            </nav>
+            
+            <div class="man-page-container" id="manPageContainer">
+                <div class="man-page-header">
+                    <h2 class="man-page-title" id="manPageTitle"></h2>
+                    <div class="header-actions">
+                        <button class="action-button" id="searchInPageBtn" title="Search in page (Ctrl+F)">🔍</button>
+                        <button class="action-button" id="tldrJumpBtn" title="Jump to TLDR">📋</button>
+                        <button class="action-button" id="bookmarkBtn" title="Bookmark this page">⭐</button>
+                        <button class="close-button" id="closeButton">&times;</button>
+                    </div>
+                </div>
+                <div class="search-in-page" id="searchInPage">
+                    <input type="text" id="searchInPageInput" placeholder="Search in this page...">
+                    <span class="search-in-page-info" id="searchInPageInfo"></span>
+                    <button class="action-button" id="searchInPagePrev">↑</button>
+                    <button class="action-button" id="searchInPageNext">↓</button>
+                    <button class="action-button" id="searchInPageClose">✕</button>
+                </div>
+                <div class="man-page-content" id="manPageContent"></div>
+                <div class="related-commands" id="relatedCommands" style="display: none;">
+                    <h4>Related Commands</h4>
+                    <div class="related-commands-list" id="relatedCommandsList"></div>
+                </div>
+                <div class="tldr-section" id="tldrSection" style="display: none;">
+                    <h4>TLDR Summary</h4>
+                    <div class="tldr-content" id="tldrContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-panel" id="sidePanel">
+        <div class="side-panel-header">
+            <h3>History & Bookmarks</h3>
+            <button class="close-button" id="sidePanelClose">&times;</button>
+        </div>
+        <div class="side-panel-tabs">
+            <button class="side-panel-tab active" data-tab="history">History</button>
+            <button class="side-panel-tab" data-tab="bookmarks">Bookmarks</button>
+        </div>
+        <div class="side-panel-content" id="historyContent">
+            <!-- History items will be populated here -->
+        </div>
+        <div class="side-panel-content" id="bookmarksContent" style="display: none;">
+            <!-- Bookmark items will be populated here -->
+        </div>
+    </div>
+
+    <div class="fab-container">
+        <button class="fab secondary" id="historyFab" title="History & Bookmarks">📚</button>
+        <button class="fab secondary" id="helpFab" title="Keyboard shortcuts">?</button>
+        <button class="fab secondary" id="explainerFab" title="Command Explainer">🔍</button>
+    </div>
+
+    <div class="shortcuts-help" id="shortcutsHelp">
+        <h3>Keyboard Shortcuts</h3>
+        <table>
+            <tr>
+                <td><kbd>/</kbd></td>
+                <td>Focus search</td>
+            </tr>
+            <tr>
+                <td><kbd>Ctrl</kbd> + <kbd>F</kbd></td>
+                <td>Search in current page</td>
+            </tr>
+            <tr>
+                <td><kbd>Esc</kbd></td>
+                <td>Close current view</td>
+            </tr>
+            <tr>
+                <td><kbd>↑</kbd> <kbd>↓</kbd></td>
+                <td>Navigate suggestions</td>
+            </tr>
+            <tr>
+                <td><kbd>Enter</kbd></td>
+                <td>Select suggestion</td>
+            </tr>
+            <tr>
+                <td><kbd>Ctrl</kbd> + <kbd>B</kbd></td>
+                <td>Bookmark current page</td>
+            </tr>
+            <tr>
+                <td><kbd>H</kbd></td>
+                <td>Toggle history panel</td>
+            </tr>
+            <tr>
+                <td><kbd>?</kbd></td>
+                <td>Show this help</td>
+            </tr>
+            <tr>
+                <td><kbd>E</kbd></td>
+                <td>Open command explainer</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="theme-modal" id="themeModal">
+        <div class="theme-modal-header">
+            <h3>Choose Theme</h3>
+            <button class="close-button" id="themeModalClose">&times;</button>
+        </div>
+        <div class="theme-modal-content">
+            <div class="theme-options" id="themeOptions">
+                <!-- Theme options will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="status" id="status"></div>
+
+    <div class="command-explainer-modal" id="commandExplainerModal">
+        <div class="command-explainer-header">
+            <h3>Command Explainer</h3>
+            <button class="close-button" id="commandExplainerClose">&times;</button>
+        </div>
+        <div class="command-explainer-content">
+            <div class="command-input-container">
+                <textarea class="command-input" id="commandInput" 
+                       placeholder="Enter a command to explain (e.g., ls -la /home)" 
+                       autocomplete="off" rows="1"></textarea>
+            </div>
+            
+            <div class="command-breakdown" id="commandBreakdown">
+                <div class="no-explanation">Enter a command above to see its breakdown</div>
+            </div>
+            
+            <div class="command-explanations" id="commandExplanations">
+                <!-- Explanations will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Load manifest and index -->
+    <script src="data/index.js"></script>
+    <script src="data/tldr_index.js"></script>
+    <script src="data/options.js"></script>
+    
+    <script>
+        // Application state
+        let currentState = 'initial';
+        let searchTimeout = null;
+        let currentManPage = null;
+        let history = [];
+        let bookmarks = [];
+        let searchInPageActive = false;
+        let searchInPageResults = [];
+        let searchInPageCurrentIndex = -1;
+
+        // DOM elements
+        const container = document.getElementById('container');
+        const searchInput = document.getElementById('searchInput');
+        const sectionSelect = document.getElementById('sectionSelect');
+        const searchButton = document.getElementById('searchButton');
+        const suggestions = document.getElementById('suggestions');
+        const contentWrapper = document.getElementById('contentWrapper');
+        const manPageContainer = document.getElementById('manPageContainer');
+        const manPageTitle = document.getElementById('manPageTitle');
+        const manPageContent = document.getElementById('manPageContent');
+        const closeButton = document.getElementById('closeButton');
+        const status = document.getElementById('status');
+        const sectionNav = document.getElementById('sectionNav');
+        const sectionNavList = document.getElementById('sectionNavList');
+        const relatedCommands = document.getElementById('relatedCommands');
+        const relatedCommandsList = document.getElementById('relatedCommandsList');
+        const sidePanel = document.getElementById('sidePanel');
+        const historyContent = document.getElementById('historyContent');
+        const bookmarksContent = document.getElementById('bookmarksContent');
+        const bookmarkBtn = document.getElementById('bookmarkBtn');
+        const searchInPageBtn = document.getElementById('searchInPageBtn');
+        const searchInPage = document.getElementById('searchInPage');
+        const searchInPageInput = document.getElementById('searchInPageInput');
+        const searchInPageInfo = document.getElementById('searchInPageInfo');
+        const shortcutsHelp = document.getElementById('shortcutsHelp');
+        const overlay = document.getElementById('overlay');
+        const tldrSection = document.getElementById('tldrSection');
+        const tldrContent = document.getElementById('tldrContent');
+        const tldrJumpBtn = document.getElementById('tldrJumpBtn');
+
+        // Load saved data from localStorage
+        function loadSavedData() {
+            try {
+                const savedHistory = localStorage.getItem('manPageHistory');
+                if (savedHistory) {
+                    history = JSON.parse(savedHistory);
+                }
+                const savedBookmarks = localStorage.getItem('manPageBookmarks');
+                if (savedBookmarks) {
+                    bookmarks = JSON.parse(savedBookmarks);
+                }
+            } catch (e) {
+                console.error('Failed to load saved data:', e);
+            }
+        }
+
+        // Save data to localStorage
+        function saveHistory() {
+            try {
+                localStorage.setItem('manPageHistory', JSON.stringify(history.slice(0, 50))); // Keep last 50
+            } catch (e) {
+                console.error('Failed to save history:', e);
+            }
+        }
+
+        function saveBookmarks() {
+            try {
+                localStorage.setItem('manPageBookmarks', JSON.stringify(bookmarks));
+            } catch (e) {
+                console.error('Failed to save bookmarks:', e);
+            }
+        }
+
+        // Show status message
+        function showStatus(message, duration = 3000) {
+            status.textContent = message;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, duration);
+        }
+
+        // Process pre-formatted .txt man pages
+        function processTextManPage(content) {
+            // .txt files are already formatted, just need to:
+            // 1. Reformat to reduce excessive spacing
+            // 2. Make section headers recognizable
+            // 3. Add syntax highlighting
+            
+            // Escape HTML entities
+            content = content.replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;');
+            
+            // Remove multiple consecutive blank lines (keep max 1 blank line)
+            content = content.replace(/\n\s*\n\s*\n+/g, '\n\n');
+            
+            // Join lines that are continuations (lines that don't end with period/colon)
+            // This helps with wrapped text in man pages
+            content = content.replace(/([^\.\:\n])\n\s+([a-z])/g, '$1 $2');
+            
+            // Convert section headers (lines that are all caps at the start)
+            content = content.replace(/^([A-Z][A-Z\s]+)$/gm, '<span class="section-header">$1</span>');
+            
+            // Bold formatting for options (e.g., -a, --all)
+            content = content.replace(/(\s|^)(-{1,2}[a-zA-Z0-9-]+)(\s|,|;|$)/g, '$1<strong>$2</strong>$3');
+            
+            // Make cross-references clickable (e.g., ls(1), chmod(2))
+            content = content.replace(/\b([a-z0-9_-]+)\((\d)\)/gi, function(match, cmd, section) {
+                return '<span class="cross-ref" data-command="' + cmd + '" data-section="' + section + '">' + match + '</span>';
+            });
+            
+            // Convert line breaks to <br> for proper formatting
+            // But first, wrap option descriptions in divs for better formatting
+            content = content.replace(/^(\s+)(-{1,2}[^<\n]+)$/gm, '<div class="indent">$2</div>');
+            
+            // Convert remaining line breaks
+            content = content.replace(/\n/g, '<br>\n');
+            
+            return content;
+        }
+
+
+        // Load all man pages for a command
+        async function loadAllManPages(command) {
+            const results = [];
+            
+            // Find all sections for this command in the search index
+            const entries = searchIndex.filter(item => 
+                (item.command || item.name) === command
+            );
+            
+            // Sort by section number (lowest first)
+            entries.sort((a, b) => {
+                // Extract numeric part of section for sorting
+                const getNumericSection = (section) => {
+                    const match = String(section).match(/^(\d+)/);
+                    return match ? parseInt(match[1]) : 999;
+                };
+                return getNumericSection(a.section) - getNumericSection(b.section);
+            });
+            
+            // Load each section
+            for (const entry of entries) {
+                try {
+                    const response = await fetch(`man_pages/${command}.${entry.section}.txt`);
+                    if (response.ok) {
+                        const content = await response.text();
+                        results.push({
+                            section: entry.section,
+                            description: entry.description,
+                            content: processTextManPage(content),
+                            command: command
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error loading ${command}(${entry.section}):`, error);
+                }
+            }
+            
+            if (results.length === 0) {
+                throw new Error(`No man pages found for command: ${command}`);
+            }
+            
+            return results;
+        }
+
+        // Process and enhance man page content
+        function processManPageContent(content) {
+            // LinuxCommandLibrary data contains HTML formatting that we need to preserve
+            // while still protecting against XSS attacks
+            
+            // Step 1: Escape potentially dangerous characters except for safe HTML tags
+            // We'll use a more selective approach
+            
+            // First, protect script tags and other dangerous elements
+            content = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+            content = content.replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '');
+            content = content.replace(/<object[^>]*>[\s\S]*?<\/object>/gi, '');
+            content = content.replace(/<embed[^>]*>/gi, '');
+            
+            // Step 2: Process custom tags from LinuxCommandLibrary
+            // These appear to be already HTML with custom classes
+            content = content.replace(/<command>/g, '<span class="command">');
+            content = content.replace(/<\/command>/g, '</span>');
+            content = content.replace(/<option>/g, '<span class="option">');
+            content = content.replace(/<\/option>/g, '</span>');
+            
+            // Step 3: Remove TLDR sections from the man page content
+            // We display a better formatted TLDR at the bottom from the TLDR pages project
+            // Match TLDR followed by everything until the next all-caps section header
+            content = content.replace(/TLDR\n[\s\S]*?(?=\n[A-Z][A-Z\s]+\n)/g, '');
+            
+            // Step 4: Process section headers
+            // LinuxCommandLibrary uses plain text headers, so we need to identify them
+            content = content.replace(/^([A-Z][A-Z\s]+)$/gm, function(match) {
+                // Don't process if it's already in HTML tags
+                if (match.includes('<') || match.includes('>')) {
+                    return match;
+                }
+                return '<span class="section-header">' + match + '</span>';
+            });
+            
+            // Step 5: Highlight commands in backticks (LinuxCommandLibrary format)
+            content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Step 6: Process square brackets as placeholders
+            content = content.replace(/\[([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
+            
+            // Step 7: Make cross-references clickable (e.g., ls(1), chmod(2))
+            content = content.replace(/\b([a-z0-9_-]+)\((\d)\)/gi, function(match, cmd, section) {
+                return '<span class="cross-ref" data-command="' + cmd + '" data-section="' + section + '">' + match + '</span>';
+            });
+            
+            // Step 8: Ensure line breaks are preserved
+            // LinuxCommandLibrary content already has <br> tags, so we don't need to add more
+            // Just ensure newlines are converted where needed
+            content = content.replace(/\n/g, function(match, offset) {
+                // Check if we're already in an HTML context
+                const before = content.substring(Math.max(0, offset - 10), offset);
+                const after = content.substring(offset, Math.min(content.length, offset + 10));
+                
+                // Don't add <br> if we're already near a <br> tag
+                if (before.includes('<br>') || after.includes('<br>')) {
+                    return match;
+                }
+                
+                // Don't add <br> inside HTML tags
+                if (before.includes('<') && !before.includes('>')) {
+                    return match;
+                }
+                
+                return '<br>\n';
+            });
+            
+            // Step 9: Clean up any double escaping that might have occurred
+            content = content.replace(/&amp;lt;/g, '&lt;');
+            content = content.replace(/&amp;gt;/g, '&gt;');
+            content = content.replace(/&amp;amp;/g, '&amp;');
+            
+            return content;
+        }
+
+        // Extract sections from man page content
+        function extractSections(content) {
+            const sections = [];
+            const lines = content.split('\n');
+            let currentSection = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                // Check if this is a section header (all caps, at start of line)
+                if (/^[A-Z][A-Z\s]+$/.test(line.trim()) && line.trim().length > 2) {
+                    const sectionName = line.trim();
+                    // Skip TLDR section since we display it separately at the bottom
+                    if (sectionName === 'TLDR') {
+                        continue;
+                    }
+                    currentSection = {
+                        name: sectionName,
+                        line: i,
+                        id: sectionName.toLowerCase().replace(/\s+/g, '-')
+                    };
+                    sections.push(currentSection);
+                }
+            }
+            
+            return sections;
+        }
+        
+        // Extract sections from HTML content
+        function extractSectionsFromContent(htmlContent) {
+            const sections = [];
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            
+            // Find all section headers
+            const headers = tempDiv.querySelectorAll('.section-header');
+            headers.forEach(header => {
+                const sectionName = header.textContent.trim();
+                if (sectionName && sectionName !== 'TLDR') {
+                    sections.push({
+                        name: sectionName,
+                        id: sectionName.toLowerCase().replace(/\s+/g, '-')
+                    });
+                }
+            });
+            
+            return sections;
+        }
+        
+        // Scroll to section within a specific man page section
+        function scrollToSectionInContent(manSection, sectionName) {
+            const targetSection = document.querySelector(`.man-section[data-section="${manSection}"]`);
+            if (!targetSection) return;
+            
+            const content = targetSection.querySelector('.man-page-content');
+            if (!content) return;
+            
+            // Find the section header
+            const headers = content.querySelectorAll('.section-header');
+            for (const header of headers) {
+                if (header.textContent.trim() === sectionName) {
+                    header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
+            }
+        }
+
+        // Build section navigation
+        function buildSectionNav(sections) {
+            sectionNavList.innerHTML = '';
+            
+            sections.forEach(section => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = '#' + section.id;
+                a.textContent = section.name;
+                a.dataset.line = section.line;
+                
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    scrollToSection(section.id);
+                    
+                    // Update active state
+                    document.querySelectorAll('.section-nav a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    a.classList.add('active');
+                });
+                
+                li.appendChild(a);
+                sectionNavList.appendChild(li);
+            });
+        }
+        
+        // Build navigation for all man page sections
+        function buildNavigationForAllSections(allSections) {
+            sectionNavList.innerHTML = '';
+            
+            allSections.forEach((sectionData, sectionIndex) => {
+                // Create section group
+                const sectionGroup = document.createElement('li');
+                
+                // Section header
+                const sectionHeader = document.createElement('div');
+                sectionHeader.className = 'nav-section-header';
+                if (sectionIndex === 0) {
+                    sectionHeader.classList.add('active');
+                }
+                
+                // Extract section number for icon
+                const sectionNum = String(sectionData.section).match(/^\d+/) ? String(sectionData.section).match(/^\d+/)[0] : sectionData.section;
+                
+                sectionHeader.innerHTML = `
+                    <span class="nav-section-icon">${sectionNum}</span>
+                    ${sectionData.command}(${sectionData.section})
+                `;
+                
+                // Click on section header to expand/collapse that section
+                sectionHeader.addEventListener('click', () => {
+                    // Update active state
+                    document.querySelectorAll('.nav-section-header').forEach(h => h.classList.remove('active'));
+                    sectionHeader.classList.add('active');
+                    
+                    // Toggle sub-navigation
+                    const subList = sectionGroup.querySelector('.nav-sub-list');
+                    if (subList) {
+                        document.querySelectorAll('.nav-sub-list').forEach(list => list.classList.remove('active'));
+                        subList.classList.add('active');
+                    }
+                    
+                    // Toggle the main section
+                    const targetSection = document.querySelector(`.man-section[data-section="${sectionData.section}"]`);
+                    if (targetSection) {
+                        // Collapse all sections first
+                        document.querySelectorAll('.man-section').forEach(section => {
+                            section.classList.add('collapsed');
+                            const contentDiv = section.querySelector('.man-section-content');
+                            if (contentDiv) {
+                                contentDiv.style.maxHeight = '0';
+                            }
+                        });
+                        
+                        // Expand the clicked section
+                        targetSection.classList.remove('collapsed');
+                        const contentDiv = targetSection.querySelector('.man-section-content');
+                        if (contentDiv) {
+                            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+                            setTimeout(() => {
+                                contentDiv.style.maxHeight = 'none';
+                            }, 300);
+                        }
+                        
+                        // Scroll to section
+                        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+                
+                sectionGroup.appendChild(sectionHeader);
+                
+                // Extract sections from content
+                const sections = extractSectionsFromContent(sectionData.content);
+                
+                // Create sub-navigation
+                if (sections.length > 0) {
+                    const subList = document.createElement('ul');
+                    subList.className = 'nav-sub-list';
+                    if (sectionIndex === 0) {
+                        subList.classList.add('active');
+                    }
+                    
+                    sections.forEach(section => {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.href = '#';
+                        a.textContent = section.name;
+                        
+                        a.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            
+                            // First, ensure the section is expanded
+                            const targetSection = document.querySelector(`.man-section[data-section="${sectionData.section}"]`);
+                            if (targetSection && targetSection.classList.contains('collapsed')) {
+                                // Click the header to expand it
+                                sectionHeader.click();
+                            }
+                            
+                            // Then scroll to the specific section
+                            setTimeout(() => {
+                                scrollToSectionInContent(sectionData.section, section.name);
+                                
+                                // Update active state
+                                document.querySelectorAll('.nav-sub-list a').forEach(link => {
+                                    link.classList.remove('active');
+                                });
+                                a.classList.add('active');
+                            }, targetSection && targetSection.classList.contains('collapsed') ? 350 : 0);
+                        });
+                        
+                        li.appendChild(a);
+                        subList.appendChild(li);
+                    });
+                    
+                    sectionGroup.appendChild(subList);
+                }
+                
+                sectionNavList.appendChild(sectionGroup);
+            });
+        }
+
+        // Scroll to section
+        function scrollToSection(sectionId) {
+            // First try to find section headers with class
+            const sectionHeaders = manPageContent.querySelectorAll('.section-header');
+            for (const header of sectionHeaders) {
+                if (header.textContent.toLowerCase().replace(/\s+/g, '-') === sectionId) {
+                    header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
+            }
+            
+            // Fallback: Search in text content
+            const content = manPageContent.textContent;
+            const lines = content.split('\n');
+            let targetLine = -1;
+            
+            // Find the line containing the section header
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                // Handle both proper headers and malformed ones
+                if (line.toLowerCase().replace(/\s+/g, '-') === sectionId && /^[A-Z][A-Z\s]+$/.test(line)) {
+                    targetLine = i;
+                    break;
+                }
+                // Also check for the malformed section headers (e.g., "section-header>NAME")
+                if (line.includes('section-header>')) {
+                    const headerText = line.replace('section-header>', '').trim();
+                    if (headerText.toLowerCase().replace(/\s+/g, '-') === sectionId) {
+                        targetLine = i;
+                        break;
+                    }
+                }
+            }
+            
+            if (targetLine >= 0) {
+                // Calculate position based on line number
+                const totalLines = lines.length;
+                const percentage = targetLine / totalLines;
+                
+                // Get the content element's position relative to the page
+                const contentRect = manPageContent.getBoundingClientRect();
+                const contentTop = contentRect.top + window.pageYOffset;
+                
+                // Calculate target scroll position
+                const targetScrollPosition = contentTop + (manPageContent.offsetHeight * percentage) - 100;
+                
+                // Scroll the window
+                window.scrollTo({
+                    top: targetScrollPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Find related commands
+        function findRelatedCommands(command, content) {
+            const related = new Set();
+            
+            // Extract from SEE ALSO section
+            const seeAlsoMatch = content.match(/SEE ALSO[\s\S]*?(?=^[A-Z]|\n\n|$)/mi);
+            if (seeAlsoMatch) {
+                const matches = seeAlsoMatch[0].matchAll(/\b([a-z0-9_-]+)\((\d)\)/gi);
+                for (const match of matches) {
+                    if (match[1].toLowerCase() !== command.toLowerCase()) {
+                        related.add({ command: match[1], section: match[2] });
+                    }
+                }
+            }
+            
+            // Extract from cross-references in content
+            const crossRefs = content.matchAll(/\b([a-z0-9_-]+)\((\d)\)/gi);
+            for (const match of crossRefs) {
+                if (match[1].toLowerCase() !== command.toLowerCase() && related.size < 10) {
+                    related.add({ command: match[1], section: match[2] });
+                }
+            }
+            
+            return Array.from(related);
+        }
+
+        // Display related commands
+        function displayRelatedCommands(relatedCmds) {
+            if (relatedCmds.length === 0) {
+                relatedCommands.style.display = 'none';
+                return;
+            }
+            
+            relatedCommandsList.innerHTML = '';
+            relatedCmds.forEach(cmd => {
+                const link = document.createElement('a');
+                link.className = 'related-command';
+                link.textContent = `${cmd.command}(${cmd.section})`;
+                link.href = '#';
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Just display the command, it will show all sections
+                    displayManPage(cmd.command, cmd.section);
+                });
+                
+                relatedCommandsList.appendChild(link);
+            });
+            
+            relatedCommands.style.display = 'block';
+        }
+
+        // TLDR Functions
+        async function fetchTLDR(command) {
+            // Check if TLDR index is loaded
+            if (!window.tldrIndex) {
+                console.error('TLDR index not loaded');
+                return null;
+            }
+            
+            // Try common and linux platforms
+            const platforms = ['common', 'linux'];
+            
+            for (const platform of platforms) {
+                // Check if command exists in this platform
+                if (window.tldrIndex[platform] && window.tldrIndex[platform].includes(command)) {
+                    try {
+                        const url = `tldr_pages/${platform}/${command}.md`;
+                        const response = await fetch(url);
+                        
+                        if (response.ok) {
+                            const content = await response.text();
+                            return content;
+                        }
+                    } catch (error) {
+                        console.error(`Failed to fetch TLDR for ${command} from ${platform}:`, error);
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        function parseTLDRMarkdown(markdown) {
+            const lines = markdown.split('\n');
+            const tldr = {
+                command: '',
+                description: '',
+                examples: []
+            };
+            
+            let currentExample = null;
+            
+            for (const line of lines) {
+                // Command name
+                if (line.startsWith('# ')) {
+                    tldr.command = line.slice(2).trim();
+                }
+                // Description
+                else if (line.startsWith('> ')) {
+                    const descLine = line.slice(2).trim();
+                    // Skip "More information:" lines completely
+                    if (!descLine.startsWith('More information:')) {
+                        tldr.description += descLine + ' ';
+                    }
+                }
+                // Example description
+                else if (line.startsWith('- ')) {
+                    if (currentExample) {
+                        tldr.examples.push(currentExample);
+                    }
+                    currentExample = {
+                        description: line.slice(2).trim(),
+                        code: ''
+                    };
+                }
+                // Code block
+                else if (line.startsWith('`') && line.endsWith('`') && line.length > 2) {
+                    if (currentExample) {
+                        currentExample.code = line.slice(1, -1);
+                    }
+                }
+            }
+            
+            if (currentExample) {
+                tldr.examples.push(currentExample);
+            }
+            
+            tldr.description = tldr.description.trim();
+            return tldr;
+        }
+
+        function highlightTLDRCode(code) {
+            // Highlight placeholders {{example}}
+            code = code.replace(/\{\{([^}]+)\}\}/g, '<span class="tldr-placeholder">$1</span>');
+            
+            // Highlight options
+            code = code.replace(/(\s|^)(-{1,2}[a-zA-Z0-9-]+)/g, '$1<span class="tldr-option">$2</span>');
+            
+            return code;
+        }
+
+        function renderTLDR(tldr) {
+            let html = '';
+            
+            if (tldr.description) {
+                html += `<p class="tldr-description">${tldr.description}</p>`;
+            }
+            
+            if (tldr.examples.length > 0) {
+                html += '<div class="tldr-examples">';
+                html += '<h5>Quick Examples:</h5>';
+                
+                for (const example of tldr.examples) {
+                    html += '<div class="tldr-example">';
+                    html += `<p class="example-description">${example.description}</p>`;
+                    html += `<pre class="example-code">${highlightTLDRCode(example.code)}</pre>`;
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        async function displayTLDR(command) {
+            tldrSection.style.display = 'block';
+            tldrContent.innerHTML = '<div class="tldr-loading">Loading TLDR summary...</div>';
+            
+            try {
+                const markdown = await fetchTLDR(command);
+                
+                if (markdown) {
+                    const tldr = parseTLDRMarkdown(markdown);
+                    tldrContent.innerHTML = renderTLDR(tldr);
+                } else {
+                    tldrContent.innerHTML = '<div class="no-tldr">No TLDR summary available for this command.</div>';
+                }
+            } catch (error) {
+                console.error('Error displaying TLDR:', error);
+                tldrContent.innerHTML = '<div class="no-tldr">Failed to load TLDR summary.</div>';
+            }
+        }
+
+        // Add to history
+        function addToHistory(command, section) {
+            const entry = {
+                command,
+                section,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Remove if already exists
+            history = history.filter(h => !(h.command === command && h.section === section));
+            
+            // Add to beginning
+            history.unshift(entry);
+            
+            // Keep only last 50
+            if (history.length > 50) {
+                history = history.slice(0, 50);
+            }
+            
+            saveHistory();
+            updateHistoryPanel();
+        }
+
+        // Update history panel
+        function updateHistoryPanel() {
+            historyContent.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyContent.innerHTML = '<p style="text-align: center; color: #999;">No history yet</p>';
+                return;
+            }
+            
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'side-panel-item';
+                div.innerHTML = `
+                    <div class="side-panel-item-command">${item.command}(${item.section})</div>
+                    <div class="side-panel-item-meta">${new Date(item.timestamp).toLocaleDateString()}</div>
+                `;
+                
+                div.addEventListener('click', () => {
+                    displayManPage(item.command, item.section);
+                    sidePanel.classList.remove('open');
+                });
+                
+                historyContent.appendChild(div);
+            });
+        }
+
+        // Update bookmarks panel
+        function updateBookmarksPanel() {
+            bookmarksContent.innerHTML = '';
+            
+            if (bookmarks.length === 0) {
+                bookmarksContent.innerHTML = '<p style="text-align: center; color: #999;">No bookmarks yet</p>';
+                return;
+            }
+            
+            bookmarks.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'side-panel-item';
+                div.innerHTML = `
+                    <div class="side-panel-item-command">${item.command}(${item.section})</div>
+                    <div class="side-panel-item-meta">
+                        ${item.description}
+                        <button class="action-button" style="float: right; padding: 2px 6px; font-size: 12px;" onclick="removeBookmark(${index})">Remove</button>
+                    </div>
+                `;
+                
+                div.addEventListener('click', (e) => {
+                    if (!e.target.matches('button')) {
+                        displayManPage(item.command, item.section);
+                        sidePanel.classList.remove('open');
+                    }
+                });
+                
+                bookmarksContent.appendChild(div);
+            });
+        }
+
+        // Toggle bookmark
+        function toggleBookmark() {
+            if (!currentManPage) return;
+            
+            const exists = bookmarks.findIndex(b => 
+                b.command === currentManPage.command && b.section === currentManPage.section
+            );
+            
+            if (exists >= 0) {
+                bookmarks.splice(exists, 1);
+                bookmarkBtn.classList.remove('active');
+                showStatus('Bookmark removed');
+            } else {
+                const entry = searchIndex.find(cmd => 
+                    cmd.command === currentManPage.command && cmd.section === currentManPage.section
+                );
+                if (entry) {
+                    bookmarks.unshift({
+                        command: currentManPage.command,
+                        section: currentManPage.section,
+                        description: entry.description
+                    });
+                    bookmarkBtn.classList.add('active');
+                    showStatus('Bookmark added');
+                }
+            }
+            
+            saveBookmarks();
+            updateBookmarksPanel();
+        }
+
+        // Remove bookmark
+        window.removeBookmark = function(index) {
+            bookmarks.splice(index, 1);
+            saveBookmarks();
+            updateBookmarksPanel();
+            
+            // Update bookmark button if current page
+            if (currentManPage) {
+                const exists = bookmarks.find(b => 
+                    b.command === currentManPage.command && b.section === currentManPage.section
+                );
+                bookmarkBtn.classList.toggle('active', !!exists);
+            }
+        };
+
+        // Search in page functionality
+        function toggleSearchInPage() {
+            searchInPageActive = !searchInPageActive;
+            searchInPage.style.display = searchInPageActive ? 'flex' : 'none';
+            
+            if (searchInPageActive) {
+                searchInPageInput.focus();
+                searchInPageInput.select();
+            } else {
+                clearSearchInPage();
+            }
+        }
+
+        function clearSearchInPage() {
+            // Remove all highlights
+            const highlights = manPageContent.querySelectorAll('.highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+            searchInPageResults = [];
+            searchInPageCurrentIndex = -1;
+            updateSearchInPageInfo();
+        }
+
+        function searchInCurrentPage(query) {
+            if (!query) {
+                clearSearchInPage();
+                return;
+            }
+            
+            clearSearchInPage();
+            
+            const walker = document.createTreeWalker(
+                manPageContent,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            let node;
+            const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            
+            while (node = walker.nextNode()) {
+                const matches = [...node.textContent.matchAll(regex)];
+                if (matches.length > 0) {
+                    const parent = node.parentNode;
+                    if (parent.classList && (parent.classList.contains('section-header') || 
+                        parent.classList.contains('option') || 
+                        parent.classList.contains('command'))) {
+                        continue; // Skip already styled elements
+                    }
+                    
+                    let lastIndex = 0;
+                    const fragment = document.createDocumentFragment();
+                    
+                    matches.forEach(match => {
+                        if (match.index > lastIndex) {
+                            fragment.appendChild(
+                                document.createTextNode(node.textContent.slice(lastIndex, match.index))
+                            );
+                        }
+                        
+                        const span = document.createElement('span');
+                        span.className = 'highlight';
+                        span.textContent = match[0];
+                        fragment.appendChild(span);
+                        searchInPageResults.push(span);
+                        
+                        lastIndex = match.index + match[0].length;
+                    });
+                    
+                    if (lastIndex < node.textContent.length) {
+                        fragment.appendChild(
+                            document.createTextNode(node.textContent.slice(lastIndex))
+                        );
+                    }
+                    
+                    parent.replaceChild(fragment, node);
+                }
+            }
+            
+            if (searchInPageResults.length > 0) {
+                searchInPageCurrentIndex = 0;
+                highlightCurrentResult();
+            }
+            
+            updateSearchInPageInfo();
+        }
+
+        function highlightCurrentResult() {
+            searchInPageResults.forEach((el, index) => {
+                el.style.backgroundColor = index === searchInPageCurrentIndex ? '#ff9632' : '#fff3cd';
+                // Check if any dark theme is active
+                const isDarkTheme = document.body.classList.contains('dark-mode') || 
+                                  document.body.classList.contains('solarized-dark') ||
+                                  document.body.classList.contains('dracula') ||
+                                  document.body.classList.contains('monokai') ||
+                                  document.body.classList.contains('high-contrast');
+                if (isDarkTheme) {
+                    el.style.backgroundColor = index === searchInPageCurrentIndex ? '#ff6b00' : '#524c00';
+                }
+            });
+            
+            if (searchInPageResults[searchInPageCurrentIndex]) {
+                searchInPageResults[searchInPageCurrentIndex].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }
+
+        function updateSearchInPageInfo() {
+            if (searchInPageResults.length === 0) {
+                searchInPageInfo.textContent = 'No results';
+            } else {
+                searchInPageInfo.textContent = `${searchInPageCurrentIndex + 1} of ${searchInPageResults.length}`;
+            }
+        }
+
+        function navigateSearchInPage(direction) {
+            if (searchInPageResults.length === 0) return;
+            
+            if (direction === 'next') {
+                searchInPageCurrentIndex = (searchInPageCurrentIndex + 1) % searchInPageResults.length;
+            } else {
+                searchInPageCurrentIndex = (searchInPageCurrentIndex - 1 + searchInPageResults.length) % searchInPageResults.length;
+            }
+            
+            highlightCurrentResult();
+            updateSearchInPageInfo();
+        }
+
+        // Full-text search in content
+        async function searchInContent(query, section = '') {
+            if (!query || query.length < 2) {
+                return [];
+            }
+
+            const results = [];
+            const lowerQuery = query.toLowerCase();
+            const sectionFilter = section ? parseInt(section) : null;
+
+            showStatus('Searching in all man pages...', 5000);
+
+            // Content search is disabled in the new architecture
+            // Each man page is loaded on-demand, so searching content would require loading all files
+            showStatus('Content search is not available with on-demand loading', 3000);
+            return [];
+        }
+
+        // Search function using the index
+        function searchManPages(query, section = '') {
+            if (!query || query.length < 1) {
+                return [];
+            }
+
+            // Check if searchIndex is loaded
+            if (typeof searchIndex === 'undefined') {
+                console.error('searchIndex is not loaded');
+                return [];
+            }
+
+            let results = [];
+            const lowerQuery = query.toLowerCase();
+            const sectionFilter = section ? parseInt(section) : null;
+
+            console.log(`Searching for: "${query}", searchIndex length: ${searchIndex.length}`);
+
+            // Group results by command name
+            const commandGroups = new Map();
+
+            for (const entry of searchIndex) {
+                if (sectionFilter && entry.section !== sectionFilter) {
+                    continue;
+                }
+
+                // Handle both 'command' and 'name' properties for backward compatibility
+                const commandName = entry.command || entry.name;
+                if (!commandName) {
+                    continue; // Skip entries without a command name
+                }
+
+                const description = entry.description || '';
+                if (commandName.toLowerCase().includes(lowerQuery) || 
+                    description.toLowerCase().includes(lowerQuery)) {
+                    
+                    // Group by command name, keeping the lowest section number
+                    if (!commandGroups.has(commandName)) {
+                        commandGroups.set(commandName, {
+                            ...entry,
+                            command: commandName,
+                            sections: [entry.section]
+                        });
+                    } else {
+                        const existing = commandGroups.get(commandName);
+                        existing.sections.push(entry.section);
+                        // Keep the entry with the lowest section number
+                        if (entry.section < existing.section) {
+                            commandGroups.set(commandName, {
+                                ...entry,
+                                command: commandName,
+                                sections: existing.sections
+                            });
+                        }
+                    }
+                    
+                    // Debug log for specific commands
+                    if (['ls', 'cat', 'chmod'].includes(commandName)) {
+                        console.log(`Found ${commandName} matching query "${query}"`);
+                    }
+                }
+            }
+
+            // Convert map to array
+            results = Array.from(commandGroups.values());
+
+            results.sort((a, b) => {
+                const aExact = a.command.toLowerCase() === lowerQuery;
+                const bExact = b.command.toLowerCase() === lowerQuery;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                return a.command.localeCompare(b.command);
+            });
+
+            console.log(`Found ${results.length} unique commands for "${query}", returning top 10`);
+            return results.slice(0, 10);
+        }
+
+        // Display suggestions with keyboard navigation
+        let selectedSuggestionIndex = -1;
+        
+        function displaySuggestions(results) {
+            console.log(`displaySuggestions called with ${results.length} results`);
+            suggestions.innerHTML = '';
+            selectedSuggestionIndex = -1;
+            
+            if (results.length === 0) {
+                suggestions.style.display = 'none';
+                console.log('No results to display, hiding suggestions');
+                return;
+            }
+
+            results.forEach((result, index) => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'suggestion';
+                suggestion.dataset.index = index;
+                
+                const descriptionText = result.description || 'No description available';
+                
+                // Show all available sections if multiple exist
+                const sectionBadge = result.sections && result.sections.length > 1
+                    ? `Sections ${result.sections.sort((a, b) => a - b).join(', ')}`
+                    : `Section ${result.section}`;
+                
+                suggestion.innerHTML = `
+                    <div class="suggestion-info">
+                        <div class="suggestion-command">${result.command}</div>
+                        <div class="suggestion-desc">${descriptionText}</div>
+                    </div>
+                    <span class="section-badge">${sectionBadge}</span>
+                `;
+                
+                suggestion.addEventListener('click', () => {
+                    displayManPage(result.command, result.section);
+                });
+                
+                suggestions.appendChild(suggestion);
+            });
+            
+            suggestions.style.display = 'block';
+        }
+
+        function updateSelectedSuggestion(newIndex) {
+            const suggestionElements = suggestions.querySelectorAll('.suggestion');
+            
+            suggestionElements.forEach((el, index) => {
+                el.classList.toggle('selected', index === newIndex);
+            });
+            
+            selectedSuggestionIndex = newIndex;
+            
+            if (suggestionElements[newIndex]) {
+                suggestionElements[newIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Display man page
+        async function displayManPage(command, section) {
+            // Update state
+            currentState = 'viewing';
+            container.classList.add('search-active');
+            suggestions.style.display = 'none';
+            contentWrapper.style.display = 'flex';
+            
+            // Show loading state
+            manPageTitle.textContent = command;
+            manPageContent.innerHTML = '<div class="loading">Loading man pages...</div>';
+            
+            // Store current page info
+            currentManPage = { command, section: section };
+            
+            // Check if any section is bookmarked
+            const isBookmarked = bookmarks.find(b => b.command === command);
+            bookmarkBtn.classList.toggle('active', !!isBookmarked);
+            
+            try {
+                // Load all man pages for this command
+                showStatus(`Loading all sections for ${command}...`);
+                const allSections = await loadAllManPages(command);
+                
+                // Clear content and add container class
+                manPageContent.innerHTML = '';
+                manPageContent.className = 'man-page-content man-sections-container';
+                
+                // Display each section in a collapsible container
+                allSections.forEach((sectionData, index) => {
+                    const isFirstSection = index === 0;
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = `man-section ${isFirstSection ? '' : 'collapsed'}`;
+                    sectionDiv.dataset.section = sectionData.section;
+                    
+                    // Create header
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'man-section-header';
+                    headerDiv.innerHTML = `
+                        <div class="man-section-info">
+                            <span class="man-section-title">${command}(${sectionData.section})</span>
+                            <span class="section-badge">Section ${sectionData.section}</span>
+                        </div>
+                        <span class="collapse-icon">▼</span>
+                    `;
+                    
+                    // Create content container
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'man-section-content';
+                    
+                    // Create inner content wrapper for padding
+                    const innerContent = document.createElement('div');
+                    innerContent.className = 'man-page-content';
+                    innerContent.innerHTML = sectionData.content;
+                    contentDiv.appendChild(innerContent);
+                    
+                    // Add click handler to header
+                    headerDiv.addEventListener('click', () => {
+                        sectionDiv.classList.toggle('collapsed');
+                        
+                        // If expanding this section, we need to set max-height for animation
+                        if (!sectionDiv.classList.contains('collapsed')) {
+                            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+                            setTimeout(() => {
+                                contentDiv.style.maxHeight = 'none';
+                            }, 300);
+                        } else {
+                            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+                            setTimeout(() => {
+                                contentDiv.style.maxHeight = '0';
+                            }, 10);
+                        }
+                    });
+                    
+                    sectionDiv.appendChild(headerDiv);
+                    sectionDiv.appendChild(contentDiv);
+                    manPageContent.appendChild(sectionDiv);
+                    
+                    // Set initial max-height for first section
+                    if (isFirstSection) {
+                        contentDiv.style.maxHeight = 'none';
+                    }
+                    
+                    // Add cross-reference click handlers
+                    innerContent.querySelectorAll('.cross-ref').forEach(ref => {
+                        ref.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const refCommand = ref.dataset.command;
+                            const refSection = ref.dataset.section;
+                            displayManPage(refCommand, refSection);
+                        });
+                    });
+                });
+                
+                // Show section navigation
+                sectionNav.style.display = 'block';
+                
+                // Build navigation for all sections
+                buildNavigationForAllSections(allSections);
+                
+                // Find related commands from first section
+                const firstContent = allSections[0].content;
+                const relatedCmds = findRelatedCommands(command, firstContent);
+                displayRelatedCommands(relatedCmds);
+                
+                // Display TLDR summary
+                displayTLDR(command);
+                
+                // Add to history (just the command, not specific section)
+                addToHistory(command, allSections[0].section);
+                
+                // Update URL hash for direct linking
+                window.location.hash = command;
+                
+                // Scroll to top
+                manPageContent.scrollTop = 0;
+                
+            } catch (error) {
+                console.error('Error loading man pages:', error);
+                manPageContent.innerHTML = `<div class="error">Error loading man pages: ${error.message}</div>`;
+            }
+        }
+
+        // Close man page
+        function closeManPage() {
+            contentWrapper.style.display = 'none';
+            currentState = 'search';
+            currentManPage = null;
+            searchInput.focus();
+            window.location.hash = '';
+            
+            if (searchInPageActive) {
+                toggleSearchInPage();
+            }
+        }
+
+        // Keyboard event handlers
+        document.addEventListener('keydown', (e) => {
+            // Global keyboard shortcuts
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey && 
+                e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+            
+            if (e.key === 'Escape') {
+                if (shortcutsHelp.style.display === 'block') {
+                    shortcutsHelp.style.display = 'none';
+                    overlay.style.display = 'none';
+                } else if (searchInPageActive) {
+                    toggleSearchInPage();
+                } else if (sidePanel.classList.contains('open')) {
+                    sidePanel.classList.remove('open');
+                } else if (currentState === 'viewing') {
+                    closeManPage();
+                } else if (suggestions.style.display === 'block') {
+                    suggestions.style.display = 'none';
+                }
+            }
+            
+            if (e.key === '?' && e.shiftKey && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                shortcutsHelp.style.display = shortcutsHelp.style.display === 'block' ? 'none' : 'block';
+                overlay.style.display = shortcutsHelp.style.display;
+            }
+            
+            if (e.key === 'h' && !e.ctrlKey && !e.metaKey && 
+                e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                sidePanel.classList.toggle('open');
+            }
+            
+            if (e.ctrlKey && e.key === 'f' && currentState === 'viewing') {
+                e.preventDefault();
+                toggleSearchInPage();
+            }
+            
+            if (e.ctrlKey && e.key === 'b' && currentState === 'viewing') {
+                e.preventDefault();
+                toggleBookmark();
+            }
+        });
+
+        // Search input keyboard navigation
+        searchInput.addEventListener('keydown', (e) => {
+            const suggestionElements = suggestions.querySelectorAll('.suggestion');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (suggestionElements.length > 0) {
+                    updateSelectedSuggestion(
+                        Math.min(selectedSuggestionIndex + 1, suggestionElements.length - 1)
+                    );
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (suggestionElements.length > 0) {
+                    updateSelectedSuggestion(Math.max(selectedSuggestionIndex - 1, 0));
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (selectedSuggestionIndex >= 0 && suggestionElements[selectedSuggestionIndex]) {
+                    suggestionElements[selectedSuggestionIndex].click();
+                } else if (suggestionElements.length > 0) {
+                    suggestionElements[0].click();
+                }
+            }
+        });
+
+        // Event listeners
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value;
+            const fullTextSearchEnabled = false; // Removed full text search feature
+            
+            console.log(`Input event: query="${query}", fullTextSearch=${fullTextSearchEnabled}`);
+            
+            if (query.length > 0 && currentState === 'initial') {
+                currentState = 'search';
+                container.classList.add('search-active');
+            }
+            
+            clearTimeout(searchTimeout);
+            
+            searchTimeout = setTimeout(async () => {
+                let results;
+                if (fullTextSearchEnabled) {
+                    results = await searchInContent(query, sectionSelect.value);
+                } else {
+                    results = searchManPages(query, sectionSelect.value);
+                }
+                console.log(`Search completed, found ${results.length} results`);
+                displaySuggestions(results);
+            }, fullTextSearchEnabled ? 500 : 150);
+        });
+
+        searchButton.addEventListener('click', async () => {
+            const query = searchInput.value;
+            const fullTextSearchEnabled = false; // Removed full text search feature
+            
+            let results;
+            if (fullTextSearchEnabled) {
+                results = await searchInContent(query, sectionSelect.value);
+            } else {
+                results = searchManPages(query, sectionSelect.value);
+            }
+            
+            if (results.length > 0) {
+                displayManPage(results[0].command, results[0].section);
+            }
+        });
+
+        closeButton.addEventListener('click', closeManPage);
+
+        // Search in page event listeners
+        searchInPageBtn.addEventListener('click', toggleSearchInPage);
+        
+        searchInPageInput.addEventListener('input', (e) => {
+            searchInCurrentPage(e.target.value);
+        });
+        
+        searchInPageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                navigateSearchInPage(e.shiftKey ? 'prev' : 'next');
+            } else if (e.key === 'Escape') {
+                toggleSearchInPage();
+            }
+        });
+        
+        document.getElementById('searchInPagePrev').addEventListener('click', () => {
+            navigateSearchInPage('prev');
+        });
+        
+        document.getElementById('searchInPageNext').addEventListener('click', () => {
+            navigateSearchInPage('next');
+        });
+        
+        document.getElementById('searchInPageClose').addEventListener('click', toggleSearchInPage);
+
+        // Bookmark button
+        bookmarkBtn.addEventListener('click', toggleBookmark);
+        
+        // TLDR jump button
+        tldrJumpBtn.addEventListener('click', () => {
+            if (tldrSection && tldrSection.style.display !== 'none') {
+                tldrSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                showStatus('TLDR section is not available for this command');
+            }
+        });
+
+        // Side panel event listeners
+        document.getElementById('historyFab').addEventListener('click', () => {
+            sidePanel.classList.toggle('open');
+            updateHistoryPanel();
+            updateBookmarksPanel();
+        });
+        
+        document.getElementById('sidePanelClose').addEventListener('click', () => {
+            sidePanel.classList.remove('open');
+        });
+        
+        // Tab switching
+        document.querySelectorAll('.side-panel-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                document.querySelectorAll('.side-panel-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                tab.classList.add('active');
+                
+                if (tabName === 'history') {
+                    historyContent.style.display = 'block';
+                    bookmarksContent.style.display = 'none';
+                } else {
+                    historyContent.style.display = 'none';
+                    bookmarksContent.style.display = 'block';
+                }
+            });
+        });
+
+        // Help button
+        document.getElementById('helpFab').addEventListener('click', () => {
+            shortcutsHelp.style.display = shortcutsHelp.style.display === 'block' ? 'none' : 'block';
+            overlay.style.display = shortcutsHelp.style.display;
+        });
+        
+        // Removed - consolidated with the overlay handler below
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                suggestions.style.display = 'none';
+            }
+        });
+
+        // Theme toggle handling
+        const themes = [
+            { name: 'Cyber Frost', class: 'cyber-frost', icon: '❄️' },
+            { name: 'Dark', class: 'dark-mode', icon: '🌙' },
+            { name: 'Dracula', class: 'dracula', icon: '🧛' },
+            { name: 'Forest Dawn', class: 'forest-dawn', icon: '🌲' },
+            { name: 'Gruvbox', class: 'gruvbox', icon: '🍂' },
+            { name: 'High Contrast', class: 'high-contrast', icon: '⚡' },
+            { name: 'Light', class: '', icon: '☀️' },
+            { name: 'Miami Sunrise', class: 'miami-sunrise', icon: '🌺' },
+            { name: 'Monokai', class: 'monokai', icon: '🎨' },
+            { name: 'Neon Noir', class: 'neon-noir', icon: '🌆' },
+            { name: 'Nord', class: 'nord', icon: '🏔️' },
+            { name: 'Ocean Depth', class: 'ocean-depth', icon: '🌊' },
+            { name: 'One Dark', class: 'one-dark', icon: '🌑' },
+            { name: 'Retro Wave', class: 'retro-wave', icon: '🌴' },
+            { name: 'Solarized', class: 'solarized-dark', icon: '🌅' },
+            { name: 'Tokyo Night', class: 'tokyo-night', icon: '🌃' }
+        ];
+        
+        let currentThemeIndex = 11; // Ocean Depth as default
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+        
+        // Theme name tooltip removed - using modal instead
+        
+        // Load saved theme or apply default
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            const themeIndex = themes.findIndex(t => t.class === savedTheme);
+            if (themeIndex !== -1) {
+                currentThemeIndex = themeIndex;
+                applyTheme(currentThemeIndex);
+            } else {
+                // Saved theme not found, apply default
+                applyTheme(currentThemeIndex);
+            }
+        } else {
+            // No saved theme, apply default
+            applyTheme(currentThemeIndex);
+        }
+        
+        function applyTheme(index) {
+            // Remove all theme classes
+            themes.forEach(theme => {
+                if (theme.class) {
+                    document.body.classList.remove(theme.class);
+                }
+            });
+            
+            // Apply new theme
+            const theme = themes[index];
+            if (theme.class) {
+                document.body.classList.add(theme.class);
+            }
+            
+            // Update icon
+            themeIcon.textContent = theme.icon;
+            
+            // Save preference
+            localStorage.setItem('theme', theme.class || '');
+        }
+        
+        // Theme modal elements
+        const themeModal = document.getElementById('themeModal');
+        const themeModalClose = document.getElementById('themeModalClose');
+        const themeOptions = document.getElementById('themeOptions');
+        
+        // Populate theme options
+        function populateThemeOptions() {
+            themeOptions.innerHTML = '';
+            themes.forEach((theme, index) => {
+                const option = document.createElement('div');
+                option.className = 'theme-option';
+                if (index === currentThemeIndex) {
+                    option.classList.add('active');
+                }
+                
+                // Apply theme-specific styling to the card
+                applyThemeCardStyle(option, theme);
+                
+                const icon = document.createElement('div');
+                icon.className = 'theme-option-icon';
+                icon.textContent = theme.icon;
+                
+                const name = document.createElement('div');
+                name.className = 'theme-option-name';
+                name.textContent = theme.name;
+                
+                const preview = document.createElement('div');
+                preview.className = 'theme-option-preview';
+                preview.innerHTML = createThemePreview(theme);
+                
+                option.appendChild(icon);
+                option.appendChild(name);
+                option.appendChild(preview);
+                
+                option.addEventListener('click', () => {
+                    currentThemeIndex = index;
+                    applyTheme(currentThemeIndex);
+                    populateThemeOptions(); // Update active state
+                    closeThemeModal();
+                });
+                
+                themeOptions.appendChild(option);
+            });
+        }
+        
+        function applyThemeCardStyle(card, theme) {
+            const cardStyles = {
+                '': {
+                    background: '#ffffff',
+                    color: '#333333',
+                    border: '2px solid #e0e0e0'
+                },
+                'dark-mode': {
+                    background: '#1e1e1e',
+                    color: '#e0e0e0',
+                    border: '2px solid #444'
+                },
+                'nord': {
+                    background: '#3b4252',
+                    color: '#eceff4',
+                    border: '2px solid #4c566a'
+                },
+                'one-dark': {
+                    background: '#282c34',
+                    color: '#abb2bf',
+                    border: '2px solid #3e4451'
+                },
+                'tokyo-night': {
+                    background: '#24283b',
+                    color: '#c0caf5',
+                    border: '2px solid #3b4261'
+                },
+                'gruvbox': {
+                    background: '#3c3836',
+                    color: '#ebdbb2',
+                    border: '2px solid #665c54'
+                },
+                'solarized-dark': {
+                    background: '#002b36',
+                    color: '#93a1a1',
+                    border: '2px solid #073642'
+                },
+                'dracula': {
+                    background: '#282a36',
+                    color: '#f8f8f2',
+                    border: '2px solid #44475a'
+                },
+                'monokai': {
+                    background: '#272822',
+                    color: '#f8f8f2',
+                    border: '2px solid #3e3d32'
+                },
+                'high-contrast': {
+                    background: '#000000',
+                    color: '#ffffff',
+                    border: '2px solid #ffffff'
+                },
+                'neon-noir': {
+                    background: '#1a1a24',
+                    color: '#e4e4f0',
+                    border: '2px solid #ea00d9'
+                },
+                'cyber-frost': {
+                    background: '#ffffff',
+                    color: '#1a1f36',
+                    border: '2px solid #00d4ff'
+                },
+                'retro-wave': {
+                    background: '#1a0b2e',
+                    color: '#ffeef8',
+                    border: '2px solid #f222ff'
+                },
+                'miami-sunrise': {
+                    background: '#fff5f8',
+                    color: '#2d1b69',
+                    border: '2px solid #ff71ce'
+                },
+                'forest-dawn': {
+                    background: '#fefef9',
+                    color: '#2b3e1f',
+                    border: '2px solid #90a955'
+                },
+                'ocean-depth': {
+                    background: '#14273e',
+                    color: '#e9f5f2',
+                    border: '2px solid #0a9396'
+                }
+            };
+            
+            const style = cardStyles[theme.class] || cardStyles[''];
+            Object.assign(card.style, style);
+        }
+        
+        function createThemePreview(theme) {
+            const previewHTML = {
+                '': `
+                    <div style="background: #f5f5f5; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #4285f4; font-weight: bold;">SECTION</div>
+                        <div style="color: #333;">man <span style="color: #0066cc;">command</span></div>
+                    </div>
+                `,
+                'dark-mode': `
+                    <div style="background: #2d2d2d; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #4a9eff; font-weight: bold;">SECTION</div>
+                        <div style="color: #d4d4d4;">man <span style="color: #79b8ff;">command</span></div>
+                    </div>
+                `,
+                'nord': `
+                    <div style="background: #2e3440; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #88c0d0; font-weight: bold;">SECTION</div>
+                        <div style="color: #d8dee9;">man <span style="color: #81a1c1;">command</span></div>
+                    </div>
+                `,
+                'one-dark': `
+                    <div style="background: #21252b; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #61afef; font-weight: bold;">SECTION</div>
+                        <div style="color: #abb2bf;">man <span style="color: #61afef;">command</span></div>
+                    </div>
+                `,
+                'tokyo-night': `
+                    <div style="background: #1f2335; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #7aa2f7; font-weight: bold;">SECTION</div>
+                        <div style="color: #a9b1d6;">man <span style="color: #7dcfff;">command</span></div>
+                    </div>
+                `,
+                'gruvbox': `
+                    <div style="background: #282828; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #b8bb26; font-weight: bold;">SECTION</div>
+                        <div style="color: #ebdbb2;">man <span style="color: #83a598;">command</span></div>
+                    </div>
+                `,
+                'solarized-dark': `
+                    <div style="background: #073642; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #268bd2; font-weight: bold;">SECTION</div>
+                        <div style="color: #93a1a1;">man <span style="color: #2aa198;">command</span></div>
+                    </div>
+                `,
+                'dracula': `
+                    <div style="background: #44475a; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #bd93f9; font-weight: bold;">SECTION</div>
+                        <div style="color: #f8f8f2;">man <span style="color: #8be9fd;">command</span></div>
+                    </div>
+                `,
+                'monokai': `
+                    <div style="background: #3e3d32; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #a6e22e; font-weight: bold;">SECTION</div>
+                        <div style="color: #f8f8f2;">man <span style="color: #66d9ef;">command</span></div>
+                    </div>
+                `,
+                'high-contrast': `
+                    <div style="background: #000; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #fff;">
+                        <div style="color: #ffff00; font-weight: bold;">SECTION</div>
+                        <div style="color: #ffffff;">man <span style="color: #00ff00;">command</span></div>
+                    </div>
+                `,
+                'neon-noir': `
+                    <div style="background: #0a0a0f; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; box-shadow: 0 0 10px rgba(234, 0, 217, 0.3);">
+                        <div style="color: #00ffff; font-weight: bold; text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);">SECTION</div>
+                        <div style="color: #e4e4f0;">man <span style="color: #0abdc6; text-shadow: 0 0 3px rgba(10, 189, 198, 0.3);">command</span></div>
+                    </div>
+                `,
+                'cyber-frost': `
+                    <div style="background: #ffffff; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #00d4ff;">
+                        <div style="color: #00bcd4; font-weight: bold; text-shadow: 0 0 5px rgba(0, 188, 212, 0.2);">SECTION</div>
+                        <div style="color: #1a1f36;">man <span style="color: #4fc3f7; font-weight: 500;">command</span></div>
+                    </div>
+                `,
+                'retro-wave': `
+                    <div style="background: #0f0613; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; box-shadow: 0 0 15px rgba(255, 41, 117, 0.3);">
+                        <div style="color: #01cdfe; font-weight: bold; text-shadow: 0 0 10px rgba(1, 205, 254, 0.6);">SECTION</div>
+                        <div style="color: #ffeef8;">man <span style="color: #00bfff; text-shadow: 0 0 5px rgba(0, 191, 255, 0.5);">command</span></div>
+                    </div>
+                `,
+                'miami-sunrise': `
+                    <div style="background: #ffffff; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #ff71ce;">
+                        <div style="color: #00d4cc; font-weight: bold;">SECTION</div>
+                        <div style="color: #2d1b69;">man <span style="color: #01cdfe; font-weight: 500;">command</span></div>
+                    </div>
+                `,
+                'forest-dawn': `
+                    <div style="background: #f9f7f1; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <div style="color: #2d5016; font-weight: bold;">SECTION</div>
+                        <div style="color: #2b3e1f;">man <span style="color: #4a6741; font-weight: 500;">command</span></div>
+                    </div>
+                `,
+                'ocean-depth': `
+                    <div style="background: #0a1628; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; box-shadow: 0 0 10px rgba(0, 212, 204, 0.2);">
+                        <div style="color: #00d4cc; font-weight: bold; text-shadow: 0 0 10px rgba(0, 212, 204, 0.4);">SECTION</div>
+                        <div style="color: #e9f5f2;">man <span style="color: #41b3ff; text-shadow: 0 0 5px rgba(65, 179, 255, 0.3);">command</span></div>
+                    </div>
+                `
+            };
+            
+            return previewHTML[theme.class] || previewHTML[''];
+        }
+        
+        function openThemeModal() {
+            populateThemeOptions();
+            themeModal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+        
+        function closeThemeModal() {
+            themeModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+        
+        themeToggle.addEventListener('click', openThemeModal);
+        
+        themeModalClose.addEventListener('click', closeThemeModal);
+
+        // Command Explainer functionality
+        const explainerFab = document.getElementById('explainerFab');
+        const commandExplainerModal = document.getElementById('commandExplainerModal');
+        const commandExplainerClose = document.getElementById('commandExplainerClose');
+        const commandInput = document.getElementById('commandInput');
+        const commandBreakdown = document.getElementById('commandBreakdown');
+        const commandExplanations = document.getElementById('commandExplanations');
+
+        // Use generated command options database if available, fallback to basic set
+        if (typeof window.commandOptions === 'undefined') {
+            window.commandOptions = {
+            'ls': {
+                description: 'List directory contents',
+                options: {
+                    '-a': { long: '--all', description: 'do not ignore entries starting with .', argType: 'none' },
+                    '-l': { description: 'use a long listing format', argType: 'none' },
+                    '-h': { long: '--human-readable', description: 'with -l, print sizes in human readable format', argType: 'none' },
+                    '-r': { long: '--reverse', description: 'reverse order while sorting', argType: 'none' },
+                    '-t': { description: 'sort by modification time, newest first', argType: 'none' },
+                    '-S': { description: 'sort by file size, largest first', argType: 'none' },
+                    '-R': { long: '--recursive', description: 'list subdirectories recursively', argType: 'none' },
+                    '-d': { long: '--directory', description: 'list directories themselves, not their contents', argType: 'none' },
+                    '--color': { description: 'colorize the output', argType: 'optional', argValues: ['always', 'auto', 'never'] }
+                }
+            },
+            'grep': {
+                description: 'Search for patterns in files',
+                options: {
+                    '-i': { long: '--ignore-case', description: 'ignore case distinctions', argType: 'none' },
+                    '-v': { long: '--invert-match', description: 'select non-matching lines', argType: 'none' },
+                    '-n': { long: '--line-number', description: 'print line number with output lines', argType: 'none' },
+                    '-c': { long: '--count', description: 'print only a count of matching lines', argType: 'none' },
+                    '-r': { long: '--recursive', description: 'recursively search directories', argType: 'none' },
+                    '-l': { long: '--files-with-matches', description: 'print only names of files containing matches', argType: 'none' },
+                    '-H': { long: '--with-filename', description: 'print the filename for each match', argType: 'none' },
+                    '-E': { long: '--extended-regexp', description: 'interpret pattern as extended regular expression', argType: 'none' },
+                    '-e': { long: '--regexp', description: 'use pattern for matching', argType: 'required' },
+                    '-f': { long: '--file', description: 'obtain patterns from file', argType: 'required' },
+                    '-A': { long: '--after-context', description: 'print NUM lines of trailing context', argType: 'required' },
+                    '-B': { long: '--before-context', description: 'print NUM lines of leading context', argType: 'required' },
+                    '--color': { description: 'highlight matching text', argType: 'optional', argValues: ['always', 'auto', 'never'] }
+                }
+            },
+            'cat': {
+                description: 'Concatenate and display files',
+                options: {
+                    '-n': { long: '--number', description: 'number all output lines', argType: 'none' },
+                    '-b': { long: '--number-nonblank', description: 'number non-empty output lines', argType: 'none' },
+                    '-s': { long: '--squeeze-blank', description: 'suppress repeated empty output lines', argType: 'none' },
+                    '-T': { long: '--show-tabs', description: 'display TAB characters as ^I', argType: 'none' },
+                    '-E': { long: '--show-ends', description: 'display $ at end of each line', argType: 'none' },
+                    '-v': { long: '--show-nonprinting', description: 'use ^ and M- notation, except for LFD and TAB', argType: 'none' },
+                    '-A': { long: '--show-all', description: 'equivalent to -vET', argType: 'none' }
+                }
+            },
+            'find': {
+                description: 'Search for files and directories',
+                options: {
+                    '-name': { description: 'search by filename pattern', argType: 'required' },
+                    '-type': { description: 'search by file type', argType: 'required', argValues: ['f', 'd', 'l', 'b', 'c', 'p', 's'] },
+                    '-size': { description: 'search by file size', argType: 'required' },
+                    '-mtime': { description: 'modified time (days)', argType: 'required' },
+                    '-atime': { description: 'access time (days)', argType: 'required' },
+                    '-ctime': { description: 'status change time (days)', argType: 'required' },
+                    '-perm': { description: 'search by file permissions', argType: 'required' },
+                    '-user': { description: 'search by file owner', argType: 'required' },
+                    '-group': { description: 'search by group', argType: 'required' },
+                    '-maxdepth': { description: 'maximum directory depth', argType: 'required' },
+                    '-mindepth': { description: 'minimum directory depth', argType: 'required' },
+                    '-exec': { description: 'execute command on found files', argType: 'required' },
+                    '-print': { description: 'print found files (default)', argType: 'none' },
+                    '-delete': { description: 'delete found files', argType: 'none' },
+                    '-empty': { description: 'find empty files and directories', argType: 'none' }
+                }
+            },
+            'tar': {
+                description: 'Archive files',
+                options: {
+                    '-c': { long: '--create', description: 'create a new archive', argType: 'none' },
+                    '-x': { long: '--extract', description: 'extract files from an archive', argType: 'none' },
+                    '-t': { long: '--list', description: 'list the contents of an archive', argType: 'none' },
+                    '-v': { long: '--verbose', description: 'verbose output', argType: 'none' },
+                    '-f': { long: '--file', description: 'use archive file', argType: 'required' },
+                    '-z': { long: '--gzip', description: 'compress/decompress with gzip', argType: 'none' },
+                    '-j': { long: '--bzip2', description: 'compress/decompress with bzip2', argType: 'none' },
+                    '-J': { long: '--xz', description: 'compress/decompress with xz', argType: 'none' },
+                    '-C': { long: '--directory', description: 'change to directory', argType: 'required' },
+                    '-p': { long: '--preserve-permissions', description: 'preserve file permissions', argType: 'none' },
+                    '--exclude': { description: 'exclude files matching pattern', argType: 'required' }
+                }
+            }
+            };
+        }
+
+        // Fallback function for hardcoded command options
+        if (typeof window.hardcodedCommandOptions === 'undefined') {
+            window.hardcodedCommandOptions = function() {
+                return window.commandOptions || {};
+            };
+        }
+
+        // Improved Command Parser for complex Linux commands
+        class CommandParser {
+            constructor() {
+                this.tokens = [];
+                this.commandOptions = window.commandOptions || {};
+            }
+
+            parse(input) {
+                this.tokens = [];
+                
+                // First, tokenize the input properly
+                const rawTokens = this.advancedTokenize(input);
+                
+                // Then, parse the tokens into semantic units
+                this.parseTokens(rawTokens);
+                
+                return this.tokens;
+            }
+
+            // Advanced tokenizer that handles complex shell syntax
+            advancedTokenize(input) {
+                const tokens = [];
+                let current = '';
+                let i = 0;
+                
+                while (i < input.length) {
+                    const char = input[i];
+                    const nextChar = input[i + 1];
+                    const prevChar = input[i - 1];
+                    
+                    // Handle quotes
+                    if ((char === '"' || char === "'") && prevChar !== '\\') {
+                        const quote = char;
+                        let quoted = '';
+                        i++; // Skip opening quote
+                        
+                        while (i < input.length && input[i] !== quote) {
+                            if (input[i] === '\\' && input[i + 1] === quote) {
+                                quoted += quote;
+                                i += 2;
+                            } else {
+                                quoted += input[i];
+                                i++;
+                            }
+                        }
+                        
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        tokens.push({ type: 'quoted', value: quoted, quote: quote });
+                        i++; // Skip closing quote
+                        continue;
+                    }
+                    
+                    // Handle command substitution
+                    if (char === '$' && nextChar === '(') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        
+                        let depth = 1;
+                        let substitution = '';
+                        i += 2; // Skip $(
+                        
+                        while (i < input.length && depth > 0) {
+                            if (input[i] === '(') depth++;
+                            else if (input[i] === ')') depth--;
+                            
+                            if (depth > 0) substitution += input[i];
+                            i++;
+                        }
+                        
+                        tokens.push({ type: 'substitution', value: substitution });
+                        continue;
+                    }
+                    
+                    // Handle backticks (old-style command substitution)
+                    if (char === '`') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        
+                        let substitution = '';
+                        i++; // Skip opening backtick
+                        
+                        while (i < input.length && input[i] !== '`') {
+                            substitution += input[i];
+                            i++;
+                        }
+                        
+                        tokens.push({ type: 'substitution', value: substitution });
+                        i++; // Skip closing backtick
+                        continue;
+                    }
+                    
+                    // Handle process substitution
+                    if ((char === '<' || char === '>') && nextChar === '(') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        
+                        const direction = char; // < or >
+                        let depth = 1;
+                        let substitution = '';
+                        i += 2; // Skip <( or >(
+                        
+                        while (i < input.length && depth > 0) {
+                            if (input[i] === '(') depth++;
+                            else if (input[i] === ')') depth--;
+                            
+                            if (depth > 0) substitution += input[i];
+                            i++;
+                        }
+                        
+                        tokens.push({ 
+                            type: 'process-substitution', 
+                            value: substitution,
+                            direction: direction
+                        });
+                        continue;
+                    }
+                    
+                    // Handle operators (order matters - longer operators first)
+                    const operators = [
+                        { op: '<<<', type: 'here-string' },
+                        { op: '<<-', type: 'here-doc-indent' },
+                        { op: '<<', type: 'here-doc' },
+                        { op: '&&', type: 'and' },
+                        { op: '||', type: 'or' },
+                        { op: ';;', type: 'case-end' },
+                        { op: ';', type: 'semicolon' },
+                        { op: '|&', type: 'pipe-both' },
+                        { op: '|', type: 'pipe' },
+                        { op: '&>>', type: 'redirect-both-append' },
+                        { op: '&>', type: 'redirect-both' },
+                        { op: '>>', type: 'redirect-append' },
+                        { op: '>', type: 'redirect-out' },
+                        { op: '2>>', type: 'redirect-err-append' },
+                        { op: '2>&1', type: 'redirect-err-to-out' },
+                        { op: '2>', type: 'redirect-err' },
+                        { op: '<', type: 'redirect-in' },
+                        { op: '&', type: 'background' }
+                    ];
+                    
+                    let foundOperator = false;
+                    for (const { op, type } of operators) {
+                        if (input.substr(i, op.length) === op) {
+                            if (current) {
+                                tokens.push({ type: 'word', value: current });
+                                current = '';
+                            }
+                            tokens.push({ type: type, value: op });
+                            i += op.length;
+                            foundOperator = true;
+                            break;
+                        }
+                    }
+                    
+                    if (foundOperator) continue;
+                    
+                    // Handle whitespace
+                    if (char === ' ' || char === '\t' || char === '\n') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle special single characters
+                    if ('(){}[]'.includes(char)) {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        tokens.push({ type: 'special', value: char });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Regular character
+                    current += char;
+                    i++;
+                }
+                
+                // Don't forget the last token
+                if (current) {
+                    tokens.push({ type: 'word', value: current });
+                }
+                
+                return tokens;
+            }
+
+            // Parse tokens into semantic units
+            parseTokens(rawTokens) {
+                let i = 0;
+                let currentCommand = null;
+                let expectingCommand = true;
+                let lastOperator = null;
+                
+                while (i < rawTokens.length) {
+                    const token = rawTokens[i];
+                    
+                    // Skip special tokens for now
+                    if (token.type === 'special') {
+                        this.tokens.push({
+                            value: token.value,
+                            type: 'special',
+                            description: this.getSpecialDescription(token.value)
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle operators
+                    if (this.isOperator(token.type)) {
+                        this.tokens.push({
+                            value: token.value,
+                            type: token.type,
+                            description: this.getOperatorDescription(token.type)
+                        });
+                        
+                        // After operators, we usually expect a new command
+                        if (['pipe', 'pipe-both', 'and', 'or', 'semicolon', 'background'].includes(token.type)) {
+                            expectingCommand = true;
+                            currentCommand = null;
+                        }
+                        
+                        lastOperator = token.type;
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle command substitution
+                    if (token.type === 'substitution') {
+                        this.tokens.push({
+                            value: `$(${token.value})`,
+                            type: 'substitution',
+                            description: 'Command substitution - execute command and use its output'
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle process substitution
+                    if (token.type === 'process-substitution') {
+                        const desc = token.direction === '<' ? 
+                            'Process substitution - use command output as input file' :
+                            'Process substitution - use command input as output file';
+                        this.tokens.push({
+                            value: `${token.direction}(${token.value})`,
+                            type: 'process-substitution',
+                            description: desc
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle quoted strings
+                    if (token.type === 'quoted') {
+                        this.tokens.push({
+                            value: `${token.quote}${token.value}${token.quote}`,
+                            type: 'argument',
+                            description: token.quote === '"' ? 
+                                'Double-quoted string (variables expanded)' : 
+                                'Single-quoted string (literal)'
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle words (commands, options, arguments)
+                    if (token.type === 'word') {
+                        const word = token.value;
+                        
+                        // Check if it's a variable assignment
+                        if (word.includes('=') && !word.startsWith('-') && expectingCommand) {
+                            const [varName, varValue] = word.split('=', 2);
+                            if (varName.match(/^[A-Za-z_][A-Za-z0-9_]*$/)) {
+                                this.tokens.push({
+                                    value: word,
+                                    type: 'variable',
+                                    description: `Set environment variable ${varName}`
+                                });
+                                i++;
+                                continue;
+                            }
+                        }
+                        
+                        // Check if it's a shell keyword
+                        if (this.isShellKeyword(word)) {
+                            this.tokens.push({
+                                value: word,
+                                type: 'keyword',
+                                description: this.getShellKeywordDescription(word)
+                            });
+                            
+                            // Some keywords expect commands after them
+                            if (['do', 'then', 'else', 'elif'].includes(word)) {
+                                expectingCommand = true;
+                                currentCommand = null;
+                            }
+                        }
+                        // Check if we're expecting a command
+                        else if (expectingCommand && !word.startsWith('-')) {
+                            currentCommand = word;
+                            const commandInfo = this.commandOptions[word];
+                            
+                            this.tokens.push({
+                                value: word,
+                                type: 'command',
+                                description: commandInfo?.description || this.getCommandDescription(word)
+                            });
+                            
+                            expectingCommand = false;
+                            
+                            // Check for subcommands
+                            if (this.hasSubcommands(word) && i + 1 < rawTokens.length) {
+                                const nextToken = rawTokens[i + 1];
+                                if (nextToken.type === 'word' && !nextToken.value.startsWith('-')) {
+                                    i++;
+                                    const subcommand = nextToken.value;
+                                    
+                                    this.tokens.push({
+                                        value: subcommand,
+                                        type: 'subcommand',
+                                        description: this.getSubcommandDescription(word, subcommand)
+                                    });
+                                    
+                                    // Update current command context for options
+                                    currentCommand = `${word}_${subcommand}`;
+                                }
+                            }
+                        }
+                        // Check if it's an option
+                        else if (word.startsWith('-') && currentCommand) {
+                            const optionInfo = this.parseOption(word, currentCommand);
+                            
+                            // If it's a grouped option like -latr, break it out
+                            if (optionInfo.isGrouped && optionInfo.individualOptions) {
+                                // Add each individual option as a separate token
+                                optionInfo.individualOptions.forEach((opt, index) => {
+                                    const individualOptionInfo = this.findOption(currentCommand, opt);
+                                    this.tokens.push({
+                                        value: opt,
+                                        type: 'option',
+                                        description: individualOptionInfo?.description || `Unknown option ${opt}`,
+                                        command: currentCommand,
+                                        fromGrouped: word
+                                    });
+                                });
+                            } else {
+                                // Single option or long option
+                                optionInfo.command = currentCommand;
+                                this.tokens.push(optionInfo);
+                            }
+                            
+                            // Check if this option expects an argument
+                            if (optionInfo.expectsArg && i + 1 < rawTokens.length) {
+                                const nextToken = rawTokens[i + 1];
+                                if (nextToken.type === 'word' && !nextToken.value.startsWith('-')) {
+                                    i++;
+                                    this.tokens.push({
+                                        value: nextToken.value,
+                                        type: 'argument',
+                                        description: `Argument for ${word}`
+                                    });
+                                }
+                            }
+                        }
+                        // Otherwise it's an argument
+                        else {
+                            // Special handling for filenames after redirections
+                            if (lastOperator && lastOperator.includes('redirect')) {
+                                this.tokens.push({
+                                    value: word,
+                                    type: 'filename',
+                                    description: this.getRedirectionTargetDescription(lastOperator)
+                                });
+                                lastOperator = null;
+                            } else {
+                                this.tokens.push({
+                                    value: word,
+                                    type: 'argument',
+                                    description: this.getArgumentDescription(word, currentCommand)
+                                });
+                            }
+                        }
+                    }
+                    
+                    i++;
+                }
+            }
+
+            // Helper methods
+            isOperator(type) {
+                return [
+                    'pipe', 'pipe-both', 'and', 'or', 'semicolon',
+                    'redirect-out', 'redirect-append', 'redirect-in',
+                    'redirect-err', 'redirect-err-append', 'redirect-err-to-out',
+                    'redirect-both', 'redirect-both-append', 'background',
+                    'here-doc', 'here-doc-indent', 'here-string', 'case-end'
+                ].includes(type);
+            }
+
+            getOperatorDescription(type) {
+                const descriptions = {
+                    'pipe': 'Pipe - send output to next command',
+                    'pipe-both': 'Pipe both stdout and stderr',
+                    'and': 'AND - run next command only if previous succeeds',
+                    'or': 'OR - run next command only if previous fails',
+                    'semicolon': 'Command separator - run commands sequentially',
+                    'redirect-out': 'Redirect output to file (overwrite)',
+                    'redirect-append': 'Redirect output to file (append)',
+                    'redirect-in': 'Read input from file',
+                    'redirect-err': 'Redirect error output to file',
+                    'redirect-err-append': 'Redirect error output to file (append)',
+                    'redirect-err-to-out': 'Redirect stderr to stdout',
+                    'redirect-both': 'Redirect both stdout and stderr to file',
+                    'redirect-both-append': 'Redirect both stdout and stderr (append)',
+                    'background': 'Run command in background',
+                    'here-doc': 'Here document - multi-line input',
+                    'here-doc-indent': 'Here document - ignore leading tabs',
+                    'here-string': 'Here string - single line input',
+                    'case-end': 'End of case pattern'
+                };
+                return descriptions[type] || 'Unknown operator';
+            }
+
+            getSpecialDescription(char) {
+                const descriptions = {
+                    '(': 'Start subshell or command group',
+                    ')': 'End subshell or command group',
+                    '{': 'Start command block',
+                    '}': 'End command block',
+                    '[': 'Start test expression or array index',
+                    ']': 'End test expression or array index'
+                };
+                return descriptions[char] || 'Special character';
+            }
+
+            getRedirectionTargetDescription(redirectType) {
+                if (redirectType.includes('err')) return 'Error output file';
+                if (redirectType.includes('in')) return 'Input file';
+                return 'Output file';
+            }
+
+            parseOption(option, command) {
+                // Handle long options with values
+                if (option.startsWith('--') && option.includes('=')) {
+                    const [optName, optValue] = option.split('=', 2);
+                    const optionInfo = this.findOption(command, optName);
+                    
+                    return {
+                        value: option,
+                        type: 'option',
+                        description: optionInfo?.description || `Long option with value: ${optValue}`,
+                        expectsArg: false
+                    };
+                }
+                
+                // Handle long options
+                if (option.startsWith('--')) {
+                    const optionInfo = this.findOption(command, option);
+                    return {
+                        value: option,
+                        type: 'option',
+                        description: optionInfo?.description || 'Unknown long option',
+                        expectsArg: optionInfo?.argType === 'required'
+                    };
+                }
+                
+                // Handle short options (can be combined)
+                if (option.startsWith('-') && option.length > 1) {
+                    const options = option.substring(1).split('');
+                    const descriptions = [];
+                    let expectsArg = false;
+                    
+                    for (let i = 0; i < options.length; i++) {
+                        const opt = '-' + options[i];
+                        const optionInfo = this.findOption(command, opt);
+                        
+                        if (optionInfo) {
+                            descriptions.push(`${opt}: ${optionInfo.description}`);
+                            // Only the last option in a group can take an argument
+                            if (i === options.length - 1 && optionInfo.argType === 'required') {
+                                expectsArg = true;
+                            }
+                        } else {
+                            descriptions.push(`${opt}: Unknown option`);
+                        }
+                    }
+                    
+                    return {
+                        value: option,
+                        type: 'option',
+                        description: 'Options combined: ' + descriptions.join(', '),
+                        expectsArg: expectsArg,
+                        isGrouped: true,
+                        individualOptions: options.map(opt => '-' + opt)
+                    };
+                }
+                
+                return {
+                    value: option,
+                    type: 'option',
+                    description: 'Unknown option',
+                    expectsArg: false
+                };
+            }
+
+            findOption(command, option) {
+                const cmdOptions = this.commandOptions[command]?.options || {};
+                
+                // Direct lookup
+                if (cmdOptions[option]) {
+                    return cmdOptions[option];
+                }
+                
+                // Check if it's a long option matching a short option
+                for (const [key, value] of Object.entries(cmdOptions)) {
+                    if (value.long === option) {
+                        return value;
+                    }
+                }
+                
+                return null;
+            }
+            
+            hasSubcommands(command) {
+                const subcommandCommands = [
+                    'git', 'docker', 'npm', 'yarn', 'cargo', 'pip', 'gem',
+                    'kubectl', 'aws', 'az', 'gcloud', 'apt', 'apt-get', 
+                    'systemctl', 'journalctl', 'ip', 'nmcli', 'snap', 'flatpak',
+                    'brew', 'sudo', 'virsh', 'podman', 'buildah', 'skopeo'
+                ];
+                return subcommandCommands.includes(command);
+            }
+
+            getCommandDescription(command) {
+                // Common commands not in database
+                const commonDescriptions = {
+                    'cd': 'Change directory',
+                    'pwd': 'Print working directory',
+                    'echo': 'Display a line of text',
+                    'export': 'Set environment variable',
+                    'source': 'Execute commands from file in current shell',
+                    'alias': 'Create command alias',
+                    'unalias': 'Remove command alias',
+                    'history': 'Display command history',
+                    'which': 'Locate a command',
+                    'type': 'Display command type',
+                    'eval': 'Execute arguments as shell command',
+                    'exec': 'Replace shell with command',
+                    'exit': 'Exit the shell',
+                    'test': 'Evaluate conditional expression',
+                    '[': 'Evaluate conditional expression (synonym for test)'
+                };
+                
+                return commonDescriptions[command] || 'Unknown command';
+            }
+            
+            isShellKeyword(word) {
+                const keywords = [
+                    'if', 'then', 'else', 'elif', 'fi',
+                    'for', 'in', 'do', 'done',
+                    'while', 'until',
+                    'case', 'esac',
+                    'function',
+                    'select',
+                    'time',
+                    'coproc'
+                ];
+                return keywords.includes(word);
+            }
+            
+            getShellKeywordDescription(keyword) {
+                const descriptions = {
+                    'if': 'Conditional statement start',
+                    'then': 'Execute commands if condition is true',
+                    'else': 'Execute commands if condition is false',
+                    'elif': 'Else-if condition',
+                    'fi': 'End of if statement',
+                    'for': 'Loop over items',
+                    'in': 'Specify items to iterate over',
+                    'do': 'Start loop body',
+                    'done': 'End loop body',
+                    'while': 'Loop while condition is true',
+                    'until': 'Loop until condition is true',
+                    'case': 'Pattern matching statement',
+                    'esac': 'End of case statement',
+                    'function': 'Define shell function',
+                    'select': 'Generate menu',
+                    'time': 'Time command execution',
+                    'coproc': 'Create coprocess'
+                };
+                return descriptions[keyword] || 'Shell keyword';
+            }
+            
+            getSubcommandDescription(command, subcommand) {
+                // Extended subcommand descriptions
+                const descriptions = {
+                    'git': {
+                        'add': 'Add file contents to the index',
+                        'commit': 'Record changes to the repository',
+                        'push': 'Update remote refs along with associated objects',
+                        'pull': 'Fetch from and integrate with another repository',
+                        'clone': 'Clone a repository into a new directory',
+                        'checkout': 'Switch branches or restore working tree files',
+                        'branch': 'List, create, or delete branches',
+                        'merge': 'Join two or more development histories together',
+                        'status': 'Show the working tree status',
+                        'log': 'Show commit logs',
+                        'diff': 'Show changes between commits',
+                        'reset': 'Reset current HEAD to the specified state',
+                        'stash': 'Stash changes in a dirty working directory',
+                        'fetch': 'Download objects and refs from another repository',
+                        'rebase': 'Reapply commits on top of another base tip',
+                        'tag': 'Create, list, delete or verify tags',
+                        'remote': 'Manage set of tracked repositories',
+                        'config': 'Get and set repository or global options',
+                        'init': 'Create an empty Git repository',
+                        'mv': 'Move or rename a file or directory',
+                        'rm': 'Remove files from the working tree and index'
+                    },
+                    'docker': {
+                        'run': 'Run a command in a new container',
+                        'build': 'Build an image from a Dockerfile',
+                        'pull': 'Pull an image or repository from a registry',
+                        'push': 'Push an image or repository to a registry',
+                        'ps': 'List containers',
+                        'images': 'List images',
+                        'exec': 'Run a command in a running container',
+                        'stop': 'Stop one or more running containers',
+                        'start': 'Start one or more stopped containers',
+                        'restart': 'Restart one or more containers',
+                        'rm': 'Remove one or more containers',
+                        'rmi': 'Remove one or more images',
+                        'logs': 'Fetch the logs of a container',
+                        'inspect': 'Return low-level information',
+                        'network': 'Manage networks',
+                        'volume': 'Manage volumes',
+                        'compose': 'Docker Compose operations',
+                        'cp': 'Copy files between containers and filesystem',
+                        'commit': 'Create a new image from container changes',
+                        'tag': 'Create a tag for an image',
+                        'save': 'Save images to a tar archive',
+                        'load': 'Load images from a tar archive'
+                    },
+                    'kubectl': {
+                        'get': 'Display one or many resources',
+                        'describe': 'Show details of a specific resource',
+                        'create': 'Create a resource from a file or stdin',
+                        'apply': 'Apply a configuration to a resource',
+                        'delete': 'Delete resources',
+                        'edit': 'Edit a resource on the server',
+                        'scale': 'Set a new size for a deployment',
+                        'expose': 'Expose a resource as a new service',
+                        'run': 'Run a particular image on the cluster',
+                        'set': 'Set specific features on objects',
+                        'rollout': 'Manage the rollout of a resource',
+                        'logs': 'Print the logs for a container',
+                        'exec': 'Execute a command in a container',
+                        'port-forward': 'Forward ports to a pod',
+                        'proxy': 'Run a proxy to the Kubernetes API server',
+                        'version': 'Print client and server version',
+                        'config': 'Modify kubeconfig files',
+                        'cluster-info': 'Display cluster info'
+                    },
+                    'systemctl': {
+                        'start': 'Start (activate) one or more units',
+                        'stop': 'Stop (deactivate) one or more units',
+                        'restart': 'Restart one or more units',
+                        'reload': 'Reload one or more units',
+                        'status': 'Show runtime status of units',
+                        'enable': 'Enable one or more unit files',
+                        'disable': 'Disable one or more unit files',
+                        'is-active': 'Check if units are active',
+                        'is-enabled': 'Check if unit files are enabled',
+                        'list-units': 'List loaded units',
+                        'list-unit-files': 'List installed unit files',
+                        'daemon-reload': 'Reload systemd manager configuration',
+                        'mask': 'Mask one or more units',
+                        'unmask': 'Unmask one or more units',
+                        'show': 'Show properties of units',
+                        'cat': 'Show unit file contents',
+                        'edit': 'Edit unit files',
+                        'kill': 'Send signal to processes of a unit'
+                    },
+                    'npm': {
+                        'install': 'Install a package',
+                        'uninstall': 'Remove a package',
+                        'update': 'Update a package',
+                        'run': 'Run a script defined in package.json',
+                        'start': 'Start a package',
+                        'test': 'Test a package',
+                        'init': 'Create a package.json file',
+                        'publish': 'Publish a package',
+                        'list': 'List installed packages',
+                        'audit': 'Run a security audit',
+                        'ci': 'Install a project with a clean slate'
+                    },
+                    'apt': {
+                        'install': 'Install new packages',
+                        'remove': 'Remove packages',
+                        'update': 'Update package list',
+                        'upgrade': 'Upgrade all upgradable packages',
+                        'search': 'Search for packages',
+                        'show': 'Show package details',
+                        'list': 'List packages based on package names',
+                        'autoremove': 'Remove automatically all unused packages',
+                        'purge': 'Remove packages and config files'
+                    }
+                };
+                
+                return descriptions[command]?.[subcommand] || 
+                       `${command} ${subcommand} - ${subcommand} operation`;
+            }
+
+            getArgumentDescription(arg, command) {
+                // Pattern-based descriptions
+                if (arg.match(/^[~\/].*$/)) return 'File or directory path';
+                if (arg.match(/^\*\.(.*?)$/)) return 'Wildcard pattern';
+                if (arg.match(/^[0-9]+$/)) return 'Numeric value';
+                if (arg.match(/^[A-Z_]+=/)) return 'Environment variable';
+                if (arg.match(/^-?[0-9]+$/)) return 'Integer value';
+                if (arg.match(/^[a-zA-Z0-9\-\_]+@[a-zA-Z0-9\-\_]+:/)) return 'Remote host specification';
+                if (arg.match(/^https?:\/\//)) return 'URL';
+                
+                // Command-specific patterns
+                if (command === 'chmod' && arg.match(/^[0-7]{3,4}$/)) {
+                    return 'Octal permission mode';
+                }
+                if (command === 'chown' && arg.includes(':')) {
+                    return 'User:group specification';
+                }
+                if ((command === 'find' || command === 'grep') && arg.match(/^[+-]\d+$/)) {
+                    return 'Numeric comparison value';
+                }
+                
+                return 'Argument';
+            }
+
+            findOptionByLongName(command, longName) {
+                const options = this.commandOptions[command]?.options;
+                if (!options) return null;
+                
+                for (const [key, value] of Object.entries(options)) {
+                    if (value.long === longName) {
+                        return value;
+                    }
+                }
+                return null;
+            }
+
+            getOptionInfo(command, option) {
+                const options = this.commandOptions[command]?.options;
+                if (!options) return null;
+                
+                // Direct lookup
+                if (options[option]) {
+                    return options[option];
+                }
+                
+                // Check if it's a long option
+                for (const [key, value] of Object.entries(options)) {
+                    if (value.long === option) {
+                        return value;
+                    }
+                }
+                
+                return null;
+            }
+        }
+
+        const commandParser = new CommandParser();
+
+        // Display parsed command
+        function displayParsedCommand(tokens) {
+            commandBreakdown.innerHTML = '';
+            
+            if (tokens.length === 0) {
+                commandBreakdown.innerHTML = '<div class="no-explanation">Enter a command above to see its breakdown</div>';
+                return;
+            }
+            
+            tokens.forEach(token => {
+                const tokenEl = document.createElement('div');
+                tokenEl.className = `command-token ${token.type}`;
+                
+                // Create text span for the token value
+                const tokenText = document.createElement('span');
+                tokenText.textContent = token.value;
+                tokenEl.appendChild(tokenText);
+                
+                // Create tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'token-tooltip';
+                tooltip.textContent = token.description;
+                tokenEl.appendChild(tooltip);
+                
+                commandBreakdown.appendChild(tokenEl);
+            });
+        }
+
+        // Display command explanations
+        function displayExplanations(tokens) {
+            commandExplanations.innerHTML = '';
+            
+            // Get all unique commands
+            const commandTokens = tokens.filter(t => t.type === 'command');
+            if (commandTokens.length === 0) return;
+            
+            const commandOptions = window.commandOptions || hardcodedCommandOptions();
+            
+            // Command overview section
+            const overviewSection = document.createElement('div');
+            overviewSection.className = 'explanation-section';
+            let overviewHtml = '<div class="explanation-header">Command Overview</div><div class="explanation-content">';
+            
+            // Command flow visualization removed - not needed
+            
+            overviewHtml += '<div style="display: flex; gap: 10px; flex-wrap: wrap;">';
+            
+            commandTokens.forEach((commandToken, index) => {
+                const commandName = commandToken.value;
+                const commandInfo = commandOptions[commandName];
+                const colorClass = `command-${index % 5}`;  // Cycle through 5 colors
+                
+                if (!commandInfo) {
+                    overviewHtml += `
+                        <button class="command-link-button ${colorClass}" onclick="searchInput.value='${commandName}'; searchInput.dispatchEvent(new Event('input')); commandExplainerModal.style.display='none'; overlay.style.display='none';" title="Search for ${commandName}">
+                            ${commandName}
+                        </button>
+                    `;
+                } else {
+                    overviewHtml += `
+                        <button class="command-link-button ${colorClass}" onclick="displayManPage('${commandName}', '1'); commandExplainerModal.style.display='none'; overlay.style.display='none';" title="View ${commandName} man page">
+                            ${commandName}
+                        </button>
+                    `;
+                }
+            });
+            
+            overviewHtml += '</div>';
+            
+            overviewHtml += '</div>';
+            overviewSection.innerHTML = overviewHtml;
+            commandExplanations.appendChild(overviewSection);
+
+            // Used options
+            const usedOptions = tokens.filter(t => t.type === 'option');
+            if (usedOptions.length > 0) {
+                const usedSection = document.createElement('div');
+                usedSection.className = 'explanation-section';
+                
+                // Group options by command
+                const optionsByCommand = {};
+                usedOptions.forEach(optionToken => {
+                    const cmd = optionToken.command || commandName;
+                    if (!optionsByCommand[cmd]) {
+                        optionsByCommand[cmd] = [];
+                    }
+                    optionsByCommand[cmd].push(optionToken);
+                });
+                
+                let optionsHtml = '<div class="explanation-header">Options Used</div><div class="explanation-content">';
+                
+                // Check if we have multiple commands
+                const commandCount = Object.keys(optionsByCommand).length;
+                
+                // Create a mapping of command names to their index for color coding
+                const commandIndexMap = {};
+                commandTokens.forEach((token, index) => {
+                    commandIndexMap[token.value] = index;
+                });
+                
+                Object.entries(optionsByCommand).forEach(([cmd, options]) => {
+                    // Get the color class for this command
+                    const commandIndex = commandIndexMap[cmd] || 0;
+                    const colorClass = `command-${commandIndex % 5}`;
+                    
+                    // Add command label with matching color
+                    optionsHtml += `<div class="command-header ${colorClass}">${cmd} options:</div>`;
+                    
+                    const optionCommandInfo = commandOptions[cmd];
+                    
+                    options.forEach(optionToken => {
+                        const optionValue = optionToken.value;
+                        
+                        if (optionValue.startsWith('--')) {
+                            // Long option
+                            const optionName = optionValue.split('=')[0];
+                            const optionData = commandParser.findOptionByLongName(cmd, optionName);
+                            if (optionData) {
+                                optionsHtml += `
+                                    <div class="option-item">
+                                        <div class="option-name">${optionName}</div>
+                                        <div class="option-description">${optionData.description}</div>
+                                    </div>
+                                `;
+                            }
+                        } else if (optionValue.startsWith('-')) {
+                            // Short option(s)
+                            const options = optionValue.substring(1).split('');
+                            options.forEach(opt => {
+                                const optionKey = '-' + opt;
+                                const optionData = optionCommandInfo?.options?.[optionKey];
+                                if (optionData) {
+                                    optionsHtml += `
+                                        <div class="option-item">
+                                            <div class="option-name">${optionKey}${optionData.long ? ' / ' + optionData.long : ''}</div>
+                                            <div class="option-description">${optionData.description}</div>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                optionsHtml += '</div>';
+                usedSection.innerHTML = optionsHtml;
+                commandExplanations.appendChild(usedSection);
+            }
+
+            // Example usage
+            const exampleSection = document.createElement('div');
+            exampleSection.className = 'explanation-section collapsed';
+            exampleSection.innerHTML = `
+                <div class="explanation-header">Common Examples</div>
+                <div class="explanation-content">
+                    <div class="loading">Loading examples...</div>
+                </div>
+            `;
+            
+            // Add click handler to toggle sections
+            exampleSection.querySelector('.explanation-header').addEventListener('click', function() {
+                exampleSection.classList.toggle('collapsed');
+            });
+            
+            commandExplanations.appendChild(exampleSection);
+            
+            // Load examples for all commands asynchronously
+            const commandNames = commandTokens.map(t => t.value);
+            getAllCommandExamples(commandNames, commandTokens).then(examplesHtml => {
+                exampleSection.querySelector('.explanation-content').innerHTML = examplesHtml;
+            });
+        }
+
+        // Get examples for multiple commands
+        async function getAllCommandExamples(commandNames, commandTokens) {
+            const examplePromises = commandNames.map(cmd => getCommandExamples(cmd));
+            const allExamples = await Promise.all(examplePromises);
+            
+            let combinedHtml = '';
+            commandNames.forEach((cmd, index) => {
+                const colorClass = `command-${index % 5}`;
+                
+                combinedHtml += `<div class="command-header ${colorClass}">${cmd} examples:</div>`;
+                combinedHtml += allExamples[index] || '<p style="color: #666;">No examples available</p>';
+            });
+            
+            return combinedHtml;
+        }
+
+        // Get command examples (integrates with TLDR)
+        async function getCommandExamples(command) {
+            // First try to get TLDR examples
+            const tldrContent = await fetchTLDR(command);
+            if (tldrContent) {
+                const tldr = parseTLDRMarkdown(tldrContent);
+                if (tldr.examples && tldr.examples.length > 0) {
+                    let html = '';
+                    tldr.examples.forEach(example => {
+                        html += `
+                            <div class="example-command">${highlightTLDRCode(example.code)}</div>
+                            <p>${example.description}</p>
+                        `;
+                    });
+                    return html;
+                }
+            }
+            
+            // Fallback to hardcoded examples
+            const examples = {
+                'ls': `
+                    <div class="example-command">ls -la</div>
+                    <p>List all files (including hidden) in long format</p>
+                    
+                    <div class="example-command">ls -lh *.txt</div>
+                    <p>List all .txt files with human-readable sizes</p>
+                    
+                    <div class="example-command">ls -lt | head -10</div>
+                    <p>List 10 most recently modified files</p>
+                `,
+                'grep': `
+                    <div class="example-command">grep -i "error" log.txt</div>
+                    <p>Search for "error" case-insensitively in log.txt</p>
+                    
+                    <div class="example-command">grep -r "TODO" --include="*.js"</div>
+                    <p>Recursively search for "TODO" in JavaScript files</p>
+                    
+                    <div class="example-command">grep -n "function" script.sh</div>
+                    <p>Search with line numbers</p>
+                `,
+                'cat': `
+                    <div class="example-command">cat file1.txt file2.txt > combined.txt</div>
+                    <p>Concatenate files and save to new file</p>
+                    
+                    <div class="example-command">cat -n script.py</div>
+                    <p>Display file with line numbers</p>
+                `,
+                'find': `
+                    <div class="example-command">find . -name "*.log" -type f</div>
+                    <p>Find all .log files in current directory</p>
+                    
+                    <div class="example-command">find /home -size +100M</div>
+                    <p>Find files larger than 100MB</p>
+                    
+                    <div class="example-command">find . -mtime -7 -type f</div>
+                    <p>Find files modified in last 7 days</p>
+                `,
+                'tar': `
+                    <div class="example-command">tar -czf archive.tar.gz folder/</div>
+                    <p>Create compressed archive of folder</p>
+                    
+                    <div class="example-command">tar -xzf archive.tar.gz</div>
+                    <p>Extract compressed archive</p>
+                    
+                    <div class="example-command">tar -tzf archive.tar.gz</div>
+                    <p>List contents of compressed archive</p>
+                `
+            };
+            
+            return examples[command] || '<p>No examples available for this command.</p>';
+        }
+
+        
+
+        // Handle command input
+        let parseTimeout;
+        commandInput.addEventListener('input', (e) => {
+            clearTimeout(parseTimeout);
+            parseTimeout = setTimeout(() => {
+                const input = e.target.value.trim();
+                if (input) {
+                    const tokens = commandParser.parse(input);
+                    displayParsedCommand(tokens);
+                    displayExplanations(tokens);
+                } else {
+                    commandBreakdown.innerHTML = '<div class="no-explanation">Enter a command above to see its breakdown</div>';
+                    commandExplanations.innerHTML = '';
+                }
+            }, 300);
+        });
+
+        // Open command explainer
+        function openCommandExplainer() {
+            commandExplainerModal.style.display = 'block';
+            overlay.style.display = 'block';
+            commandInput.focus();
+        }
+
+        // Close command explainer
+        function closeCommandExplainer() {
+            commandExplainerModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        explainerFab.addEventListener('click', openCommandExplainer);
+        commandExplainerClose.addEventListener('click', closeCommandExplainer);
+
+        // Add keyboard shortcut for command explainer
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'e' && !e.ctrlKey && !e.metaKey && !e.altKey && 
+                document.activeElement.tagName !== 'INPUT' && 
+                document.activeElement.tagName !== 'TEXTAREA') {
+                openCommandExplainer();
+            }
+        });
+        
+        // Close modals when clicking overlay
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                // Close theme modal if open
+                if (themeModal.style.display === 'block') {
+                    closeThemeModal();
+                }
+                // Close shortcuts help if open
+                if (shortcutsHelp.style.display === 'block') {
+                    shortcutsHelp.style.display = 'none';
+                    overlay.style.display = 'none';
+                }
+                // Close command explainer if open
+                if (commandExplainerModal.style.display === 'block') {
+                    closeCommandExplainer();
+                }
+            }
+        });
+
+        // Handle direct linking via hash
+        function handleHashChange() {
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                // Just command name in hash now
+                const command = hash;
+                const found = searchIndex.find(item => 
+                    (item.command || item.name) === command
+                );
+                if (found) {
+                    displayManPage(command, found.section);
+                }
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', async () => {
+            loadSavedData();
+            
+            if (typeof searchIndex === 'undefined') {
+                showStatus('Warning: Search index not found.', 5000);
+            } else {
+                showStatus(`Ready: ${searchIndex.length} man pages available`);
+                
+                // Check for direct link
+                handleHashChange();
+            }
+            
+            searchInput.focus();
+        });
+        
+        window.addEventListener('hashchange', handleHashChange);
+    </script>
+</body>
+</html>

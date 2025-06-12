@@ -1,0 +1,528 @@
+NAME
+
+sq - A
+command-line frontend for Sequoia, an implementation of
+OpenPGP
+
+SYNOPSIS
+
+sq
+encrypt [OPTIONS] FILE 
+sq decrypt [OPTIONS] FILE 
+sq sign [OPTIONS] FILE 
+sq verify [OPTIONS] FILE 
+sq inspect [OPTIONS] FILE 
+sq cert [OPTIONS] SUBCOMMAND 
+sq key [OPTIONS] SUBCOMMAND 
+sq pki [OPTIONS] SUBCOMMAND 
+sq autocrypt [OPTIONS] SUBCOMMAND 
+sq network [OPTIONS] SUBCOMMAND 
+sq toolbox [OPTIONS] SUBCOMMAND 
+sq version [OPTIONS]
+
+DESCRIPTION
+
+A command-line
+frontend for Sequoia, an implementation of OpenPGP.
+
+Functionality
+is grouped and available using subcommands. This interface
+is not completely stateless. In particular, the user’s
+default certificate store is used. This can be disabled
+using ’--no-cert-store’. Similarly, a key store
+is used to manage and protect secret key material. This can
+be disabled using ’--no-key-store’.
+
+OpenPGP data
+can be provided in binary or ASCII armored form. This will
+be handled automatically. Emitted OpenPGP data is ASCII
+armored by default.
+
+We use the term
+"certificate", or "cert" for short, to
+refer to OpenPGP keys that do not contain secrets.
+Conversely, we use the term "key" to refer to
+OpenPGP keys that do contain secrets.
+
+OPTIONS
+
+Global
+options 
+--cert-store=PATH
+
+Specify the location of the
+certificate store. By default, sq uses the OpenPGP
+certificate directory at
+’$HOME/.local/share/pgp.cert.d’, and creates it
+if it does not exist.
+
+-f, --force
+
+Overwrite existing files
+
+-h, --help
+
+Print help (see a summary with
+’-h’)
+
+--key-store=PATH
+
+A key store server manages and
+protects secret key material. By default, ’sq’
+connects to the key store server listening on
+’$XDG_DATA_HOME/sequoia’. If no key store server
+is running, one is started.
+
+This option
+causes ’sq’ to use an alternate key store
+server. If necessary, a key store server is started, and
+configured to look for its data in the specified
+location.
+
+--keyring=PATH
+
+Specify the location of a
+keyring to use. Keyrings are used in addition to any
+certificate store. The content of the keyring is not
+imported into the certificate store. When a certificate is
+looked up, it is looked up in all keyrings and any
+certificate store, and the results are merged together.
+
+--known-notation=NOTATION
+
+Add NOTATION to the list of
+known notations. This is used when validating signatures.
+Signatures that have unknown notations with the critical bit
+set are considered invalid.
+
+--no-cert-store
+
+Disable the use of a
+certificate store. Normally sq uses the user’s
+standard cert-d, which is located in
+’$HOME/.local/share/pgp.cert.d’.
+
+--no-key-store
+
+Disable the use of the key
+store.
+
+It is still
+possible to use functionality that does not require the key
+store.
+
+--output-format=FORMAT
+
+Produce output in FORMAT, if
+possible
+
+--output-version=VERSION
+
+Produce output variant VERSION,
+such as 0.0.0. The default is the newest version. The output
+version is separate from the version of the sq program. To
+see the current supported versions, use output-versions
+subcommand.
+
+--pep-cert-store=PATH
+
+Specify the location of a pEp
+certificate store. sq does not use a pEp certificate store
+by default; it must be explicitly enabled using this
+argument or the corresponding environment variable,
+PEP_CERT_STORE. The pEp Engine’s default certificate
+store is at ’$HOME/.pEp/keys.db’.
+
+--time=TIME
+
+Set the reference time as an
+ISO 8601 formatted timestamp. Normally, commands use the
+current time as the reference time. This argument allows the
+user to use a difference reference time. For instance, when
+creating a key using ’sq key generate’, the
+creation time is normally set to the current time, but can
+be overridden using this option. Similarly, when verifying a
+message, the message is verified with respect to the current
+time. This option allows the user to use a different
+time.
+
+TIME is
+interpreted as an ISO 8601 timestamp. To set the
+certification time to July 21, 2013 at midnight UTC, you can
+do:
+
+$ sq --time
+20130721 verify msg.pgp
+
+To include a
+time, say 5:50 AM, add a T, the time and optionally the
+timezone (the default timezone is UTC):
+
+$ sq --time
+20130721T0550+0200 verify msg.pgp
+
+--trust-root=FINGERPRINT|KEYID
+
+Consider the specified
+certificate to be a trust root. Trust roots are used by
+trust models, e.g., the Web of Trust, to authenticate
+certificates and User IDs.
+
+-v, --verbose
+
+Be more verbose.
+
+SUBCOMMANDS
+
+sq
+encrypt 
+Encrypt a message.
+
+Encrypt a
+message for any number of recipients and with any number of
+passwords, optionally signing the message in the
+process.
+
+The converse
+operation is ’sq decrypt’.
+
+’sq
+encrypt’ respects the reference time set by the
+top-level ’--time’ argument. It uses the
+reference time when selecting encryption keys, and it sets
+the signature’s creation time to the reference
+time.
+
+sq
+decrypt 
+Decrypt a message.
+
+Decrypt a
+message using either supplied keys, or by prompting for a
+password. If message tampering is detected, an error is
+returned. See below for details.
+
+If certificates
+are supplied using the ’--signer-cert’ option,
+any signatures that are found are checked using these
+certificates. Verification is only successful if there is no
+bad signature, and the number of successfully verified
+signatures reaches the threshold configured with the
+’--signatures’ parameter.
+
+If the
+signature verification fails, or if message tampering is
+detected, the program terminates with an exit status
+indicating failure. In addition to that, the last 25 MiB of
+the message are withheld, i.e. if the message is smaller
+than 25 MiB, no output is produced, and if it is larger,
+then the output will be truncated.
+
+The converse
+operation is ’sq encrypt’.
+
+sq sign
+
+Sign messages or data files.
+
+Creates signed
+messages or detached signatures. Detached signatures are
+often used to sign software packages.
+
+The converse
+operation is ’sq verify’.
+
+’sq
+sign’ respects the reference time set by the top-level
+’--time’ argument. When set, it uses the
+specified time instead of the current time, when determining
+what keys are valid, and it sets the signature’s
+creation time to the reference time instead of the current
+time.
+
+sq
+verify 
+Verify signed messages or detached signatures.
+
+When verifying
+signed messages, the message is written to stdout or the
+file given to ’--output’.
+
+When a detached
+message is verified, no output is produced. Detached
+signatures are often used to sign software packages.
+
+Verification is
+only successful if there is no bad signature, and the number
+of successfully verified signatures reaches the threshold
+configured with the ’--signatures’ parameter. If
+the verification fails, the program terminates with an exit
+status indicating failure. In addition to that, the last 25
+MiB of the message are withheld, i.e. if the message is
+smaller than 25 MiB, no output is produced, and if it is
+larger, then the output will be truncated.
+
+A signature is
+considered to have been authenticated if the signer can be
+authenticated. If the signer is provided via
+’--signer-file’, then the signer is considered
+authenticated. Otherwise, the signer is looked up and
+authenticated using the Web of Trust. If at least one User
+ID can be fully authenticated, then the signature is
+considered to have been authenticated. If the signature
+includes a Signer User ID subpacket, then only that User ID
+is considered. Note: the User ID need not be self
+signed.
+
+The converse
+operation is ’sq sign’.
+
+If you are
+looking for a standalone program to verify detached
+signatures, consider using sequoia-sqv.
+
+’sq
+verify’ respects the reference time set by the
+top-level ’--time’ argument. When set, it
+verifies the message as of the reference time instead of the
+current time.
+
+sq
+inspect 
+Inspect data, like file(1).
+
+It is often
+difficult to tell from cursory inspection using cat(1) or
+file(1) what kind of OpenPGP one is looking at. This
+subcommand inspects the data and provides a meaningful
+human-readable description of it.
+
+’sq
+inspect’ respects the reference time set by the
+top-level ’--time’ argument. It uses the
+reference time when determining what binding signatures are
+active.
+
+sq cert
+
+Manage certificates.
+
+We use the term
+"certificate", or "cert" for short, to
+refer to OpenPGP keys that do not contain secrets. This
+subcommand provides primitives to generate and otherwise
+manipulate certs.
+
+Conversely, we
+use the term "key" to refer to OpenPGP keys that
+do contain secrets. See ’sq key’ for operations
+on keys.
+
+sq key
+
+Manage keys.
+
+We use the term
+"key" to refer to OpenPGP keys that do contain
+secrets. This subcommand provides primitives to generate and
+otherwise manipulate keys.
+
+Conversely, we
+use the term "certificate", or "cert"
+for short, to refer to OpenPGP keys that do not contain
+secrets. See ’sq toolbox keyring’ for operations
+on certificates.
+
+sq pki
+
+Authenticate certs using the Web of Trust.
+
+The "Web
+of Trust" is a decentralized trust model popularized by
+PGP. It is a superset of X.509, which is a hierarchical
+trust model, and is the most popular trust model on the
+public internet today. As used on the public internet,
+however, X.509 relies on a handful of global certification
+authorities (CAs) who often undermine its security.
+
+The Web of
+Trust is more nuanced than X.509. Using the Web of Trust,
+require multiple, independent paths to authenticate a
+binding by only partially trusting CAs. This prevents a
+single bad actor from compromising their security. And those
+who have stronger security requirements can use the Web of
+Trust in a completely decentralized manner where only the
+individuals they select – who are not necessarily
+institutions – act as trusted introducers.
+
+sq
+autocrypt 
+Communicate certificates using Autocrypt.
+
+Autocrypt is a
+standard for mail user agents to provide convenient
+end-to-end encryption of emails. This subcommand provides a
+limited way to produce and consume headers that are used by
+Autocrypt to communicate certificates between clients.
+
+See
+https://autocrypt.org/>.
+
+sq
+network 
+Retrieve and publish certificates over the network.
+
+OpenPGP
+certificates can be discovered and updated from, and
+published on services accessible over the network. This is a
+collection of commands to interact with these services.
+
+sq
+toolbox 
+Tools for developers, maintainers, and forensic
+specialists.
+
+This is a
+collection of low-level tools to inspect and manipulate
+OpenPGP data structures.
+
+sq
+version 
+Detailed version and output version information.
+
+With no further
+options, this command lists the version of ’sq’,
+the version of the underlying OpenPGP implementation
+’sequoia-openpgp’, and which cryptographic
+library is used.
+
+This command
+can also be used to query the output format versions for the
+machine-readable output of various subcommands, and the
+default output format versions.
+
+EXAMPLES
+
+sq
+encrypt 
+Encrypt a file using a certificate
+
+sq encrypt
+--recipient-file romeo.pgp message.txt
+
+Encrypt a file
+creating a signature in the process
+
+sq encrypt
+--recipient-file romeo.pgp --signer-file juliet.pgp \
+
+message.txt
+
+Encrypt a file
+using a password
+
+sq encrypt
+--symmetric message.txt
+
+sq
+decrypt 
+Decrypt a file using a secret key
+
+sq decrypt
+--recipient-file juliet.pgp ciphertext.pgp
+
+Decrypt a file
+verifying signatures
+
+sq decrypt
+--recipient-file juliet.pgp --signer-file romeo.pgp \
+
+ciphertext.pgp
+
+Decrypt a file
+using a password
+
+sq decrypt
+ciphertext.pgp
+
+sq sign
+
+Create a signed message
+
+sq sign
+--signer-file juliet.pgp message.txt
+
+Create a
+detached signature
+
+sq sign
+--detached --signer-file juliet.pgp message.txt
+
+Create a
+signature with the specified creation time
+
+sq sign --time
+20020304 --detached --signer-file juliet.pgp \
+
+message.txt
+
+sq
+verify 
+Verify a signed message
+
+sq verify
+signed-message.pgp
+
+Verify a
+detached message
+
+sq verify
+--detached message.sig message.txt
+
+Verify a
+message as of June 9, 2011 at midnight UTC:
+
+sq verify
+--time 20130721 msg.pgp
+
+sq
+inspect 
+Inspect a certificate.
+
+sq inspect
+juliet.pgp
+
+Show how the
+certificate looked on July 21, 2013.
+
+sq inspect
+--time 20130721 juliet.pgp
+
+Inspect an
+encrypted message.
+
+sq inspect
+message.pgp
+
+Inspect a
+detachted signature.
+
+sq inspect
+document.sig
+
+SEE ALSO
+
+sq-encrypt(1),
+sq-decrypt(1), sq-sign(1),
+sq-verify(1), sq-inspect(1),
+sq-cert(1), sq-key(1), sq-pki(1),
+sq-autocrypt(1), sq-network(1),
+sq-toolbox(1), sq-version(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org>.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

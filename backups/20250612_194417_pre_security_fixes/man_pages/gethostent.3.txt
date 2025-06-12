@@ -1,0 +1,202 @@
+NAME
+
+FBB::GetHostent
+- Obtain hostent struct from hostname or -address
+
+SYNOPSIS
+
+#include
+
+Linking option: -lbobcat
+
+DESCRIPTION
+
+FBB::GetHostent
+objects produce hostent structs which may be used by
+other types of objects. The FBB::GetHostent class is
+therefore primarily used as a base-class for other classes
+and is seldomly used ’stand-alone’. The
+hostent structs are static structs, but a non-static
+copy may be obtained using an FBB::Hostent
+object.
+
+A
+hostent struct is defined as follows:
+
+struct hostent
+
+{ 
+char *h_name; // official name of host 
+char **h_aliases; // alias list 
+int h_addrtype; // host address type (always AF_INET) 
+int h_length; // length of address 
+char **h_addr_list; // list of addresses 
+}
+
+The
+address fields are binary values of the addresses,
+each address requiring h_length bytes, the last
+address being equal to 0. These binary values may be
+converted to character-representations by the
+addressToString() member, which uses
+inet_ntop(), internally.
+
+NAMESPACE
+
+FBB 
+All constructors, members, operators and manipulators,
+mentioned in this man-page, are defined in the namespace
+FBB.
+
+INHERITS FROM
+
+-
+
+CONSTRUCTORS
+
+All members of
+the class FBB::GetHostent are static. Consequently,
+there is no need to construct a FBB::GetHostent
+object.
+
+STATIC MEMBERS
+
+o
+
+hostent const
+*gethostent(char const *errorprefix, std::string const
+&nameOrAddress): 
+
+The gethostent() member
+returns a pointer to a static struct hostent. It
+contains the information about the host whose name or dotted
+decimal address was provided as its second argument. Its
+first argument is an error string prefix, prefixing the
+error message in an FBB::Exception object. Such an
+object is thrown as an exception when the host’s
+information could not be retrieved.
+
+o
+
+std::string
+addressToString(char const *errorprefix, void const
+*ads): 
+
+This member returns the dotted
+decimal address of the host whose binary address is provided
+at ads. Its first argument is an error string prefix,
+prefixing the error message in an FBB::Exception
+object. Such an object is thrown as an exception when the
+dotted decimal address could not be determined.
+
+The
+class’ members can only be used when the host whose
+name or address is searched can be resolved by a name
+resolution process, e.g., bind(1).
+
+EXAMPLE
+
+#include
+
+#include  
+#include 
+
+#include
+
+#include 
+
+using namespace
+std; 
+using namespace FBB;
+
+int main(int
+argc, char **argv) 
+try 
+{ 
+if (argc == 1) 
+{ 
+cerr 
+return 1; 
+}
+
+Hostent
+he(GetHostent::gethostent(argv[1], argv[1])); 
+cout 
+
+cout 
+copy(he.beginAlias(), he.endAlias(), 
+ostream_iterator(cout,
+"\n"));
+
+cout 
+for (size_t idx = 0; idx 
+cout 
+} 
+catch (Exception const &err) 
+{ 
+cout 
+return 1; 
+}
+
+FILES
+
+bobcat/gethostent
+- defines the class interface
+
+SEE ALSO
+
+bind(1),
+bobcat(7), gethostbyaddr(3)
+gethostbyname(3), hostent(3bobcat),
+inetaddress(3bobcat), inet_ntop(3)
+
+BUGS
+
+None
+Reported.
+
+BOBCAT PROJECT FILES
+
+o
+
+https://fbb-git.gitlab.io/bobcat/:
+gitlab project page;
+
+o
+
+bobcat_6.06.01-x.dsc: detached signature;
+
+o
+
+bobcat_6.06.01-x.tar.gz: source archive;
+
+o
+
+bobcat_6.06.01-x_i386.changes: change log;
+
+o
+
+libbobcat1_6.06.01-x_*.deb: debian package
+containing the libraries;
+
+o
+
+libbobcat1-dev_6.06.01-x_*.deb: debian package
+containing the libraries, headers and manual pages;
+
+BOBCAT
+
+Bobcat is an
+acronym of ’Brokken’s Own Base Classes And
+Templates’.
+
+COPYRIGHT
+
+This is free
+software, distributed under the terms of the GNU General
+Public License (GPL).
+
+AUTHOR
+
+Frank B.
+Brokken (f.b.brokken [AT] rug.nl).

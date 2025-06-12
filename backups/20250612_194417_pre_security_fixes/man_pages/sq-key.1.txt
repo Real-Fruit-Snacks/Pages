@@ -1,0 +1,315 @@
+NAME
+
+sq key - Manage
+keys
+
+SYNOPSIS
+
+sq key
+list [OPTIONS] 
+sq key generate [OPTIONS] 
+sq key import [OPTIONS] KEY_FILE 
+sq key password [OPTIONS] FILE 
+sq key expire [OPTIONS] EXPIRY FILE
+
+sq key revoke [OPTIONS] REASON MESSAGE
+
+sq key userid [OPTIONS] SUBCOMMAND 
+sq key subkey [OPTIONS] SUBCOMMAND 
+sq key attest-certifications [OPTIONS] KEY
+
+sq key adopt [OPTIONS] TARGET-KEY
+
+DESCRIPTION
+
+Manage
+keys.
+
+We use the term
+"key" to refer to OpenPGP keys that do contain
+secrets. This subcommand provides primitives to generate and
+otherwise manipulate keys.
+
+Conversely, we
+use the term "certificate", or "cert"
+for short, to refer to OpenPGP keys that do not contain
+secrets. See ’sq toolbox keyring’ for operations
+on certificates.
+
+SUBCOMMANDS
+
+sq key
+list 
+List keys managed by the key store.
+
+sq key
+generate 
+Generate a new key.
+
+Generating a
+key is the prerequisite to receiving encrypted messages and
+creating signatures. There are a few parameters to this
+process, but we provide reasonable defaults for most
+users.
+
+When generating
+a key, we also generate a revocation certificate. This can
+be used in case the key is superseded, lost, or compromised.
+It is a good idea to keep a copy of this in a safe
+place.
+
+After
+generating a key, use ’sq toolbox extract-cert’
+to get the certificate corresponding to the key. The key
+must be kept secure, while the certificate should be handed
+out to correspondents, e.g. by uploading it to a key
+server.
+
+By default a
+key expires after 3 years. Using the ’--expiry=’
+argument specific validity periods may be defined. It allows
+for providing a point in time for validity to end or a
+validity duration.
+
+’sq key
+generate’ respects the reference time set by the
+top-level ’--time’ argument. It sets the
+creation time of the key, any subkeys, and the binding
+signatures to the reference time.
+
+sq key
+import 
+Import keys into the key store.
+
+sq key
+password 
+Change password protecting secrets.
+
+Secret key
+material in keys can be protected by a password. This
+subcommand changes or clears this encryption password.
+
+To emit the key
+with unencrypted secrets, either use ’--clear’
+or supply a zero-length password when prompted for the new
+password.
+
+sq key
+expire 
+Change expiration times.
+
+Keys and their
+individual subkeys can expire. This subcommand changes or
+clears the expiration times.
+
+By default, the
+expiration time of the entire key is changed. To change the
+expiration of only some of the subkeys, use the
+’--subkey’ option.
+
+sq key
+revoke 
+Revoke a certificate.
+
+Creates a
+revocation certificate for the certificate.
+
+If
+’--revocation-file’ is provided, then that key
+is used to create the signature. If that key is different
+from the certificate being revoked, this creates a
+third-party revocation. This is normally only useful if the
+owner of the certificate designated the key to be a
+designated revoker.
+
+If
+’--revocation-file’ is not provided, then the
+certificate must include a certification-capable key.
+
+’sq key
+revoke’ respects the reference time set by the
+top-level ’--time’ argument. When set, it uses
+the specified time instead of the current time, when
+determining what keys are valid, and it sets the revocation
+certificate’s creation time to the reference time
+instead of the current time.
+
+sq key
+userid 
+Manage User IDs.
+
+Add User IDs
+to, or strip User IDs from a key.
+
+sq key
+subkey 
+Manage Subkeys.
+
+Add new subkeys
+to an existing key.
+
+sq key
+attest-certifications 
+Attest to third-party certifications allowing for their
+distribution.
+
+To prevent
+certificate flooding attacks, modern key servers prevent
+uncontrolled distribution of third-party certifications on
+certificates. To make the key holder the sovereign over the
+information over what information is distributed with the
+certificate, the key holder needs to explicitly attest to
+third-party certifications.
+
+After the
+attestation has been created, the certificate has to be
+distributed, e.g. by uploading it to a key server.
+
+sq key
+adopt 
+Bind keys from one certificate to another.
+
+This command
+allows one to transfer primary keys and subkeys into an
+existing certificate. Say you want to transition to a new
+certificate, but have an authentication subkey on your
+current certificate. You want to keep the authentication
+subkey because it allows access to SSH servers and updating
+their configuration is not feasible.
+
+EXAMPLES
+
+sq key
+list 
+List the keys managed by the keystore server.
+
+sq key list
+
+sq key
+generate 
+First, generate a key
+
+sq key generate
+--userid ’juliet [AT] example.org>’ \
+
+--output juliet.key.pgp
+
+Then, extract
+the certificate for distribution
+
+sq toolbox
+extract-cert --output juliet.cert.pgp juliet.key.pgp
+
+Generate a key
+protecting it with a password
+
+sq key generate
+--userid ’juliet [AT] example.org>’
+--with-password
+
+Generate a key
+with multiple userids
+
+sq key generate
+--userid ’juliet [AT] example.org>’ \
+
+--userid ’Juliet
+Capulet’
+
+Generate a key
+whose creation time is June 9, 2011 at midnight UTC
+
+sq key generate
+--time 20110609 --userid Noam \
+
+--output noam.pgp
+
+sq key
+import 
+Import the keys into the keystore server.
+
+sq key import
+alice-secret.pgp
+
+sq key
+password 
+First, generate a key
+
+sq key generate
+--userid ’juliet [AT] example.org>’ \
+
+--output juliet.key.pgp
+
+Then, encrypt
+the secrets in the key with a password.
+
+sq key password
+ juliet.encrypted_key.pgp
+
+And remove the
+password again.
+
+sq key password
+--clear 
+
+>
+juliet.decrypted_key.pgp
+
+sq key
+expire 
+Make Alice’s key expire in a year.
+
+sq key expire
+1y alice-secret.pgp
+
+Make
+Alice’s key never expire.
+
+sq key expire
+never alice-secret.pgp
+
+Make
+Bob’s authentication subkey expire in six months.
+
+sq key expire
+6m --subkey 6AEACDD24F896624 bob-secret.pgp
+
+sq key
+attest-certifications 
+Attest to all certifications present on the key
+
+sq key
+attest-certifications juliet.pgp
+
+Retract prior
+attestations on the key
+
+sq key
+attest-certifications --none juliet.pgp
+
+sq key
+adopt 
+Adopt an subkey into the new cert
+
+sq key adopt
+--keyring juliet-old.pgp --key 0123456789ABCDEF \
+
+juliet-new.pgp
+
+SEE ALSO
+
+sq(1),
+sq-key-list(1), sq-key-generate(1),
+sq-key-import(1), sq-key-password(1),
+sq-key-expire(1), sq-key-revoke(1),
+sq-key-userid(1), sq-key-subkey(1),
+sq-key-attest-certifications(1),
+sq-key-adopt(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org>.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

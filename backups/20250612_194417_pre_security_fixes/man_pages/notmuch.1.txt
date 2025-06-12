@@ -1,0 +1,260 @@
+NAME
+
+notmuch-setup -
+getting started with notmuch
+
+SYNOPSIS
+
+notmuch
+[option ...] command [arg ...]
+
+DESCRIPTION
+
+Notmuch is a
+command-line based program for indexing, searching, reading,
+and tagging large collections of email messages.
+
+This page
+describes how to get started using notmuch from the command
+line, and gives a brief overview of the commands available.
+For more information on e.g. notmuch show consult the
+notmuch-show man page, also accessible via notmuch
+help show
+
+The quickest
+way to get started with Notmuch is to simply invoke the
+notmuch command with no arguments, which will
+interactively guide you through the process of indexing your
+mail.
+
+NOTE
+
+While the
+command-line program notmuch provides powerful
+functionality, it does not provide the most convenient
+interface for that functionality. More sophisticated
+interfaces are expected to be built on top of either the
+command-line interface, or more likely, on top of the
+notmuch library interface. See
+https://notmuchmail.org for more about alternate
+interfaces to notmuch. The emacs-based interface to notmuch
+(available under emacs/ in the Notmuch source
+distribution) is probably the most widely used at this
+time.
+
+OPTIONS
+
+Supported
+global options for notmuch include 
+--help [command-name]
+
+Print a synopsis of available
+commands and exit. With an optional command name, show the
+man page for that subcommand.
+
+--version
+
+Print the installed version of
+notmuch, and exit.
+
+--config=FILE
+
+Specify the configuration file
+to use. This overrides any configuration file specified by
+NOTMUCH_CONFIG. The empty string is a permitted and
+sometimes useful value of FILE, which tells
+notmuch to use only configuration metadata from the
+database.
+
+--uuid=HEX
+
+Enforce that the database UUID
+(a unique identifier which persists until e.g. the database
+is compacted) is HEX; exit with an error if it is not. This
+is useful to detect rollover in modification counts on
+messages. You can find this UUID using e.g. notmuch count
+--lastmod
+
+All global
+options except --config can also be specified after
+the command. For example, notmuch subcommand
+--uuid=HEX is equivalent to notmuch --uuid=HEX
+subcommand.
+
+COMMANDS
+
+SETUP
+
+The notmuch setup command is used to configure
+Notmuch for first use, (or to reconfigure it later).
+
+The setup
+command will prompt for your full name, your primary email
+address, any alternate email addresses you use, and the
+directory containing your email archives. Your answers will
+be written to a configuration file in NOTMUCH_CONFIG
+(if set) or ${HOME}/.notmuch-config . This configuration
+file will be created with descriptive comments, making it
+easy to edit by hand later to change the configuration. Or
+you can run notmuch setup again to change the
+configuration.
+
+The mail
+directory you specify can contain any number of
+sub-directories and should primarily contain only files with
+individual email messages (eg. maildir or mh archives are
+perfect). If there are other, non-email files (such as
+indexes maintained by other email programs) then notmuch
+will do its best to detect those and ignore them.
+
+Mail storage
+that uses mbox format, (where one mbox file contains many
+messages), will not work with notmuch. If that's how your
+mail is currently stored, it is recommended you first
+convert it to maildir format with a utility such as
+mb2md(1) before running notmuch
+setup.
+
+Invoking
+notmuch with no command argument will run
+setup if the setup command has not previously been
+completed.
+
+OTHER
+COMMANDS 
+Several of the notmuch commands accept search terms with a
+common syntax. See notmuch-search-terms for more
+details on the supported syntax.
+
+The
+notmuch-search, notmuch-show,
+notmuch-address and notmuch-count commands are
+used to query the email database.
+
+The
+notmuch-reply command is useful for preparing a
+template for an email reply.
+
+The
+notmuch-tag command is the only command available for
+manipulating database contents.
+
+The
+notmuch-dump and notmuch-restore commands can
+be used to create a textual dump of email tags for backup
+purposes, and to restore from that dump.
+
+The
+notmuch-config command can be used to get or set
+settings in the notmuch configuration file.
+
+EXTERNAL
+COMMANDS 
+If the given command is not known to notmuch, notmuch tries
+to execute the external notmuch- in
+PATH instead. This allows users to have their own
+notmuch related tools to be run via the notmuch command. By
+design, this does not allow notmuch's own commands to be
+overridden using external commands. The environment variable
+NOTMUCH_CONFIG will be set according to
+--config, if the latter is present.
+
+OPTION
+SYNTAX 
+All options accepting an argument can be used with '=' or
+':' as a separator. Except for boolean options (which would
+be ambiguous), a space can also be used as a separator. The
+following are all equivalent:
+
+notmuch
+--config=alt-config config get user.name 
+notmuch --config:alt-config config get user.name 
+notmuch --config alt-config config get user.name
+
+DUPLICATE MESSAGE FILES
+
+Notmuch
+considers the Message-ID to be the primary identifier
+of message. Per RFC 5322 the Message-ID is
+supposed to be globally unique, but this fails in two
+distinct ways. When you receive copies of a message via a
+mechanism like Cc or via a mailing list, the copies
+are typically interchangeable. In the case of some broken
+mail sending software, the same Message-ID is used
+for completely unrelated messages. The options search
+--duplicate and show --duplicate options provide
+the user with control over which message file is displayed.
+Front ends will need to provide their own interface, see
+e.g. the Emacs front-end Dealing with duplicates.
+
+ENVIRONMENT
+
+The following
+environment variables can be used to control the behavior of
+notmuch. 
+NOTMUCH_CONFIG
+
+Specifies the location of the
+notmuch configuration file. See - notmuch-config for
+details.
+
+NOTMUCH_DATABASE
+
+Specifies the location of the
+notmuch database. See - notmuch-config for
+details.
+
+NOTMUCH_PROFILE
+
+Selects among notmuch
+configurations. See notmuch-config for details.
+
+NOTMUCH_TALLOC_REPORT
+
+Location to write a talloc
+memory usage report. See
+talloc_enable_leak_report_full in talloc(3) for
+more information.
+
+NOTMUCH_DEBUG_QUERY
+
+If set to a non-empty value,
+the notmuch library will print (to stderr) Xapian queries it
+constructs.
+
+SEE ALSO
+
+notmuch-address,
+notmuch-compact, notmuch-config,
+notmuch-count, - notmuch-dump,
+notmuch-hooks, notmuch-insert,
+notmuch-new, - notmuch-properties,
+notmuch-reindex, notmuch-reply,
+notmuch-restore, - notmuch-search,
+notmuch-search-terms, notmuch-show,
+notmuch-tag
+
+The notmuch
+website: https://notmuchmail.org
+
+CONTACT
+
+Feel free to
+send questions, comments, or kudos to the notmuch mailing
+list notmuch [AT] notmuchmail.org> . Subscription
+is not required before posting, but is available from the
+notmuchmail.org website.
+
+Real-time
+interaction with the Notmuch community is available via IRC
+(server: irc.libera.chat, channel: #notmuch).
+
+AUTHOR
+
+Carl Worth and
+many others
+
+COPYRIGHT
+
+2009-2024, Carl
+Worth and many others

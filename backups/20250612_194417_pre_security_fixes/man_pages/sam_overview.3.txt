@@ -1,0 +1,199 @@
+NAME
+
+sam_overview -
+Overview of the Simple Availability Manager
+
+OVERVIEW
+
+The SAM library
+provide a tool to check the health of an application. The
+main purpose of SAM is to restart a local process when it
+fails to respond to a healthcheck request in a configured
+time interval.
+
+During
+sam_initialize(3), a duplicate copy of the process is
+created using the fork(3) system call. This duplicate
+process copy contains the logic for executing the SAM
+server. The SAM server is responsible for requesting
+healthchecks from the active process, and controlling the
+lifecycle of the active process when it fails. If the active
+process fails to respond to the healthcheck request sent by
+the SAM server, it will be sent a user configurable signal
+(default SIGTERM) to request shutdown of the application.
+After a configured time interval, the process will be
+forcibly killed by being sent a SIGKILL signal. Once the
+active process terminates, the SAM server will create a new
+active process.
+
+The Simple
+Availability Manager is meant to be used in conjunction with
+the cpg service. Used together, it is possible to restart a
+cpg process that fails healthchecking during operation.
+
+The main
+features of SAM include:
+
+•
+
+A configurable recovery policy.
+
+•
+
+A configurable time interval for health check
+operations. 
+
+•
+
+A notification via signal before recovery action is
+taken. 
+
+•
+
+A mechanism to indicate to the application the number of
+times an active process has been created by the SAM
+server. 
+
+•
+
+Both application driven health checking and event driven
+health checking.
+
+Initializing SAM
+
+The SAM library
+is initialized by sam_initialize(3).
+sam_initalize(3) may only be called once per process.
+Calling it more then once has undefined results and is not
+recommended or tested.
+
+Setting warning callback
+
+User
+configurable signal (default SIGTERM) is sent to the
+application when a recovery action is planned. The
+application can use the signal(3) system call to
+monitor for this signal.
+
+There are no
+special constraints on what SAM apis may be called in a
+warning callback. After time_interval expires, a
+SIGKILL signal is sent to the active process to force its
+termination.
+
+Registering the active process
+
+The active
+process is registered with SAM by calling
+sam_register(3). This function should only be called
+one time in a process. After a recovery action is taken, the
+new active process will begin execution at the next line of
+code in a user process after sam_register(3).
+
+Enabling event driven healthchecking
+
+Two types of
+healthchecking are available to the user. The first model is
+one where the user application healthchecks during its
+normal operation. It is never requested to healtcheck, and
+if the active process doesn’t respond within the time
+interval, the process will be restarted.
+
+A more useful
+mechanism for healthchecking is event driven healthchecking.
+Because this model is directed by the SAM server, It
+isn’t necessary to guess or add timers to the active
+process to signal a healthcheck operation is successful. To
+use event driven healthchecking, the
+sam_hc_callback_register(3) function should be
+executed.
+
+Quorum integration
+
+SAM has special
+policies (SAM_RECOVERY_POLICY_QUIT and
+SAM_RECOVERY_POLICY_RESTART) for integration with
+quorum service. This policies changes SAM behaviour in two
+aspects.
+
+•
+
+Call of sam_start(3)
+blocks until corosync becomes quorate
+
+•
+
+User selected recovery action is taken immediately after
+lost of quorum.
+
+Storing user data
+
+Sometimes there
+is need to store some data, which survives between
+instances. One can in such case use files, databases, ... or
+much simpler in memory solution presented by
+sam_data_store(3), sam_data_restore(3) and
+sam_data_getsize(3) functions.
+
+Confdb integration
+
+SAM has policy
+flag used for confdb system integration
+(SAM_RECOVERY_POLICY_CONFDB). If process is
+registered with this flag, new confdb object
+PROCESS_NAME:PID is created with following keys:
+
+•
+
+recovery - will be quit
+or restart depending on policy
+
+•
+
+poll_period - period of health checking in
+milliseconds 
+
+•
+
+last_updated - Timestamp (in nanoseconds) of the
+last health check.
+
+•
+
+state - state of process (can be one of
+registered, started, failed, waiting for quorum)
+
+Object is
+automatically deleted if process exits with stopped health
+checking.
+
+Confdb
+integration with corosync watchdog can be used in implicit
+and explicit way.
+
+Implicit way is
+achieved by setting recovery policy to QUIT and let process
+exit with started health checking. If this happened, object
+is not deleted and corosync watchdog will take required
+action.
+
+Explicit way is
+useful for situations, when developer can deal with some
+non-fatal fall of application. This mode is achieved by
+setting policy to RESTART and using SAM same as without
+Confdb integration. If real fail is needed (like too many
+restarts at all, per/sec, ...), it’s possible to use
+sam_mark_failed(3) and let corosync watchdog take
+required action.
+
+BUGS
+
+SEE ALSO
+
+sam_initialize(3),
+sam_data_getsize(3), sam_data_restore(3),
+sam_data_store(3), sam_finalize(3),
+sam_mark_failed(3), sam_start(3),
+sam_stop(3), sam_register(3),
+sam_warn_signal_set(3), sam_hc_send(3),
+sam_hc_callback_register(3)

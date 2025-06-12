@@ -1,0 +1,213 @@
+NAME
+
+pam_unix
+− authentication, account, session, and password
+management PAM modules for UNIX
+
+SYNOPSIS
+
+/usr/lib/security/pam_unix.so.1
+
+DESCRIPTION
+
+The UNIX
+service module for PAM,
+/usr/lib/security/pam_unix.so.1, provides
+functionality for all four PAM modules: authentication,
+account management, session management and password
+management. The pam_unix.so.1 module is a shared
+object that can be dynamically loaded to provide the
+necessary functionality upon demand. Its path is specified
+in the PAM configuration file.
+
+UNIX
+Authentication Module 
+The UNIX authentication component provides functions to
+verify the identity of a user,
+(pam_sm_authenticate()) and to set user specific
+credentials (pam_sm_setcred()).
+pam_sm_authenticate() compares the user entered
+password with the password from the UNIX password database.
+If the passwords match, the user is authenticated. If the
+user also has secure RPC credentials and the secure
+RPC password is the same as the UNIX password, then
+the secure RPC credentials are also obtained.
+
+The following
+options may be passed to the UNIX service module:
+
+debug
+
+syslog(3C) debugging information at
+LOG_DEBUG level.
+
+nowarn
+
+Turn off warning messages.
+
+use_first_pass
+
+It compares the password in the
+password database with the user’s initial password
+(entered when the user authenticated to the first
+authentication module in the stack). If the passwords do not
+match, or if no password has been entered, it quits and does
+not prompt the user for a password. This option should only
+be used if the authentication service is designated as
+optional in the pam.conf configuration
+file.
+
+try_first_pass
+
+It compares the password in the
+password database with the user’s initial password
+(entered when the user authenticated to the first
+authentication module in the stack). If the passwords do not
+match, or if no password has been entered, prompt the user
+for a password. When prompting for the current password, the
+UNIX authentication module will use the prompt,
+"password:" unless one of the following scenarios
+occur:
+
+1.
+
+The option try_first_pass is specified and the
+password entered for the first module in the stack fails for
+the UNIX module.
+
+2.
+
+The option try_first_pass is not specified, and
+the earlier authentication modules listed in the
+pam.conf file have prompted the user for the
+password. 
+
+In these two
+cases, the UNIX authentication module will use the prompt
+"SYSTEM password:". The pam_sm_setcred()
+function sets user specific credentials. If the user had
+secure RPC credentials, but the secure RPC
+password was not the same as the UNIX password, then a
+warning message is printed. If the user wants to get secure
+RPC credentials, then keylogin(1) needs to be
+run.
+
+UNIX Account
+Management Module 
+The UNIX account management component provides a function to
+perform account management, pam_sm_acct_mgmt(). The
+function retrieves the user’s password entry from the
+UNIX password database and verifies that the user’s
+account and password have not expired. The following options
+may be passed in to the UNIX service module:
+
+debug
+
+syslog(3C) debugging
+information at LOG_DEBUG level.
+
+nowarn
+
+Turn off warning messages.
+
+UNIX Session
+Management Module 
+The UNIX session management component provides functions to
+initiate pam_sm_open_session() and terminate
+pam_sm_close_session() UNIX sessions. For UNIX,
+pam_open_session updates the /var/adm/lastlog
+file. The account management module reads this file to
+determine the previous time the user logged in. The
+following options may be passed in to the UNIX service
+module:
+
+debug
+
+syslog(3C) debugging information at
+LOG_DEBUG level.
+
+nowarn
+
+Turn off warning messages.
+pam_close_session is a null function.
+
+UNIX
+Password Management Module 
+The UNIX password management component provides a function
+to change passwords pam_sm_chauthtok() in the UNIX
+password database. This module must be required in
+pam.conf. It cannot be optional or
+sufficient. The following options may be passed in to
+the UNIX service module:
+
+debug
+
+syslog(3C) Debugging information at
+LOG_DEBUG level.
+
+nowarn
+
+Turn off warning messages.
+
+use_first_pass
+
+It compares the password in the
+password database with the user’s old password
+(entered to the first password module in the stack). If the
+passwords do not match, or if no password has been entered,
+it quits and does not prompt the user for the old password.
+It also attempts to use the new password (entered to the
+first password module in the stack) as the new password for
+this module. If the new password fails, it quits and does
+not prompt the user for a new password.
+
+try_first_pass
+
+It compares the password in the
+password database with the user’s old password
+(entered to the first password module in the stack). If the
+passwords do not match, or if no password has been entered,
+it prompts the user for the old password. It also attempts
+to use the new password (entered to the first password
+module in the stack) as the new password for this module. If
+the new password fails, it prompts the user for a new
+password. If the user’s password has expired, the UNIX
+account module saves this information in the authentication
+handle using pam_set_data(), with a unique name,
+SUNW_UNIX_AUTHOK_DATA. The UNIX password module
+retrieves this information from the authentication handle
+using pam_get_data() to determine whether or not to
+force the user to update the user’s password.
+
+ATTRIBUTES
+
+See
+attributes(5) for description of the following
+attributes:
+
+SEE ALSO
+
+keylogin(1),
+pam(3PAM), pam_authenticate(3PAM),
+pam_setcred(3PAM), syslog(3C),
+libpam(3LIB), pam.conf(4),
+attributes(5), pam_authtok_check(5),
+pam_authtok_get(5), pam_authtok_store(5),
+pam_dhkeys(5), pam_passwd_auth(5),
+pam_unix_account(5), pam_unix_auth(5),
+pam_unix_session(5)
+
+NOTES
+
+The interfaces
+in libpam(3LIB) are MT-Safe only if each thread
+within the multi-threaded application uses its own
+PAM handle.
+
+The
+pam_unix(5) module might not be supported in a future
+release. Similar functionality is provided by
+pam_authtok_check(5), pam_authtok_get(5),
+pam_authtok_store(5), pam_dhkeys(5),
+pam_passwd_auth(5), pam_unix_account(5),
+pam_unix_auth(5), and pam_unix_session(5).

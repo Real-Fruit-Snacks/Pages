@@ -1,0 +1,339 @@
+NAME
+
+ldpd - an LDP
+routing engine for use with FRRouting.
+
+SYNOPSIS
+
+ldpd [-h]
+[-v]
+
+ldpd
+[-d|-t|-dt] [-C] [-f config-file] [-i pid-file] [-z
+zclient-path] [-u user] [-g group] [-A vty-addr] [-P
+vty-port] [-M module[:options]] [-N pathspace] [--vty_socket
+vty-path] [--moduledir module-path]
+
+DESCRIPTION
+
+ldpd is a
+routing component that works with the FRRouting routing
+engine.
+
+OPTIONS
+
+OPTIONS
+available for the ldpd command:
+
+HELP AND
+VERSION 
+-h, --help
+
+Print a short description of
+the daemon's command line options.
+
+-v, --version
+
+Print version and build
+information for the daemon.
+
+Both of these
+options inhibit normal operation and will immediately
+exit.
+
+PROCESS
+CONTROL 
+These options control background operation: 
+-d, --daemon
+
+Launches the process in
+background/daemon mode, forking and detaching from the
+terminal.
+
+The parent
+process will delay its exit until the daemon/child has
+finished its initialization and has entered its main loop.
+This is important for zebra startup because the other
+daemons will attempt to connect to zebra. A return from
+zebra -d guarantees its readiness to accept these
+connections.
+
+-t, --terminal
+
+Opens an interactive VTY
+session on the terminal, allowing for both state and
+configuration operations. Note that the terminal starts
+operating after startup has completed and the configuration
+file has been loaded.
+
+The process
+will exit when end of file is detected on the terminal. It
+is possible to daemonize a process started with -t (but
+without -d) by sending SIGQUIT to the process (normally
+mapped to a ^keypress.)
+
+The combination
+of --daemon and --terminal will delay the
+daemon from going into background until the terminal session
+ends (by end of file.)
+
+If the process
+receives SIGINT (e.g. a ^C keypress) in this mode, it will
+exit instead of daemonizing.
+
+It is safe to
+suspend (SIGTSTP / ^Z) the terminal session opened by the
+previous two options; this will only stop the terminal but
+not the protocol daemon itself (which runs in a separate
+second process.)
+
+CONFIGURATION
+AND PATHS 
+The following options control configuration and file system
+locations for frr processes: 
+-f, --config_file config-file
+
+Specify a configuration file to
+be used instead of the default /etc/frr/.conf
+file.
+
+Note that the
+daemon will attempt to write to this file if the write file
+command is issued on its VTY interface or through vtysh.
+
+-C, --dryrun
+
+Load the configuration file and
+check its validity, then exit.
+
+-i, --pid_file
+pid-file
+
+Output a pid file to a location
+other than the default /var/run/frr/.pid.
+
+-z, --socket
+zclient-path
+
+Override the path of the ZAPI
+socket used to communicate between zebra and the various
+protocol daemons. The default is /var/run/frr/zserv.api. The
+value of this option must be the same across all
+daemons.
+
+-N, --pathspace
+pathspace
+
+Insert pathspace into all
+default paths, changing the defaults to:
+
+/etc/frr/pathspace/.conf
+/var/run/frr/pathspace/.pid
+/var/run/frr/pathspace/.vty
+/var/run/frr/pathspace/zserv.api
+
+´.´
+and ´/´ characters will not be accepted in
+pathspace, but the empty string will be accepted.
+
+Note that this
+only changes the respective defaults, it has no effect on
+the respective path if the -f, -i, -z or --vty_socket
+options are used.
+
+The purpose of
+this option is to easily group all file system related bits
+together for running multiple fully-separate "logical
+routers" on a system, particularly with Linux network
+namespaces. Groups of daemons running with distinct
+pathspace values will be completely unaware of each other
+and not interact in any way.
+
+This option
+does not do any system setup (like network namespaces.) This
+must be done by the user, for example by running:
+
+ip netns exec
+namespace  -N namespace
+
+PROCESS
+CREDENTIALS 
+-u, --user user
+
+(default: frr)
+
+-g, --group group
+
+(default: frr)
+
+Change the
+user/group which the daemon will switch to.
+
+-S, --skip_runas
+
+Skip setting the process
+effective user and group.
+
+Note that there
+is an additional group, frrvty, which controls group
+ownership of the VTY sockets. The name of this group cannot
+currently be changed, and user must be a member of this
+group.
+
+VTY
+SETUP 
+These following options control the daemon's VTY
+(interactive command line) interface. The interface is
+available over TCP, using the telnet protocol, as well as
+through the vtysh frontend. 
+-A, --vty_addr vty-addr
+
+Specify an IP/IPv6 address to
+bind the TCP VTY interface to. It is generally recommended
+to specify ::1 or 127.0.0.1. For reasons of backwards
+compatibility, the default is to listen on all
+interfaces.
+
+-P, --vty_port
+vty-port
+
+Override the daemon's default
+TCP VTY port (each daemon has a different default value
+upwards of 2600, listed below.) Specifying 0 disables the
+TCP VTY interface.
+
+Default ports
+are::
+
+zebra           2601
+ripd            2602
+ripngd          2603
+ospfd           2604
+bgpd            2605
+ospf6d          2606
+isisd           2608
+babeld          2609
+nhrpd           2610
+pimd            2611
+ldpd            2612
+eigrpd          2613
+pbrd            2615
+staticd         2616
+bfdd            2617
+
+Port 2607 is
+used for ospfd's Opaque LSA API.
+
+--vty_socket
+vty-path
+
+Overrides the directory used
+for the .vty sockets. vtysh connects to these
+sockets in order to access each daemon's VTY. Default:
+/var/run/frr[/]
+
+NB: Unlike the
+other options, this option specifies a directory, not a full
+path.
+
+This option is
+primarily used by the SNAP packaging system, its semantics
+may change. It should not be necessary in most other
+scenarios.
+
+MODULE
+LOADING 
+frr supports optional dynamically loadable modules, although
+these can only be loaded at startup. The set of available
+modules may vary across distributions and packages, and
+modules may be available for installation as separate
+packages. 
+-M, --module module[:options]
+
+Load a module named module,
+optionally passing options to it.
+
+If there is a
+´/´ character in module, the value is assumed to
+be a pathname to a module.
+
+If there is no
+´/´ character, the module directory (see next
+option) is searched first for a module named
+"_.so", then for
+".so". This allows for a module to
+exist in variations appropriate for particular daemons, e.g.
+zebra_snmp and bgp_snmp, with the correct one selected by -M
+snmp.
+
+The meaning of
+options is specific to the module being loaded. Most modules
+currently ignore it.
+
+Modules are
+loaded in the order as listed on the command line. This is
+not generally relevant.
+
+--moduledir
+module-path
+
+Look for modules in the
+module-path directory instead of the default
+/usr/lib/frr/modules. (This path is not affected by the -N
+option.)
+
+The list of
+loaded modules can be inspected at runtime with the show
+modules VTY command.
+
+FILES
+
+/usr/lib/frr/ldpd
+
+The default location of the
+ldpd binary.
+
+/etc/frr/ldpd.conf
+
+The default location of the
+ldpd config file.
+
+$(PWD)/ldpd.log
+
+If the ldpd process is
+configured to output logs to a file, then you will find this
+file in the directory where you started ldpd.
+
+WARNING
+
+This man page
+is intended to be a quick reference for command line
+options. The definitive document is the info file frr 6.0.2
+or the documentation available on the project website at
+https://frrouting.org/.
+
+DIAGNOSTICS
+
+The daemon may
+log to standard output, to a VTY, to a log file, or through
+syslog to the system logs. FRR supports many debugging
+options, see the Info file, web docs or source for
+details.
+
+SEE ALSO
+
+zebra(8),
+vtysh(1), ripd(8), ripngd(8), ospfd(8), ospf6d(8), bgpd(8),
+isisd(8), babeld(8), nhrpd(8), pimd(8), pbrd(8), ldpd(8),
+eigrpd(8), staticd(8), mtracebis(8)
+https://frrouting.org/
+
+BUGS
+
+FRR eats bugs
+for breakfast. If you have food for the maintainers, please
+email dev [AT] lists.org>.
+
+COPYRIGHT
+
+2019, FRR

@@ -1,0 +1,346 @@
+NAME
+
+pmlogsummary
+- calculate averages of metrics stored in a set of PCP
+archives
+
+SYNOPSIS
+
+pmlogsummary
+[-abfFHiIlmMNsvVxyz?] [-B nbins]
+[-n pmnsfile] [-p precision]
+[-S starttime] [-T endtime]
+[-Z timezone] archive
+[metricname ...]
+
+DESCRIPTION
+
+pmlogsummary
+prints statistical information about metrics of numeric type
+contained within the files of a set of Performance Co-Pilot
+(PCP) archives. The default output prints time averages for
+both counter and non-counter metrics. The set of archives is
+identified by archive, which is a comma-separated
+list of names, each of which may be the base name of an
+archive or the name of a directory containing one or more
+archives. The archives are typically created using
+pmlogger(1).
+
+The metrics of
+interest are named in the metricname arguments. If
+metricname is a non-leaf node in the Performance
+Metrics Name Space (PMNS(5)), then
+pmlogsummary will recursively descend the PMNS and
+report on all leaf nodes. If no metricname argument
+is given, the root of the namespace is used.
+
+Metrics with
+counter semantics are converted to rates before being
+evaluated.
+
+OPTIONS
+
+The available
+command line options are: 
+-a, --all
+
+Print all information. This is
+equivalent to -blmMy.
+
+-b
+
+Print both forms of averaging, that is both stochastic
+and time averaging.
+
+-B nbins,
+--bins=nbins
+
+Print the approximate
+distribution of values, using histogram bins such that the
+value range (minimum - maximum) for each metric is divided
+equally into nbins bins, and each bin accumulates the
+frequency of observed values in the corresponding range.
+Refer to the ’’OUTPUT FORMAT’’
+section below for a description of how the distribution of
+values is reported).
+
+-f
+
+Spreadsheet format - the tab character is used to
+delimit each field printed. This option is intended to allow
+pmlogsummary output to be imported directly into
+common spreadsheet applications.
+
+-F
+
+Spreadsheet format - the comma character is used to
+delimit each field printed. This option is intended to allow
+pmlogsummary output to be imported directly into
+common spreadsheet applications which support the Comma
+Separated Value (.csv) format.
+
+-H, --header
+
+Print a one-line header at the
+start showing what each field represents.
+
+-i, --mintime
+
+Also print the time at which
+the minimum value was logged. The format of this timestamp
+is described in the ’’OUTPUT
+FORMAT’’ section below.
+
+-I, --maxtime
+
+Also print the time at which
+the maximum value was logged. The format of this timestamp
+is described in the ’’OUTPUT
+FORMAT’’ section below.
+
+-l, --label
+
+Also print the archive label,
+showing the archive format version, the time and date for
+the start and end of the archive time window, and the host
+from which the performance metrics values were
+collected.
+
+-m, --minimum
+
+Also print the minimum logged
+value for each metric.
+
+-M, --maximum
+
+Also print the maximum logged
+value for each metric.
+
+-n pmnsfile,
+--namespace=pmnsfile
+
+Load an alternative Performance
+Metrics Name Space (PMNS(5)) from the file
+pmnsfile.
+
+-N
+
+Suppress any warnings resulting from individual archive
+fetches (default).
+
+-p precision,
+--precision=precision
+
+Print all floating point
+numbers with precision digits after the decimal
+place.
+
+-s, --sum
+
+Print (only) the sum of all
+logged values for each metric.
+
+-S starttime,
+--start=starttime
+
+Set the starttime of the
+time window. Refer to PCPIntro(1) for a complete
+description of the syntax for starttime.
+
+-T endtime,
+--finish=endtime
+
+Set the endtime of the
+time window. Refer to PCPIntro(1) for a complete
+description of the syntax for endtime.
+
+-v, --verbose
+
+Report (verbosely) on warnings
+resulting from individual archive fetches.
+
+-V, --version
+
+Display version number and
+exit.
+
+-x
+
+Print stochastic averages instead of the default (time
+averages). 
+
+-y, --samples
+
+Also print the number of
+samples encountered in the set of archives for each
+metric.
+
+-z,
+--hostzone
+
+Change the timezone to the
+local timezone at the host that is the source of the
+performance metrics, as specified in the label record of the
+archive.
+
+-Z timezone,
+--timezone=timezone
+
+By default, pmlogsummary
+reports the time of day according to the local timezone on
+the system where pmlogsummary is run. Change the
+timezone to timezone in the format of the environment
+variable TZ as described in environ(7).
+
+-?, --help
+
+Display usage message and
+exit.
+
+OUTPUT FORMAT
+
+The
+pmlogsummary output format is spartan as it is
+intended to be post-processed with standard tools. This
+means that there is no annotation associated with each
+output field which would make processing harder. The
+intention is that pmlogsummary output be massaged
+into a format which can be used by a spreadsheet program, is
+suitable for inclusion in a web page, or whatever.
+
+For each
+metric, pmlogsummary produces a single output line as
+follows:
+
+metricname
+value(s) units
+
+For metrics
+with multiple instances, pmlogsummary produces
+multiple lines of output as follows:
+
+metricname
+["instance 1"] value(s) units 
+metricname ["instance 2"] value(s)
+units 
+metricname ["instance N"] value(s)
+units
+
+The printed
+value(s) for each metric always follow this order:
+stochastic average, time average, minimum, minimum
+timestamp, maximum, maximum timestamp, count, [bin 1 range],
+bin 1 count, ... [bin nbins range], bin nbins
+count. The individual values for each metric are
+space-separated (unless the -f option is used).
+
+All counter
+metrics which are measured in units of time will be
+converted to seconds before being rate converted and used in
+the pmlogsummary calculations. The values calculated
+for these metrics are also printed in seconds.
+
+The units will
+be displayed in the format described by
+pmUnitsStr(3).
+
+Given either of
+the -i or -I options, pmlogsummary
+produces two different timestamp formats, depending on the
+interval over which it is run. For an interval greater than
+24 hours, the date is displayed in addition to the time at
+which the maxima and/or minima occurred. If the extent of
+the data being checked is less than 24 hours, a more precise
+format is used (time is displayed with millisecond
+precision, but without the date).
+
+NOTES
+
+The average for
+an individual metric is calculated as follows:
+
+Non-counter
+metrics are averaged using stochastic averaging - each
+observation has an equal weighting towards the calculation
+of the average (the sum of all values divided by the total
+number of values, for each metric).
+
+Counter metrics
+are averaged using time averaging (by default), but the
+-x option can be used to specify that counters be
+averaged using the stochastic method instead. When
+calculating a time average, the sum of the product of each
+sample value multiplied by the time difference between each
+sample, is divided by the total time over which that metric
+was logged.
+
+Counter metrics
+whose measurements do not span 90% of the set of archives
+will be printed with the metric name prefixed by an asterisk
+(*).
+
+EXAMPLES
+
+$ pmlogsummary
+-aN -p 1 -B 3 surf network.interface.out.bytes 
+Log Label (Log Format Version 1) 
+Performance metrics from host www.sgi.com 
+commencing Tue Jan 14 20:50:50.317 1997 
+ending Wed Jan 29 10:13:07.387 1997 
+network.interface.out.bytes ["xpi0"] 202831.3
+202062.5 20618.7 \
+
+1235067.7 971 [
+
+17 byte / sec
+
+network.interface.out.bytes
+["xpi1"] 0.0 0.0 0.0 0.0 1033 [
+
+1033 [] 0 [] 0 byte / sec
+
+network.interface.out.bytes
+["et0"] 0.0 0.0 0.0 0.0 1033 [
+
+1033 [] 0 [] 0 byte / sec
+
+network.interface.out.bytes
+["lo0"] 899.0 895.2 142.6 9583.1 1031 \
+
+[
+
+A description
+of each field in the first line of statistical output, which
+describes one instance of the network.interface.out.bytes
+metric, follows:
+
+FILES
+
+$PCP_VAR_DIR/pmns/*
+
+default PMNS specification
+files
+
+$PCP_LOG_DIR/pmlogger/
+
+Default directory for PCP
+archives containing performance metric values collected from
+the host .
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+SEE ALSO
+
+PCPIntro(1),
+pmchart(1), pmdumptext(1),
+pmlogextract(1), pmlogger(1), pmrep(1),
+pmval(1), PMAPI(3), pmUnitsStr(3) and
+PMNS(5).

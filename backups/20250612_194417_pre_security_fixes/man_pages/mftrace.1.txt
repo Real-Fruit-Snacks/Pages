@@ -1,0 +1,210 @@
+NAME
+
+mftrace -
+convert METAFONT format fonts into Type1 outline fonts
+
+SYNOPSIS
+
+mftrace
+[options] fontname
+
+DESCRIPTION
+
+mftrace
+is a program that can convert a METAFONT font into a Type1
+font. It is simply called with the name of the font (without
+a ’.mf’ suffix) and produces a Type1 font file
+called either fontname.pfa or fontname.pfb
+depending on the command line options. With the help of
+fontforge(1) it can produce other font formats
+too.
+
+For tracing the
+bitmap, mftrace either uses potrace(1) or
+autotrace(1) (the former preferred) if available;
+this can be overridden with the --autotrace and
+--potrace command line options.
+
+OPTIONS
+
+This program
+follows the usual GNU command line syntax, with long options
+starting with two dashes (’-’). 
+-k, --keep
+
+Keep all output in directory
+’mftrace.dir’.
+
+--magnification=MAG
+
+The magnification to use for
+the PFA file. The default is 1000. The larger the
+magnification, the more precise the PFA file will be.
+However, if the magnification is too large METAFONT can
+crash with overflow errors.
+
+Sadly, many MF
+fonts contain resolution checks
+
+if
+dots_per_inch * design_size > 1500:
+
+This check is
+susceptible to overflow errors. Such code should be reported
+as a bug, and changed to
+
+if
+dots_per_inch > (1500 / design_size):
+
+--formats=FMT1,FMT2,...
+
+Specify which formats to
+generate (default is pfa). Choices are: ’afm’,
+’pfa’, ’pfb’, ’ttf’,
+’svg’. Note that fontforge must be
+installed to generate any format except ’pfa’ or
+’pfb’. For generating ’afm’ you need
+either fontforge or ghostscript.
+
+--simplify
+
+This passes the created Type1
+font to fontforge to simplify and autohint it.
+
+--gffile=FILE
+
+Use generic font file
+FILE instead of running Metafont. (GF is the default
+output format of Metafont.)
+
+-I DIR,
+--include=DIR
+
+Add DIR to the current
+path for searching files.
+
+--glyphs=LIST
+
+Process only these glyphs.
+LIST is a comma separated list of decimal numbers or
+ranges, for example ’1-10,50,55,90-100’.
+
+--tfmfile=FILE
+
+Use FILE for the TFM
+file. (The default is to use fontname.tfm).
+
+-e ENC,
+--encoding=ENC
+
+Use encoding file ENC.
+Encoding files used by mftrace are basically in the
+GhostScript/dvips format, but you may use a special
+.notavail glyph name in order to tell mftrace not to
+process a specific glyph. If this option is not specified,
+mftrace tries to determine the encoding file
+automatically, from the encoding specified in the TFM file,
+the default being ’tex256.enc’.
+
+--keep-trying
+
+Try to continue if external
+programs called by mftrace fail. If METAFONT crashes with
+overflow errors, but nevertheless outputs a GF file, try to
+process its output as is (useful for some buggy fonts, see
+above). If potrace or autotrace fail to trace
+a specific character, first try it with a less smoothed
+curve, and if that fails, skip the character. By default,
+mftrace leaves a file
+’trace-bug-font-char.pbm’ and
+stops the process with a request to file a bugreport.
+
+--dos-kpath
+
+Try to use MikTeX’s
+version of kpsewhich.
+
+--potrace
+
+Use potrace for tracing
+bitmaps. The default is to use potrace if it is
+found, otherwise to use autotrace.
+
+--autotrace
+
+Use autotrace for
+tracing bitmaps.
+
+--no-afm
+
+Don’t read the AFM file
+to find font information.
+
+--noround
+
+Do not round coordinates of
+control points to integer values (use with --grid).
+Disabled by default.
+
+--grid=GRID
+
+Set reciprocal grid size in em
+units multiplied by ratio magnification/1000. For example,
+’--grid 10
+--magnification 1000’ rounds coordinates of
+control points to 1/10th of the em unit. Useful
+simultaneously with the --noround option. Default
+GRID value is 1, i.e., round to integer. This
+option is only used with potrace.
+
+-D,--define=SYMBOL=VALUE
+
+Set the font info SYMBOL
+to the given VALUE. For example,
+-DFamilyName=Foo sets the font family name to
+Foo. mftrace tries to fill in sensible default
+values for the ’FontName’,
+’FamilyName’, ’FullName’ and
+’Weight’ fields.
+
+-V, --verbose
+
+Be verbose.
+
+-h, --help
+
+Show summary of options.
+
+-v, --version
+
+Show version of program.
+
+-w, --warranty
+
+Show warranty and
+copyright.
+
+COPYRIGHT
+
+You may
+redistribute copies of mftrace under the terms of the GNU
+General Public License
+http://www.gnu.org/licenses/gpl.html>. There is NO
+WARRANTY, to the extent permitted by law. 
+This manual page is copyright © 2005,2006,2007 Julian
+Gilbey and is distributed under the GNU General Public
+License too.
+
+SEE ALSO
+
+mf(1),
+autotrace(1), potrace(1),
+fontforge(1).
+
+AUTHOR
+
+mftrace
+was written by Han-Wen Nienhuys hanwen [AT] xs4all.nl>.
+This manual page was originally written by Julian Gilbey
+jdg [AT] debian.org> and has been revised by Werner
+Lemberg wl [AT] gnu.org>.

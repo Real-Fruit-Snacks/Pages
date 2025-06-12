@@ -1,0 +1,80 @@
+MLD(4) BSD Kernel Interfaces Manual MLD(4)
+
+NAME
+
+mld — Multicast
+Listener Discovery Protocol
+
+SYNOPSIS
+
+#include 
+
+#include  
+#include  
+#include  
+#include  
+#include  
+#include 
+
+int
+
+socket(AF_INET6,
+SOCK_RAW, IPPROTO_ICMPV6);
+
+DESCRIPTION
+
+MLD is a control plane protocol
+used by IPv6 hosts and routers to propagate multicast group
+membership information. Normally this protocol is not used
+directly, except by the kernel itself, in response to
+multicast membership requests by user applications.
+Multicast routing protocol daemons may open a raw socket to
+directly interact with mld and receive membership
+reports.
+
+As of
+FreeBSD 8.0, MLD version 2 is implemented. This adds
+support for Source-Specific Multicast (SSM), whereby
+applications may communicate to upstream multicast routers
+that they are only interested in receiving multicast streams
+from particular sources. The retransmission of state-change
+reports adds some robustness to the protocol.
+
+SYSCTL VARIABLES 
+net.inet6.mld.ifinfo
+
+This opaque read-only variable
+exposes the per-link MLDv2 status to ifmcstat(8).
+
+net.inet6.mld.gsrdelay
+
+This variable specifies the
+time threshold, in seconds, for processing Group-and-Source
+Specific Queries (GSR). As GSR query processing requires
+maintaining state on the host, it may cause memory to be
+allocated, and is therefore a potential attack point for
+Denial-of-Service (DoS). If more than one GSR query is
+received within this threshold, it will be dropped, to
+mitigate the potential for DoS.
+
+net.inet6.mld.v1enable
+
+If this variable is non-zero,
+then MLDv1 membership queries (and host reports) will be
+processed by this host, and backwards compatibility will be
+enabled until the v1 ’Older Version Querier
+Present’ timer expires. This sysctl is normally
+enabled by default.
+
+SEE ALSO
+
+netstat(1), sourcefilter(3),
+icmp6(4), inet(4), multicast(4), ifmcstat(8)
+
+HISTORY
+
+The mld manual page
+appeared in FreeBSD 8.0.
+
+BSD
+April 8, 2013 BSD

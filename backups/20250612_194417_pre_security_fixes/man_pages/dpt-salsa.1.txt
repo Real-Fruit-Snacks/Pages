@@ -1,0 +1,416 @@
+NAME
+
+dpt-salsa -
+manage repositories and members of the perl-team on
+salsa.debian.org
+
+SYNOPSIS
+
+dpt
+salsa [--help|--man|--json|--all|--attic]
+subcommand [parameters]
+
+DESCRIPTION
+
+dpt-salsa
+is basically a wrapper around GitLab::API::v4, similar to
+gitlab-api-v4(1), with various variables regarding
+salsa.debian.org and the modules subgroup of
+the perl-team group already preset and typical method
+calls encapsulated.
+
+It offers
+subcommands to manage repositories and members of the
+modules subgroup with hopefully less typing then
+calling the API manually each time.
+
+Make sure to
+check the " CONFIGURATION" section
+below if you use dpt-salsa for the first time.
+
+SUBCOMMANDS
+
+for managing
+repositories 
+pushrepo
+
+Creates a new
+repository in the modules subgroup (with
+"createrepo()" and
+"configurerepo()") and pushes the local
+repository.
+
+createrepo
+repositoryname
+
+Creates a new
+empty repository in the modules subgroup and calls
+"configurerepo()".
+
+Parameters:
+
+repositoryname
+
+Name of the repository to be
+added; usually the package name. Required.
+
+configurerepo
+repositoryid|repositoryname
+
+Sets up the
+default webhooks and services for one repository.
+
+Parameters:
+
+repositoryid|repositoryname
+
+The repository to be
+configured. Either its id (\d+) or name (\w+). Required.
+
+configurerepo
+--all [--attic]
+
+Sets up the
+default webhooks and services for all active (or, with
+"--attic", archived) repositories.
+
+changerepo
+repositoryid|repositoryname
+"name"|"description"
+"parameter"
+
+Changes the
+name (and the path) or the description of a repository.
+
+Parameters:
+
+repositoryid|repositoryname
+
+The repository to be
+configured. Either its id (\d+) or name (\w+). Required.
+
+"name"|"description"
+
+What should be changed? The
+"name" or the "description" of the
+repository. Required.
+
+parameter
+
+The new name or description.
+Required.
+
+listrepos
+[--json] [--attic]
+
+Show all active
+(or, with "--attic", archived)
+repositories in the modules subgroup.
+
+If used with
+"--all", returns repository ids and does
+not output anything; for internal use.
+
+kgb
+repositoryid|repositoryname|--all [--attic]
+--on|--off
+
+Install
+("--on") or remove
+("--off") the KGB IRC
+notification webhook for the given, all active
+("--all"), or all archived
+("--attic") repositories.
+
+If a
+KGB notification webhook is already present,
+"--on" does nothing.
+
+Parameters:
+
+repositoryid|repositoryname
+
+The repository to be
+configured. Either its id (\d+) or name (\w+). Required
+unless "--all" is used.
+
+toattic|fromattic
+repositoryid|repositoryname
+
+Moves a
+repository to/from the attic sub-group of the
+modules sub-group. Useful when a package is removed
+from the archive or added back.
+
+Probably needs
+appropriate permissions.
+
+for managing
+users 
+adduser username|userid [access_level]
+
+Adds a user to
+the modules subgroup of the perl-team
+group.
+
+Parameters:
+
+username|userid
+
+The user to be added. Either
+their id (\d+) or their username (\w+). Required.
+
+access_level
+
+One of GitLab’s
+access levels: no_access, guest, reporter, developer,
+maintainer, owner. Optional, defaults to
+"maintainer".
+
+removeuser
+username|userid
+
+Removes a user
+from the modules subgroup of the perl-team
+group.
+
+Parameters:
+
+username|userid
+
+The user to be removed. Either
+their id (\d+) or their username (\w+). Required.
+
+changeuser
+access_level username|userid|--all
+
+Change the
+access level of one or all user(s) in the modules
+subgroup of the perl-team group.
+
+Parameters:
+
+access_level
+
+One of GitLab’s
+access levels: guest, reporter, developer, maintainer,
+owner. Required.
+
+username|userid
+
+The user whose access level is
+to be changed. Either their id (\d+) or their username
+(\w+). Required, unless "--all" is
+used.
+
+listmembers
+[--json]
+
+Show all
+members of the modules subgroup of the
+perl-team group.
+
+If used with
+"--all", returns user ids and does not
+output anything; for internal use.
+
+others
+
+mrconfig [--parallel N] [-j N]
+
+Helper for
+creating
+
+•
+
+a .mrconfig.packages file in the local clone of
+"meta.git" for all active packages of the
+modules subgroup of the perl-team group. Also
+writes to stdout which can be included from
+.mrconfig. 
+
+•
+
+.lastactivity/PKGNAME files in the local clone of
+"meta.git" for all active packages of the
+modules subgroup of the perl-team group which
+are then used by compare-lastactivity in
+.mrconfig. 
+
+With
+"--parallel" Parallel::ForkManager is
+employed for parallelism.
+
+Additionally,
+the option will also output a list of repositories that
+potentially have not been configured with
+dpt-salsa.
+
+current_user
+[--json]
+
+Outputs
+information about the user whose GitLab token is
+used.
+
+help
+
+Same as option
+--help.
+
+version
+[--json]
+
+Returns the
+version of the GitLab instance running on
+salsa.debian.org.
+
+This subcommand
+is pretty useless, the only excuse for its existence is the
+ability to test if everything is working fine.
+
+OPTIONS
+
+--help
+
+Show short help.
+
+--man
+
+Show complete manpage.
+
+--all
+
+Act on all users or
+repositories, not a single named one. Only for specific
+subcommands, as noted in their description.
+
+--attic
+
+Act on archived repositories
+instead of active ones. Only for specific subcommands, as
+noted in their description.
+
+--json
+
+Format output as
+JSON instead of human-targeted text. Only for
+specific subcommands, as noted in their description.
+
+CONFIGURATION
+
+dpt-salsa
+uses the following environment variables, set either
+directly or via ~/.dpt.conf /
+~/.config/dpt.conf: 
+DPT_SALSA_PRIVATE_TOKEN
+
+required, no default,
+obviously
+
+These tokens
+are created at
+https://salsa.debian.org/profile/personal_access_tokens>.
+
+DPT_SALSA_API_URL
+
+optional, default:
+https://salsa.debian.org/api/v4
+
+DPT_SALSA_PERL_TEAM_PATH
+
+optional, default:
+perl-team
+
+DPT_SALSA_PERL_TEAM_ID
+
+optional, default: 2663
+
+DPT_SALSA_PERL_TEAM_INTERPRETER_PATH
+
+optional, default:
+perl-team/interpreter
+
+DPT_SALSA_PERL_TEAM_INTERPRETER_ID
+
+optional, default: 2664
+
+DPT_SALSA_PERL_TEAM_MODULES_PATH
+
+optional, default:
+perl-team/modules
+
+DPT_SALSA_PERL_TEAM_MODULES_ID
+
+optional, default: 2665
+
+DPT_SALSA_PERL_TEAM_MODULES_PACKAGES_PATH
+
+optional, default:
+perl-team/modules/packages
+
+DPT_SALSA_PERL_TEAM_MODULES_PACKAGES_ID
+
+optional, default: 2666
+
+DPT_SALSA_PERL_TEAM_MODULES_ATTIC_PATH
+
+optional, default:
+perl-team/modules/attic
+
+DPT_SALSA_PERL_TEAM_MODULES_ATTIC_ID
+
+optional, default: 2667
+
+DPT_SALSA_PERL_TEAM_MODULES_META_PATH
+
+optional, default:
+perl-team/modules/meta
+
+DPT_SALSA_PERL_TEAM_MODULES_META_ID
+
+optional, default: 13881
+
+DPT_SALSA_PERL_TEAM_PAGES_PATH
+
+optional, default:
+perl-team/perl-team.pages.debian.net
+
+DPT_SALSA_PERL_TEAM_PAGES_ID
+
+optional, default: 11266
+
+DPT_SALSA_PERL_TEAM_SCRIPTS_PATH
+
+optional, default:
+perl-team/scripts
+
+DPT_SALSA_PERL_TEAM_SCRIPTS_ID
+
+optional, default: 13429
+
+DPT_PACKAGES
+
+only used by the
+mrconfig subcommand, no default; most probably
+already set for use with other dpt commands.
+
+Cf.
+dpt-config(5).
+
+SEE ALSO
+
+https://salsa.debian.org/perl-team>
+
+GitLab::API::v4
+
+https://docs.gitlab.com/ce/api/>
+
+COPYRIGHT AND LICENSE
+
+Copyright
+2018-2020, gregor herrmann gregoa [AT] debian.org>
+
+Released under
+the same terms as Perl itself, i.e. Artistic or
+GPL-1+.

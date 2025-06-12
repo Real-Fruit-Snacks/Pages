@@ -1,0 +1,303 @@
+NATMIP(4) BSD Kernel Interfaces Manual NATMIP(4)
+
+NAME
+
+natmip — IP over
+ATM PVCs
+
+SYNOPSIS
+
+device atm 
+options NATM
+
+DESCRIPTION
+
+The NATM protocol stack includes
+support for IP over ATM. Without any additional signalling
+stacks or other modules it is possible to build a CLIP
+(classical IP over ATM) network based on PVCs.
+
+An ATM network
+card (en0 in this example) is configured for IP by something
+like:
+
+ifconfig en0
+128.252.200.1 netmask 0xffffff00 up
+
+IP routing is
+done with special interface routes (routes with directly
+reachable destinations) with a link layer gateway address.
+The link layer address specifies the ATM interface through
+which the destination can be reached, the virtual channel
+that connects to the destination and the ATM characteristics
+of this channel. The address part of the link layer address
+(see link_addr(3)) consists of a fixed part (the first 5
+bytes) and a part that depends on the kind of the PVC (UBR,
+CBR, VBR, ABR). Multi-byte values are big-endian encoded:
+the bytes with the lower numbers contain the higher order
+bits.
+
+byte 0
+
+Is a flag byte.
+Currently only flag 0x20 is used. When set, all IP frames
+are LLC/SNAP encapsulated before putting them into an AAL5
+frame. Setting this flag is recommended and allows
+interoperability with other CLIP implementations. Note that
+BPF works only with LLC/SNAP encapsulation.
+
+byte 1
+
+This is the VPI
+of the channel.
+
+bytes 2...3
+
+VCI of the
+channel. Must not be zero.
+
+byte 4
+
+Traffic type.
+One of 0 (UBR), 1 (CBR), 2 (ABR), 3 (VBR).
+
+The variable
+part for UBR connections may be either empty or three
+bytes:
+
+bytes 5...7
+
+Specifies the
+peak cell rate for UBR.
+
+The variable
+part for CBR connections must be three bytes:
+
+bytes 5...7
+
+Specifies the
+peak cell rate for CBR.
+
+The variable
+part for VBR connections must be 9 bytes long and specifies
+three values:
+
+bytes 5...7
+
+Specifies the
+peak cell rate for VBR.
+
+bytes 8...10
+
+This is the
+sustainable cell rate.
+
+bytes 11...13
+
+The maximum
+burst size.
+
+The variable
+part for ABR connections must be 19 bytes long and specifies
+the following values:
+
+bytes 5...7
+
+Specifies the
+peak cell rate for ABR.
+
+bytes 8...10
+
+The minimum
+cell rate.
+
+bytes 11...13
+
+The initial
+cell rate.
+
+bytes 14...16
+
+The transient
+buffer exposure.
+
+byte 17
+
+The NRM
+value.
+
+byte 18
+
+The TRM
+value.
+
+bytes 19...20
+
+The ADTF
+value.
+
+byte 21
+
+The rate
+increase factor (RIF).
+
+byte 22
+
+The rate
+decrease factor (RDF).
+
+byte 23
+
+The cutoff
+decrease factor (CDF).
+
+To add a PVC the
+route(8) utility can be used:
+
+route add
+−iface ⟨
+remote IP address⟩ −link
+⟨
+
+iface ⟩ :⟨ lladdr⟩
+
+The iface
+is the ATM interface through which
+remote IP address can be reached and
+lladdr is the link layer address as a string of
+dot-separated, hexadecimal bytes.
+
+NATM also
+supports the old, original format. This consists of 4 byte
+link layer addresses (and the channels are implicit
+UBR):
+
+byte 0
+
+Flags:
+
+0x01
+
+use AAL5.
+
+0x02
+
+if using AAL5,
+use an LLC/SNAP header.
+
+Thus, parameter
+3 means AAL5 and LLC/SNAP encapsulation (this is the
+required setting for interworking with other CLIP clients).
+Note that BPF works only with LLC/SNAP encapsulation.
+
+byte 1
+
+VPI for the
+channel
+
+bytes 2...3
+
+VCI for the
+channel
+
+EXAMPLES
+
+Suppose you have 3 hosts
+128.252.200.1, 128.252.200.2 and 128.252.200.3 connected by
+ATM through PVCs:
+
+between
+128.252.200.1 and 128.252.200.2: 0xc9 UBR 
+between 128.252.200.1 and 128.252.200.3: 0xca VBR 
+between 128.252.200.2 and 128.252.200.3: 0xcb CBR
+
+The parameters
+for the VBR channel are: PCR 50000, SCR 10000, MBS 10. The
+peak cell rate for the CBR channel is 100000.
+
+To enable the
+links use the following commands:
+
+on host
+128.252.200.1:
+
+ifconfig en0 128.252.200.1
+netmask 0xffffff00 up 
+route add -iface 128.252.200.2 -link en0:3.0.0.c9.0 
+route add -iface 128.252.200.3 -link
+en0:3.0.0.ca.3.0.c3.50.0.27.10.0.0.a
+
+on host
+128.252.200.2:
+
+ifconfig en0 128.252.200.2
+netmask 0xffffff00 up 
+route add -iface 128.252.200.1 -link en0:3.0.0.c9.0 
+route add -iface 128.252.200.3 -link
+en0:3.0.0.cb.1.1.86.a0
+
+on host
+128.252.200.3:
+
+ifconfig en0 128.252.200.3
+netmask 0xffffff00 up 
+route add -iface 128.252.200.1 -link
+en0:3.0.0.ca.3.0.c3.50.0.27.10.0.0.a 
+route add -iface 128.252.200.2 -link
+en0:3.0.0.cb.1.1.86.a0
+
+This can also be
+done in rc.conf(5):
+
+on host
+128.252.200.1:
+
+network_interfaces="lo0
+en0" 
+ifconfig_en0="inet 128.252.200.1 netmask
+255.255.255.0" 
+static_routes="host2 host3" 
+route_host2="-iface 128.252.200.2 -link
+en0:3.0.0.c9.0" 
+route_host3="-iface 128.252.200.3 -link
+en0:3.0.0.ca.3.0.c3.50.0.27.10.0.0.a"
+
+on host
+128.252.200.2:
+
+network_interfaces="lo0
+en0" 
+ifconfig_en0="inet 128.252.200.2 netmask
+255.255.255.0" 
+static_routes="host1 host3" 
+route_host1="-iface 128.252.200.1 -link
+en0:3.0.0.c9.0" 
+route_host3="-iface 128.252.200.3 -link
+en0:3.0.0.cb.1.1.86.a0"
+
+on host
+128.252.200.3:
+
+network_interfaces="lo0
+en0" 
+ifconfig_en0="inet 128.252.200.3 netmask
+255.255.255.0" 
+static_routes="host1 host2" 
+route_host1="-iface 128.252.200.1 -link
+en0:3.0.0.ca.3.0.c3.50.0.27.10.0.0.a" 
+route_host2="-iface 128.252.200.2 -link
+en0:3.0.0.cb.1.1.86.a0"
+
+SEE ALSO
+
+en(4), fatm(4), hatm(4),
+natm(4), patm(4)
+
+AUTHORS
+
+Chuck Cranor of Washington
+University implemented the NATM protocol layer along with
+the EN ATM driver in 1996 for NetBSD.
+
+BSD
+August 11, 2003 BSD

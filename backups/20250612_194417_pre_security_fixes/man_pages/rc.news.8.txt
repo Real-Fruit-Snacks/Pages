@@ -1,0 +1,117 @@
+NAME
+
+rc.news - Start
+or stop INN daemons
+
+SYNOPSIS
+
+rc.news
+["start" | "stop"]
+
+DESCRIPTION
+
+rc.news
+can be used to start or stop innd and supporting
+programs. It checks to make sure INN is not already running,
+handles cases of unclean shutdown, finishes up tasks which
+might have been interrupted by the preceding shutdown,
+e-mails certain boot-time warnings to newsmaster (as
+set in inn.conf), and is generally safer and easier
+than starting and stopping everything directly. It needs to
+be run as the news user so that files in pathrun are
+created with the right ownership (though this is less
+important for "rc.news stop").
+
+Programs run
+and stopped by this script include:
+
+•
+
+Always: innd is started or stopped.
+
+•
+
+If doinnwatch is true in inn.conf:
+innwatch is started and stopped.
+
+•
+
+If docnfsstat is true in inn.conf:
+cnfsstat is started and stopped.
+
+•
+
+If ovmethod is set to "ovdb" in
+inn.conf: ovdb_init is run; ovdb_server
+and ovdb_monitor are stopped.
+
+•
+
+If ovmethod is set to "ovsqlite" in
+inn.conf: ovsqlite-server is started and
+stopped. 
+
+•
+
+If rc.news.local exists in pathbin:
+rc.news.local is run with argument "start"
+or "stop" (to perform site-specific startup or
+shutdown tasks).
+
+•
+
+When started, if INN appears to have previously been
+shut down during its expiry process, run expirerm if
+there are articles to unlink.
+
+•
+
+When started, if overview data appears to have just been
+rebuilt and active needs to be renumbered, then
+actually renumber it.
+
+OPTIONS
+
+"start"
+
+If the first argument is
+"start", or no first argument is given,
+rc.news initiates INN startup.
+
+"stop"
+
+If the first argument is
+"stop", rc.news initiates INN shutdown.
+
+EXAMPLES
+
+To start INN
+and leave certain error messages going to the terminal:
+
+su news -s
+/bin/sh -c /rc.news
+
+To run INN at
+startup time from appropriate system boot scripts:
+
+su news -s
+/bin/sh -c /rc.news >>
+/rc.news 2>&1
+
+To stop
+INN:
+
+su news -s
+/bin/sh -c '/rc.news stop'
+
+HISTORY
+
+This manual
+page written by Jeffrey M. Vinocur
+jeff [AT] litech.org> for InterNetNews.
+
+SEE ALSO
+
+ctlinnd(8),
+cnfsstat(8), expirerm(8), inn.conf(5), innwatch(8), ovdb(5),
+ovsqlite(5).

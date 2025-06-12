@@ -1,0 +1,580 @@
+NAME
+
+gbp-buildpackage
+- Build Debian packages from a Git repository
+
+SYNOPSIS
+
+gbp buildpackage
+[--git-[no-]ignore-new] [--git-tag]
+[--git-verbose] [--git-color=[auto|on|off]]
+[--git-color-scheme= COLOR_SCHEME]
+[--git-notify=[auto|on|off]]
+[--git-upstream-branch= TREEISH]
+[--git-debian-branch= BRANCH_NAME]
+[--git-ignore-branch] [--git-[no-]submodules]
+[--git-builder= BUILD_CMD]
+[--git-cleaner= CLEAN_CMD]
+[--git-[no-]overlay] [--git-[no-]pbuilder]
+[--git-[no-]qemubuilder] [--git-dist=
+DIST] [--git-arch= ARCH]
+[--git-[no-]pbuilder-autoconf]
+[--git-pbuilder-options= PBUILDER_OPTIONS]
+[--git-[no-]sign-tags] [--git-keyid=
+GPG-KEYID] [--git-preexport= COMMAND]
+[--git-postexport= COMMAND]
+[--git-prebuild= COMMAND]
+[--git-postbuild= COMMAND]
+[--git-posttag= COMMAND]
+[--git-[no-]hooks] [--git-debian-tag=
+tag-format] [--git-debian-tag-msg=
+tag-msg-format] [--git-upstream-tag=
+tag-format] [--git-force-create]
+[--git-no-create-orig]
+[--git-upstream-signatures=[auto|on|off]]
+[--git-upstream-tree=
+[BRANCH|SLOPPY|TAG|TREEISH]]
+[--git-tarball-dir= DIRECTORY]
+[--git-compression= TYPE]
+[--git-compression-level= LEVEL]
+[--git-component= component]...
+[--git-export-dir= DIRECTORY]
+[--git-export= TREEISH]
+[--git-[no-]pristine-tar]
+[--git-[no-]pristine-tar-commit]
+[--git-[no-]-purge] [--git-tag-only]
+[--git-retag]
+[OPTION_PASSED_TO_BUILD_CMD]...
+
+DESCRIPTION
+
+gbp buildpackage
+is used to build Debian source and .deb packages from a Git
+repository.
+
+gbp buildpackage
+will, in order:
+
+•
+
+Verify that it is being executed from the proper
+location. 
+
+•
+
+Verify that the repository doesn’t contain any
+uncommitted source changes.
+
+•
+
+Verify that it is being executed from the correct
+branch. 
+
+•
+
+(Optionally) run a clean command specified with
+--git-cleaner. 
+
+•
+
+(Optionally) export the source tree to a separate build
+area. 
+
+•
+
+Build an orig tarball if it doesn’t exist.
+Optionally using pristine-tar.
+
+•
+
+(Optionally) call a pre build hook.
+
+•
+
+Call debuild(1) or Cowbuilder (via
+--git-pbuilder) or the application specified via
+--git-builder passing along all arguments given to
+gbp buildpackage on the command line that
+don’t start with --git-.
+
+•
+
+(Optionally) tag the current commit after a successful
+build. 
+
+•
+
+(Optionally) call a post build hook - e.g. to run
+lintian. 
+
+•
+
+(Optionally) call a post tag hook - e.g. to push the
+results to a remote repository after creating the tag.
+
+OPTIONS
+
+All options are
+prefixed with git- to distinguish options for
+gbp buildpackage from options passed to the
+BUILD_CMD:
+
+UPSTREAM
+TARBALL CREATION OPTIONS 
+When gbp buildpackage doesn’t find a
+suitable upstream tarball it will create one either using
+pristine-tar or git archive. These options determine
+how the tarball is created: 
+--git-pristine-tar
+
+Use pristine-tar when
+generating the upstream tarball if it doesn’t exist.
+If this mode is enabled the --git-upstream-tag,
+--git-upstream-tree options have no effect.
+
+--git-upstream-tag=TAG-FORMAT
+
+Use this tag format when
+looking for tags of upstream versions to build the upstream
+tarballs. Default is upstream/%(version)s. This must
+be set correctly if you don’t want to pass any other
+options. The default matches what
+gbp import-orig uses to create tags.
+
+--git-upstream-tree=[BRANCH|SLOPPY|TAG|TREEISH]
+
+How to find the upstream
+sources used to generate the tarball. TAG (the
+default) looks at a tag corresponding to the version in the
+changelog. BRANCH looks at the upstream branch given
+via the --git-upstream-branch option. The
+SLOPPY option looks at the debian branch given via
+the --git-debian-branch and drops the debian/
+dir.
+
+Other values
+are interpreted as treeishs.
+
+This
+doesn’t have any effect if --git-pristine-tar
+is being used.
+
+--git-upstream-branch=BRANCH_NAME
+
+Branch to build the orig
+tarball from if --git-upstream-tree is set to
+BRANCH. Default is upstream.
+
+--git-tarball-dir=DIRECTORY
+
+Search for upstream tarballs in
+DIRECTORY instead of generating them. If a tarball is
+not found here it will be generated nevertheless.
+DIRECTORY can contain a version format substitution
+pattern, eg: foo-%(version)s.
+
+--git-component=COMPONENT
+
+When generating tarballs create
+an additional upstream tarball of directory COMPONENT
+in the source tree. Using additional upstream tarballs is a
+feature of the 3.0 (quilt) source format. See the
+dpkg-source manpage for details. Note that the
+--git-pristine-tar-commit option is currently
+incompatible with this option.
+
+This is
+considered an experimental feature and might change
+incompatibly.
+
+--git-pristine-tar-commit
+
+Commit the pristine-tar delta
+to the pristine-tar branch if a new tarball was generated
+and the pristine-tar data isn’t already there.
+
+--git-force-create
+
+Force creation of an upstream
+tarball (overwriting a pre-existing one if present).
+
+--git-no-create-orig
+
+Don’t try to create any
+upstream tarballs or to create symlinks to existing tarballs
+in tarball-dir.
+
+--git-upstream-signatures=[auto|on|off]
+
+Whether to export the upstream
+tarball with signatures.
+
+--git-[no-]submodules
+
+Include Git submodules in the
+orig tarball if present.
+
+--git-compression=TYPE
+
+Specifies the upstream tarball
+compression type. This will be used to locate and build the
+upstream tarball if necessary. The default is auto
+which derives the compression type from the pristine-tar
+branch if available and falls back to gzip otherwise. Other
+options are gzip, bzip2, lzma and
+xz.
+
+--git-compression-level=LEVEL
+
+Specifies the upstream tarball
+compression level if an upstream tarball needs to be
+built.
+
+PACKAGE
+BUILD OPTIONS 
+gbp buildpackage can invoke different types of
+builders to produce the source and binary packages. These
+options determine which builder is invoked and how. 
+--git-builder=BUILD_CMD
+
+Use BUILD_CMD instead of
+debuild -i -I. If you want to use Cowbuilder or
+Pbuilder see the --git-pbuilder.
+
+--git-cleaner=CLEAN_CMD
+
+Use CLEAN_CMD to clean
+the source tree before the build. The default is
+/bin/true (no cleaning).
+
+--git-pbuilder
+
+Build the package using
+git-pbuilder (which uses cowbuilder by
+default). Note that this overwrites any --git-builder
+and --git-cleaner options.
+
+--git-qemubuilder
+
+Build package using
+git-pbuilder with qemubuilder. Note that this
+overwrites any --git-builder and --git-cleaner
+options.
+
+--git-dist=DIST
+
+Build for distribution
+DIST when using git-pbuilder (either via
+--git-pbuilder, --git-qemubuilder or the
+corresponding configuration file options). If unset build
+for the unstable distribution. The special value DEP14 will
+set the distribution to build for from the branch name. I.e.
+if you’re starting the build from a branch named
+debian/wheezy-backports the distribution is set to
+wheezy-backports. If the branch is named
+downstream/sid the distribution is set to
+downstream_sid.
+
+--git-arch=ARCH
+
+Build for architecture
+ARCH when using git-pbuilder (either via
+--git-pbuilder, --git-qemubuilder or the
+corresponding configuration file options). If unset no
+architecture is passed to git-pbuilder.
+
+--git-pbuilder-autoconf
+
+Whether to try to autoconfigure
+git-pbuilder or to rely on the settings in
+.pbuilderrc. See the git-pbuilder manpage for
+details. Only takes effect when using git-pbuilder
+(either via --git-pbuilder, --git-qemubuilder
+or the corresponding configuration file options).
+
+--git-pbuilder-options
+
+Options to pass to pbuilder
+when building via git-pbuilder (either via
+--git-pbuilder, --git-qemubuilder or the
+corresponding configuration file options). It does so by
+using the GIT_PBUILDER_OPTIONS environment variable
+to pass options to git-pbuilder.
+
+As an example,
+to tell pbuilder to use an alternate .pbuilderrc file, you
+may run gbp buildpackage with
+--git-pbuilder-options="--configfile
+/tmp/my/pbuilderrc". See pbuilder(8) for
+more options to pass through here.
+
+If unset the
+GIT_PBUILDER_OPTIONS environment variable will be
+left untouched.
+
+--git-notify=[auto|on|off]
+
+Whether to send a desktop
+notification after the build. This needs python3-notify2
+installed.
+
+HOOK
+OPTIONS 
+Hooks allow you to run arbitrary commands at different
+stages of the build. These options configure what will be
+run: 
+--git-preexport=COMMAND
+
+Execute COMMAND before
+exporting the source tree. Valid only if --git-export-dir
+has been specified.
+
+Exported
+environment variables are: GBP_GIT_DIR (the
+repository the package is being built from),
+GBP_BUILD_DIR (the build dir).
+
+--git-postexport=COMMAND
+
+Execute COMMAND after
+exporting the source tree. Valid only if --git-export-dir
+has been specified. The working directory of this hook is
+the toplevel directory of the exported source tree.
+
+Exported
+environment variables are: GBP_GIT_DIR (the
+repository the package is being built from),
+GBP_TMP_DIR (the temporary directory where the
+sources have been initially exported).
+
+--git-prebuild=COMMAND
+
+Execute COMMAND from the
+build directory before calling debuild or the application
+specified via --git-builder.
+
+Exported
+environment variables are: GBP_GIT_DIR (the
+repository the package is being built from),
+GBP_BUILD_DIR (the build dir).
+
+--git-postbuild=COMMAND
+
+Execute COMMAND after
+successful build. The working directory of this hook is the
+directory the package was built in.
+
+Exported
+environment variables are: GBP_CHANGES_FILE (the name
+of the generated changes file), GBP_BUILD_DIR (the
+build dir).
+
+--git-posttag=COMMAND
+
+Execute COMMAND after
+tagging a new version. The working directory of this hook is
+the toplevel directory of the Git repository.
+
+Exported
+environment variables are: GBP_TAG (the name of the
+generated tag), GBP_BRANCH (the branch the package
+was built from) and GBP_SHA1 (the sha1 of the commit
+the tag was created at).
+
+--git-[no-]hooks
+
+Enable running all (cleaner,
+preexport, postexport, prebuild, postbuild, and posttag)
+hooks. Note: the --git-builder command is not
+affected by this option.
+
+TAGGING
+OPTIONS 
+--git-tag
+
+Add a git tag after a
+successful build. It tags the currently checked out commit
+except when you’re on a patch-queue branch. In that
+case the corresponding debian branch is tagged.
+
+This is a
+command line only option that cannot be specified via
+gbp.conf.
+
+--git-[no-]sign-tags
+
+GPG sign all created tags.
+
+--git-keyid=GPG-KEYID
+
+Use this keyid for gpg signing
+tags.
+
+--git-debian-tag=TAG-FORMAT
+
+Use this tag format when
+tagging Debian versions, default is
+debian/%(version)s.
+
+--git-debian-tag-msg=tag-msg-format
+
+Use this tag message format
+when signing Debian versions, default is %(pkg)s Debian
+release %(version)s
+
+--git-retag
+
+Don’t fail tag operations
+if a tag with the same version already exists. This is a
+command line only option that cannot be specified via
+gbp.conf.
+
+--git-tag-only
+
+Don’t build, only tag and
+run post-tag hooks. This is a command line only option that
+cannot be specified via gbp.conf.
+
+BUILD AREA
+OPTIONS 
+gbp buildpackage can export the source tree to a
+different build-area before performing the build. This
+options specify if and how this is done: 
+--git-export-dir=DIRECTORY
+
+Export the current branch head
+(or the treeish object given via --git-export to
+DIRECTORY before building. If unset the source will
+not be exported before starting the build.
+
+--git-export=TREEISH
+
+Instead of exporting the
+current branch head, export the treeish object
+TREEISH. The special name INDEX exports the
+current index whereas the special name WC exports the
+current working copy as is.
+
+Note that using
+WC enables the --git-ignore-branch and
+--git-ignore-new options as well since when exporting
+the working copy there’s no point in enforcing any
+branch or modification checks.
+
+--git[-no]-purge
+
+Purge (remove) temporary build
+area after build. This is the default but it can be turned
+off for e.g. debugging purposes.
+
+--git-[no-]overlay
+
+Extract upstream tarball from
+tarball-dir when using the export-dir option
+(in analogy to mergeWithUpstream in svn-bp). Also remove
+debian/ if contained in the upstream tarball in case of 2.0
+and 3.0 source formats.
+
+This optios
+allows one to keep only the debian/ dir in the version
+control system.
+
+SAFETY
+OPTIONS 
+In order to make sure what you build is what you upload
+gbp buildpackage performs several safety checks.
+These options allow one to configure and disable them:
+
+--git-debian-branch=BRANCH_NAME
+
+If you’re not on this
+branch when invoking gbp buildpackage it will
+fail. Default is master. This is done to make sure
+you don’t accidentally release from a topic branch.
+Not being on this branch will be ignored when using
+--git-ignore-new.
+
+--git-ignore-branch
+
+Don’t check if the
+current branch matches DEBIAN-BRANCH.
+
+--git-[no-]ignore-new
+
+Don’t abort if there are
+uncommitted changes in the source tree or the current branch
+doesn’t match the DEBIAN-BRANCH.
+
+COLOR AND
+VERBOSITY OPTIONS 
+--git-verbose
+
+Verbose execution. Useful for
+debugging and bug reports.
+
+--git-color=[auto|on|off]
+
+Whether to use colored
+output.
+
+--git-color-scheme=COLOR_SCHEME
+
+Colors to use in output (when
+color is enabled). The format for COLOR_SCHEME is
+’:::’.
+Numerical values and color names are accepted, empty fields
+imply the default color. For example
+--git-color-scheme=’cyan:34::’ would show debug
+messages in cyan, info messages in blue and other messages
+in default (i.e. warning and error messages in red).
+
+EXAMPLES
+
+Build a Debian
+package using git-pbuilder which in turn invokes
+cowbuilder. Instruct cowbuilder to build within a
+Wheezy chroot for i386.
+
+gbp buildpackage
+--git-pbuilder --git-arch=i386 --git-dist=wheezy
+
+Note that the
+above needs a cowbuilder chroot already. This can be
+created using:
+
+DIST=wheezy
+ARCH=i386 git-pbuilder create
+
+CONFIGURATION FILES
+
+Several
+gbp.conf files are parsed to set defaults for the
+above command-line arguments. See the gbp.conf(5)
+manpage for details.
+
+All options in
+the config files must be specified without the
+’git-’ prefix. So e.g.
+--git-debian-branch=debian/sid becomes in
+gbp.conf:
+
+[buildpackage]
+
+debian-branch = debian/sid
+
+SEE ALSO
+
+gbp-import-dsc(1),
+gbp-import-dscs(1), gbp-import-orig(1),
+gbp-dch(1), git-pbuilder(1),
+cowbuilder(8), dpkg-source(1),
+git-submodule(1), gbp.conf(5),
+debuild(1), git(1), pristine-tar(1),
+
+The Git-Buildpackage Manual ⟨
+file:///usr/share/doc/git-buildpackage/manual-html/index.html⟩
+
+AUTHOR
+
+Guido
+Günther agx [AT] sigxcpu.org>

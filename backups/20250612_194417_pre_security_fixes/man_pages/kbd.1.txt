@@ -1,0 +1,254 @@
+NAME
+
+kbd −
+manipulate the state of keyboard, or display the type of
+keyboard, or change the default keyboard abort sequence
+effect
+
+SYNOPSIS
+
+kbd
+[-r] [-t ] [-a enable | disable |
+alternate ] [-c on | off ] [-d keyboard
+device ]
+
+kbd
+[-i] [-d keyboard device ]
+
+DESCRIPTION
+
+The kbd
+utility manipulates the state of the keyboard, or displays
+the keyboard type, or allows the default keyboard abort
+sequence effect to be changed. The abort sequence also
+applies to serial console devices. The kbd utility
+sets the /dev/kbd default keyboard device.
+
+EXTENDED DESCRIPTION
+
+The -i
+option reads and processes default values for the keyclick
+and keyboard abort settings from the /etc/default/kbd
+keyboard default file. Only keyboards that support a clicker
+respond to the -c option. To turn clicking on by
+default, add or change the value of the KEYCLICK
+variable in the /etc/default/kbd file to:
+
+KEYCLICK=on
+
+Next, run the
+command kbd -i to change the setting. Valid
+settings for the KEYCLICK variable are on and
+off; all other values are ignored. If the
+KEYCLICK variable is not specified in the default
+file, the setting is unchanged.
+
+The keyboard
+abort sequence effect (L1-A or STOP-A on the keyboard, and
+BREAK on the serial console input device on most systems)
+can only be changed by a superuser using the -a
+option. The system can be configured to ignore the keyboard
+abort sequence or trigger on the standard or alternate
+sequence.
+
+A BREAK
+condition that originates from an erroneous electrical
+signal cannot be distinguished from one deliberately sent by
+remote DCE. As a remedy, use the -a option with Alternate
+Break to switch break interpretation. Due to the risk of
+incorrect sequence interpretation, binary protocols such as
+PPP, SLIP, and others should not be run over the serial
+console port when Alternate Break sequence is in effect. The
+Alternate Break sequence has no effect on the keyboard
+abort. For more information on the Alternate Break sequence,
+se zs(7D) ,se(7D), and asy(7D).
+
+On many
+systems, the default effect of the keyboard abort sequence
+is to suspend the operating system and enter the debugger or
+the monitor. Some systems feature key switches with a
+secure position. On these systems, setting the key
+switch to the secure position overrides any software
+default set with this command.
+
+To permanently
+change the software default effect of the keyboard abort
+sequence, first add or change the value of the
+KEYBOARD_ABORT variable in the
+/etc/default/kbd file to:
+
+KEYBOARD_ABORT=disable
+
+Next, run the
+command kbd -i to change the setting. Valid
+settings are enable, disable, and
+alternate; all other values are ignored. If the
+variable is not specified in the default file, the setting
+is unchanged.
+
+To set the
+abort sequence to the hardware BREAK, set the value of the
+KEYBOARD_ABORT variable in the
+/etc/default/kbd file to:
+
+KEYBOARD_ABORT=enable
+
+To change the
+current setting, run the command kbd -i. To
+set the abort sequence to the Alternate Break character
+sequence, first set the current value of the KEYBOARD_ABORT
+variable in the /etc/default/kbd file to:
+
+KEYBOARD_ABORT=alternate
+
+Next, run the
+command kbd -i to change the setting. When the
+Alternate Break sequence is in effect, only serial console
+devices are affected.
+
+OPTIONS
+
+The kbd
+utility supports the following options:
+
+-i
+
+Set keyboard defaults from the keyboard default file.
+With the exception of -d keyboard device, this
+option cannot be used with any other option. The -i
+option instructs the keyboard command to read and process
+keyclick and keyboard abort default values from the
+/etc/default/kbd file. The -i option can only
+be used by a superuser.
+
+-r
+
+Reset the keyboard as if power-up
+
+-t
+
+Return the type of the keyboard being used
+
+-c on/off
+state
+
+Turn the clicking of the
+keyboard on or off.
+
+on
+
+Enable clicking
+
+off
+
+Disable clicking
+
+-a
+enable/disable/alternate state
+
+Enable, disable, or alternate
+the keyboard abort sequence effect. By default, a keyboard
+abort sequence (typically Stop-A or L1-A on the keyboard and
+BREAK on the serial console device) suspends the operating
+system on most systems. The default keyboard behavior can be
+changed using this option. The -a option can only be
+used by a superuser. 
+enable
+
+Enable the default effect of
+the keyboard abort sequence (suspend the operating system
+and enter the debugger or the monitor)
+
+disable
+
+Disable the default/alternate
+effect and ignore keyboard abort sequences
+
+alternate
+
+Enable the alternate effect of
+the keyboard abort sequences (suspend the operating system
+and enter the debugger or the monitor) upon receiving the
+Alternate Break character sequence on the console. The
+Alternate Break sequence is defined by the drivers
+zs(7D), se(7D), asy(7D). Due to a risk
+of incorrect sequence interpretation, binary protocols
+cannot be run over the serial console port when this value
+is used.
+
+-d keyboard
+device
+
+Specify the keyboard device
+being set. The default setting is /dev/kbd.
+
+EXAMPLES
+
+Example 1:
+Displaying the keyboard type
+
+To display the
+keyboard type:
+
+example% kbd
+-t
+
+Type 4 Sun keyboard
+example%
+
+Example 2:
+Setting keyboard defaults
+
+To set the
+keyboard defaults as specified in the keyboard default
+file:
+
+example# kbd
+-i 
+example#
+
+FILES
+
+/etc/rcS
+
+shell script containing
+commands necessary to get the system to single-user mode
+
+/dev/kbd
+
+keyboard device file
+
+/etc/default/kbd
+
+keyboard default file
+containing software defaults for keyboard
+configurations.
+
+ATTRIBUTES
+
+See
+attributes(5) for descriptions of the following
+attributes:
+
+SEE ALSO
+
+loadkeys(1),
+kadb(1M), keytables(4), attributes(5),
+kb(7M), zs(7D), se(7D),
+asy(7D)
+
+NOTES
+
+Some server
+systems have key switches with a secure key position
+that can be read by system software. This key position
+overrides the normal default of the keyboard abort sequence
+effect and changes the default so the effect is disabled.
+When the key switch is in the secure position on
+these systems, the keyboard abort sequence effect cannot be
+overridden by the software default, which is settable with
+the kbd utility.
+
+Currently,
+there is no way to determine the state of the keyboard click
+setting.

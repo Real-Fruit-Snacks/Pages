@@ -1,0 +1,265 @@
+NAME
+
+verifyfilter,
+verifysmtp - Verify mail addresses
+
+SYNOPSIS
+
+filterctl {[start] |
+[stop]} verifyfilter
+
+DESCRIPTION
+
+This is a mail
+filter/tool combination that tries to determine the validity
+of E-mail addresses by attempting to contact the mail
+domain's mail server, and executing a RCPT TO
+command. There are three ways to use this tool.
+
+• As a
+shell command, to test an E-mail address for
+deliverability.
+
+• As a
+global mail filter.
+
+• As a
+local recipient mail filter.
+
+verifyfilter
+is suitable for handling moderate amount of E-mail traffic.
+Address validation is expensive, requiring a DNS lookup and
+an outbound connection to a mail server for every validated
+address. verifyfilter goes through the same steps
+that the mail server does when sending mail, including
+enabling of encryption.
+
+verifyfilter
+uses logging and caching, to avoid repeatedly validating the
+same return address when receiving multiple E-mails from the
+same sender; but its caching is rudimentary (a simple log
+file), and increased logging due to high E-mail traffic mail
+delivery may create large log files, impacting
+performance.
+
+The
+verifysmtp command
+
+verifysmtp [-n] [-t directory]
+[-m {full|base}] {user@domain}
+
+The
+verifysmtp command creates a network connection to
+domain's mail server, and checks if it considers the
+given E-mail address as valid. Two or more E-mail addresses
+can be given, and each E-mail address gets checked
+individually.
+
+verifysmtp
+terminates with a zero exit code if all given E-mail
+addresses passed. A non-zero exit code indicates that one or
+more of the given addresses were rejected.
+
+The -m
+option is analogous to the verifyfilter-logmode setting,
+described below, that specifies how E-mail addresses are
+compared against the cached verification results. The
+-t enables caching of verification results, and
+specifies the directory for storing the cached results.
+
+The -n
+option suppresses internal error messages from getting
+logged to standard error. This is used in the
+verifyfilter global mail filter.
+
+The verifyfilter global mail filter
+
+filterctl {[start] | [stop]} verifyfilter
+
+The
+verifyfilter global mail filter, if enabled, checks
+each message's return address. The E-mail message gets
+rejected if its return address's mail server rejects the
+return address. There's not much sense in accepting mail if
+its return address is undeliverable.
+
+verifyfilter
+ignores messages from authenticated senders, and does not
+check their return addresses.
+
+Local recipient mail filter
+
+mkdir /etc/courier/maildroprcs
+
+cp /usr/lib/courier/verifysender /etc/courier/maildroprcs
+
+cp /usr/lib/courier/verifysenderfull
+/etc/courier/maildroprcs
+
+In your
+$HOME:
+
+mkdir
+$HOME/.trackdir
+
+In
+$HOME/.mailfilters/rcptfilter:
+
+include
+'/etc/courier/maildroprcs/verifysender'
+
+Or:
+
+include
+'/etc/courier/maildroprcs/verifysenderfull'
+
+This
+alternative provides comparable functionality as the global
+mail filter, but exposed via the
+localmailfilter(7)
+[1]
+API.
+
+With
+maildrop, a protected wrapper filtering recipe gets
+installed into /etc/courier/maildroprcs/verifysender, which
+invokes verifysmtp via maildrop's
+system command. The wrapper must be included in this
+manner, since maildrop normally does not allow the
+system command in the embedded execution mode that's
+used by the local mail filtering API.
+
+The
+wrapper executes verifysmtp with a special argument,
+a single “.”. This is a special parameter that
+indicates that verifysmtp should read the E-mail
+address from the SENDER environment variable
+(avoiding issues with shell expansion, and script
+kiddies).
+
+The
+/etc/courier/maildroprcs/verifysender wrapper can be
+suitably, perhaps optionally, included from either the
+rcptfilter or the smtpfilter script.
+
+Logging
+and caching 
+verifyfilter caches the return address it checks. Once
+verifyfilter verifies that the return address is
+accepted by the sending domain's mail server, this is logged
+and additional E-mail with the same return address gets
+immediately accepted without contacting the sending domain's
+mail server to re-check the same address.
+
+Successfully
+verified return addresses get cached for approximately 2-3
+hours. If no other E-mail with the same address get received
+before the cache expires that return address gets rechecked
+the next time it is seen. If another E-mail with the same
+return address gets received, it is immediately accepted and
+the email address gets recached. Most mailing lists' bounce
+addresses should not cause excessive re-verification,
+provided a regular trickle of mailing list traffic. This
+includes mailing list that use per-message bounce addresses
+that follow the common VERP convention (Variable Envelope
+Return Path), see “FILES” below.
+
+As
+becomes obvious after perusing the contents of the stock
+verifysender local mail filter, verifysmtp's
+-t gives the name of a scratch directory that
+verifysmtp uses for the cache. This directory should
+be set aside for verifysmtp, and not used for other
+purposes. The global mail filter shares the scratch
+directory together with other Courier functions that work
+the same way.
+
+BUGS
+
+Just
+because a mail server accepted the RCPT TO it does
+not mean that the given E-mail address can ultimately
+receive E-mail.
+
+verifysmtp
+is a shell script wrapper that imports Courier's environment
+from /etc/courier/courierd then executes
+verifyfilter. Running as a non-daemon user,
+verifysmtp may not be able to read some Courier's
+configuration files, and also won't use several others like
+smtproutes and authclient. As such, verifysmtp's
+behavior might differ from Courier's, when sending
+mail.
+
+FILES
+
+verifyfilter
+uses the following configuration files. Changes to the
+following files do not take effect until the filter has been
+stopped and restarted.
+
+/etc/courier/filters/verifyfilter-mode
+
+If this
+file exists and contains the word "all",
+verifyfilter will create its socket in
+/var/lib/courier/allfilters, otherwise the socket will be
+created in /var/lib/courier/filters, see
+courierfilter(8)
+[2]
+for more information.
+
+/etc/courier/filters/verifyfilter-logmode
+
+This file
+contains a single line, “base” or
+“full”. “full” verifies each return
+address, exactly as given. The default “base”
+value strips off any VERP component of the sender's address,
+before comparing it. If the local mailbox portion of the
+return address contains a dash, the dash and the remaining
+portion of the return address gets removed.
+
+With
+the default “base” logging mode, once the E-mail
+address list-12 [AT] example.com> gets verified, all
+further addresses like list-13 [AT] example.com> and
+list-foo-bar [AT] example.com> are considered as verified,
+but not anotherlist [AT] example.com>.
+
+/etc/courier/filters/verifyfilter-nthreads
+
+This file
+contains a single numerical value that sets the number of
+threads created (one thread is used to check each email
+address). The default number of threads is 10.
+
+SEE ALSO
+
+courierfilter(8)
+[2]
+,
+localmailfilter(7)
+[1]
+.
+
+AUTHOR
+
+Sam
+Varshavchik
+
+Author
+
+NOTES
+
+1. 
+
+localmailfilter(7) 
+
+http://www.courier-mta.org/localmailfilter.html
+
+2. 
+
+courierfilter(8) 
+
+http://www.courier-mta.org/courierfilter.html

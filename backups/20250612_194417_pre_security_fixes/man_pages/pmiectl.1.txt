@@ -1,0 +1,496 @@
+NAME
+
+pmiectl
+- manage and control Performance Co-Pilot inference
+engines
+
+SYNOPSIS
+
+pmiectl
+[-afmNV?] [-C check_args] [-c
+class] [-i ident] [-p
+policy] command [host ...]
+
+DESCRIPTION
+
+pmiectl
+may be used to manage non-primary instances of the
+Performance Co-Pilot (PCP) inference engine pmie(1).
+This would be most relevant in a PCP inference engine
+’’farm’’ where many pmie(1)
+instances would be evaluating rules against the performance
+data collected from pmcd(1) on many remote hosts.
+
+The
+primary pmie(1) instance is closely linked to
+the local pmcd(1) process and as a consequence shares
+the same control infrastructure, namely systemd(1) or
+the PCP init(1) ’’rc
+scripts’’. This is why the primary
+pmie(1) instance cannot be managed with
+pmiectl.
+
+For brevity in
+the description below, the term
+’’instance’’ means a pmie(1)
+instance.
+
+All instances
+managed by pmiectl, pmie_check(1) and
+pmie_daily(1) abide by the following rules:
+
+1.
+
+Each instance is fetching performance data from a single
+pmcd(1) (i.e. one host), but each pmcd(1) may
+be providing performance data to zero, one or more
+pmie(1) processes running on one or more hosts.
+
+2.
+
+On the local host, each pmie(1) instance must be
+specified once in a pmie_check(1) control file and
+pmie(1) creates a unique log file, named in the 4th
+parameter of the associated control file entry (see the
+CONFIGURATION section of pmie_check(1)).
+
+3.
+
+Each instance belongs to exactly one class,
+optionally named using a $class=... assignment in the
+associated control file. The special default class is
+reserved for all instances that do not have an associated
+$class=... assignment. For reporting purposes (refer
+to the summary command below), the primary
+pmie(1) instance is automatically assigned to the
+special primary class.
+
+Each
+pmiectl execution manages one or more instances
+updating the associated control files and then running
+pmie_check(1) to effect the desired change.
+
+The host
+arguments are usually valid host names. For all commands
+except create and cond-create
+(described below) the host arguments may also be
+egrep(1) regular expressions that match the
+whole of a valid host name, so the pattern used is
+actually ^host$. For example
+foo.* (matches all host names beginning with
+’’foo’’) or .*foo (matches
+all host names ending with ’’foo’’)
+or .*[fF][oO][oO].* (matches all host names
+containing ’’foo’’ in upper, lower
+or mixed case).
+
+The combination
+of a class from the optional -c option (or
+default) and the host arguments to each
+command identifies a target of set instances
+to which the command operation should be applied.
+
+The -i
+option may be used with the create or
+cond-create commands to override the instance
+identity that is specified in the ident section of the class
+policy file (see the CLASS POLICY FILE section below). Since
+the identifier must be unique across all instances and all
+classes, it only makes sense to use this option when there
+is a single host argument.
+
+Given the tasks
+that pmiectl is undertaking it usually must be run as
+’’root’’, the exceptions being the
+status command or when the -N option is
+specified.
+
+COMMANDS
+
+command
+is one of the following: 
+check
+
+Check the status of all
+currently configured pmie instances and restart any that
+have failed. If the -m flag is given on systemd(1)
+platforms, also migrate matching (and new) processes to the
+pmie_farm service.
+
+create
+
+Create new instances in the
+class classname (default by default) for the
+host hosts. The name of the class is used to identify
+a class policy file (see the CLASS POLICY FILE section
+below) which provides a template for each new control file
+with %h replaced by host and %i
+replaced by the instance’s (unique) identifier from
+the ident section of the class policy file or ident
+from the -i option.
+
+The -p
+option may be used to identify a class policy file other
+than the one found in the standard place, i.e.
+$PCP_SYSCONF_DIR/pmie/class.d/classname.
+
+At least one
+host must be specified for the create
+command.
+
+cond-create
+
+Similar to create but
+the instance will only be created if one of the conditions
+in the create section of associated class policy file(s)
+evaluates to true.
+
+If a -c
+option is specified, then only the class classname
+will be considered, otherwise all classes will be
+considered. In the latter case, if none of the conditions in
+any of the classes evaluates to true, the the special
+pmfind class is used (this is the
+’’default’’ class for the
+cond-create command when all else fails).
+
+If more than
+one class evaluates to true then a composite pmie(1)
+configuration file is created and the instance is also
+assigned to the special pmfind class. The composite
+configuration file may contain a mix of explicit
+configuration clauses and the more general conditional
+configuration clauses as understood by the
+pmieconf(1) tool.
+
+start
+
+Start the target set of
+instances.
+
+If the target
+set intentionally contains more than one instance, then the
+-a option should be used (this is designed to reduce
+the risk of accidentally starting a potentially large number
+of pmie(1) processes).
+
+If an instance
+in the target set is already started, no change is made (see
+the restart command to force new instances to be
+launched).
+
+stop
+
+Stop the target set of
+instances.
+
+If the target
+set intentionally contains more than one instance, then the
+-a option should be used (this is designed to reduce
+the risk of accidentally stopping a potentially large number
+of pmie(1) processes).
+
+If an instance
+in the target set is already stopped, no change is made but
+a warning is issued.
+
+restart
+
+Stop and then start the target
+set of instances.
+
+If the target
+set intentionally contains more than one instance, then the
+-a option should be used (this is designed to reduce
+the risk of accidentally stopping and starting a potentially
+large number of pmie(1) processes).
+
+If an instance
+in the target set is already stopped, a warning is issued
+before the instance is started.
+
+status
+
+Report the status of the target
+set of instances. If there is no -c option specified
+and no host arguments, i.e. the target set is empty,
+then all instances will be reported.
+
+destroy
+
+Destroy the target set of
+instances. At the end of this operation the associated
+pmie(1) processes will have been stopped and the
+relevant control file information removed.
+
+If the target
+set intentionally contains more than one instance, then the
+-a option should be used (this is designed to reduce
+the risk of accidentally terminating a potentially large
+number of pmie(1) processes and removing their
+pmie_check(1) configurations).
+
+The policy file
+linked to the class of an instance to be destroyed may
+contain a destroy section that may influence if and
+how the destroy operation should be performed. This may
+require a -p option to find the associated class
+policy file.
+
+The class
+policy checking can be by-passed using the -f (force)
+command line option.
+
+CLASS POLICY FILE
+
+A class policy
+file contains a number of sections, each section begins with
+a line that simply starts with the name of the section
+followed enclosed by ’’[’’ and
+’’]’’.
+
+Lines beginning
+with a hash (#) are treated as comments and ignored. Blank
+or empty lines are also ignored.
+
+The typical
+location of the policy file for the class foo is
+$PCP_SYSCONF_DIR/pmie/class.d/foo. 
+[class]
+
+The optional class name section
+names the class. If it is missing, the name of the policy
+file (stripped of any directory prefix) is used as the name
+of the class.
+
+[ident]
+
+The ident section specifies the
+template to be used for the instance identifier to be given
+to each member of the class. This identifier needs to be
+unique across all instances and all classes, and it needs to
+be a valid file name in the local filesystem, so would
+normally contain the class name and the macro %h,
+e.g. foo-%h. The macro is replaced by the host
+when each instance is created.
+
+[control]
+
+The control section consists of
+one or more lines of template text that will be used to
+create the control file for each instance. This must at
+least include the pmie_check(1) control line to
+specify how to start the associated pmie(1) process;
+this line contains fields separated by white space as
+follows:
+
+1.
+
+the hostname, usually the macro %h
+
+2.
+
+n to indicate this is a non-primary instance
+
+3.
+
+the ’’socks’’ flag, typically
+n 
+
+4.
+
+the pathname used by pmie(1) for the log file;
+this needs to be unique and is usually specified using the
+pmie_check(1) macro PCP_LOG_DIR as the start
+of the path, followed by pmie, and then the
+instance’s unique directory %i, e.g.
+PCP_LOG_DIR/pmie/%i/pmie.log 
+
+5.
+
+additional parameters to pmie(1) which probably
+include at least a -c option to provide a
+configuration file that describes which rules should be
+evaluated for instances of this class, which may be the same
+for all instances in this class, or it may include the
+%i macro to use a different configuration file for
+each instance. Note that if this configuration file does not
+exist, it will be created using pmieconf(1) the first
+time pmie_check(1) is run.
+
+Before
+the control line there should be a line that defines the
+version of the control line that follows, i.e. 
+$version=1.1 
+If this is missing, pmiectl will assume the version
+is 1.1 and insert the line when the instance is created.
+
+pmiectl
+will also add the class name during creation. e.g. 
+$class=foo
+
+[create]
+
+The create section defines the
+conditions that must be met before an instance will be
+created with the cond-create command. The intent is
+to allow different decisions to be made when a new host
+running pmcd(1) is discovered, e.g. by
+pmfind(1).
+
+Each non-blank
+line in the create section is a condition of the form
+function(arg), where function is one of
+the following: 
+exists
+
+arg is the name of a
+performance metric and exits evaluates to true if
+that metric exists in the Performance Metrics Name Space
+(PMNS) on the remote host
+
+values
+
+arg is the name of a
+performance metric in the remote PMNS and values
+evaluates to true if some instance of that metric has a
+value on the remote host
+
+condition
+
+arg is a derived metric
+expression in the format supported by
+pmRegisterDerived(3), and condition evaluates
+to true if the value of that expression on the remote host
+is greater than zero
+
+hostname
+
+arg is a regular
+expression in the style of egrep(1) and
+hostname evaluates to true if the remote host name
+matches arg
+
+[destroy]
+
+The destroy section defines the
+policy to be applied when an instance is destroyed.
+
+The intent is
+to allow different decisions to be made when discovery
+service, e.g. pmfind(1), notices that a host
+associated with an instance is no longer present. But in the
+current version this is not implemented and the destroy
+section syntax and semantics is not yet defined.
+
+A sample class
+policy file is as follows:
+
+# policy file
+for the foo class 
+[class] 
+foo 
+[ident] 
+foo-%h
+
+[control] 
+$version=1.1 
+%h n n PCP_LOG_DIR/pmie/%i/pmie.log -c
+foo-metrics.config
+
+[create] 
+# matches all hosts 
+hostname(.*)
+
+[destroy] 
+# still to be defined
+
+OPTIONS
+
+The available
+command line options are: 
+-a, --all
+
+Apply action to all matching
+instances. By default only one instance definition is
+expected and acted upon.
+
+-c class,
+--class=class
+
+Set the name of the class for
+which pmie(1) instances belong to as
+class.
+
+-C check_args,
+--checkargs=check_args
+
+check_args are
+additional command line arguments for pmie_check(1)
+when it is called. This is most useful for options like
+-V. Multiple -C options may be used and the
+various check_args options will be accumulated and
+all passed to pmie_check(1).
+
+-f, --force
+
+Force action if possible.
+
+-i ident,
+--ident=ident
+
+Override instance identifier
+with ident. This option applies only for the commands
+create and cond-create.
+
+-N, --showme
+
+Runs pmiectl in a
+’’show me’’ or ’’dry
+run’’ mode where the intent of the command is
+shown, but no changes are made.
+
+-m, --migrate
+
+When used with the
+create or check commands on systemd(1)
+platforms, also migrate new or existing non-primary
+pmie processes to the pmie_farm service. This
+is normally done automatically by the pmie_farm_check
+service, which is timer driven (so there may be a few
+minutes delay before automatic migration is initiated).
+
+-p policy,
+--policy=policy
+
+Use policy as the class
+policy file. Defaults to
+$PCP_SYSCONF_DIR/pmie/class.d/.
+
+-V, --verbose
+
+Enable verbose mode. Using this
+option twice increases verbosity.
+
+-?, --help
+
+Display usage message and
+exit.
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+SEE ALSO
+
+egrep(1),
+init(1), PCPIntro(1), pmcd(1),
+pmieconf(1), pmie(1), pmie_check(1),
+pmie_daily(1), systemd(1), PMAPI(3),
+pmDerivedRegister(3) and pcp.conf(5).

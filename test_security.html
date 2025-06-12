@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Security Test</title>
+</head>
+<body>
+    <h1>Security Module Test</h1>
+    
+    <h2>Test 1: HTML Escaping</h2>
+    <div id="test1"></div>
+    
+    <h2>Test 2: Command Sanitization</h2>
+    <div id="test2"></div>
+    
+    <h2>Test 3: localStorage Validation</h2>
+    <div id="test3"></div>
+    
+    <script>
+        // Include the Security module (copy from index.html)
+        const Security = {
+            escapeHtml(unsafe) {
+                if (typeof unsafe !== 'string') {
+                    return '';
+                }
+                const div = document.createElement('div');
+                div.textContent = unsafe;
+                return div.innerHTML;
+            },
+
+            sanitizeCommand(input) {
+                if (typeof input !== 'string') {
+                    return '';
+                }
+                return input
+                    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+                    .replace(/javascript:/gi, '')
+                    .replace(/on\w+\s*=/gi, '')
+                    .substring(0, 1000);
+            },
+
+            getFromStorage(key) {
+                try {
+                    const data = localStorage.getItem(key);
+                    if (!data) return null;
+                    
+                    const parsed = JSON.parse(data);
+                    
+                    switch (key) {
+                        case 'manPageHistory':
+                        case 'manPageBookmarks':
+                            if (!Array.isArray(parsed)) return [];
+                            return parsed.map(entry => ({
+                                command: this.sanitizeCommand(entry.command || ''),
+                                section: parseInt(entry.section) || 1,
+                                timestamp: parseInt(entry.timestamp) || Date.now()
+                            }));
+                        
+                        case 'selectedTheme':
+                            const validThemes = [
+                                'default', 'dark', 'solarized-dark', 'solarized-light',
+                                'monokai', 'dracula', 'nord', 'gruvbox', 'material',
+                                'one-dark', 'cyberpunk', 'ocean-depth', 'forest-night',
+                                'sunset', 'midnight-blue', 'high-contrast'
+                            ];
+                            return validThemes.includes(parsed) ? parsed : 'ocean-depth';
+                        
+                        default:
+                            return parsed;
+                    }
+                } catch (e) {
+                    console.error(`Failed to parse storage key ${key}:`, e);
+                    return null;
+                }
+            }
+        };
+
+        // Test 1: HTML Escaping
+        const maliciousHTML = '<script>alert("XSS")</script><img src=x onerror=alert(1)>';
+        const escaped = Security.escapeHtml(maliciousHTML);
+        document.getElementById('test1').innerHTML = `
+            <p>Input: <code>${Security.escapeHtml(maliciousHTML)}</code></p>
+            <p>Escaped: <code>${escaped}</code></p>
+            <p>Safe rendering: <span style="border: 1px solid #ccc; padding: 5px;">${escaped}</span></p>
+        `;
+
+        // Test 2: Command Sanitization
+        const maliciousCommands = [
+            'ls <script>alert(1)</script>',
+            'echo javascript:alert(1)',
+            'cat onclick=alert(1) file.txt',
+            'a'.repeat(2000)
+        ];
+        
+        const test2Results = maliciousCommands.map(cmd => ({
+            input: cmd,
+            sanitized: Security.sanitizeCommand(cmd)
+        }));
+        
+        document.getElementById('test2').innerHTML = `
+            <ul>
+                ${test2Results.map(r => `
+                    <li>
+                        Input: <code>${Security.escapeHtml(r.input.substring(0, 50) + (r.input.length > 50 ? '...' : ''))}</code><br>
+                        Sanitized: <code>${Security.escapeHtml(r.sanitized.substring(0, 50) + (r.sanitized.length > 50 ? '...' : ''))}</code>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+
+        // Test 3: localStorage Validation
+        // Inject malicious data
+        localStorage.setItem('manPageHistory', JSON.stringify([
+            {
+                command: '<img src=x onerror=alert("XSS")>',
+                section: '1',
+                timestamp: Date.now()
+            },
+            {
+                command: 'ls',
+                section: 'invalid',
+                timestamp: 'not-a-number'
+            }
+        ]));
+
+        const cleanHistory = Security.getFromStorage('manPageHistory');
+        
+        document.getElementById('test3').innerHTML = `
+            <p>Cleaned history:</p>
+            <ul>
+                ${cleanHistory.map((item, i) => `
+                    <li>
+                        Command: <code>${Security.escapeHtml(item.command)}</code><br>
+                        Section: ${item.section}<br>
+                        Timestamp: ${new Date(item.timestamp).toISOString()}
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+
+        console.log('All security tests completed. Check the page for results.');
+    </script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+NAME
+
+udev −
+Linux configurable dynamic device naming support
+
+SYNOPSIS
+
+udev
+hotplug-subsystem
+
+The environment
+must provide the following variables:
+
+ACTION
+
+add or remove signifies the connection or
+disconnection of a device.
+
+DEVPATH
+
+The sysfs devpath of the device
+without the mountpoint but a leading slash.
+
+Additional
+optional environment variables: 
+UDEV_CONFIG_FILE
+
+Overrides the default location
+of the udev config file.
+
+UDEV_NO_DEVD
+
+The default behavior of
+udev is to execute programs in the /etc/dev.d/
+directory after device handling. If set, udev will
+skip this step.
+
+DESCRIPTION
+
+udev
+provides a dynamic device directory containing only the
+files for actually present devices. It creates or removes
+device node files usually located in the /dev directory, or
+it renames network interfaces.
+
+As part of the
+hotplug subsystem, udev is executed if a
+kernel device is added or removed from the system. On device
+creation, udev reads the sysfs directory of the given
+device to collect device attributes like label, serial
+number or bus device number. These attributes may be used as
+keys to determine a unique name for the device. udev
+maintains a database for devices present on the system. 
+On device removal, udev queries its database for the
+name of the device file to be deleted.
+
+CONFIGURATION
+
+All udev
+configuration files consist of a set of lines of text. All
+empty lines and lines beginning with a ’#’ will
+be ignored.
+
+udev
+expects its main configuration file at
+/etc/udev/udev.conf. The file consists of a set of
+variables and values allowing the user to override default
+udev values. The following variables can be overridden in
+this file: 
+udev_root
+
+Indicates where to place the
+device nodes in the filesystem. The default value is
+/dev/.
+
+udev_db
+
+The name and location of the
+udev database. The default value is
+/dev/.udev.tdb.
+
+udev_rules
+
+The name of the udev rules file
+or directory to look for files with the suffix
+.rules. All rule files are read in lexical order. The
+default value is /etc/udev/rules.d/.
+
+udev_permissions
+
+The name of the udev permission
+file or directory to look for files with the suffix
+.permissions. All permission files are read in
+lexical order. The default value is
+/etc/udev/permissions.d/.
+
+udev_log
+
+The switch, if udev logs some
+information for every device handled. The default value is
+yes.
+
+default_mode
+
+The default mode for all nodes
+not explicitely matching in the permissions file. The
+default value is 0666.
+
+default_owner
+
+The default owner for all nodes
+not explicitely matching in the permissions file. The
+default value is root.
+
+default_group
+
+The default group for all nodes
+not explicitely matching in the permissions file. The
+default value is root.
+
+A sample
+udev.conf might look like this:
+
+# udev_root -
+where to place the device nodes in the filesystem 
+udev_root="/udev"
+
+# udev_db - The
+name and location of the udev database 
+udev_db="/udev/.udev.tdb"
+
+# udev_rules -
+The name of the udev rules file or directory to look 
+for files with the suffix .rules 
+udev_rules="/etc/udev/rules.d/"
+
+#
+udev_permissions - The name of the udev permission file or
+directory 
+to look for files with the suffix .permissions 
+udev_permissions="/etc/udev/udev.permissions"
+
+# udev_log -
+set to "yes" if you want logging, else
+"no" 
+udev_log="yes"
+
+# default_mode
+- set the default mode for all nodes not 
+# explicitely matching in the permissions file 
+default_mode="0666"
+
+# default_owner
+- set the default owner for all nodes not 
+# explicitely matching in the permissions file 
+default_owner="root"
+
+# default_group
+- set the default group for all nodes not 
+# explicitely matching in the permissions file 
+default_group="root"
+
+The rules for
+device naming, are read from the files located in the
+/etc/udev/rules.d/ directory, or at the location
+specified by the udev_rules value in the
+/etc/udev/udev.conf file. 
+Every line in the rules file defines the mapping between
+device attributes and the device name. One or more keys are
+specified to match a rule with the current device. If all
+keys are matching, the rule will be applied and the name is
+used to name the device file or the network interface. 
+If no matching rule is found, the default kernel device name
+is used.
+
+Every rule
+consists of a list of comma separated fields:
+
+key
+,[key ,...] name [, symlink]
+
+where fields
+are:
+
+BUS
+
+Match the bus type of the device. (The sysfs device bus
+must be able to be determined by a "device"
+symlink.) 
+
+KERNEL
+
+Match the kernel device name.
+
+ID
+
+Match the device number on the bus, like PCI bus id.
+
+PLACE
+
+Match the topological position on bus, like physical
+port of USB device
+
+SYSFS{filename}
+
+Match sysfs device attribute
+like label, vendor, USB serial number, SCSI UUID or file
+system label. Up to 5 different sysfs files can be checked,
+with all of the values being required to match the rule.
+
+Trailing whitespace characters in the sysfs attribute value
+are ignored, if the key doesn’t have any trailing
+whitespace characters by itself.
+
+PROGRAM
+
+Call external program. This key
+is valid if the program returns successful. The environment
+variables of udev are also available for the program.
+
+The string returned by the program may be additionally
+matched with the RESULT key.
+
+RESULT
+
+Match the returned string of the last PROGRAM
+call. This key may be used in any following rule after a
+PROGRAM call.
+
+NAME
+
+The name of the node to be created, or the name, the
+network interface should be renamed to.
+
+If given with the attribute
+NAME{all_partitions} it will create all 15
+partitions of a blockdevice. This may be useful for
+removable media devices.
+
+SYMLINK
+
+The name of a symlink targeting
+the node. Multiple symlinks may be specified by separating
+the names by the space character. 
+If both the name and the symlink fields are omitted or its
+values empty, the device will be ignored and no node will be
+created. 
+If only the symlink field is given and the name field is
+omitted, the rule will not be applied immediatly, but the
+symlink field is added to the symlink list of the rule which
+will create the node. This makes it possible to specify
+additional symlinks in a possibly separate rules file, while
+the device nodes are maintained by the distribution provided
+rules file.
+
+OWNER, GROUP, MODE
+
+The permissions for this
+device. Every specified value overwrites the value given in
+the permissions file.
+
+The NAME
+,SYMLINK and PROGRAM fields support simple
+printf-like string substitution:
+
+%n
+
+The "kernel number" of the device. For
+example, ’sda3’ has a "kernel number"
+of ’3’.
+
+%k
+
+The "kernel name" for the device.
+
+%M
+
+The kernel major number for the device.
+
+%m
+
+The kernel minor number for the device.
+
+%b
+
+The bus id for the device.
+
+%c
+
+The string returned from the execution of PROGRAM
+(This does not work within the PROGRAM field for the
+obvious reason.)
+
+A single part of the string,
+separated by a space character may be selected by specifying
+the part number as an attribute: %c{N}
+If the number is followed by the + char this part plus all
+remaining parts of the result string are substituted:
+%c{N+}
+
+%s{filename}
+
+The content of a sysfs
+attribute.
+
+%e
+
+If a device node already exists with the name, the
+smallest positive decimal integer N is substituted such that
+the resulting name doesn’t match an existing device
+node. Otherwise nothing is substituted. This can be used to
+create compatibility symlinks and enumerate devices of the
+same type originating from different kernel subsystems.
+
+%%
+
+The ’%’ character itself.
+
+The count of
+charcters to insert may be limited by specifying the format
+length value. For example, ’%3s{file}’ will only
+insert the first three characters of the sysfs
+attribute.
+
+A sample
+udev.rules might look like this:
+
+# if
+/sbin/scsi_id returns "OEM 0815" device will be
+called disk1 
+BUS="scsi", PROGRAM="/sbin/scsi_id",
+RESULT="OEM 0815", NAME="disk1"
+
+# USB printer
+to be called lp_color 
+BUS="usb",
+SYSFS{serial}="W09090207101241330",
+NAME="lp_color"
+
+# SCSI disk
+with a specific vendor and model number will be called boot
+
+BUS="scsi", SYSFS{vendor}="IBM",
+SYSFS{model}="ST336", NAME="boot%n"
+
+# sound card
+with PCI bus id 00:0b.0 to be called dsp 
+BUS="pci", ID="00:0b.0",
+NAME="dsp"
+
+# USB mouse at
+third port of the second hub to be called mouse1 
+BUS="usb", PLACE="2.3",
+NAME="mouse1"
+
+# ttyUSB1
+should always be called pda with two additional symlinks
+
+KERNEL="ttyUSB1", NAME="pda",
+SYMLINK="palmtop handheld"
+
+# multiple USB
+webcams with symlinks to be called webcam0, webcam1, ...
+
+BUS="usb", SYSFS{model}="XV3",
+NAME="video%n", SYMLINK="webcam%n"
+
+# grouping of
+optical drives from multiple kernel subsystems 
+KERNEL="sr*", NAME="%k",
+SYMLINK="cdrom%e" 
+KERNEL="scd*", NAME="%k",
+SYMLINK="cdrom%e" 
+KERNEL="pcd*", NAME="%k",
+SYMLINK="cdrom%e" 
+KERNEL="hd[a-z]", PROGRAM="/bin/cat
+/proc/ide/%k/media", RESULT="cdrom", 
+NAME="%k", SYMLINK="cdrom%e"
+
+The permissions
+and ownership of the created device file is read from the
+files located in the /etc/udev/permissions.d/
+directory, or at the location specified by the
+udev_permission value in the
+/etc/udev/udev.conf file. 
+Every line lists a device name followed by owner, group and
+permission mode. All values are separated by colons. The
+name field may contain a pattern to apply the values to a
+whole class of devices.
+
+A sample
+udev.permissions might look like this:
+
+#name:user:group:mode
+
+input/*:root:root:644 
+ttyUSB1:0:8:0660 
+video*:root:video:0660 
+dsp1:::0666
+
+A number of
+different fields in the above configuration files support a
+simple form of shell style pattern matching. It supports the
+following pattern characters:
+
+*
+
+Matches zero, one, or more
+characters. 
+
+?
+
+Matches any single character, but does not match zero
+characters. 
+
+[ ]
+
+Matches any single character specified within the
+brackets. For example, the pattern string
+"tty[SR]" would match either "ttyS" or
+"ttyR". Ranges are also supported within this
+match with the ’−’ character. For example,
+to match on the range of all digits, the pattern [0−9]
+would be used. If the first character following the
+’[’ is a ’!’, any character not
+enclosed is matched.
+
+After device
+node creation, removal, or network device renaming,
+udev executes the programs in the directory tree
+under /etc/dev.d/. The name of a program must end
+with .dev suffix, to be recognized. 
+In addition to the hotplug environment variables,
+DEVNAME is exported to make the name of the created
+node, or the name the network device is renamed to,
+available to the executed program. The programs in every
+directory are sorted in lexical order, while the directories
+are searched in the following order:
+
+/etc/dev.d/$(DEVNAME)/*.dev
+
+/etc/dev.d/$(SUBSYSTEM)/*.dev 
+/etc/dev.d/default/*.dev
+
+FILES
+
+/sbin/udev udev
+program 
+/etc/udev/* udev config files 
+/etc/hotplug.d/default/udev.hotplug hotplug symlink to udev
+program 
+/etc/dev.d/* programs invoked by udev
+
+SEE ALSO
+
+udevinfo(8),
+udevd(8), hotplug(8)
+
+The
+http://linux−hotplug.sourceforge.net/ web
+site.
+
+AUTHORS
+
+udev was
+developed by Greg Kroah-Hartman greg [AT] kroah.com> with
+much help from Dan Stekloff dsteklof [AT] us.com>, Kay
+Sievers kay.sievers [AT] vrfy.org>, and many others.

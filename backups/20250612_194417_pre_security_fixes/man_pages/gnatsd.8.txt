@@ -1,0 +1,1157 @@
+NAME
+
+gnatsd −
+GNATS network server
+
+SYNOPSIS
+
+gnatsd
+
+[−−database database | −d database]
+[−−not−inetd | −n]
+[−−max-access-level level | −m level]
+[−−version | −V]
+[−−help | −h] 
+
+DESCRIPTION
+
+gnatsd
+is used to service remote GNATS requests such as querying
+PRs, PR creation, deletion, and editing, and
+miscellaneous database queries. It uses a simple ASCII-based
+command protocol (similar to SMTP or POP3) for communicating
+with remote clients.
+
+It also
+provides a security model based either on IP-based
+authentication (generally a terrible idea) or
+username/passwords. Passwords may be encrypted using UNIX
+crypt() or MD5 (for operating systems that support it).
+Plaintext passwords are also supported but strongly
+discouraged.
+
+All of the
+GNATS clients are capable of communicating via the GNATS
+remote protocol to perform their functions.
+
+gnatsd
+should be run by the GNATS user (by default gnats),
+and it is usually started from inetd(8).
+
+OPTIONS
+
+−V,
+−−version
+
+Prints the program version to
+stdout and exits.
+
+−h,
+−−help
+
+Prints a short help text to
+stdout and exits.
+
+−d,
+−−database
+
+Specifies the default database
+which is to be serviced by this invocation of gnatsd.
+(The selected database may be changed via the CHDB
+command; this is simply the default if no CHDB
+command is issued.) If no database is specified, the
+database named default is assumed. This option
+overrides the database specified in the GNATSDB
+environment variable.
+
+−−not−inetd, −n
+
+As its name suggests, indicates
+that gnatsd is not being invoked from inetd.
+This can be used when testing gnatsd, or if it being
+run via ssh or some other mechanism.
+
+This has the
+effect of using the local hostname where gnatsd is
+being invoked for authentication purposes, rather than the
+remote address of the connecting client.
+
+−−max-access-level, −m
+
+Specifies the maximum access
+level that the connecting client can authenticate to.
+Authentication is as normal but if the user or host
+authenticates at a higher level, access level is set to this
+level.
+
+COMMAND PROTOCOL
+
+Commands are
+issued to gnatsd as one or more words followed by a
+carriage-return/linefeed pair. For example, the CHDB
+(change databases) command is sent as
+
+CHDB
+database
+
+[the CRLF will not be
+explicitly written for future examples]
+
+Replies from
+gnatsd are returned as one or more response
+lines containing a 3-digit numeric code followed by a
+human-readable string; the line is terminated with a
+ pair. For example, one possible
+response to the CHDB command above would be:
+
+210 Now accessing GNATS
+database ’database’.
+
+The three-digit
+code is normally followed by a single ASCII space (character
+0x20). However, if additional response lines are to be
+returned from the server, there will be a single dash
+(’-’) instead of the space character after the
+three-digit code.
+
+Response code
+values are divided into ranges. The first digit reflects the
+general type of response (such as "successful" or
+"error"), and the subsequent digits identify the
+specific type of response. 
+Codes 200-299
+
+Positive response indicating
+that the command was successful. No subsequent data will be
+transmitted with the response. [In particular, code 210
+(CODE_OK) is used as the positive result code for
+most simple commands.]
+
+Commands that
+expect additional data from the client (such as SUBM
+or VFLD) use a two-step mechanism for sending the
+data. The server will respond to the initial command with
+either a 211 (CODE_SEND_PR) or 212
+(CODE_SEND_TEXT) response line, or an error code if
+an error occurred with the initial command. The client is
+then expected to send the remaining data using the same
+quoting mechanism as described for server responses in the
+300-349 range. The server will then send a final response
+line to the command.
+
+Codes 300-399
+
+Positive response indicating
+that the query request was successful, and that a PR
+or other data will follow. Codes 300-349 are used when
+transmitting PRs, and 350-399 are used for other
+responses.
+
+Codes in the
+300-349 range are followed by a series of CRLF-terminated
+lines containing the command response, usually a PR.
+The final line of the result is a single period
+(’.’). Result lines that begin with a period
+have an extra period prepended to them.
+
+Codes in the
+350-399 range use a different scheme for sending their
+responses. The three-digit numeric code will be followed by
+either a dash (’-’) or a single space. If the
+code is followed by a dash, that indicates that another
+response line will follow. The final line of the response
+has a single space after the three-digit code.
+
+In previous
+versions of the protocol the first line of a
+CODE_INFORMATION (310) response was to be ignored. This is
+no longer the case. Instead, any lines marked with code
+CODE_INFORMATION_FILLER (351) are to be ignored. This allows
+the server to transmit additional headers or other
+human-readable text that can be safely ignored by the
+clients.
+
+Codes 400-599
+
+An error occurred, usually
+because of invalid command parameters or invalid input from
+the client, missing arguments to the comamand, or a command
+was issued out of sequence. The human-readable message
+associated with the response line describes the general
+problem encountered with the command.
+
+Multiple error
+messages may be returned from a command; in this case the
+’-’ continuation character is used on all but
+the last response line.
+
+Codes 600-799
+
+An internal error occurred on
+the server, a timeout occurred reading data from the client,
+or a network failure occurred. These errors are of the
+"this should not occur" nature, and retrying the
+operation may resolve the problem. Fortunately, most GNATS
+transactions are idempotent; unfortunately, locking the
+database or a PR are not repeatable actions (we
+cannot determine if an existing lock is the one we
+originally requested, or someone else’s).
+
+COMMANDS
+
+Note that the
+set of GNATS commands and their responses is somewhat
+inconsistent and is very much in flux. At present the GNATS
+clients are rather simple-minded and not very strict about
+processing responses. For example, if the server were to
+issue a code 300 (CODE_PR_READY) response to a
+CHDB command, the client would happily expect to see
+a PR appear (and would print it out if one was sent).
+
+It is thus
+suggested that any clients that use the GNATS protocol be
+equally flexible about the way received responses are
+handled; in particular, only the first digit of the response
+code should be assumed to be meaningful, although subsequent
+digits are needed in some cases (codes 300-399). No
+attempt should be made to parse the message strings on error
+response lines; they are only intended to be read by humans,
+and will be changed on a regular basis.
+
+Almost every
+command may result in the response 440
+(CODE_CMD_ERROR). This indicates that there was a
+problem with the command arguments, usually because of
+insufficient or too many arguments being specified. 
+USER [userid>
+[password>]]
+
+Specifies the userid and
+password for database access. Both a username and a password
+may be given, only a username may be given, or both may be
+omitted; if both are omitted, the current access level is
+returned.
+
+The possible
+server responses are: 
+350 (CODE_INFORMATION)
+
+The current access level is
+specified.
+
+422 (CODE_NO_ACCESS)
+
+A matching username and
+password could not be found.
+
+200 (CODE_OK)
+
+A matching username and
+password was found, and the login was successful.
+
+QUIT
+
+Requests that the connection be closed. Possible
+responses: 
+
+201 (CODE_CLOSING)
+
+Normal exit.
+
+The quit
+command has the dubious distinction of being the only
+command that cannot fail.
+
+LIST
+list type>
+
+Describes various aspects of
+the database. The lists are returned as a list of records,
+one per line. Each line may contain a number of
+colon-separated fields.
+
+Possible values
+for list type include
+
+Categories
+
+Describes the legal categories
+for the database.
+
+Submitters
+
+Describes the set of submitters
+for the database.
+
+Responsible
+
+Lists the names in the
+responsible administrative file, including their full names
+and email addresses.
+
+States
+
+Lists the states listed in the state administrative
+file, including the state type (usually blank for most
+states; the closed state has a special type).
+
+FieldNames
+
+Lists the entire set of PR
+fields.
+
+InitialInputFields
+
+Lists the fields that should be
+present when a PR is initially entered.
+
+InitialRequiredFields
+
+Lists fields that have to be
+present and nonempty when a PR is initially entered (fields
+containing only blank characters such as spaces or newlines
+are considered empty.)
+
+Databases
+
+Lists the set of databases.
+
+The possible
+responses are: 
+301 (CODE_TEXT_READY)
+
+Normal response, followed by
+the records making up the list as described above.
+
+416
+(CODE_INVALID_LIST)
+
+The requested list does not
+exist.
+
+FTYP
+field> [field> ...]
+
+Describes the type of data held
+in the field(s) specified with the command. The
+currently-defined data types are:
+
+Text
+
+A plain text field, containing exactly one line.
+
+MultiText
+
+A text field possibly
+containing multiple lines of text.
+
+Enum
+
+An enumerated data field; the value is restricted to one
+entry out of a list of values associated with the field.
+
+MultiEnum
+
+The field contains one or more
+enumerated values. Values are separated with spaces or
+colons (:).
+
+Integer
+
+The field contains an integer
+value, possibly signed.
+
+Date
+
+The field contains a date.
+
+TextWithRegex
+
+The value in the field must
+match one or more regular expressions associated with the
+field.
+
+The possible
+responses are: 
+350 (CODE_INFORMATION)
+
+The normal response; the
+supplied text is the data type.
+
+410
+(CODE_INVALID_FIELD_NAME)
+
+The specified field does not
+exist.
+
+If multiple
+field names were given, multiple response lines will be
+sent, one for each field, using the standard continuation
+protocol; each response except the last will have a dash
+(’-’) immediately after the response code.
+
+FTYPINFO
+field> property>
+
+Provides field-type-related
+information. Currently, only the property
+’separators’ for MultiEnum fields is supported.
+When ’separators’ is specified, the possible
+return codes are: 
+350 (CODE_INFORMATION)
+
+A proper MultiEnum field was
+specified and the returned text is the string of separators
+specified for the field in the dbconfig file, quoted within
+’’.
+
+435
+(CODE_INVALID_FTYPE_PROPERTY)
+
+The ’separators’
+property is not defined for this field, i.e. the specified
+field is not of type MultiEnum.
+
+Currently,
+specifying a different property than
+’separators’ results in return code 435 as
+above.
+
+FDSC
+field> [field> ... ]
+
+Returns a human-readable
+description of the listed field(s). The possible responses
+are: 
+350 (CODE_INFORMATION)
+
+The normal response; the
+supplied text is the field description.
+
+410
+(CODE_INVALID_FIELD_NAME)
+
+The specified field does not
+exist.
+
+Like the
+FVLD command, the standard continuation protocol will
+be used if multiple fields were specified with the
+command.
+
+FIELDFLAGS
+field> [field> ... ]
+
+Returns a set of flags
+describing the specified field(s). The possible responses
+are either 410 (CODE_INVALID_FIELD_NAME),
+meaning that the specified field is invalid or nonexistent,
+or 350 (CODE_INFORMATION) which contains the set
+of flags for the field. The flags may be blank, which
+indicate that no special flags have been set for this
+field.
+
+Like the
+FDSC and FTYP commands, multiple field names
+may be listed with the command, and a response line will be
+returned for each one in the order that the fields appear on
+the command line.
+
+The flags
+include: 
+textsearch
+
+The field will be searched when
+a text field search is requested.
+
+allowAnyValue
+
+For fields that contain
+enumerated values, any legal value may be used in the field,
+not just ones that appear in the enumerated list.
+
+requireChangeReason
+
+If the field is edited, a
+reason for the change must be supplied in the new PR
+text describing the reason for the change. The reason must
+be supplied as a multitext PR field in the new
+PR whose name is field-Changed-Why (where
+field is the name of the field being edited).
+
+readonly
+
+The field is read-only, and
+cannot be edited.
+
+FVLD
+field>
+
+Returns one or more regular
+expressions or strings that describe the valid types of data
+that can be placed in field. Exactly what is returned
+is dependent on the type of data that can be stored in the
+field. For most fields a regular expression is returned; for
+enumerated fields, the returned values are the list of legal
+strings that can be held in the field.
+
+The possible
+responses are: 
+301 (CODE_TEXT_READY)
+
+The normal response, which is
+followed by the list of regexps or strings.
+
+410
+(CODE_INVALID_FIELD_NAME)
+
+The specified field does not
+exist.
+
+VFLD
+field>
+
+VFLD can be used to
+validate a given value for a field in the database. The
+client issues the VFLD command with the name of the
+field to validate as an argument. The server will either
+respond with 212 (CODE_SEND_TEXT), or 410
+(CODE_INVALID_FIELD_NAME) if the specified field does
+not exist.
+
+Once the 212
+response is received from the server, the client should then
+send the line(s) of text to be validated, using the normal
+quoting mechanism described for PRs. The final line
+of text is followed by a line containing a single period,
+again as when sending PR text.
+
+The server will
+then either respond with 210 (CODE_OK), indicating
+that the text is acceptable, or one or more error codes
+describing the problems with the field contents.
+
+INPUTDEFAULT
+field> [field> ... ]
+
+Returns the suggested default
+value for a field when a PR is initially created. The
+possible responses are either
+410(CODE_INVALID_FIELD_NAME), meaning that the
+specified field is invalid or nonexistent, or
+350 (CODE_INFORMATION) which contains the
+default value for the field.
+
+Like the
+FDSC and FTYP commands, multiple field names
+may be listed with the command, and a response line will be
+returned for each one in the order that the fields appear on
+the command line.
+
+RSET
+
+Used to reset the internal server state. The current
+query expression is cleared, and the index of PRs may be
+reread if it has been updated since the start of the
+session. 
+
+The possible responses are:
+
+200 (CODE_OK)
+
+The state has been reset.
+
+440 (CODE_CMD_ERROR)
+
+One or more arguments were
+supplied to the command.
+
+6xx (internal error)
+
+There were problems resetting
+the state (usually because the index could not be reread).
+The session will be immediately terminated.
+
+LKDB
+
+Locks the main GNATS database. No subsequent database
+locks will succeed until the lock is removed. Sessions that
+attempt to write to the database will fail.
+
+The possible responses are:
+
+200 (CODE_OK)
+
+The lock has been
+established.
+
+440 (CODE_CMD_ERROR)
+
+One or more arguments were
+supplied to the command.
+
+431
+(CODE_GNATS_LOCKED)
+
+The database is already locked,
+and the lock could not be obtained after 10 seconds.
+
+6xx (internal error)
+
+An internal error occurred,
+usually because of permission or other filesystem-related
+problems. The lock may or may not have been established.
+
+UNDB
+
+Unlocks the database. Any session may steal a database
+lock; no checking of any sort is done.
+
+The possible responses are:
+
+200 (CODE_OK)
+
+The lock has been removed.
+
+432
+(CODE_GNATS_NOT_LOCKED)
+
+The database was not
+locked.
+
+440 (CODE_CMD_ERROR)
+
+One or more arguments were
+supplied to the command.
+
+6xx (internal error)
+
+The database lock could not be
+removed, usually because of permissions or other
+filesystem-related issues.
+
+LOCK PR>
+user> [pid>]
+
+Locks the specified PR,
+marking the lock with the name user and the optional
+pid. (No checking is done that the user or
+pid arguments are valid or meaningful; they are
+simply treated as strings.)
+
+The EDIT
+command requires that the PR be locked before it may
+be successfully executed. However, it does not require that
+the lock is owned by the editing session, so the usefulness
+of the lock is simply as an advisory measure.
+
+The APPN
+and REPL commands lock the PR as part of the
+editing process, and they do not require that the PR
+be locked before they are invoked.
+
+The possible
+responses are: 
+440 (CODE_CMD_ERROR)
+
+Insufficient or too many
+arguments were specified to the command.
+
+300 (CODE_PR_READY)
+
+The lock was successfully
+obtained; the text of the PR (using the standard
+quoting mechanism for PRs) follows.
+
+400
+(CODE_NONEXISTENT_PR)
+
+The PR specified does
+not exist.
+
+430 (CODE_LOCKED_PR)
+
+The PR is already locked
+by another session.
+
+6xx (internal error)
+
+The PR lock could not be
+created, usually because of permissions or other
+filesystem-related issues.
+
+UNLK
+PR>
+
+Unlocks PR. Any user may
+unlock a PR, as no checking is done to determine if
+the requesting session owns the lock.
+
+The possible
+responses are: 
+440 (CODE_CMD_ERROR)
+
+Insufficient or too many
+arguments were specified to the command.
+
+200 (CODE_OK)
+
+The PR was successfully
+unlocked.
+
+433
+(CODE_PR_NOT_LOCKED)
+
+The PR was not
+locked.
+
+6xx (internal error)
+
+The PR could not be
+unlocked, usually because of permission or other
+filesystem-related problems.
+
+DELETE
+PR>
+
+Deletes the specified
+PR. The user making the request must have
+admin privileges. If successful, the PR is
+removed from the filesystem and the index file; a gap will
+be left in the numbering sequence for PRs. No checks
+are made that the PR is closed.
+
+The possible
+responses are: 
+200 (CODE_OK)
+
+The PR was successfully
+deleted.
+
+422 (CODE_NO_ACCESS)
+
+The user requesting the delete
+does not have admin privileges.
+
+430 (CODE_LOCKED_PR)
+
+The PR is locked by
+another session.
+
+431
+(CODE_GNATS_LOCKED)
+
+The database has been locked,
+and no PRs may be updated until the lock is
+cleared.
+
+6xx (internal error)
+
+The PR could not be
+successfully deleted, usually because of permission or other
+filesystem-related problems.
+
+CHEK [initial]
+
+Used to check the text of an
+entire PR for errors. Unlike the VFLD command,
+it accepts an entire PR at once instead of the
+contents of an individual field.
+
+The
+initial argument indicates that the PR text to be
+checked is for a PR that will be newly created,
+rather than an edit or replacement of an existing PR.
+
+After the
+CHEK command is issued, the server will respond with
+either a 440 (CODE_CMD_ERROR) response indicating
+that the command arguments were incorrect, or a 211
+(CODE_SEND_PR) response code will be sent.
+
+Once the 211
+response is received from the server, the client should send
+the PR using the normal PR quoting mechanism;
+the final line of the PR is then followed by a line
+containing a single period, as usual.
+
+The server will
+then respond with either a 200 (CODE_OK) response,
+indicating there were no problems with the supplied text, or
+one or more error codes listing the problems with the
+PR.
+
+EDIT
+PR>
+
+Verifies the replacement text
+for PR. If the command is successful, the contents of
+PR are completely replaced with the supplied text.
+PR must previously have been locked with the
+LOCK command.
+
+The possible
+responses are: 
+431 (CODE_GNATS_LOCKED)
+
+The database has been locked,
+and no PRs may be updated until the lock is
+cleared.
+
+433
+(CODE_PR_NOT_LOCKED)
+
+The PR was not
+previously locked with the LOCK command.
+
+400
+(CODE_NONEXISTENT_PR)
+
+The specified PR does
+not currently exist. The SUBM command should be used
+to create new PRs.
+
+211 (CODE_SEND_PR)
+
+The client should now transmit
+the replacement PR text using the normal PR
+quoting mechanism. After the PR has been sent, the
+server will respond with either a 200 (CODE_OK)
+response indicating the edit was successful, or one or more
+error codes listing problems with either with the
+replacement PR text, or errors encountered while
+updating the PR file or index.
+
+APPN PR>
+field> 
+REPL PR> field>
+
+Appends to or replaces the
+contents of field in PR with the supplied
+text. The command returns a 201 (CODE_SEND_TEXT)
+response; the client should then transmit the new field
+contents using the standard PR quoting mechanism.
+After the server has read the new contents, it then attempts
+to make the requested change to the PR.
+
+The possible
+responses are: 
+200 (CODE_OK)
+
+The PR field was
+successfully changed.
+
+400
+(CODE_NONEXISTENT_PR)
+
+The PR specified does
+not exist.
+
+410
+(CODE_INVALID_FIELD_NAME)
+
+The specified field does not
+exist.
+
+402
+(CODE_UNREADABLE_PR)
+
+The PR could not be
+read.
+
+431
+(CODE_GNATS_LOCKED)
+
+The database has been locked,
+and no PRs may be updated until the lock is
+cleared.
+
+430 (CODE_LOCKED_PR)
+
+The PR is locked, and
+may not be altered until the lock is cleared.
+
+413
+(CODE_INVALID_FIELD_CONTENTS)
+
+The supplied (or resulting)
+field contents are not valid for the field.
+
+6xx (internal error)
+
+An internal error occurred,
+usually because of permission or other filesystem-related
+problems. The PR may or may not have been
+altered.
+
+SUBM
+Submits a new PR into the database. The supplied text
+is verified for correctness, and if no problems are found a
+new PR is created.
+
+The possible
+responses are: 
+431 (CODE_GNATS_LOCKED)
+
+The database has been locked,
+and no PRs may be submitted until the lock is
+cleared.
+
+211 (CODE_SEND_PR)
+
+The client should now transmit
+the new PR text using the normal quoting mechanism.
+After the PR has been sent, the server will respond
+with either a 200 (CODE_OK) response indicating that
+the new PR has been created (and mail sent to the
+appropriate persons), or one or more error codes listing
+problems with the new PR text.
+
+CHDB
+database> [userid>
+[password>]]
+
+Switches the current database
+to the name specified in the command. An optional username
+or an optional username and password may be given.
+
+The possible
+responses are: 
+422 (CODE_NO_ACCESS)
+
+The user does not have
+permission to access the requested database.
+
+417
+(CODE_INVALID_DATABASE)
+
+The database specified does not
+exist, or one or more configuration errors in the database
+were encountered.
+
+210 (CODE_OK)
+
+The current database is now
+database. Any operations performed will now be
+applied to that database. The user access level for the new
+database is also returned.
+
+DBLS
+
+Lists the known set of databases.
+
+The possible
+responses are: 
+6xx (internal error)
+
+An internal error was
+encountered while trying to obtain the list of available
+databases, usually due to lack of permissions or other
+filesystem-related problems, or the list of databases is
+empty.
+
+301
+(CODE_TEXT_READY)
+
+The list of databases follows,
+one per line, using the standard quoting mechanism. Only the
+database names are sent.
+
+DBDESC
+databasename>
+
+Returns a human-readable
+description of the specified database. Responses
+include:
+
+6xx (internal error)
+
+An internal error was
+encountered while trying to read the list of available
+databases, usually due to lack of permissions or other
+filesystem-related problems, or the list of databases is
+empty.
+
+350
+(CODE_INFORMATION)
+
+The normal response; the
+supplied text is the database description.
+
+417
+(CODE_INVALID_DATABASE)
+
+The specified database name
+does not have an entry.
+
+EXPR query
+expression>
+
+Specifies a query expression
+used to limit which PRs are returned from the
+QUER command. The expression uses the normal query
+expression syntax, as described in the manual entry for
+query-pr(1).
+
+Multiple
+EXPR commands may be issued; the expressions are
+boolean ANDed together.
+
+Expressions are
+cleared by the RSET command.
+
+Possible
+responses include: 
+415 (CODE_INVALID_EXPR)
+
+The specified expression is
+invalid, and could not be parsed.
+
+200 (CODE_OK)
+
+The expression has been
+accepted, and will be used to limit the results returned
+from QUER.
+
+QFMT query
+format>
+
+Use the specified query format
+to format the output of the QUER command. The query
+format may be either the name of a query format known to the
+server, or an actual query format. 
+The possible responses are: 
+200 (CODE_OK)
+
+The normal response, which
+indicates that the query format is acceptable.
+
+440 (CODE_CMD_ERROR)
+
+No query format was
+supplied.
+
+418
+(CODE_INVALID_QUERY_FORMAT)
+
+The specified query format does
+not exist, or could not be parsed.
+
+QUER [PR]
+[PR] [...]
+
+Searches the contents of the
+database for PRs that match the (optional) specified
+expressions with the EXPR command. If no expressions
+were specified with EXPR, the entire set of
+PRs is returned.
+
+If one or more
+PRs are specified on the commandline, only those
+PRs will be searched and/or output.
+
+The format of
+the output from the command is determined by the query
+format selected with the QFMT command.
+
+The possible
+responses are: 
+418 (CODE_INVALID_QUERY_FORMAT)
+
+A valid format was not
+specified with the QFMT command prior to invoking
+QUER.
+
+300 (CODE_PR_READY)
+
+One or more PRs will be
+output using the requested query format. The PR text
+is quoted using the normal quoting mechanisms for
+PRs.
+
+220
+(CODE_NO_PRS_MATCHED)
+
+No PRs met the specified
+criteria.
+
+ADMV
+field> key>
+[subfield>]
+
+Returns an entry from an adm
+file associated with field. key is used to
+look up the entry in the data file. If subfield is
+specified, only the value of that subfield is returned;
+otherwise, all of the fields in the adm data file are
+returned, separated by colons (’:’).
+
+The responses
+are: 
+410 (CODE_INVALID_FIELD_NAME)
+
+The specified field does not
+exist.
+
+221
+(CODE_NO_ADM_ENTRY)
+
+An adm entry matching the key
+was not found, or the field does not have an adm file
+associated with it.
+
+350
+(CODE_INFORMATION)
+
+The normal response; the
+supplied text is the requested field(s).
+
+ENVIRONMENT VARIABLES
+
+The
+GNATSDB environment variable is used to determine
+which database to use. For a local database, it contains the
+name of the database to access. gnatsd cannot service
+remote databases (tho it might be interesting if it could)
+so the database is always assumed to be local.
+
+If
+GNATSDB is not set and the --database option is not
+supplied, it is assumed that the database is local and that
+its name is default.
+
+SEE ALSO
+
+Keeping
+Track: Managing Messages With GNATS (also installed as
+the GNU Info file gnats.info)
+
+databases(5),
+dbconfig(5), delete-pr(8), edit-pr(1)
+file-pr(8), gen-index(8), gnats(7),
+gnatsd(8), mkcat(8), mkdb(8),
+pr-edit(8), query-pr(1), queue-pr(8),
+send-pr(1).
+
+COPYING
+
+Copyright (c)
+2000, 2003 Free Software Foundation, Inc.
+
+Permission is
+granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission
+notice are preserved on all copies.
+
+Permission is
+granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+
+Permission is
+granted to copy and distribute translations of this manual
+into another language, under the above conditions for
+modified versions, except that this permission notice may be
+included in translations approved by the Free Software
+Foundation instead of in the original English.

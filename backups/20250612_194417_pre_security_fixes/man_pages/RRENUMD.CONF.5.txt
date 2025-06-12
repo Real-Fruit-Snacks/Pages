@@ -1,0 +1,301 @@
+RRENUMD.CONF(5) BSD File Formats Manual
+RRENUMD.CONF(5)
+
+NAME
+
+rrenumd.conf —
+configuration file for router renumbering daemon
+
+DESCRIPTION
+
+The rrenumd config file
+describes how the router renumbering packet must be
+constructed and to which destinations it should be sent.
+This file consists of a sequence of statements terminated by
+a semi-colon (’;’). Statements are composed of
+tokens separated by white space, which can be any
+combination of blanks, tabs and newlines. This structure
+simplifies identification of the parts of the configuration
+associated with each other. Lines beginning with
+’#’ are comments.
+
+Meta Syntax
+
+Keywords and special characters
+that the parser expects exactly are displayed using the
+bold font. Parameters are specifying with
+underline. Parameters shown in square brackets
+(’[’ and ’]’) are used to show
+optional keywords and parameters. The vertical bar
+(’|’) is used to indicate between a choice of
+optional parameters. Curly braces (’{’ and
+’}’) are used to group keywords and parameters
+when necessary.
+
+Interface
+specification
+
+There are some statements that
+may or have to specify interface. Interfaces are specified
+in the form of "name unit", such as lo0 and
+ep1.
+
+Configuration Statements 
+debug on|off;
+
+Enables configuration file
+parser debugging. If on is specified, then debugging
+is enabled, If off is specified, then debugging is
+disabled. It is disabled by default.
+
+dest dest-list
+[retrycmd];
+
+Specifies destinations to which
+router renumbering messages should be sent. dest-list
+can be any combination of single or multiple numerical IPv6
+addrs, or Full Qualified Domain Names. retrycmd has
+following syntax.
+
+retry
+retry-num
+
+retry-num specifies how
+many router renumbering messages are sent repeatedly.
+
+[add|change|setglobal]
+
+match-prefix
+match-prefix-val [/match-prefix-len]
+[maxlen maxlen-val]
+[minlen minlen-val]
+[use-prefix use-prefix-val]
+[/use-prefix-len] [keeplen keeplen-val]
+[use-prefix-values];
+
+Specifies
+contents of sending router renumbering message with seqnum
+0. If add|change|setglobal is not specified, then
+add is assumed. use-prefix-values has
+following syntax.
+
+{
+[vltime vltime-val]
+[pltime pltime-val]
+[raf_onlink on|off]
+[raf_auto on|off]
+[rrf_decrprefd on|off]
+[rrf_decrvalid on|off] }
+
+Each value has
+following meaning.
+
+match-prefix
+match-prefix-val [/match-prefix-len]
+
+Specify match-prefix-val
+that is used for matching with preassigned prefixes to which
+add|change|setglobal command should be applied.
+/match-prefix-len Specify the starting part of
+match-prefix-val to be used for matching with
+preassigned prefixes, as decimal bit number.
+
+maxlen maxlen-val
+
+Specify the maximum length of
+prefixes which is allowed to be matched to
+match-prefix-val, as decimal bit number.
+
+minlen minlen-val
+
+Specify the minimum length of
+prefixes which is allowed to be matched to
+match-prefix-val, as decimal bit number.
+
+use-prefix use-prefix-val
+[/usr-prefix-len]
+
+Specify use-prefix-val
+that is used for prefixes to be added on
+add|change|setglobal command. /use-prefix-len
+Specify the starting part of use-prefix-val copied to
+the starting part of prefixes to be added on
+add|change|setglobal command, as decimal bit
+number.
+
+keeplen keeplen-val
+
+Specify the medium part of
+use-prefix-val just next to the starting part
+specified by use-prefix-len, as decimal bit number.
+Contiguous bits part in the same bit position of an existent
+prefix matched with match-prefix-val is copied to the
+same bit position of prefixes to be added.
+
+vltime vmtime-val
+
+Assign an time as prefix
+valid life time for a prefix to be added. Valid value for
+time is decimal seconds number or special format as
+"d00h00m00s00", where 00 can take any decimal
+number, and "d" means days, "h" means
+hours, "m" means minutes, "s" means
+seconds. And alternatively, special keyword
+"infinity" can be also be specified.
+
+pltime pltime-val
+
+Assign an time as prefix
+preferred life time for a prefix to be added. Valid value
+for time is same as for vltime-val.
+
+raf_onlink on|off
+
+Let the prefix to be added to
+have on-link or off-link nature for the assigned interface.
+If on is specified, the prefix have on-link nature
+(e.g. the prefix belong to the link). If off is
+specified, the prefix have off-link nature (e.g. the prefix
+does not belong to the link).
+
+raf_auto on|off
+
+Enable or disable the
+autonomous address auto configuration for the prefix to be
+added. If on is specified, autonomous address auto
+configuration is enabled. If off is specified, it is
+disabled.
+
+rrf_decrprefd on|off
+
+Enable or disable the
+decrementation of the pltime. If on is specified,
+decrementation of the pltime is enabled. If off is
+specified, decrementation of the pltime is disabled.
+
+rrf_decrvalid on|off
+
+Enable or disable the
+decrementation of the vltime. If on is specified,
+decrementation of the vltime is enabled. If off is
+specified, decrementation of the vltime is disabled.
+
+seqnum seqnum-val {
+rrenum-cmd };
+
+Specifies contents of sending
+router renumbering message with some specific seqnum.
+Multiple of this statement can be specified if they have
+different seqnum-val each other. rrenum-cmd
+has just same syntax with above add|change|setglobal
+statement.
+
+EXAMPLES
+
+For each configuration file
+example shown below, we suppose every IPv6 subnet has its
+own prefix beginning with fec0:0:0::/48 and with its own
+subnet number (in this case, subnet number is 7th and 8th
+octet value of the prefix).
+
+If you want to
+assign prefixes beginning with 3ffe:501:ffff::/48 to each
+subnet, then following configuration will be enough, if each
+of your routers supports IPv6 multicast forwarding. The
+subnet number of the existing fec0:0:0::/48 prefix and the
+newly assigned 3ffe:501:ffff::/48 prefix will be same.
+
+dest
+ff05::2;
+
+add
+match-prefix fec0:0:0:: /48 use-prefix 3ffe:501:ffff:: /48
+keeplen 16;
+
+If your routers
+don’t support IPv6 multicast forwarding, you’ll
+need to specify each destination at dest command.
+
+dest
+fec0:0:0:1:260:8ff:fe24:fb3a fec0:0:0:2:200:eff:fe2e:dfe1
+fec0:0:0:3:5254:ff:fedc:5217;
+
+add
+match-prefix fec0:0:0:: /48 use-prefix 3ffe:501:ffff:: /48
+keeplen 16;
+
+If you are going
+to do renumbering, then following procedure will be
+natural.
+
+1.
+
+Assign a new prefix.
+
+2.
+
+Set old prefix lifetimes to
+some appropriate transition period. In the following example
+we use 1 week for valid lifetime, and 0 for preferred
+lifetime. Also, enable old prefix lifetime expiration (By
+default, it is static and does not expire).
+
+3.
+
+After the transition period,
+old prefixes should become invalid, and may have been
+deleted. To make sure that they are deleted, send new router
+renumbering message, which specifies old prefixes as match
+prefix, and no use prefix.
+
+The following
+configuration file will do 1 and 2.
+
+dest
+ff05::2;
+
+seqnum 0 {
+
+add match-prefix fec0:0:0:: /48 use-prefix
+3ffe:501:fffe:: /48 keeplen 16;
+
+};
+
+seqnum 1 {
+
+change match-prefix 3ffe:501:ffff:: /48 use-prefix
+3ffe:501:ffff:: /48 keeplen 16 vltime d7 pltime 0
+rrf_decrvalid on rrf_decrprefd on;
+
+};
+
+And the
+following configuration file will do 3 (should be used for
+the router renumbering message to be sent 1 week
+afterward).
+
+dest
+ff05::2;
+
+change
+match-prefix 3ffe:501:ffff:: /48;
+
+In the above
+example, only add and change commands are
+used, and there is no example for setglobal command.
+setglobal command is almost same with change
+command except that it deletes all pre-defined IPv6 global
+address.
+
+SEE ALSO
+
+prefix(8), rrenumd(8)
+
+HISTORY
+
+The rrenumd.conf
+configuration file was first appeared in KAME IPv6 protocol
+stack kit.
+
+BSD
+November 5, 1998 BSD

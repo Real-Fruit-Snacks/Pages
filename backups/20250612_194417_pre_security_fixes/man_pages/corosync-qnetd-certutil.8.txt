@@ -1,0 +1,76 @@
+NAME
+
+corosync-qnetd-certutil
+- tool to generate qnetd TLS certificates
+
+SYNOPSIS
+
+corosync-qnetd-certutil
+[-i|-s] [-c certificate] [-n cluster_name]
+
+DESCRIPTION
+
+corosync-qnetd-certutil
+is a frontend for the NSS certutil, it is used for
+generating the QNetd CA (Certificate Authority), server
+certificate and signing cluster certificate used by
+corosync-qdevice when using the model
+’net’.
+
+OPTIONS
+
+-i
+
+Initialize the QNetd NSS
+certificate database and generate the QNetd CA and server
+certificates. The default directory for the database is
+/etc/corosync/qnetd. This directory must be writeable by the
+current user. The QNetd CA certificate is also exported into
+the file /etc/corosync/qnetd/nssdb/qnetd-cacert.crt.
+
+-s
+
+Sign the cluster certificate. It is necessary to pass
+the cluster name (as configured in corosync.conf) and the
+certificate request file - see options below. The signed
+certificate will be written to the file
+/etc/corosync/qnetd/nssdb/cluster-$ClusterName.crt 
+
+-c
+
+Certificate request file to sign.
+
+-G
+
+Do not set group write bit for new files. This option
+has effect only when used together with -i option. It
+is useful when extended security is needed and it’s
+viable to prohibit daemon to change its configuration.
+Expected usage is to first set owner of the
+/etc/corosync/qnetd directory to root:$COROQNETD with
+permissions 0750 and then create database (as a root):
+
+#
+corosync-qnetd-certutil -i -G
+
+-n
+
+Name of the cluster.
+
+NOTES
+
+If qnetd is
+executed by a non root user, /etc/corosync/qnetd and its
+subdirectories must be owned by (or have group access for)
+the given user. If corosync-qnetd-certutil is
+executed as root it tries to copy the owner and group of
+/etc/corosync/qnetd to all of the created files.
+
+SEE ALSO
+
+corosync-qnetd(8)
+corosync-qdevice(8)
+
+AUTHOR
+
+Jan Friesse

@@ -1,0 +1,129 @@
+NAME
+
+ratefilter -
+Rate-limiting mail filter
+
+SYNOPSIS
+
+filterctl {[start] |
+[stop]} ratefilter
+
+DESCRIPTION
+
+Enable this
+filter to enforce a maximum number of messages accepted from
+the same sender.
+
+ratefilter
+uses the following configuration files. Changes to the
+following files do not take effect until the filter has been
+stopped and restarted.
+
+/etc/courier/filters/ratefilter-interval
+
+This file contains a single
+numerical value that sets the rate limiting time interval
+setting, in seconds. The default value is sixty seconds.
+Sixty seconds is also the minimum acceptable interval.
+
+/etc/courier/filters/ratefilter-maxrcpts
+
+This file contains a single
+numerical value that sets how many receipients the same
+sender can send mail to, within the controlling time
+interval. The default value is 100 recipients.
+
+/etc/courier/filters/ratefilter-minuid
+
+When ratefilter is
+enabled for locally originating mail, this sets the minimum
+system userid that has rate limiting enforced. The default
+value is 100. Mail sent by processes with lower uids are not
+subject to rate limiting.
+
+/etc/courier/filters/ratefilter-mode
+
+If this file exists and
+contains the word "all", ratefilter creates
+its listening socket in /var/lib/courier/allfilters,
+otherwise the socket gets created in
+/var/lib/courier/filters, see
+courierfilter(8)
+[1]
+for more information.
+
+The
+enablefiltering settings controls whether local or ESMTP
+mail is subject to rate limiting, see
+courier(8)
+[2]
+for more information.
+
+In
+this context, “local” mail refers to mail that
+gets sent when a process executes the
+sendmail(1)
+[3]
+command. This does not include mail
+sent via connection to local port 25, this is considered
+ESMTP mail.
+
+Local
+mail gets rate limited based on the sending process's
+userid. Each numerical userid gets treated as an individual
+sender. ESMTP mail's sender is taken from the authenticated
+ESMTP's userid. Non-authenticated ESMTP mail is not subject
+to rate limiting.
+
+Rate
+limiting is implemented by dividing chronological time into
+intervals that are half the time interval given in the
+ratefilter-interval setting. For example, with the default
+interval of sixty seconds, chronological time gets divided
+into thirty second intervals.
+
+ratefilter
+counts the number of receipients in each message (and not
+just the number of messages) from each sender, in each time
+interval.
+
+ratefilter
+rejects the message when the total number of recipients from
+all messages from the same sender in the current and the
+previous time interval exceeds the ratefilter-maxrcpts
+setting. The rejected message's number of recipients also
+get counted, for the purpose of rejecting future
+messages.
+
+SEE ALSO
+
+courierfilter(8)
+[1]
+.
+
+AUTHOR
+
+Sam
+Varshavchik
+
+Author
+
+NOTES
+
+1. 
+
+courierfilter(8) 
+
+http://www.courier-mta.org/courierfilter.html
+
+2. 
+
+courier(8) 
+
+http://www.courier-mta.org/courier.html
+
+3. 
+
+sendmail(1) 
+
+http://www.courier-mta.org/sendmail.html

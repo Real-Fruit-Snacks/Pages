@@ -1,0 +1,192 @@
+LED(4) BSD Kernel Interfaces Manual LED(4)
+
+NAME
+
+led — API for
+manipulating LED’s, lamps and other annunciators
+
+SYNOPSIS
+
+#include
+
+typedef void
+led_t(void *priv, int onoff);
+
+struct cdev
+*
+
+led_create_state(led_t *func,
+void *priv, char const *name,
+int state);
+
+struct cdev
+*
+
+led_create(led_t *func,
+void *priv,
+char const *name);
+
+void
+
+led_destroy(struct cdev *);
+
+DESCRIPTION
+
+The led driver provides
+generic support for handling LEDs, lamps and other
+annunciators.
+
+The hardware
+driver must supply a function to turn the annunciator on and
+off and the device name of the annunciator relative
+to /dev/led/. The priv argument is passed back
+to this on/off function and can be used however the hardware
+driver sees fit.
+
+The lamp can be
+controlled by opening and writing ASCII strings to the
+/dev/led/bla device.
+
+In the
+following, we will use this special notation to indicate the
+resulting output of the annunciator:
+
+*
+
+The annunciator
+is on for 1/10th second.
+
+_
+
+The annunciator
+is off for 1/10th second.
+
+State can be set
+directly, and since the change happens immediately, it is
+possible to flash the annunciator with very short periods
+and synchronize it with program events. It should be noted
+that there is a non-trivial overhead, so this may not be
+usable for benchmarking or measuring short intervals.
+
+0
+
+Turn the
+annunciator off immediately.
+
+1
+
+Turn the
+annunciator on immediately.
+
+Flashing can be
+set with a given period. The pattern continues
+endlessly.
+
+f
+
+_*
+
+f1
+
+_*
+
+f2
+
+__**
+
+f3
+
+___***
+
+... 
+f9
+
+_________*********
+
+Three high-level
+commands are available:
+
+d%d
+
+Numbers. Each
+digit is blinked out at 1/10th second, zero as ten pulses.
+Between digits a one second pause and after the last digit a
+two second pause after which the sequence is repeated.
+
+s%s
+
+String. This
+gives full control over the annunciator. Letters
+’A’ ... ’J’ turn the annunciator on
+for from 1/10th to one full second. Letters ’a’
+... ’j’ turn the annunciator off for 1/10th to
+one full second. Letters ’u’ and ’U’
+turn the annunciator off and on respectively when the next
+UTC second starts. Unless terminated with a ’.’,
+the sequence is immediately repeated.
+
+m%s
+
+Morse.
+
+’.’
+
+becomes
+’_*’
+
+’-’
+
+becomes
+’_***’
+
+’ ’
+
+becomes
+’__’
+
+’\n’
+
+becomes
+’____’
+
+The sequence is
+repeated after a one second pause.
+
+FILES 
+/dev/led/* 
+EXAMPLES
+
+A ’d12’ flashes the
+lamp
+
+*__________*_*______________________________
+
+A
+’sAaAbBa’ flashes
+
+*_*__**_
+
+/usr/bin/morse
+-l "Soekris rocks" > /dev/led/error
+
+SEE ALSO
+
+morse(6)
+
+HISTORY
+
+The led driver first
+appeared in FreeBSD 5.2.
+
+AUTHORS
+
+This software was written by
+Poul-Henning Kamp phk [AT] FreeBSD.org>.
+
+This manual page
+was written by Sergey A. Osokin
+osa [AT] FreeBSD.org> and Poul-Henning Kamp
+phk [AT] FreeBSD.org>.
+
+BSD
+April 24, 2007 BSD

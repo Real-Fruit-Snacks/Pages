@@ -1818,6 +1818,214 @@
     <script src="data/options.js"></script>
     
     <script>
+        // Security Module - Integrated for XSS prevention
+        const Security = {
+            /**
+             * Escape HTML entities to prevent XSS
+             * @param {string} unsafe - Untrusted input string
+             * @returns {string} Safe HTML-escaped string
+             */
+            escapeHtml(unsafe) {
+                if (typeof unsafe !== 'string') {
+                    return '';
+                }
+                const div = document.createElement('div');
+                div.textContent = unsafe;
+                return div.innerHTML;
+            },
+
+            /**
+             * Sanitize command input
+             * @param {string} input - User command input
+             * @returns {string} Sanitized command string
+             */
+            sanitizeCommand(input) {
+                if (typeof input !== 'string') {
+                    return '';
+                }
+                // Remove potential script injections
+                return input
+                    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+                    .replace(/javascript:/gi, '')
+                    .replace(/on\w+\s*=/gi, '')
+                    .substring(0, 1000); // Limit length
+            },
+
+            /**
+             * Validate regex patterns to prevent ReDoS
+             * @param {string} pattern - Regex pattern to validate
+             * @returns {boolean} True if pattern is safe
+             */
+            validateRegex(pattern) {
+                try {
+                    // Test for catastrophic backtracking
+                    const testString = 'a'.repeat(100);
+                    const regex = new RegExp(pattern);
+                    const start = performance.now();
+                    regex.test(testString);
+                    const duration = performance.now() - start;
+                    
+                    // Reject if takes too long (potential ReDoS)
+                    return duration < 50;
+                } catch (e) {
+                    return false;
+                }
+            },
+
+            /**
+             * Create element with safe text content
+             * @param {string} tag - HTML tag name
+             * @param {string} text - Text content
+             * @param {string} className - Optional CSS class
+             * @returns {HTMLElement} Safe element
+             */
+            createElement(tag, text, className) {
+                const element = document.createElement(tag);
+                if (text) {
+                    element.textContent = text;
+                }
+                if (className) {
+                    element.className = className;
+                }
+                return element;
+            },
+
+            /**
+             * Validate and sanitize data from localStorage
+             * @param {string} key - Storage key
+             * @returns {*} Parsed and validated data
+             */
+            getFromStorage(key) {
+                try {
+                    const data = localStorage.getItem(key);
+                    if (!data) return null;
+                    
+                    const parsed = JSON.parse(data);
+                    
+                    // Validate structure based on key
+                    switch (key) {
+                        case 'manPageHistory':
+                        case 'manPageBookmarks':
+                            if (!Array.isArray(parsed)) return [];
+                            // Sanitize each entry
+                            return parsed.map(entry => ({
+                                command: this.sanitizeCommand(entry.command || ''),
+                                section: parseInt(entry.section) || 1,
+                                timestamp: parseInt(entry.timestamp) || Date.now()
+                            }));
+                        
+                        case 'selectedTheme':
+                            // Whitelist valid theme names
+                            const validThemes = [
+                                'default', 'dark', 'solarized-dark', 'solarized-light',
+                                'monokai', 'dracula', 'nord', 'gruvbox', 'material',
+                                'one-dark', 'cyberpunk', 'ocean-depth', 'forest-night',
+                                'sunset', 'midnight-blue', 'high-contrast'
+                            ];
+                            return validThemes.includes(parsed) ? parsed : 'ocean-depth';
+                        
+                        default:
+                            return parsed;
+                    }
+                } catch (e) {
+                    console.error(`Failed to parse storage key ${key}:`, e);
+                    return null;
+                }
+            },
+
+            /**
+             * Create a safe suggestion element
+             * @param {Object} result - Search result object
+             * @param {number} index - Result index
+             * @returns {HTMLElement} Safe suggestion element
+             */
+            createSuggestionElement(result, index) {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'suggestion';
+                suggestion.dataset.index = index;
+                
+                // Create info container
+                const info = document.createElement('div');
+                info.className = 'suggestion-info';
+                
+                // Command name (sanitized)
+                const command = document.createElement('div');
+                command.className = 'suggestion-command';
+                command.textContent = this.sanitizeCommand(result.command || '');
+                
+                // Description (sanitized)
+                const desc = document.createElement('div');
+                desc.className = 'suggestion-desc';
+                desc.textContent = result.description || 'No description available';
+                
+                // Section badge
+                const badge = document.createElement('span');
+                badge.className = 'section-badge';
+                
+                if (result.sections && result.sections.length > 1) {
+                    const sections = result.sections
+                        .filter(s => parseInt(s) >= 1 && parseInt(s) <= 9)
+                        .sort((a, b) => a - b)
+                        .join(', ');
+                    badge.textContent = `Sections ${sections}`;
+                } else {
+                    const section = parseInt(result.section) || 1;
+                    badge.textContent = `Section ${section}`;
+                }
+                
+                // Assemble structure
+                info.appendChild(command);
+                info.appendChild(desc);
+                suggestion.appendChild(info);
+                suggestion.appendChild(badge);
+                
+                return suggestion;
+            },
+
+            /**
+             * Create a safe history/bookmark item
+             * @param {Object} item - History/bookmark item
+             * @param {string} type - 'history' or 'bookmark'
+             * @returns {HTMLElement} Safe item element
+             */
+            createListItem(item, type) {
+                const div = document.createElement('div');
+                div.className = type === 'history' ? 'history-item' : 'bookmark-item';
+                
+                // Command link
+                const link = document.createElement('a');
+                link.href = '#';
+                link.className = type === 'history' ? 'history-link' : 'bookmark-link';
+                link.textContent = this.sanitizeCommand(item.command || 'Unknown');
+                
+                // Section badge
+                const section = document.createElement('span');
+                section.className = 'section-indicator';
+                section.textContent = `(${parseInt(item.section) || 1})`;
+                
+                // Timestamp (history only)
+                if (type === 'history' && item.timestamp) {
+                    const time = document.createElement('span');
+                    time.className = 'history-time';
+                    const date = new Date(parseInt(item.timestamp) || Date.now());
+                    time.textContent = date.toLocaleTimeString();
+                    div.appendChild(time);
+                }
+                
+                // Remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.className = type === 'history' ? 'remove-history' : 'remove-bookmark';
+                removeBtn.textContent = '×';
+                removeBtn.setAttribute('aria-label', `Remove ${type}`);
+                
+                div.appendChild(link);
+                div.appendChild(section);
+                div.appendChild(removeBtn);
+                
+                return div;
+            }
+        };
+
         // Application state
         let currentState = 'initial';
         let searchTimeout = null;
@@ -1861,16 +2069,13 @@
         // Load saved data from localStorage
         function loadSavedData() {
             try {
-                const savedHistory = localStorage.getItem('manPageHistory');
-                if (savedHistory) {
-                    history = JSON.parse(savedHistory);
-                }
-                const savedBookmarks = localStorage.getItem('manPageBookmarks');
-                if (savedBookmarks) {
-                    bookmarks = JSON.parse(savedBookmarks);
-                }
+                // Use Security module to validate and sanitize stored data
+                history = Security.getFromStorage('manPageHistory') || [];
+                bookmarks = Security.getFromStorage('manPageBookmarks') || [];
             } catch (e) {
                 console.error('Failed to load saved data:', e);
+                history = [];
+                bookmarks = [];
             }
         }
 
@@ -2533,20 +2738,34 @@
 
         // Update history panel
         function updateHistoryPanel() {
-            historyContent.innerHTML = '';
+            // Clear content safely
+            while (historyContent.firstChild) {
+                historyContent.removeChild(historyContent.firstChild);
+            }
             
             if (history.length === 0) {
-                historyContent.innerHTML = '<p style="text-align: center; color: #999;">No history yet</p>';
+                const emptyMsg = document.createElement('p');
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.style.color = '#999';
+                emptyMsg.textContent = 'No history yet';
+                historyContent.appendChild(emptyMsg);
                 return;
             }
             
             history.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'side-panel-item';
-                div.innerHTML = `
-                    <div class="side-panel-item-command">${item.command}(${item.section})</div>
-                    <div class="side-panel-item-meta">${new Date(item.timestamp).toLocaleDateString()}</div>
-                `;
+                
+                const commandDiv = document.createElement('div');
+                commandDiv.className = 'side-panel-item-command';
+                commandDiv.textContent = `${Security.sanitizeCommand(item.command)}(${parseInt(item.section) || 1})`;
+                
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'side-panel-item-meta';
+                metaDiv.textContent = new Date(item.timestamp).toLocaleDateString();
+                
+                div.appendChild(commandDiv);
+                div.appendChild(metaDiv);
                 
                 div.addEventListener('click', () => {
                     displayManPage(item.command, item.section);
@@ -2559,24 +2778,53 @@
 
         // Update bookmarks panel
         function updateBookmarksPanel() {
-            bookmarksContent.innerHTML = '';
+            // Clear content safely
+            while (bookmarksContent.firstChild) {
+                bookmarksContent.removeChild(bookmarksContent.firstChild);
+            }
             
             if (bookmarks.length === 0) {
-                bookmarksContent.innerHTML = '<p style="text-align: center; color: #999;">No bookmarks yet</p>';
+                const emptyMsg = document.createElement('p');
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.style.color = '#999';
+                emptyMsg.textContent = 'No bookmarks yet';
+                bookmarksContent.appendChild(emptyMsg);
                 return;
             }
             
             bookmarks.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'side-panel-item';
-                div.innerHTML = `
-                    <div class="side-panel-item-command">${item.command}(${item.section})</div>
-                    <div class="side-panel-item-meta">
-                        ${item.description}
-                        <button class="action-button" style="float: right; padding: 2px 6px; font-size: 12px;" onclick="removeBookmark(${index})">Remove</button>
-                    </div>
-                `;
                 
+                const commandDiv = document.createElement('div');
+                commandDiv.className = 'side-panel-item-command';
+                commandDiv.textContent = `${Security.sanitizeCommand(item.command)}(${parseInt(item.section) || 1})`;
+                
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'side-panel-item-meta';
+                
+                const descText = document.createElement('span');
+                descText.textContent = item.description || '';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'action-button';
+                removeBtn.style.cssText = 'float: right; padding: 2px 6px; font-size: 12px;';
+                removeBtn.textContent = 'Remove';
+                removeBtn.dataset.index = index;
+                
+                metaDiv.appendChild(descText);
+                metaDiv.appendChild(removeBtn);
+                
+                div.appendChild(commandDiv);
+                div.appendChild(metaDiv);
+                
+                // Handle click on remove button
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeBookmark(parseInt(e.target.dataset.index));
+                });
+                
+                // Handle click on item
                 div.addEventListener('click', (e) => {
                     if (!e.target.matches('button')) {
                         displayManPage(item.command, item.section);
@@ -2869,7 +3117,11 @@
         
         function displaySuggestions(results) {
             console.log(`displaySuggestions called with ${results.length} results`);
-            suggestions.innerHTML = '';
+            
+            // Clear suggestions safely
+            while (suggestions.firstChild) {
+                suggestions.removeChild(suggestions.firstChild);
+            }
             selectedSuggestionIndex = -1;
             
             if (results.length === 0) {
@@ -2879,24 +3131,8 @@
             }
 
             results.forEach((result, index) => {
-                const suggestion = document.createElement('div');
-                suggestion.className = 'suggestion';
-                suggestion.dataset.index = index;
-                
-                const descriptionText = result.description || 'No description available';
-                
-                // Show all available sections if multiple exist
-                const sectionBadge = result.sections && result.sections.length > 1
-                    ? `Sections ${result.sections.sort((a, b) => a - b).join(', ')}`
-                    : `Section ${result.section}`;
-                
-                suggestion.innerHTML = `
-                    <div class="suggestion-info">
-                        <div class="suggestion-command">${result.command}</div>
-                        <div class="suggestion-desc">${descriptionText}</div>
-                    </div>
-                    <span class="section-badge">${sectionBadge}</span>
-                `;
+                // Use Security module to create safe suggestion element
+                const suggestion = Security.createSuggestionElement(result, index);
                 
                 suggestion.addEventListener('click', () => {
                     displayManPage(result.command, result.section);
@@ -4459,10 +4695,16 @@
 
         // Display parsed command
         function displayParsedCommand(tokens) {
-            commandBreakdown.innerHTML = '';
+            // Clear content safely
+            while (commandBreakdown.firstChild) {
+                commandBreakdown.removeChild(commandBreakdown.firstChild);
+            }
             
             if (tokens.length === 0) {
-                commandBreakdown.innerHTML = '<div class="no-explanation">Enter a command above to see its breakdown</div>';
+                const noExplain = document.createElement('div');
+                noExplain.className = 'no-explanation';
+                noExplain.textContent = 'Enter a command above to see its breakdown';
+                commandBreakdown.appendChild(noExplain);
                 return;
             }
             

@@ -1,0 +1,184 @@
+NAME
+
+aliascheck
+− check for existence of mail alias
+
+SYNOPSIS
+
+aliascheck
+[−−nopwd] name [alias-file]
+
+aliascheck
+−−map [−−case] name
+map-file
+
+aliascheck
+−−qmail [−−nopwd] name
+[alias-user]
+
+DESCRIPTION
+
+aliascheck
+checks whether name is a valid email alias or a user
+in the password file. It converts name to lower-case
+before performing any of the checks. If the alias or user
+exists, aliascheck exits with status 0 and outputs what the
+address resolves to. If the alias does not exist, aliascheck
+exits with status 1. If aliascheck cannot determine the
+validity of name because of some system error, it
+exits with status 2.
+
+aliascheck can
+run in three different modes--sendmail alias mode (the
+default), sendmail map mode, and qmail mode. In sendmail
+alias mode the second argument, alias-file, is the
+name of the sendmail alias file, typically
+/etc/mail/aliases.db. If no second argument is
+supplied, aliascheck first checks for the existence of
+/etc/mail/aliases.db, then for the existence of
+/etc/aliases.db, then finally exits with status 2 if
+neither file exists. When an alias is found, aliascheck
+outputs the value of that alias in the alias database.
+
+When aliascheck
+is invoked with −−map, it looks up
+name in map-file, which should be a database
+created with sendmail’s makemap(8) utility.
+Note that maps have a slightly different and incompatible
+format from that of alias files. Use the
+−−case argument to prevent name
+from being folded to lower-case before it is looked up in
+the database. Note that −−map implies the
+−−nopwd option.
+
+When aliascheck
+is given the argument −−qmail, it runs in
+qmail mode. In this case, the second argument,
+alias-user, specifies the user under which qmail
+processes mail aliases. aliascheck will check this
+user’s home directory for files named
+.qmail−XXX for various appropriate suffixes
+XXX . On success, it outputs the full
+pathname of the appropriate file.
+
+If aliascheck
+cannot find an alias, it also checks the password file, and
+exits 0 if it can find name there. If name is
+found, aliascheck also outputs name (in lower-case)
+to standard output before exiting. (This is useful for Mail
+Avenger, because asmtpd does not recognize users with
+invalid shells or UID 0, while MTAs typically
+do.) To suppress password file checking, supply the
+−−nopwd argument to aliascheck.
+
+EXAMPLES
+
+If you are
+using Mail Avenger in conjunction with a sendmail
+installation, you might want to put the following code in
+your /etc/avenger/unknown file to reject mail for
+unknown users who do not show up in the alias file.
+
+    aliascheck "$RECIPIENT_LOCAL" /etc/mail/aliases.db > /dev/null
+    case "$?" in
+        0)
+            # Fall through to default checks
+            ;;
+        1)
+            reject unknown user
+            ;;
+        *)
+            # Probably safest to do nothing, but could also
+            # defer the mail with the following command:
+            #
+            #defer Temporary error processing alias file
+            ;;
+    esac
+
+If you have
+qmail instead of sendmail, assuming the qmail alias
+user is called "alias", you would change
+the first line in the previous example to:
+
+    aliascheck −−qmail "$RECIPIENT_LOCAL" alias > /dev/null
+
+FILES
+
+/etc/avenger/unknown
+
+Mail Avenger rules for local
+email addresses that do not correspond to local users, or
+correspond to local users without valid shells, or local
+users with uid 0 (i.e., root). Note the location may be
+different if you set EtcDir in your
+asmtpd.conf file.
+
+/etc/mail/aliases.db 
+/etc/aliases.db
+
+Default locations of sendmail
+alias file
+
+/etc/mail/virtusertable.db
+
+Default location of the
+sendmail virtual user table map, when this feature is in
+use.
+
+~alias/.qmail−*
+
+Default locations of qmail
+alias files
+
+/etc/password
+
+System password file. (Note,
+however, that aliascheck uses the getpwnam function,
+and will thus be compatible with schemes such as
+NIS that do not keep all users in the local
+password file.)
+
+SEE ALSO
+
+avenger(1),
+asmtpd.conf(5), makemap(8),
+
+The Mail
+Avenger home page: http://www.mailavenger.org/>.
+
+BUGS
+
+aliascheck
+doesn’t necessarily know how to parse the particular
+database format your sendmail installation uses for aliases.
+Make sure you test it before using it in an avenger
+script.
+
+In some
+sendmail installations, the alias database is not world
+readable, which can obviously prevent aliascheck from
+working properly if run under the wrong user identity (such
+as the AvengerUser).
+
+It is quite
+possible for aliascheck to return a system error (exit code
+2), particularly if you run it while you are rebuilding a
+large alias database. (aliascheck checks for the existence
+of special key "@" in the database.) Make
+sure you differentiate between error code 1 (no user) and
+error code 2 (system error).
+
+aliascheck may
+not do the right thing if you installed qmail with
+conf-break set to a character other than
+"−".
+
+Remember that
+aliascheck does not read your qmail users/assign or
+users/cdb files--it only checks for .qmail
+files in the alias user’s home directory.
+
+AUTHOR
+
+David
+Mazieres

@@ -1,0 +1,260 @@
+POD2::JA::MIME::CharseUsermContributed Perl DocumePOD2::JA::MIME::Charset(3pm)
+
+NAME
+       MIME::Charset~[ja] - MIME
+
+SYNOPSIS
+           use MIME::Charset:
+
+           $charset = MIME::Charset->new("euc-jp");
+
+       :
+
+           $benc = $charset->body_encoding; #  "Q"
+           $cset = $charset->as_string; #  "US-ASCII"
+           $henc = $charset->header_encoding; #  "S"
+           $cset = $charset->output_charset; #  "ISO-2022-JP"
+
+       :
+
+           ($text, $charset, $encoding) =
+               $charset->header_encode(
+                  "\xc9\xc2\xc5\xaa\xc0\xde\xc3\xef\xc5\xaa".
+                  "\xc7\xd1\xca\xaa\xbd\xd0\xce\xcf\xb4\xef",
+                  Charset => 'euc-jp');
+           # ... (<>, "ISO-2022-JP", "B")
+
+           ($text, $charset, $encoding) =
+               $charset->body_encode(
+                   "Collectioneur path\xe9tiquement ",
+                   Charset => 'latin1');
+           # ... (<>, "ISO-8859-1", "QUOTED-PRINTABLE")
+
+           $len = $charset->encoded_header_len(
+               "Perl\xe8\xa8\x80\xe8\xaa\x9e",
+               Charset => "utf-8",
+               Encoding => "b");
+           # ... 28
+
+       :
+
+           MIME::Charset::alias("csEUCKR", "euc-kr");
+           MIME::Charset::default("iso-8859-1");
+           MIME::Charset::fallback("us-ascii");
+
+       OO ():
+
+           use MIME::Charset qw(:info);
+
+           $benc = body_encoding("iso-8859-2"); # "Q"
+           $cset = canonical_charset("ANSI X3.4-1968"); # "US-ASCII"
+           $henc = header_encoding("utf-8"); # "S"
+           $cset = output_charset("shift_jis"); # "ISO-2022-JP"
+
+           use MIME::Charset qw(:trans);
+
+           ($text, $charset, $encoding) =
+               header_encode(
+                  "\xc9\xc2\xc5\xaa\xc0\xde\xc3\xef\xc5\xaa".
+                  "\xc7\xd1\xca\xaa\xbd\xd0\xce\xcf\xb4\xef",
+                  "euc-jp");
+           # ...(<>, "ISO-2022-JP", "B")
+
+           ($text, $charset, $encoding) =
+               body_encode(
+                   "Collectioneur path\xe9tiquement ".
+                   "\xe9clectique de d\xe9chets",
+                   "latin1");
+           # ...(<>, "ISO-8859-1", "QUOTED-PRINTABLE")
+
+           $len = encoded_header_len(
+               "Perl\xe8\xa8\x80\xe8\xaa\x9e", "b", "utf-8"); # 28
+
+DESCRIPTION
+       MIME::Charset  MIME
+
+        MIME  ``character set'' ISO/IEC  ``'' (CCS) ``'' (CES)
+
+        MIME US-ASCII
+
+       $charset = MIME::Charset->new([CHARSET [, OPTS]])
+
+           OPTS NOTE: Unicode/ ("USE_ENCODE" )
+
+           Mapping => MAPTYPE
+                "EXTENDED" "STANDARD"  "EXTENDED"
+
+       $charset->body_encoding
+       body_encoding CHARSET
+           CHARSET
+
+            "B" (BASE64)"Q" (QUOTED-PRINTABLE)"S" () "undef" ( --- 7BIT  8BIT)
+
+       $charset->as_string
+       canonical_charset CHARSET
+
+       $charset->decoder
+            Unicode "Encode::Encoding" undef
+
+       $charset->dup
+
+       $charset->encoder([CHARSET])
+            MIME "Encode::Encoding"
+
+           CHARSET $charset () CHARSET $charset CHARSET
+
+       $charset->header_encoding
+       header_encoding CHARSET
+           CHARSET
+
+            "B""Q""S" () "undef" ()
+
+       $charset->output_charset
+       output_charset CHARSET
+            CHARSET MIME ()
+
+           Unicode/ ("USE_ENCODE" )  "canonical_charset"
+
+       $charset->body_encode(STRING [, OPTS])
+       body_encode STRING, CHARSET [, OPTS]
+           STRING  () CHARSET  STRING
+
+           OPTS NOTE: Unicode/ ("USE_ENCODE" )
+
+           Detect7bit => YESNO
+               CHARSET 7  "YES"
+
+           Replacement => REPLACEMENT
+               ""
+
+           3 (, , )   "BASE64""QUOTED-PRINTABLE" "7BIT""8BIT"   ASCII
+           "undef"  "BASE64"   "US-ASCII"  ASCII
+
+       $charset->decode(STRING [,CHECK])
+           STRING  Unicode
+
+           NOTE: Unicode/ ("USE_ENCODE" )
+
+       detect_7bit_charset STRING
+            STRING 7 STRING 8 "undef"
+
+       $charset->encode(STRING [, CHECK])
+           STRING (Unicode ) MIME ()  Unicode
+
+           NOTE: Unicode/ ("USE_ENCODE" )
+
+       $charset->encoded_header_len(STRING [, ENCODING])
+       encoded_header_len STRING, ENCODING, CHARSET
+           STRING ()
+
+           ENCODING  "B""Q""S" ("B"  "Q" )
+
+       $charset->header_encode(STRING [, OPTS])
+       header_encode STRING, CHARSET [, OPTS]
+           STRING  () CHARSET  STRING
+
+           OPTS NOTE: Unicode/ ("USE_ENCODE" )
+
+           Detect7bit => YESNO
+               CHARSET 7  "YES"
+
+           Replacement => REPLACEMENT
+               ""
+
+           3 (, , )   "B""Q""undef" ()   ASCII  "8BIT" ()    "undef" ()
+           "US-ASCII"  ASCII
+
+       $charset->undecode(STRING [,CHECK])
+           Unicode  string $charset  "$charset->decoder->encode()"
+
+           NOTE: Unicode/ ("USE_ENCODE" )
+
+       alias ALIAS [, CHARSET]
+           "canonical_charset" /
+
+           CHARSET ALIAS  CHARSET  ALIAS
+
+       default [CHARSET]
+           /
+
+             "US-ASCII"
+
+           CHARSET
+
+           NOTE:
+
+       fallback [CHARSET]
+           /
+
+             "FALLBACK"  "UTF-8"
+
+           CHARSET CHARSET  "NONE"
+
+           NOTE:  "US-ASCII"
+
+       recommended CHARSET [, HEADERENC, BODYENC [, ENCCHARSET]]
+           /
+
+             CHARSET CHARSET  3 (HEADERENC, BODYENC, ENCCHARSET)
+
+           HEADERENC "B""Q""S" () "undef" ()
+
+           BODYENC "B""Q""S" ()"undef" ()
+
+           ENCCHARSET  CHARSET MIME  () ENCCHARSET  "undef"
+
+           NOTE: () "header_encoding""body_encoding""output_charset"
+
+       USE_ENCODE
+           Unicode/ Unicode  Perl 5.7.3  Perl
+
+       "body_encode"  "header_encode" "Replacement" :
+
+       "DEFAULT"
+            UCM  <subchar>
+
+       "FALLBACK"
+             "DEFAULT" ("fallback" )
+
+       "CROAK"
+            eval{} "STRICT"
+
+       "PERLQQ"
+       "HTMLCREF"
+       "XMLCREF"
+           Encode "FB_PERLQQ""FB_HTMLCREF""FB_XMLCREF"
+
+             "Handling Malformed Data" in Encode
+
+        "DEFAULT"
+
+        MIME/Charset/Defaults.pm  MIME/Charset/Defaults.pm.sample
+
+VERSION
+       $VERSION
+
+        <http://hatuka.nezumi.nu/repos/MIME-Charset/>
+
+       1.001
+           o   new()  CHARSET
+
+       1.005
+           o   encoded-word  RFC 2047  5 (3) encoded_header_len()
+
+       1.008.2
+           o   body_encoding()  "S"
+
+           o   body_encode()  UTF-8  "BASE64" "QUOTED-PRINTABLE"
+
+SEE ALSO
+       Multipurpose Internet Mail Extensions (MIME).
+
+AUTHOR
+       Hatuka*nezumi - IKEDA Soji <hatuka(at)nezumi.nu>
+
+COPYRIGHT
+       Copyright (C) 2006-2017 Hatuka*nezumi - IKEDA Soji.  This program is
+       free software; you can redistribute it and/or modify it under the same
+       terms as Perl itself.
+
+perl v5.34.0                      2022-10-13      POD2::JA::MIME::Charset(3pm)

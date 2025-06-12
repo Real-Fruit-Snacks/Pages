@@ -1,0 +1,272 @@
+NAME
+
+lockfile_create,
+lockfile_remove, lockfile_touch, lockfile_check - manage
+lockfiles
+
+SYNOPSIS
+
+#include
+
+cc [
+flag ... ] file ... -llockfile [
+library ]
+
+int
+lockfile_create( const char *lockfile, int
+retrycnt, int flags [, struct
+lockargs args ] ); 
+int lockfile_remove( const char *lockfile );
+
+int lockfile_touch( const char *lockfile );
+
+int lockfile_check( const char *lockfile,
+int flags );
+
+DESCRIPTION
+
+Functions to
+handle lockfiles in an NFS safe way.
+
+lockfile_create
+
+The lockfile_create function creates a lockfile in an
+NFS safe way.
+
+If flags is set
+to L_PID or L_PPID then lockfile_create will
+not only check for an existing lockfile, but it will read
+the contents as well to see if it contains a process id in
+ASCII. If so, the lockfile is only valid if that process
+still exists. Otherwise, a lockfile older than 5 minutes is
+considered to be stale.
+
+When creating a
+lockfile, if L_PID is set in flags, then the current
+process’ PID will be written to the lockfile.
+Sometimes it can be useful to use the parent’s PID
+instead (for example, the dotlockfile command uses
+that). In such cases you can use the L_PPID flag
+instead.
+
+lockfile_touch
+
+If the lockfile is on a shared filesystem, it might have
+been created by a process on a remote host. So the L_PID or
+L_PPID method of deciding if a lockfile is still valid or
+stale is incorrect and must not be used. If you are holding
+a lock longer than 5 minutes, a call to
+lockfile_create by another process will consider the
+lock stale and remove it. To prevent this, call
+lockfile_touch to refresh the lockfile at a regular
+interval (every minute or so).
+
+lockfile_check
+
+This function checks if a valid lockfile is already present
+without trying to create a new lockfile.
+
+lockfile_remove
+
+Removes the lockfile.
+
+RETURN VALUES
+
+lockfile_create
+returns one of the following status codes:
+
+#define
+L_SUCCESS 0 /* Lockfile created */ 
+#define L_TMPLOCK 2 /* Error creating tmp lockfile */ 
+#define L_TMPWRITE 3 /* Can’t write pid int tmp
+lockfile */ 
+#define L_MAXTRYS 4 /* Failed after max. number of attempts
+*/ 
+#define L_ERROR 5 /* Unknown error; check errno */ 
+#define L_ORPHANED 7 /* Called with L_PPID but parent is
+gone */ 
+#define L_RMSTALE 8 /* Failed to remove stale lockfile
+*/
+
+lockfile_check
+returns 0 if a valid lockfile is present. If no lockfile or
+no valid lockfile is present, -1 is returned.
+
+lockfile_touch
+and lockfile_remove return 0 on success. On failure
+-1 is returned and errno is set appropriately. It is
+not an error to lockfile_remove() a non-existing
+lockfile.
+
+ALGORITHM
+
+The algorithm
+that is used to create a lockfile in an atomic way, even
+over NFS, is as follows:
+
+1
+
+A unique file is created. In printf format, the name of
+the file is .lk%05d%x%s. The first argument (%05d) is the
+current process id. The second argument (%x) consists of the
+4 minor bits of the value returned by time(2). The
+last argument is the system hostname.
+
+2
+
+Then the lockfile is created using link(2). The
+return value of link is ignored.
+
+3
+
+Now the lockfile is stat()ed. If the stat fails,
+we go to step 6.
+
+4
+
+The stat value of the lockfile is compared with
+that of the temporary file. If they are the same, we have
+the lock. The temporary file is deleted and a value of 0
+(success) is returned to the caller.
+
+5
+
+A check is made to see if the existing lockfile is a
+valid one. If it isn’t valid, the stale lockfile is
+deleted. 
+
+6
+
+Before retrying, we sleep for n seconds. n
+is initially 5 seconds, but after every retry 5 extra
+seconds is added up to a maximum of 60 seconds (an
+incremental backoff). Then we go to step 2 up to
+retries times.
+
+REMOTE FILE SYSTEMS AND THE KERNEL ATTRIBUTE CACHE
+
+These functions
+do not lock a file - they generate a lockfile.
+However in a lot of cases, such as Unix mailboxes, all
+concerned programs accessing the mailboxes agree on the fact
+that the presence of .lock means that
+ is locked.
+
+If you are
+using lockfile_create to create a lock on a file that
+resides on a remote server, and you already have that file
+open, you need to flush the NFS attribute cache after
+locking. This is needed to prevent the following
+scenario:
+
+o
+
+open /var/mail/USERNAME
+
+o
+
+attributes, such as size, inode, etc are now cached in
+the kernel!
+
+o
+
+meanwhile, another remote system appends data to
+/var/mail/USERNAME 
+
+o
+
+grab lock using lockfile_create()
+
+o
+
+seek to end of file
+
+o
+
+write data
+
+Now the end of
+the file really isn’t the end of the file - the kernel
+cached the attributes on open, and st_size is not the end of
+the file anymore. So after locking the file, you need to
+tell the kernel to flush the NFS file attribute cache.
+
+The only
+portable way to do this is the POSIX fcntl()
+file locking primitives - locking a file using
+fcntl() has the fortunate side-effect of invalidating
+the NFS file attribute cache of the kernel.
+
+lockfile_create()
+cannot do this for you for two reasons. One, it just creates
+a lockfile- it doesn’t know which file you are
+actually trying to lock! Two, even if it could deduce the
+file you’re locking from the filename, by just opening
+and closing it, it would invalidate any existing POSIX locks
+the program might already have on that file (yes, POSIX
+locking semantics are insane!).
+
+So basically
+what you need to do is something like this:
+
+fd =
+open("/var/mail/USER"); 
+.. program code ..
+
+lockfile_create("/var/mail/USER.lock",
+x, y);
+
+/* Invalidate
+NFS attribute cache using POSIX locks */ 
+if (lockf(fd, F_TLOCK, 0) == 0) lockf(fd, F_ULOCK, 0);
+
+You have to be
+careful with this if you’re putting this in an
+existing program that might already be using fcntl(),
+flock() or lockf() locking- you might invalidate existing
+locks.
+
+There is also a
+non-portable way. A lot of NFS operations return the updated
+attributes - and the Linux kernel actually uses these to
+update the attribute cache. One of these operations is
+chmod(2).
+
+So stat()ing a
+file and then chmod()ing it to st.st_mode will not actually
+change the file, nor will it interfere with any locks on the
+file, but it will invalidate the attribute cache. The
+equivalent to use from a shell script would be
+
+chmod u=u
+/var/mail/USER
+
+PERMISSIONS
+
+If you are on a
+system that has a mail spool directory that is only writable
+by a special group (usually "mail") you cannot
+create a lockfile directly in the mailspool directory
+without special permissions.
+
+Lockfile_create
+and lockfile_remove check if the lockfile ends in
+$USERNAME.lock, and if the directory the lockfile is
+writable by group "mail". If so, an external set
+group-id mail executable (dotlockfile(1) ) is spawned
+to do the actual locking / unlocking.
+
+FILES
+
+/usr/lib/liblockfile.so.1
+
+AUTHOR
+
+Miquel van
+Smoorenburg
+
+SEE ALSO
+
+dotlockfile(1),
+maillock(3), touchlock (3),
+mailunlock(3)

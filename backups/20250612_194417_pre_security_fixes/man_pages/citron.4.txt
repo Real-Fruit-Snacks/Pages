@@ -1,0 +1,896 @@
+NAME
+
+citron −
+Citron Infrared Touch Driver (CiTouch)
+
+SYNOPSIS
+
+Section
+"InputDevice" 
+Identifier "idevname" 
+Driver "citron" 
+Option "Device" "devpath"
+
+... 
+EndSection
+
+DESCRIPTION
+
+citron
+is a Xorg input driver for Citron Infrared Touch
+devices.
+
+The
+citron driver acts as a pointer input device, and may
+be used as the X server’s core pointer. It is
+connected via a "RS232" with the host.
+
+SUPPORTED HARDWARE
+
+At the moment
+the following touches are supported. They are also available
+as ZPress touches.
+
+2nd Gen
+Touches
+−−−−−−−−−−−−−−−−
+
+IRT6I5−V2.x
+
+6.5 inch Infrared Touch
+
+IRT10I4−V4.x
+
+10.4 inch Infrared Touch
+
+IRT12I1−V2.x
+
+12.1 inch Infrared Touch
+
+IRT15I1−V1.x
+
+15.1 inch Infrared Touch
+
+3rd Gen
+Touches
+−−−−−−−−−−−−−−−−−
+
+IRT65−V3.x
+
+6.5 inch Infrared Touch
+
+IRT84−V2.x
+
+8.4 inch Infrared Touch
+
+IRT104−V5.x
+
+10.4 inch Infrared Touch
+
+IRT104−V6.x
+
+10.4 inch Infrared Touch with integrated keyboard and
+ambient light overflow detection
+
+IRT121−V3.x
+
+12.1 inch Infrared Touch
+
+IRT15I1−V1.x
+
+15.1 inch Infrared Touch
+
+IRT170−V1.x
+
+17.0 inch Infrared Touch
+
+IRT181−V1.x
+
+18.1 inch Infrared Touch
+
+IRT190−V1.x
+
+19.0 inch Infrared Touch
+
+CONFIGURATION DETAILS
+
+Please refer to
+xorg.conf(5x) for general configuration details and for
+options that can be used with all input drivers. This
+section only covers configuration details specific to this
+driver. For better understanding please read also the
+CTS manual and various IRT manuals which are
+available in "pdf" format from Citron web page
+www.citron.de or directly from Citron.
+
+The following
+driver Options are supported: 
+Option "Device"
+"devpath"
+
+Specify the device path for the
+citron touch. Valid devices are:
+
+/dev/ttyS0,
+/dev/ttyS1, ....
+
+This option is
+mandatory. It’s important to specify the right device
+Note: com1 −> /dev/ttyS0, com2 −>
+/dev/ttyS1 ....
+
+Option
+"ScreenNumber"
+"screennumber"
+
+sets the screennumber
+for the citron InputDevice.
+
+Default:
+ScreenNumber: "0"
+
+Option "MinX,
+MinY" "value"
+
+These are the minimum X and Y
+values for the citron input device.
+
+Note: MinX,
+MinY must be less than MaxX, MaxY.
+
+Range:
+"0" − "65535"
+
+Default:
+MinX: "0" MinY: "0"
+
+Option "MaxX,
+MaxY" "value"
+
+These are the maximum X and Y
+values for the citron input device.
+
+Note: MaxX,
+MaxY must be greater than MinX, MinY.
+
+Range:
+"0" − "65535"
+
+Default:
+MaxX: "65535" MaxY: "65535"
+
+Option
+"ButtonNumber"
+"value"
+
+This value is responsible for
+the button number that is returned within the
+xf86PostButton event message
+
+Range:
+"0" − "255"
+
+Default:
+"1"
+
+Option
+"ButtonThreshold"
+"value"
+
+This value is responsible for
+the button threshold. It changes the pressure
+sensitivity of the touch. A higher number corresponds to a
+higher pressure.
+
+Note: This
+feature is only available with pressure sensitive
+hardware.
+
+Range:
+"0" − "255"
+
+Default:
+"20"
+
+Sleep−Mode
+
+If the IRT is in
+Doze−Mode and Touch Zone is not interrupted for
+another certain span of time, the so−called
+Slee-Mode is activated. The Sleep−Mode
+decreases the scan rate of the beams even further than the
+Doze−Mode does (see below). This way the life
+expectancy of the beams is prolonged and the power
+consumption of the IRT is reduced. As soon as an
+interruption of the Touch Zone is detected, the
+Sleep−Mode is deactivated and the Touch Zone
+will again be scanned with the maximum speed. With the
+Sleep−Mode activated, depending on the set scan rate
+the IRT’s response time can be considerably longer as
+in normal operation. If, for example, a scan rate of 500 ms
+/ scan is set, it may last up to a half of a second until
+the IRT detects the interruption and deactivates the
+Sleep−Mode.
+
+Option "SleepMode"
+"mode"
+
+This value is responsible for
+the sleep−mode of the touch. 
+Determines the behaviour of the Sleep-Mode.
+
+0x00
+
+No message at either activation or deactivation
+
+0x01
+
+Message at activation
+
+0x02
+
+Message at deactivation
+
+0x03
+
+Message at activation and deactivation
+
+0x10
+GP_OUT output set according to the Sleep−Mode
+status
+
+Values:
+"0" "1" "2" "3"
+"16"
+
+Default:
+"0"
+
+Option "SleepTime"
+"time"
+
+This value is responsible for
+the sleep−time of the touch. It is the
+activation time in seconds ("0" = immediately
+activated, "65535" = always deactivated).
+
+Range:
+"0" − "65535" [s]
+
+Default:
+"65535" => deactivated
+
+Option "SleepScan"
+"scan"
+
+This value is responsible for
+the scan−time of the touch. This is the time
+interval between two scan operations while in
+Sleep−Mode. The time interval is set in steps of
+milliseconds.
+
+Range:
+"0" − "65535" [ms]
+
+Default:
+"500"
+
+Option "PWMAdjSrc"
+"value" 
+Option "PWMAdjDst"
+"value"
+
+These parameters are used to
+adjust the brightness of different backlight inverters. At
+the moment 2 backlight inverters are used: 0=TDK 1=AC. If
+you want a AC backlight inverter to behave like an AC type
+you have to set PWMAdjSrc to 0 (TDK) and
+PWMAdjDst to 1 (AC).
+
+Range:
+"0" − "1"
+
+Default:
+"−1" (no adjustment)
+
+Option "PWMActive"
+"value"
+
+This value determines the
+mark−to−space ratio of the PWM output
+while in normal operation (sleep−mode not active).
+Higher values result in longer pulse widths. This output
+signal can be used in conjunction with the Citron
+AWBI to do backlight−dimming via the touch.
+
+Range:
+"0" − "255"
+
+Default:
+"255" (max. brightness)
+
+Option "PWMSleep"
+"value"
+
+This value determines the
+mark−to−space ratio of the PWM output
+while in sleep−mode (−> SleepMode,
+SleepScan, SleepTime ) operation (sleep−mode
+active). Higher values result in longer pulse widths.
+
+Range:
+"0" − "255"
+
+Default:
+"255" (max. brightness)
+
+Option "PWMFreq"
+"value"
+
+This value determines the
+PWM frequency in Hertz
+
+Range:
+"39" − "9803"
+
+Default:
+"9803" (max. frequency)
+
+Option "ClickMode"
+"mode"
+
+With mode one can select
+between 5 ClickModes
+
+"1"
+= ClickMode Enter
+
+With this mode
+every interruption of the infrared beams will activate a
+ButtonPress event and after the interruption a ButtonRelease
+event will be sent.
+
+"2"
+= ClickMode Dual
+
+With this mode
+every interruption will sent a Proximity event and every
+second interruption a ButtonPress event. With the release of
+the interruption (while one interruption is still active) a
+ButtonRelease event will be sent.
+
+"3"
+= ClickMode Dual Exit
+
+With this mode
+every interruption will sent a ProximityIn event and every
+second interruption a ButtonPress event. With the release of
+the interruption (while one interruption is still active) no
+ButtonRelease event will be sent. Only if all interruptions
+are released a ButtonRelease followed by a ProximityOut
+event will be sent.
+
+"4"
+= ClickMode ZPress
+
+With this mode
+every interruption will sent a ProximityIn event. Only if a
+certain pressure is exceeded a ButtonPress event will occur.
+If the pressure falls below a certain limit a ButtonRelease
+event will be sent. After also the interruption is released
+a ProximityOut event is generated.
+
+"5"
+= ClickMode ZPress Exit
+
+This mode is
+similar to "Clickmode Dual Exit". The first
+interruption of the beams will sent a ProximityIn event.
+Only if a certain pressure is exceeded a ButtonPress event
+will occur. If the pressure falls below a certain limit no
+ButtonRelease event will be sent. After the interruption is
+also released a ButtonRelease followed by a ProximityOut
+event is generated.
+
+Range:
+"1" − "5"
+
+Default:
+"1" (ClickMode Enter)
+
+Option "Origin"
+"value"
+
+This value sets the coordinates
+origin to one of the four corners of the screen. The
+following values are accepted: "0" TOPLEFT: Origin
+set to the left−hand side top corner. "1"
+TOPRIGHT: Origin set to the right−hand side top
+corner. "2" BOTTOMRIGHT: Origin set to the
+right−hand side bottom corner. "3"
+BOTTOMLEFT: Origin set to the left−hand side bottom
+corner.
+
+Range:
+"0" − "3"
+
+Default:
+"0" (TOPLEFT)
+
+Doze−Mode
+
+If for a certain span of time
+the Touch Zone is not interrupted, the so−called
+Doze−Mode is automatically activated. The activated
+Doze−Mode slightly decreases the scan rate of the
+beams. This way the power consumption of the IRT is reduced.
+As soon as an interruption of the Touch Zone is detected,
+the Doze−Mode is deactivated and the Touch Zone will
+again be scanned with the maximum speed.
+
+Option "DozeMode"
+"mode"
+
+This value is responsible for
+the doze−mode of the touch.
+
+Determines the
+behaviour of the Doze−Mode.
+
+0x00 No message
+at either activation or deactivation
+
+0x01 Message at
+activation
+
+0x02 Message at
+deactivation
+
+0x03 Message at
+activation and deactivation
+
+0x10 GP_OUT
+output set according to the Doze−Mode status
+
+If the GP_OUT
+output is already controlled by the Sleep−Mode
+it is no longer available as an output port anymore.
+
+Values:
+"0" "1" "2" "3"
+"16"
+
+Default:
+"0"
+
+Option "DozeTime"
+"time"
+
+This value is responsible for
+the doze−time of the touch. It is the
+activation time in seconds ("0" = immediately
+activated, "65535" = always deactivated).
+
+Range:
+"0" − "65535" [s]
+
+Default:
+"65535" => deactivated
+
+Option "DozeScan"
+"scan"
+
+This value is responsible for
+the scan−time of the touch. This is the time
+interval between two scan operations while in
+Doze−Mode. The time interval is set in steps of
+milliseconds.
+
+Range:
+"0" − "65535" [ms]
+
+Default:
+"500"
+
+Option "DeltaX"
+"value"
+
+This value determines a virtual
+area at the left and right side of the current cursor
+position where the cursor didn’t move. Within this
+area no "MotionNotify" event will be sent.
+
+Range:
+"0" − "255"
+
+Default:
+"0" (no deltaX)
+
+Option "DeltaY"
+" value "
+
+This value determines a virtual
+area at the top and bottom of the current cursor position
+where the cursor didn’t move. Within this area no
+"MotionNotify" event will be sent.
+
+Range:
+"0" − "255"
+
+Default:
+"0" (no deltaY)
+
+Option "Beep"
+"value"
+
+This value determines if a
+"ButtonPress" and/or a "ButtonRelease"
+event should sound the buzzer. "0" deactivates the
+buzzer while every other value will activate it.
+
+Range:
+"0" − "1"
+
+Default:
+"0" (deactivated)
+
+Option "PressVol"
+"value"
+
+This value determines the
+volume of the buzzer (0−100%) when a
+"ButtonPress" event is sent.
+
+Range:
+"0" − "100"
+
+Default:
+"100"
+
+Option
+"PressPitch"
+"value"
+
+This value determines the pitch
+of the tone when a "ButtonPress" event is
+sent.
+
+Range:
+"0" − "3000"
+
+Default:
+"880"
+
+Option "PressDur"
+"value"
+
+This value determines the
+duration of the tone in ms when a "ButtonPress"
+event is sent.
+
+Range:
+"0" - "255"
+
+Default:
+"15"
+
+Option
+"ReleaseVol"
+"value"
+
+This value determines the
+volume of the buzzer (0-100%) when a
+"ButtonRelease" event is sent.
+
+Range:
+"0" - "100"
+
+Default:
+"100"
+
+Option
+"ReleasePitch"
+"value"
+
+This value determines the pitch
+of the tone when when a "ButtonRelease" event is
+sent.
+
+Range:
+"0" − "3000"
+
+Default:
+"1200"
+
+Option "ReleseDur"
+"value"
+
+This value determines the
+duration of the tone in ms when when a
+"ButtonRelease" event is sent.
+
+Range:
+"0" − "255"
+
+Default:
+"10"
+
+Option
+"BeamTimeout"
+"value"
+
+Determines the time span in
+seconds, that has to elapse before a beam is considered
+defective, blanked−out and excluded from the
+coordinates evaluation.
+
+Range:
+"0" − "65535"
+
+Default:
+"30" (30 seconds)
+
+Option "TouchTime"
+"value"
+
+Determines the minimum time
+span in steps of 10ms for a valid interruption. In order for
+an interruption to be reported to the host computer as
+valid, it needs to remain at the same spot for at least the
+time span declared here.
+
+Range:
+"0" − "255"
+
+Default:
+"0" (=6,5 ms)
+
+Option
+"EnterCount"
+"count"
+
+Number of skipped "enter
+reports". Reports are sent approx. every 20ms.
+
+Range:
+"0" − "31"
+
+Default:
+"3" (3 skipped messages = 60ms)
+
+Option
+"ZEnterCount"
+"count"
+
+Number of skipped "enter
+reports" while in pressure sensitive mode. Reports are
+sent approx. every 20ms.
+
+Range:
+"0" − "31"
+
+Default:
+"1" (1 skipped messages = 20ms)
+
+Option
+"LockZEnterTime"
+"count"
+
+Minimum duration of an
+AreaPressEnter state (Pressure > AreaPressure) before a
+PressEnter event is issued. The time is given in 10ms
+steps.
+
+Range:
+"0" − "255"
+
+Default:
+"1" (10ms)
+
+Option
+"LockZExitTime"
+"count"
+
+Minimum duration of an
+AreaPressExit state (Pressure 
+
+Range:
+"0" − "255"
+
+Default:
+"1" (10ms)
+
+Option
+"LockZLockTime"
+"count"
+
+Minimum gap between a PressExit
+and a PressEnter event. The time is in 10ms steps.
+
+Range:
+"0" − "255"
+
+Default:
+"10" (100ms)
+
+Option "DualCount"
+"count"
+
+Number of skipped "dual
+touch error". Reports are sent approx. every 20ms. This
+option is only available for "ZPress" and
+"ZPress Exit" modes.
+
+Range:
+"0" − "31"
+
+Default:
+"2" (2 skipped messages = 40ms)
+
+Please Note:
+
+The following functions are
+only available on touches with special hardware, which does
+support that functions. Please contact Citron to get more
+information.
+
+Option
+"AmbientOverload"
+"mode"
+
+Defines how detection of
+ambient light overload is handled. These values can be
+"ored" to combine them.
+
+mode=0
+
+Ambient light
+is ignored and no error message is generated.
+
+mode=1
+
+Ambient light
+error message is generated.
+
+mode=2
+
+Scanning is
+stopped in case of ambient light error.
+
+Bits can be
+"ored"
+
+Range:
+"0" − "3"
+
+Default:
+"0" Ambient light overload is ignored and no error
+message is generated
+
+Option "KeyMatrix"
+"mode"
+
+Enables or disables 4x4 key
+matrix scanning on touches with key matrix feature
+
+Range:
+"0" − "1"
+
+Default:
+"0" No scanning of 4x4 key matrix
+
+Option "BeepKey"
+"value"
+
+This value determines if a
+"KeyPress" and/or a "KeyRelease" event
+should sound the buzzer. "0" deactivates the
+buzzer while every other value will activate it.
+
+Range:
+"0" − "1"
+
+Default:
+"0" (deactivated)
+
+Option
+"PressVolKey"
+"value"
+
+This value determines the
+duration of the speaker on period when a
+"KeyPress" event is sent. It is calculated:
+(PressVolKey * PressDurKey / 50). If you give PressVolKey a
+value of 50 then PressDurKey is the duration in [ms].
+
+Range:
+"0" − "256"
+
+Default:
+"50"
+
+Option
+"PressPitchKey"
+"value"
+
+This value determines the pitch
+of the tone when a "ButtonPress" event is sent. It
+is the frequency in [Hz].
+
+Range:
+"0" − "3000"
+
+Default:
+"1500"
+
+Option
+"PressDurKey"
+"value"
+
+This value determines the
+duration of the tone in ms when a "ButtonPress"
+event is sent. It is calculated: (PressVolKey * PressDurKey
+/ 50). If you give PressVolKey a value of 50 then
+PressDurKey is the duration in [ms].
+
+Range:
+"0" − "65535"
+
+Default:
+"120"
+
+Option
+"ReleaseVolKey"
+"value"
+
+This value determines the
+duration of the speaker on interval when a
+"KeyRelease" event is sent. It is calculated:
+(PressVolKey * PressDurKey / 50). If you give PressVolKey a
+value of 50 then PressDurKey is the duration in [ms].
+
+Range:
+"0" − "255"
+
+Default:
+"50"
+
+Option
+"ReleasePitchKey"
+"value"
+
+This value determines the pitch
+of the tone when when a "ButtonRelease" event is
+sent. It is the frequency in [Hz].
+
+Range:
+"0" − "3000"
+
+Default:
+"3000"
+
+Option
+"ReleseDurKey"
+"value"
+
+This value determines the
+duration of the speaker on period when a
+"KeyRelease" event is sent. It is calculated:
+(PressVolKey * PressDurKey / 50). If you give PressVolKey a
+value of 50 then PressDurKey is the duration in [ms].
+
+Range:
+"0" − "65535"
+
+Default:
+"60"
+
+SEE ALSO
+
+XFree86(1),
+XF86Config(5x), xf86config(1), Xserver(1), X(7).
+
+AUTHORS
+
+2000−2005
+− written by Citron GmbH (support [AT] citron.de)

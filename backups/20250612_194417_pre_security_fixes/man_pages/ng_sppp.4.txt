@@ -1,0 +1,119 @@
+NG_SPPP(4) BSD Kernel Interfaces Manual NG_SPPP(4)
+
+NAME
+
+ng_sppp — sppp
+netgraph node type
+
+SYNOPSIS
+
+#include
+
+DESCRIPTION
+
+An sppp node is a
+netgraph(4) interface to the original sppp(4) network module
+for synchronous lines. Currently, sppp(4) supports PPP and
+Cisco HDLC protocols. An sppp node could be
+considered as an alternative kernel mode PPP implementation
+to net/mpd port + ng_ppp(4), and as an alternative to
+ng_cisco(4) node. While having less features than
+net/mpd + ng_ppp(4), it is significantly easier to
+use in the majority of simple configurations, and allows the
+administrator to not install the net/mpd port. With
+sppp you do not need any other nodes, not even an
+ng_iface(4) node. When an sppp node is created, a new
+interface appears which is accessible via ifconfig(8).
+Network interfaces corresponding to sppp nodes are
+named sppp0, sppp1, etc. When a node is shut down, the
+corresponding interface is removed, and the interface name
+becomes available for reuse by future sppp nodes. New
+nodes always take the first unused interface. The node
+itself is assigned the same name as its interface, unless
+the name already exists, in which case the node remains
+unnamed. The sppp node allows drivers written to the
+old sppp(4) interface to be rewritten using the newer more
+powerful netgraph(4) interface, and still behave in a
+compatible manner without supporting both network
+modules.
+
+An sppp
+node has a single hook named downstream. Usually it
+is connected directly to a device driver hook.
+
+The sppp
+nodes support the Berkeley Packet Filter, bpf(4).
+
+HOOKS
+
+This node type supports the
+following hooks:
+
+downstream
+
+The connection
+to the synchronous line.
+
+CONTROL MESSAGES
+
+This node type supports the
+generic control messages, plus the following:
+
+NGM_SPPP_GET_IFNAME
+(getifname)
+
+Returns the name of the
+associated interface as a NUL-terminated ASCII string.
+Normally this is the same as the name of the node.
+
+SHUTDOWN
+
+This node shuts down upon
+receipt of a NGM_SHUTDOWN control message. The associated
+interface is removed and becomes available for use by future
+sppp nodes.
+
+Unlike most
+other node types and like ng_iface(4) does, an sppp
+node does not go away when all hooks have been
+disconnected; rather, an explicit NGM_SHUTDOWN control
+message is required.
+
+EXAMPLES
+
+For example, if you have the
+cx(4) device, you could run PPP over it with just one
+command:
+
+ngctl mkpeer
+cx0: sppp rawdata downstream
+
+Now you have the
+sppp0 interface (if this was the first sppp node)
+which can be accessed via ifconfig(8) as a normal network
+interface, or via spppcontrol(8) as an sppp(4)
+interface.
+
+SEE ALSO
+
+bpf(4), cx(4), netgraph(4),
+ng_cisco(4), ng_iface(4), ng_ppp(4), sppp(4), ifconfig(8),
+ngctl(8), spppcontrol(8)
+
+For complex
+networking topologies you may want to look at net/mpd
+port.
+
+HISTORY
+
+The sppp node type was
+implemented for FreeBSD 5.0. It was included to the
+system since FreeBSD 5.3.
+
+AUTHORS
+
+Copyright (C) 2003-2004 Roman
+Kurakin rik [AT] cronyx.ru>
+
+BSD
+February 3, 2005 BSD

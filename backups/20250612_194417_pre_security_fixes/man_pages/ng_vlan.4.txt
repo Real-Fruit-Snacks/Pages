@@ -1,0 +1,133 @@
+NG_VLAN(4) BSD Kernel Interfaces Manual NG_VLAN(4)
+
+NAME
+
+ng_vlan — IEEE
+802.1Q VLAN tagging netgraph node type
+
+SYNOPSIS
+
+#include 
+
+#include  
+#include 
+
+DESCRIPTION
+
+The vlan node type
+multiplexes frames tagged according to the IEEE 802.1Q
+standard between different hooks.
+
+Each node has
+two special hooks, downstream and nomatch, and
+an arbitrary number of ’’vlan’’
+hooks, each associated with a particular VLAN tag.
+
+An
+ETHERTYPE_VLAN frame received on the downstream hook
+with a tag that the node has been configured to filter is
+sent out the corresponding ’’vlan’’
+hook. If it does not match any of the configured tags, or is
+not of a type ETHERTYPE_VLAN, it is sent out the
+nomatch hook. If the nomatch hook is not
+connected, the packet is dropped.
+
+An Ethernet
+frame received on the nomatch hook is passed
+unmodified to the downstream hook.
+
+An Ethernet
+frame received on any of the
+’’vlan’’ hooks is tagged accordingly
+and sent out the downstream hook.
+
+HOOKS
+
+This node type supports the
+following hooks:
+
+downstream
+
+Typically this
+hook would be connected to a ng_ether(4) node, using the
+lower hook.
+
+nomatch
+
+Typically this
+hook would also be connected to an ng_ether(4) type node
+using the upper hook.
+
+⟨ any valid
+name⟩
+
+Any other hook
+name will be accepted and should later be associated with a
+particular tag. Typically this hook would be attached to an
+ng_eiface(4) type node using the ether hook.
+
+CONTROL MESSAGES
+
+This node type supports the
+generic control messages, plus the following:
+
+NGM_VLAN_ADD_FILTER
+(addfilter)
+
+Associates a hook with the
+tag.
+
+NGM_VLAN_DEL_FILTER
+(delfilter)
+
+Disassociates a hook from the
+tag.
+
+NGM_VLAN_GET_TABLE
+(gettable)
+
+Returns a table of all hook/tag
+associations.
+
+EXAMPLES
+
+#!/bin/sh
+
+ETHER_IF=rl0
+
+ngctl -f-
+
+shutdown ${ETHER_IF}: 
+mkpeer ${ETHER_IF}: vlan lower downstream 
+name ${ETHER_IF}:lower vlan 
+connect ${ETHER_IF}: vlan: upper nomatch 
+EOF
+
+ngctl mkpeer
+vlan: eiface vlan123 ether 
+ngctl msg vlan: addfilter ’{ vlan=123
+hook="vlan123" }’
+
+SHUTDOWN
+
+This node shuts down upon
+receipt of a NGM_SHUTDOWN control message, or when all hooks
+have been disconnected.
+
+SEE ALSO
+
+netgraph(4), ng_eiface(4),
+ng_ether(4), ngctl(8), nghook(8)
+
+HISTORY
+
+The ng_vlan node type
+appeared in FreeBSD 4.10.
+
+AUTHORS
+
+Ruslan Ermilov
+ru [AT] FreeBSD.org>
+
+BSD
+March 1, 2004 BSD

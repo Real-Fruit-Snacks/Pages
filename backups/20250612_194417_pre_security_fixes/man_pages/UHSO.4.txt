@@ -1,0 +1,134 @@
+UHSO(4) BSD Kernel Interfaces Manual UHSO(4)
+
+NAME
+
+uhso — support for
+several HSxPA devices from Option N.V.
+
+SYNOPSIS
+
+The module can be loaded at boot
+time by placing the following line in loader.conf(5):
+
+uhso_load="YES"
+
+DESCRIPTION
+
+The uhso driver provides
+support for several HSxPA devices from Option N.V. that are
+based on their packet interface. Each device has a set of
+serial ports and a raw IP packet interface. The serial ports
+of the device are accessed through the ucom(4) driver which
+makes them behave like tty(4) devices. The packet interface
+is exposed as a network interface.
+
+Establishing a
+connection on the packet interface is achieved by using the
+proprietary AT commands
+’’AT_OWANCALL’’ and
+’’AT_OWANDATA’’ on any of the
+available serial ports.
+
+The network
+interface must be configured manually using the data obtain
+from these calls.
+
+Each device
+usually have at least two or more serial ports, their
+individual purpose can be identified through sysctl(8).
+Ports identified as ’’Modem’’
+features a normal modem interface that can be used with PPP.
+Ports identified as ’’Diagnostic’’
+uses a proprietary binary interface used for firmware
+upgrades, this port does not have a AT command interface and
+can not be used to control the device. Other ports features
+an AT command interface that can be used for normal device
+control.
+
+HARDWARE
+
+The uhso driver should
+work with most devices from Option. The following devices
+have been verified to work
+
+•
+
+Option GlobeSurfer iCON 7.2
+(new firmware)
+
+•
+
+Option GlobeTrotter Max 7.2
+(new firmware)
+
+•
+
+Option iCON 225
+
+•
+
+Option iCON 452
+
+•
+
+Option iCON 505
+
+The device
+features a mass storage device referred to as
+’’Zero-CD’’ which contains drivers
+for Microsoft Windows; this is the default mode for the
+device. The uhso driver automatically switches the
+device from ’’Zero-CD’’ mode to
+modem mode. This behavior can be disabled by setting
+hw.usb.uhso.auto_switch to 0 using sysctl(8).
+
+FILES 
+/dev/cuaU?.?
+
+EXAMPLES
+
+Establishing a packet interface
+connection using the AT command interface available at one
+of the serial ports
+
+AT+CGDCONT=1,,"apn.provider"
+
+AT_OWANCALL=1,1,1 
+OK 
+_OWANCALL=1,1
+
+AT_OWANDATA=1
+
+_OWANDATA: 1, 10.11.12.13, 0.0.0.0, 10.2.3.4, 10.2.3.5,
+\
+
+0.0.0.0, 0.0.0.0, 72000
+
+Configuring the
+interface
+
+ifconfig uhso0
+10.11.12.13 up 
+route add default -interface uhso0 
+echo "nameserver 10.2.3.4" > /etc/resolv.conf
+
+echo "nameserver 10.2.3.5" >>
+/etc/resolv.conf
+
+The connection
+can be terminated with
+
+AT_OWANCALL=1,0,1
+
+SEE ALSO
+
+uhsoctl(1), ucom(4), usb(4)
+
+AUTHORS
+
+The uhso driver was
+written by Fredrik Lindberg
+fli [AT] shapeshifter.se>.
+
+BSD
+July 20, 2010 BSD

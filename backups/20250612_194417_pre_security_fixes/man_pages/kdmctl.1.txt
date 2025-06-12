@@ -1,0 +1,343 @@
+NAME
+
+kdmctl −
+kdm remote control application
+
+SYNOPSIS
+
+kdmctl
+[options] [command [command arguments]]
+
+DESCRIPTION
+
+kdmctl
+is an application to remote−control kdm. It
+makes use of UNIX domain sockets.
+
+There are two
+types of sockets: the global one (dmctl) and the
+per−display ones (dmctl−). The
+global one’s subdir is owned by root, the subdirs of
+the per−display ones’ are owned by the user
+currently owning the session (root or the logged in
+user).
+
+The directory
+in which the sockets are located is determined this way:
+
+− the −s
+option is examined 
+− the $DM_CONTROL variable is examined 
+− the kdm config file is searched for the FifoDir key
+
+−/var/run/xdmctl and /var/run are tried
+
+If $DISPLAY is
+set (or −d was specified) and −g
+was not specified, the display−specific control socket
+will be used, otherwise the global one.
+
+Tokens in the
+command and the reply are tab−separated. Command
+arguments can be specified as separate command line
+parameters, in which case they are simply concatenated with
+tabs in between.
+
+If the command
+is ’−’, kdmctl reads commands from
+stdin. The default command is ’caps’.
+
+OPTIONS
+
+Options:
+
+−h −help
+
+print help message.
+
+−g
+−global
+
+Use global control socket even
+if $DISPLAY is set
+
+−d
+−display
+
+Override $DISPLAY
+
+−s
+−sockets
+
+Override $DM_CONTROL
+
+−c
+−config
+
+Use alternative kdm config
+file
+
+Commands:
+
+Global commands:
+
+login
+
+display (now|schedule) user password
+[session_arguments] 
+
+login user at specified
+display. if "now" is specified, a possibly running
+session is killed, otherwise the login is done after the
+session exits. 
+session_arguments are printf−like escaped contents for
+.dmrc. Unlisted keys will default to previously saved
+values.
+
+Per−display
+commands:
+
+lock
+
+The display is marked as locked.
+If the X−Server crashes in this state, no
+auto−relogin will be performed even if the option is
+on. 
+
+unlock
+
+Reverse the effect of "lock": re−enable
+auto−relogin. 
+
+suicide
+
+The currently running session
+is forcibly terminated. No auto−relogin is attempted,
+but a scheduled "login" command will be
+executed.
+
+Commands for
+all sockets:
+
+caps
+
+Returns a list of this socket’s capabilities:
+
+− kdm
+
+identifies kdm, in case some
+other DM implements this protocol, too.
+
+− list, activate, lock,
+suicide, login
+
+the respective command is
+supported.
+
+− bootoptions
+
+the "listbootoptions"
+command and the "=" option to "shutdown"
+are supported.
+
+− shutdown
+
+"shutdown" is
+supported and allowed to the listed users
+(comma−separated). "*" means all
+authenticated users.
+
+− shutdown
+
+"shutdown" is
+supported and allowed to everybody.
+
+− nuke 
+
+forced shutdown is allowed to
+the listed users.
+
+− nuke
+
+forced shutdown is allowed to
+everybody.
+
+− reserve
+
+reserve displays are configured
+and  are available at this time.
+
+list [all|alllocal]
+
+Return a list of running
+sessions. By default all active sessions are listed. If
+"all" is specified, passive sessions are listed as
+well. If "alllocal" is specified, passive sessions
+are listed as well, but all incoming remote sessions are
+skipped.
+
+Each session
+entry is a comma−separated tuple of: 
+− Display or TTY name 
+− VT name for local sessions 
+− Logged in user’s name, empty for passive
+sessions and outgoing 
+remote sessions (local chooser mode) 
+− Session type or remote host for outgoing remote
+sessions, 
+empty for passive sessions 
+− A flag field:
+
+− "t" for tty
+sessions 
+− "*" for the display belonging to the
+requesting socket 
+− "!" for sessions that cannot be killed by
+the requesting 
+socket 
+− New flags might be added later
+
+− New fields might be
+added later
+
+reserve [timeout in
+seconds]
+
+Start a reserve login screen.
+If nobody logs in within the specified amount of time (one
+minute by default), the display is removed again. When the
+session on the display exits, the display is removed, too.
+
+Permitted only on sockets of local displays and the global
+socket.
+
+activate
+(vt|display)
+
+Switch to a particular VT
+(virtual terminal). The VT may be specified either directly
+(e.g., vt3) or by a display using it (e.g., :2). 
+Permitted only on sockets of local displays and the global
+socket.
+
+listbootoptions
+
+List available boot options.
+
+=> "ok" list default current default and
+current are indices into the list and are −1 if unset
+or undeterminable.
+
+shutdown (reboot|halt)
+[=bootchoice]
+
+(ask|trynow|forcenow|schedule|start
+
+(−1|end (force|forcemy|cancel))) 
+Request a system shutdown, either a reboot or a
+halt/poweroff.
+
+An OS choice
+for the next boot may be specified from the list returned by
+"listbootoptions".
+
+Shutdowns
+requested from per−display sockets are executed when
+the current session on that display exits. Such a request
+may pop up a dialog asking for confirmation and/or
+authentication.
+
+start is the
+time for which the shutdown is scheduled. If it starts with
+a plus−sign, the current time is added. Zero means
+immediately.
+
+end is the
+latest time at which the shutdown should be performed if
+active sessions are still running. If it starts with a
+plus−sign, the start time is added. Minus one means
+wait infinitely. If end is through and active sessions are
+still running, KDM can do one of the following:
+
+- "cancel" −
+give up the shutdown. 
+- "force" − shut down nonetheless. 
+- "forcemy" − shut down nonetheless if all
+active sessions 
+belong to the requesting user. Only for per−display
+sockets.
+
+start and end
+are specified in seconds since the UNIX epoch.
+
+"trynow"
+is a synonym for "0 0 cancel",
+"forcenow" for "0 0 force" and
+"schedule" for "0 −1".
+
+"ask"
+attempts an immediate shutdown and interacts with the user
+if active sessions are still running. Only for
+per−display sockets.
+
+shutdown cancel
+[local|global]
+
+Cancel a scheduled shutdown.
+The global socket always cancels the currently pending
+shutdown, while per−display sockets default to
+cancelling their queued request.
+
+shutdown status
+
+Return a list with information
+about shutdowns. 
+The entries are comma−separated tuples of:
+
+−
+("global"|"local") − pending vs.
+queued shutdown. A local 
+entry can be returned only by a per−display socket.
+
+− ("halt"|"reboot") 
+− start 
+− end 
+−
+("ask"|"force"|"forcemy"|"cancel")
+
+− Numeric user ID of the requesting user, −1 for
+the global 
+socket. 
+− The next boot OS choice or "−" for
+none. 
+− New fields might be added later.
+
+SEE ALSO
+
+kdm(1)
+
+/usr/share/doc/kdm/README.gz
+
+Information about the command
+sockets (and kdm)
+
+AUTHORS
+
+Oswald
+Buddenhagen ossi [AT] kde.org>
+
+Please use
+http://bugs.kde.org to report bugs; do not mail the authors
+directly.
+
+This manual
+page was written by Holger Hartmann
+Holger_Hartmann [AT] gmx.de> for the Debian Project (but
+may be used by others). Permission is granted to copy,
+distribute and/or modify this document under the terms of
+the GNU General Public License, Version 2 or any later
+version published by the Free Software Foundation.
+
+On Debian
+systems, the complete text of the GNU General Public License
+can be found in /usr/share/common−licenses/GPL.

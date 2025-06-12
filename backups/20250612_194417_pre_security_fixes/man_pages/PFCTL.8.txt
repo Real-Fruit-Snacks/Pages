@@ -1,0 +1,620 @@
+PFCTL(8) BSD System Manager’s Manual PFCTL(8)
+
+NAME
+
+pfctl — control the
+packet filter (PF) and network address translation (NAT)
+device
+
+SYNOPSIS
+
+pfctl
+[−AdeghNnOqRrvz]
+[−a anchor[:ruleset]]
+[−D macro=value]
+[−F modifier]
+[−f file]
+[−i interface]
+[−k host]
+[−p device]
+[−s modifier]
+[−T command [address ...]]
+[−t table]
+[−x level]
+
+DESCRIPTION
+
+The pfctl utility
+communicates with the packet filter device using the ioctl
+interface described in pf(4). It allows ruleset and
+parameter configuration and retrieval of status information
+from the packet filter.
+
+Packet filtering
+restricts the types of packets that pass through network
+interfaces entering or leaving the host based on filter
+rules as described in pf.conf(5). The packet filter can also
+replace addresses and ports of packets. Replacing source
+addresses and ports of outgoing packets is called NAT
+(Network Address Translation) and is used to connect an
+internal network (usually reserved address space) to an
+external one (the Internet) by making all connections to
+external hosts appear to come from the gateway. Replacing
+destination addresses and ports of incoming packets is used
+to redirect connections to different hosts and/or ports. A
+combination of both translations, bidirectional NAT, is also
+supported. Translation rules are described in
+pf.conf(5).
+
+When the
+variable pf is set to YES in rc.conf(8), the rule file
+specified with the variable pf_rules is loaded automatically
+by the rc(8) scripts and the packet filter is enabled.
+
+The packet
+filter does not itself forward packets between interfaces.
+Forwarding can be enabled by setting the sysctl(8) variables
+net.inet.ip.forwarding and/or
+net.inet6.ip6.forwarding, to 1. Set them permanently
+in sysctl.conf(5).
+
+The pfctl
+utility provides several commands. The options are as
+follows:
+
+−A
+
+Load only the
+queue rules present in the rule file. Other rules and
+options are ignored.
+
+−a
+anchor[:ruleset]
+
+Apply flags −f,
+−F and −s only to the rules in the
+specified anchor and optional named ruleset
+ruleset. In addition to the main ruleset,
+pfctl can load and manipulate additional rulesets by
+name. Named rulesets are attached at anchor points,
+which are also referenced by name. Evaluation of
+anchor rules from the main ruleset is described in
+pf.conf(5). For example, to show all filter rules inside
+anchor foo:
+
+# pfctl -a foo
+-s rules
+
+Private tables
+can also be put inside subrulesets, either by having table
+statements in the pf.conf(5) file that is loaded in the
+anchor, or by using regular table commands as in:
+
+# pfctl -a
+foo:bar -t mytable -T add 1.2.3.4 5.6.7.8
+
+When a rule
+referring to a table is loaded in an anchor, the rule will
+use the private table if one is defined, and then fallback
+to the table defined in the main ruleset, if there is one.
+This is similar to C rules for variables. It is possible to
+create distinct tables with the same name in the global
+ruleset and in an anchor, but this is often bad design and a
+warning will be issued in that case.
+
+−D
+macro=value
+
+Define macro to be set
+to value on the command line. Overrides the
+definition of macro in the ruleset.
+
+−d
+
+Disable the
+packet filter.
+
+−e
+
+Enable the
+packet filter.
+
+−F
+modifier
+
+Flush the filter parameters
+specified by modifier (may be abbreviated):
+
+−F nat
+
+Flush the NAT
+rules.
+
+−F queue
+
+Flush the queue
+rules.
+
+−F rules
+
+Flush the
+filter rules.
+
+−F state
+
+Flush the state
+table (NAT and filter).
+
+−F Sources
+
+Flush the
+source tracking table.
+
+−F info
+
+Flush the
+filter information (statistics that are not bound to
+rules).
+
+−F Tables
+
+Flush the
+tables.
+
+−F osfp
+
+Flush the
+passive operating system fingerprints.
+
+−F all
+
+Flush all of
+the above.
+
+−f file
+
+Load the rules contained in
+file. This file may contain macros, tables,
+options, and normalization, queueing, translation, and
+filtering rules. With the exception of macros and tables,
+the statements must appear in that order.
+
+−g
+
+Include output
+helpful for debugging.
+
+−h
+
+Help.
+
+−i
+interface
+
+Restrict the operation to the
+given interface.
+
+−k host
+
+Kill all of the state entries
+originating from the specified host. A second
+−k host option may be specified, which
+will kill all the state entries from the first host
+to the second host. For example, to kill all of the
+state entries originating from host:
+
+# pfctl -k
+host
+
+To kill all of
+the state entries from host1 to host2:
+
+# pfctl -k
+host1 -k host2
+
+−N
+
+Load only the
+NAT rules present in the rule file. Other rules and options
+are ignored.
+
+−n
+
+Do not actually
+load rules, just parse them.
+
+−O
+
+Load only the
+options present in the rule file. Other rules and options
+are ignored.
+
+−p
+device
+
+Use the device file
+device instead of the default /dev/pf.
+
+−q
+
+Only print
+errors and warnings.
+
+−R
+
+Load only the
+filter rules present in the rule file. Other rules and
+options are ignored.
+
+−r
+
+Perform reverse
+DNS lookups on states when displaying them.
+
+−s
+modifier
+
+Show the filter parameters
+specified by modifier (may be abbreviated):
+
+−s nat
+
+Show the
+currently loaded NAT rules.
+
+−s queue
+
+Show the
+currently loaded queue rules. When used together with
+−v, per-queue statistics are also shown. When
+used together with −v −v, pfctl
+will loop and show updated queue statistics every five
+seconds, including measured bandwidth and packets per
+second.
+
+−s rules
+
+Show the
+currently loaded filter rules. When used together with
+−v, the per-rule statistics (number of
+evaluations, packets and bytes) are also shown. Note that
+the ’skip step’ optimization done automatically
+by the kernel will skip evaluation of rules where possible.
+Packets passed statefully are counted in the rule that
+created the state (even though the rule isn’t
+evaluated more than once for the entire connection).
+
+−s Anchors
+
+Show the
+currently loaded anchors. If −a anchor
+is specified as well, the named rulesets currently loaded in
+the specified anchor are shown instead.
+
+−s state
+
+Show the
+contents of the state table.
+
+−s Sources
+
+Show the
+contents of the source tracking table.
+
+−s info
+
+Show filter
+information (statistics and counters). When used together
+with −v, source tracking statistics are also
+shown.
+
+−s labels
+
+Show per-rule
+statistics (label, evaluations, packets, bytes) of filter
+rules with labels, useful for accounting.
+
+−s timeouts
+
+Show the
+current global timeouts.
+
+−s memory
+
+Show the
+current pool memory hard limits.
+
+−s Tables
+
+Show the list
+of tables.
+
+−s osfp
+
+Show the list
+of operating system fingerprints.
+
+−s Interfaces
+
+Show the list
+of interfaces and interface drivers available to PF. When
+used together with a double −v, interface
+statistics are also shown. −i can be used to
+select an interface or a group of interfaces.
+
+−s all
+
+Show all of the
+above, except for the lists of interfaces and operating
+system fingerprints.
+
+−T command
+[address ...]
+
+Specify the command (may
+be abbreviated) to apply to the table. Commands include:
+
+−T kill
+
+Kill a
+table.
+
+−T flush
+
+Flush all
+addresses of a table.
+
+−T add
+
+Add one or more
+addresses in a table. Automatically create a nonexisting
+table.
+
+−T delete
+
+Delete one or
+more addresses from a table.
+
+−T replace
+
+Replace the
+addresses of the table. Automatically create a nonexisting
+table.
+
+−T show
+
+Show the
+content (addresses) of a table.
+
+−T test
+
+Test if the
+given addresses match a table.
+
+−T zero
+
+Clear all the
+statistics of a table.
+
+−T load
+
+Load only the
+table definitions from pf.conf(5). This is used in
+conjunction with the −f flag, as in:
+
+# pfctl -Tl -f
+pf.conf
+
+For the
+add, delete, replace and test
+commands, the list of addresses can be specified either
+directly on the command line and/or in an unformatted text
+file, using the −f flag. Comments starting with
+a "#" are allowed in the text file. With these
+commands, the −v flag can also be used once or
+twice, in which case pfctl will print the detailed
+result of the operation for each individual address,
+prefixed by one of the following letters:
+
+A
+
+The
+address/network has been added.
+
+C
+
+The
+address/network has been changed (negated).
+
+D
+
+The
+address/network has been deleted.
+
+M
+
+The address
+matches (test operation only).
+
+X
+
+The
+address/network is duplicated and therefore ignored.
+
+Y
+
+The
+address/network cannot be added/deleted due to conflicting
+"!" attribute.
+
+Z
+
+The
+address/network has been cleared (statistics).
+
+Each table
+maintains a set of counters that can be retrieved using the
+−v flag of pfctl. For example, the
+following commands define a wide open firewall which will
+keep track of packets going to or coming from the OpenBSD
+ftp server. The following commands configure the firewall
+and send 10 pings to the ftp server:
+
+# printf
+"table  { ftp.openbsd.org }\n \ 
+pass out to  keep state\n" | pfctl -f- 
+# ping -qc10 ftp.openbsd.org
+
+We can now use
+the table show command to output, for each address
+and packet direction, the number of packets and bytes that
+are being passed or blocked by rules referencing the table.
+The time at which the current accounting started is also
+shown with the Cleared line.
+
+# pfctl -t test
+-vTshow 
+129.128.5.191 
+Cleared: Thu Feb 13 18:55:18 2003 
+In/Block: [ Packets: 0 Bytes: 0 ] 
+In/Pass: [ Packets: 10 Bytes: 840 ] 
+Out/Block: [ Packets: 0 Bytes: 0 ] 
+Out/Pass: [ Packets: 10 Bytes: 840 ]
+
+Similarly, it
+is possible to view global information about the tables by
+using the −v modifier twice and the show
+Tables command. This will display the number of
+addresses on each table, the number of rules which reference
+the table, and the global packet statistics for the whole
+table:
+
+# pfctl
+-vvsTables 
+--a-r- test 
+Addresses: 1 
+Cleared: Thu Feb 13 18:55:18 2003 
+References: [ Anchors: 0 Rules: 1 ] 
+Evaluations: [ NoMatch: 3496 Match: 1 ] 
+In/Block: [ Packets: 0 Bytes: 0 ] 
+In/Pass: [ Packets: 10 Bytes: 840 ] 
+In/XPass: [ Packets: 0 Bytes: 0 ] 
+Out/Block: [ Packets: 0 Bytes: 0 ] 
+Out/Pass: [ Packets: 10 Bytes: 840 ] 
+Out/XPass: [ Packets: 0 Bytes: 0 ]
+
+As we can see
+here, only one packet − the initial ping request
+− matched the table; but all packets passing as the
+result of the state are correctly accounted for. Reloading
+the table(s) or ruleset will not affect packet accounting in
+any way. The two XPass counters are incremented
+instead of the Pass counters when a
+"stateful" packet is passed but doesn’t
+match the table anymore. This will happen in our example if
+someone flushes the table while the ping command is
+running.
+
+When used with
+a single −v, pfctl will only display the
+first line containing the table flags and name. The flags
+are defined as follows:
+
+c
+
+For constant
+tables, which cannot be altered outside pf.conf(5).
+
+p
+
+For persistent
+tables, which don’t get automatically flushed when no
+rules refer to them.
+
+a
+
+For tables
+which are part of the active tableset. Tables without
+this flag do not really exist, cannot contain addresses, and
+are only listed if the −g flag is given.
+
+i
+
+For tables
+which are part of the inactive tableset. This flag
+can only be witnessed briefly during the loading of
+pf.conf(5).
+
+r
+
+For tables
+which are referenced (used) by rules.
+
+h
+
+This flag is
+set when a table in the main ruleset is hidden by one or
+more tables of the same name in sub-rulesets (anchors).
+
+−t table
+
+Specify the name of the
+table.
+
+−v
+
+Produce more
+verbose output. A second use of −v will produce
+even more verbose output including ruleset warnings. See
+previous section for its effect on table commands.
+
+−x level
+
+Set the debug level (may
+be abbreviated) to one of the following:
+
+−x none
+
+Don’t
+generate debug messages.
+
+−x urgent
+
+Generate debug
+messages only for serious errors.
+
+−x misc
+
+Generate debug
+messages for various errors.
+
+−x loud
+
+Generate debug
+messages for common conditions.
+
+−z
+
+Clear per-rule
+statistics.
+
+FILES 
+/etc/pf.conf
+
+Packet filter
+rules file.
+
+SEE ALSO
+
+pf(4), pf.conf(5), pf.os(5),
+sysctl.conf(5), ftp-proxy(8), rc(8), rc.conf(8),
+sysctl(8)
+
+HISTORY
+
+The pfctl program and the
+pf(4) filter mechanism first appeared in
+OpenBSD 3.0.
+
+BSD
+November 20, 2002 BSD

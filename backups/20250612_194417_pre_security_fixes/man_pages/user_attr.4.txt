@@ -1,0 +1,167 @@
+NAME
+
+user_attr
+− extended user attributes database
+
+SYNOPSIS
+
+/etc/user_attr
+
+DESCRIPTION
+
+/etc/user_attr
+is a local source of extended attributes associated with
+users and roles. user_attr can be used with other
+user attribute sources, including the user_attr NIS
+map and NIS+ table. Programs use the
+getuserattr(3SECDB) routines to gain access to this
+information.
+
+The search
+order for multiple user_attr sources is specified in
+the /etc/nsswitch.conf file, as described in the
+nsswitch.conf(4) man page. The search order follows
+that for passwd(4).
+
+Each entry in
+the user_attr databases consists of a single line
+with five fields separated by colons (:). Line
+continuations using the backslash (\) character are
+permitted. Each entry has the form:
+
+user:qualifier:res1:res2:attr
+
+user
+
+The name of the user as specified in the
+passwd(4) database.
+
+qualifier
+
+Reserved for future use.
+
+res1
+
+Reserved for future use.
+
+res2
+
+Reserved for future use.
+
+attr
+
+An optional list of semicolon-separated (;)
+key-value pairs that describe the security attributes to
+apply to the object upon execution. Zero or more keys may be
+specified. There are five valid keys: auths,
+profiles, roles, type, and
+project. 
+
+auths
+
+Specifies a comma-separated list
+of authorization names chosen from those names defined in
+the auth_attr(4) database. Authorization names may be
+specified using the asterisk (*) character as a
+wildcard. For example, solaris.printer.* means all of
+Sun’s printer authorizations.
+
+profiles
+
+Contains an ordered,
+comma-separated list of profile names chosen from
+prof_attr(4). Profiles are enforced by the profile
+shells, pfcsh, pfksh, and pfsh. See
+pfsh(1). If no profiles are assigned, the profile
+shells do not allow the user to execute any commands.
+
+roles
+
+Can be assigned a comma-separated list of role names
+from the set of user accounts in this database whose
+type field indicates the account is a role. If the
+roles key value is not specified, the user is not
+permitted to assume any role.
+
+type
+
+Can be assigned one of these strings: normal,
+indicating that this account is for a normal user, one who
+logs in; or role, indicating that this account is for
+a role. Roles can only be assumed by a normal user after the
+user has logged in.
+
+project
+
+Can be assigned a name of one
+project from the project(4) database to be used as a
+default project to place the user in at login time. For more
+information, see getdefaultproj(3PROJECT).
+
+EXAMPLES
+
+Example 1:
+Assigning a Profile to Root
+
+The following
+example entry assigns to root the All profile, which
+allows root to use all commands in the system, and also
+assigns two authorizations:
+
+root::::auths=solaris.*,solaris.grant;profiles=All;type=normal
+
+The
+solaris.* wildcard authorization shown above gives
+root all the solaris authorizations; and the
+solaris.grant authorization gives root the right to
+grant to others any solaris authorizations that root
+has. The combination of authorizations enables root to grant
+to others all the solaris authorizations. See
+auth_attr(4) for more about authorizations.
+
+FILES
+
+/etc/nsswitch.conf
+
+/etc/user_attr
+
+SEE ALSO
+
+auths(1),
+pfcsh(1), pfksh(1), pfsh(1),
+profiles(1), roles(1),
+getdefaultproj(3PROJECT), getuserattr(3SECDB),
+auth_attr(4), exec_attr(4),
+nsswitch.conf(4), passwd(4),
+prof_attr(4), project(4)
+
+NOTES
+
+When deciding
+which authorization source to use, keep in mind that
+NIS+ provides stronger authentication than
+NIS.
+
+The root user
+is usually defined in local databases for a number of
+reasons, including the fact that root needs to be able to
+log in and do system maintenance in single-user mode, before
+the network name service databases are available. For this
+reason, an entry should exist for root in the local
+user_attr file, and the precedence shown in the
+example nsswitch.conf(4) file entry under EXAMPLES is
+highly recommended.
+
+Because the
+list of legal keys is likely to expand, any code that parses
+this database must be written to ignore unknown key-value
+pairs without error. When any new keywords are created, the
+names should be prefixed with a unique string, such as the
+company’s stock symbol, to avoid potential naming
+conflicts.
+
+In the
+attr field, escape the following symbols with a
+backslash (\) if you use them in any value: colon
+(:), semicolon (;), carriage return
+(\n), equals (=), or backslash (\).

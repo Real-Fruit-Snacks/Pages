@@ -1,0 +1,444 @@
+LIBDISK(3) BSD Library Functions Manual LIBDISK(3)
+
+NAME
+
+Open_Disk,
+Free_Disk, Debug_Disk, Set_Bios_Geom,
+Delete_Chunk, Collapse_Disk,
+Collapse_Chunk, Create_Chunk,
+All_FreeBSD, CheckRules, Disk_Names,
+Set_Boot_Mgr, Set_Boot_Blocks,
+Write_Disk, Cyl_Aligned,
+Next_Cyl_Aligned, Prev_Cyl_Aligned,
+Track_Aligned, Next_Track_Aligned,
+Prev_Track_Aligned, Create_Chunk_DWIM,
+MakeDev, MakeDevDisk, ShowChunkFlags,
+chunk_name, slice_type_name — library
+interface to slice and partition labels
+
+LIBRARY
+
+Interface to Slice and Partition
+Labels Library (libdisk, −ldisk)
+
+SYNOPSIS
+
+#include 
+
+#include 
+
+struct disk
+*
+
+Open_Disk(const char *devname);
+
+void
+
+Free_Disk(struct disk *disk);
+
+void
+
+Debug_Disk(struct disk *disk);
+
+void
+
+Set_Bios_Geom(struct disk *disk,
+u_long cyl, u_long heads,
+u_long sects);
+
+int
+
+Delete_Chunk(struct disk *disk,
+struct chunk *);
+
+void
+
+Collapse_Disk(struct disk *disk);
+
+int
+
+Collapse_Chunk(struct disk *disk,
+struct chunk *chunk);
+
+int
+
+Create_Chunk(struct disk *disk,
+daddr_t offset, daddr_t size,
+chunk_e type, int subtype,
+u_long flags);
+
+void
+
+All_FreeBSD(struct disk *d,
+int force_all);
+
+char
+*
+
+CheckRules(struct disk *);
+
+char
+**
+
+Disk_Names(void);
+
+void
+
+Set_Boot_Mgr(struct disk *d,
+const u_char *bootmgr,
+const size_t bootmgr_size);
+
+int
+
+Set_Boot_Blocks(struct disk *d,
+const u_char *boot1,
+const u_char *boot2);
+
+int
+
+Write_Disk(struct disk *d);
+
+int
+
+Cyl_Aligned(struct disk *d,
+daddr_t offset);
+
+daddr_t
+
+Next_Cyl_Aligned(struct disk *d,
+daddr_t offset);
+
+daddr_t
+
+Prev_Cyl_Aligned(struct disk *d,
+daddr_t offset);
+
+int
+
+Track_Aligned(struct disk *d,
+daddr_t offset);
+
+daddr_t
+
+Next_Track_Aligned(struct disk *d,
+daddr_t offset);
+
+daddr_t
+
+Prev_Track_Aligned(struct disk *d,
+daddr_t offset);
+
+struct chunk
+*
+
+Create_Chunk_DWIM(struct disk *d,
+struct chunk *parent,
+daddr_t size, chunk_e type,
+int subtype, u_long flags);
+
+int
+
+MakeDev(struct chunk *c,
+const char *path);
+
+int
+
+MakeDevDisk(struct disk *d,
+const char *path);
+
+char
+*
+
+ShowChunkFlags(struct chunk *c);
+
+const char
+*
+
+chunk_name(chunk_e type);
+
+const char
+*
+
+slice_type_name(int type,
+int subtype);
+
+DESCRIPTION
+
+The libdisk library
+provides an interface to the low-level disk slice and
+partition labels. Most functions operate with arguments of
+the types ’struct disk’, or ’struct
+chunk’.
+
+While both types
+are mostly opaque to the programmer, the internal structure
+is mentioned below for the sake of completeness.
+
+struct disk
+{
+
+char
+
+*name;
+
+u_long
+
+flags;
+
+u_long
+
+bios_cyl;
+
+u_long
+
+bios_hd;
+
+u_long
+
+bios_sect;
+
+u_char
+
+*bootmgr;
+
+u_char
+
+*boot1;
+
+u_char
+
+*boot2;
+
+struct chunk
+
+*chunks;
+
+u_long
+
+sector_size;
+
+};
+
+The only flag value by now is
+’DISK_ON_TRACK’, meaning that this disk is
+handled by the On-Track Disk Manager.
+
+struct chunk
+{
+
+struct chunk
+
+*next;
+
+struct chunk
+
+*part;
+
+struct disk
+
+*disk;
+
+daddr_t
+
+offset;
+
+daddr_t
+
+size;
+
+daddr_t
+
+end;
+
+char
+
+*name;
+
+char
+
+*oname;
+
+chunk_e
+
+type;
+
+int
+
+subtype;
+
+u_long
+
+flags;
+
+void
+
+(*private_free)(void*);
+
+void
+
+*(*private_clone)(void*);
+
+void
+
+*private_data;
+
+};
+
+The ’type’ field can
+be one of the following values: ’whole, unknown, fat,
+freebsd, extended, part, unused’.
+
+These are the
+valid ’flag’ values for a ’struct
+chunk’.
+
+CHUNK_PAST_1024
+
+This chunk
+cannot be booted from because it extends past cylinder
+1024.
+
+CHUNK_BSD_COMPAT
+
+This chunk is
+in the BSD-compatibility, and has a short name too, i.e.
+’wd0s4f -> wd0f’.
+
+CHUNK_ALIGN
+
+This chunk
+should be aligned.
+
+CHUNK_IS_ROOT
+
+This
+’part’ is a rootfs, allocate partition
+’a’.
+
+CHUNK_ACTIVE
+
+This is the
+active slice in the MBR.
+
+CHUNK_FORCE_ALL
+
+Force a
+dedicated disk for FreeBSD, bypassing all BIOS geometry
+considerations.
+
+The
+’private_data’, ’private_free’, and
+’private_clone’ fields are for data private to
+the application, and the management thereof. If the
+functions are not provided, no storage management is done,
+cloning will just copy the pointer and freeing will just
+forget it.
+
+Open_Disk()
+will open the named disk, and return populated tree.
+
+Free_Disk()
+frees a tree made with Open_Disk() or
+Clone_Disk().
+
+Debug_Disk()
+prints the content of the tree to stdout.
+
+Set_Bios_Geom()
+sets the geometry the bios uses.
+
+Delete_Chunk()
+frees a chunk of disk_space.
+
+Collapse_Disk()
+and Collapse_Chunk() are experimental, do not
+use.
+
+Create_Chunk()
+creates a chunk with the specified parameters.
+
+All_FreeBSD()
+makes one FreeBSD chunk covering the entire disk; if
+’force_all’ is set, bypass all BIOS geometry
+considerations.
+
+CheckRules()
+returns ’char*’ to warnings about broken design
+rules in this disklayout.
+
+Disk_Names()
+returns ’char**’ with all disk’s names
+(wd0, wd1 ...). You must free each pointer, as well as the
+array by hand.
+
+Set_Boot_Mgr()
+sets this boot-manager for use on this disk. Gets written
+when Write_Disk() is called.
+
+Set_Boot_Blocks()
+sets the boot-blocks for use on this disk. Gets written when
+Write_Disk() is called.
+
+Write_Disk()
+writes all the MBRs, disklabels, bootblocks and boot
+managers.
+
+Cyl_Aligned()
+checks if ’offset’ is aligned on a cylinder
+according to the BIOS geometry.
+
+Next_Cyl_Aligned()
+rounds ’offset’ up to next cylinder according to
+the BIOS geometry.
+
+Prev_Cyl_Aligned()
+rounds ’offset’ down to previous cylinder
+according to the BIOS geometry.
+
+Track_Aligned()
+checks if ’offset’ is aligned on a track
+according to the BIOS geometry.
+
+Next_Track_Aligned()
+rounds ’offset’ up to next track according to
+the BIOS geometry.
+
+Prev_Track_Aligned()
+checks if ’offset’ is aligned on a track
+according to the BIOS geometry.
+
+Create_Chunk_DWIM()
+creates a partition inside the given parent of the given
+size, and returns a pointer to it. The first unused chunk
+big enough is used.
+
+MakeDev()
+makes the device nodes for this chunk.
+
+MakeDevDisk()
+makes the device nodes for all chunks on this disk.
+
+ShowChunkFlags()
+returns a string to show flags.
+
+The
+chunk_name() function takes the enumerated chunk type
+and returns its name. chunk_name() replaces the old
+external array chunk_n.
+
+slice_type_name()
+returns the name strings associated with the specified
+’type’. ’subtype’. If
+slice_type_name() returns "unknown" for
+slices it isn’t familiar with.
+
+AUTHORS
+
+The libdisk library was
+written by Poul-Henning Kamp.
+
+This manual page
+was written by Jörg Wunsch.
+
+BSD
+March 15, 1996 BSD

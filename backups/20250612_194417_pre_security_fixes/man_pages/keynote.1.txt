@@ -1,0 +1,243 @@
+KEYNOTE(1) BSD General Commands Manual KEYNOTE(1)
+
+NAME
+
+keynote — command
+line tool for keynote(3) operations
+
+SYNOPSIS
+
+keynote keygen
+AlgorithmName KeySize PublicKeyFile PrivateKeyFile
+[print-offset] [print-length]
+
+keynote
+sign [−v] AlgorithmName AssertionFile
+PrivateKeyFile [print-offset] [print-length]
+
+keynote
+sigver [AssertionFile]
+
+keynote
+verify [−h]
+[−e file] −l
+file −r retlist
+[−k file]
+[−l file]
+[file ...]
+
+DESCRIPTION
+
+For more details on
+KeyNote, see RFC 2704.
+
+KEY GENERATION
+
+"keynote keygen"
+creates a public/private key of size KeySize, (in
+bits) for the algorithm specified by AlgorithmName.
+Typical keysizes are 512, 1024, or 2048 (bits). The minimum
+key size for DSA keys is 512 (bits). Supported
+AlgorithmName identifiers are:
+
+’’dsa-hex:’’
+
+’’dsa-base64:’’
+
+’’rsa-hex:’’
+
+’’rsa-base64:’’
+
+’’x509-hex:’’
+
+’’x509-base64:’’
+
+Notice that the
+trailing colon is required. The resulting public key is
+stored in file PublicKeyFile. Similarly, the
+resulting private key is stored in file
+PrivateKeyFile. Either of the filenames can be
+specified to be ’’-’’, in which case
+the corresponding key(s) will be printed in standard
+output.
+
+The optional
+parameters print-offset and print-length
+specify the offset from the beginning of the line where the
+key will be printed, and the number of characters of the key
+that will be printed per line. print-length includes
+AlgorithmName for the first line and has to be longer
+(by at least 2) than AlgorithmName.
+print-length also accounts for the line-continuation
+character (backslash) at the end of each line, and the
+doublequotes at the beginning and end of the key encoding.
+Default values are 12 and 50 respectively.
+
+ASSERTION SIGNING
+
+"keynote sign" reads
+the assertion contained in AssertionFile and
+generates a signature specified by AlgorithmName
+using the private key stored in PrivateKeyFile. The
+private key is expected to be of the form output by
+"keynote keygen". The private key algorithm and
+the AlgorithmName specified as an argument are
+expected to match. There is no requirement for the internal
+or ASCII encodings to match. Valid AlgorithmName
+identifiers are:
+
+’’sig-dsa-sha1-hex:’’
+
+’’sig-dsa-sha1-base64:’’
+
+’’sig-rsa-sha1-hex:’’
+
+’’sig-rsa-sha1-base64:’’
+
+’’sig-rsa-md5-hex:’’
+
+’’sig-rsa-md5-base64:’’
+
+’’sig-x509-sha1-hex:’’
+
+’’sig-x509-sha1-base64:’’
+
+Notice that the
+trailing colon is required. The resulting signature is
+printed in standard output. This can then be added (via
+cut-and-paste or some script) at the end of the assertion,
+in the Signature field.
+
+The public key
+corresponding to the private key in PrivateKeyFile is
+expected to already be included in the Authorizer
+field of the assertion, either directly or indirectly (i.e.,
+through use of a Local-Constants attribute).
+Furthermore, the assertion must have a Signature
+field (even if it is empty), as the signature is computed on
+everything between the KeyNote-Version and
+Signature keywords (inclusive), and the
+AlgorithmName string.
+
+If the
+−v flag is provided, "keynote sign"
+will also verify the newly-created signature using the
+Authorizer field key.
+
+The optional
+parameters print-offset and print-length
+specify the offset from the beginning of the line where the
+signature will be printed, and the number of characters of
+the signature that will be printed per line.
+print-length includes AlgorithmName for the
+first line and has to be longer (by at least 2) than
+AlgorithmName. print-length also accounts for
+the line-continuation character (backslash) at the end of
+each line, and the doublequotes at the beginning and end of
+the signature encoding. Default values are 12 and 50
+respectively.
+
+SIGNATURE
+VERIFICATION
+
+"keynote sigver" reads
+the assertions contained in AssertionFile and
+verifies the public-key signatures on all of them.
+
+QUERY TOOL
+
+For each operand that names a
+"keynote verify" reads the file and parses the
+assertions contained therein (one assertion per file).
+
+Files given with
+the −l flag are assumed to contain trusted
+assertions (no signature verification is performed, and the
+Authorizer field can contain non-key principals.
+There should be at least one assertion with the
+POLICY keyword in the Authorizer field.
+
+The
+−r flag is used to provide a comma-separated
+list of return values, in increasing order of compliance
+from left to right.
+
+Files given with
+the −e flag are assumed to contain environment
+variables and their values, in the format:
+
+varname =
+"value"
+
+varname
+can begin with any letter (upper or lower case) or number,
+and can contain underscores. value is a quoted
+string, and can contain any character, and escape
+(backslash) processing is performed, as specified in the
+KeyNote RFC.
+
+The remaining
+options are:
+
+−h
+
+Print a usage
+message and exit.
+
+−k file
+
+Add a key from file in
+the action authorizers.
+
+Exactly one
+−r and least one of each −e,
+−l, and −k flags should be given
+per invocation. If no flags are given, "keynote
+verify" prints the usage message and exits with error
+code −1.
+
+"keynote
+verify" exits with code −1 if there was an error,
+and 0 on success.
+
+SEE ALSO
+
+keynote(3), keynote(4),
+keynote(5)
+
+’’The KeyNote
+Trust-Management System, Version 2’’
+
+M. Blaze, J. Feigenbaum, A. D.
+Keromytis, Internet Drafts, RFC 2704.
+
+’’Decentralized
+Trust Management’’
+
+M. Blaze, J. Feigenbaum, J.
+Lacy, 1996 IEEE Conference on Privacy and Security
+
+’’Compliance-Checking
+in the PolicyMaker Trust Management System’’
+
+M. Blaze, J. Feigenbaum, M.
+Strauss, 1998 Financial Crypto Conference
+
+AUTHOR
+
+Angelos D. Keromytis
+(angelos [AT] dsl.edu)
+
+WEB PAGE
+
+http://www.cis.upenn.edu/~keynote
+
+BUGS
+
+None that we know of. If you
+find any, please report them at
+
+keynote [AT] research.com
+
+BSD
+April 29, 1999 BSD

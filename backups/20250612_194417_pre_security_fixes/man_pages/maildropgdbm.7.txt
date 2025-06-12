@@ -1,0 +1,236 @@
+NAME
+
+maildropgdbm -
+GDBM/DB support in maildrop
+
+SYNOPSIS
+
+gdbmopen(filename,
+mode)
+
+gdbmclose
+
+gdbmfetch(key
+[,default])
+
+gdbmstore(key,value)
+
+DESCRIPTION
+
+The gdbm family
+of functions provides access to the GDBM library - a library
+of routines that manage simple database files. The library
+provides a way of quickly storing and looking up key/data
+pairs.
+
+GDBM support in
+maildrop is optional, and may not be available to
+you.
+
+GDBM support in
+maildrop can optionally be implemented using the DB
+library. This option is selected by the system
+administrator. If this is the case, these functions still
+work exactly as described below, except that they will
+operate on DB hash files, instead of GDBM files.
+
+To see whether
+GDBM or DB support is used, run the command
+"maildrop -v".
+
+GDBM support is
+minimal, and simplistic. A filter file may have only one
+gdbm file open at the same time. However, the filter file
+can close the current gdbm file, and open another one. If
+another filter file is included using the include statement,
+the included filter file may open its own, separate, gdbm
+file.
+
+A GDBM file
+contains a list of key/value pairs. All keys in the GDBM
+file are unique. After storing an arbitrary key/value pair
+in the GDBM file, the value associated with the given key
+can be quickly located and retrieved.
+
+gdbmclose -
+close gdbm file
+
+gdbmclose
+
+This function
+closes the current GDBM file.
+
+gdbmfetch -
+retrieve data
+
+gdbmfetch (key [,
+options] [, default])
+
+This function
+retrieves the data for the given key. key is the key
+to retrieve. The gdbmfetch function returns the data
+associated with this key. If the key does not exist in the
+GDBM file, gdbmfetch returns the default
+argument. If the default argument is not specified,
+gdbmfetch returns empty text. Please note that the
+default argument is not actually evaluated unless the
+key does not exist in the GDBM file.
+
+The
+options argument specifies additional maildrop
+value-added features. The following functionality is not
+available in the GDBM library, but is rather provided by
+maildrop.
+
+If the
+options argument is set to "D", and the key
+could not be found in the GDBM database, and the key is of
+the form "user@domain", maildrop will then
+attempt to look up the key "user@". If that key is
+also not found, maildrop finally looks up the key
+"domain".
+
+If
+"domain" is also not found, and domain is of the
+form "a.b.c.d.tld" (with variable number of
+period-separated sections), maildrop then attempts to
+look up the key "b.c.d.tld". If that key is not
+found, maildrop tries "c.d.tld", and so on,
+until a key is found, or there are no more subdomains to
+remove, at which point gdbmfetch will return either
+the default argument, or empty text.
+
+If the
+options argument is set to "D", and the key
+could not be found in the GDBM database, and the key is of
+the form "a.b.c.d.tld" (with variable number of
+period-separated sections), maildrop will also
+attempt to look up keys for successive higher-level domains
+in the GDBM database.
+
+Note
+
+GDBM databases are case sensitive. Make sure that the GDBM
+database is created using lowercase letters only, and use
+the tolower
+[1]
+function to convert the key to
+lowercase.
+
+If
+the options argument is "I", and the key is
+not in the GDBM database, and the key is of the form
+"w.x.y.z" (with variable number of
+period-separated sections), maildrop then tries to
+look up the key "w.x.y", then "w.x",
+until a key is found, or there are no more sections to
+remove. Use this feature to look up IP-address based GDBM
+lists.
+
+Note
+
+These features are implemented by brute force: if the query
+doesn't succeed, try again. Take note of potential
+denial-of-service attacks where key is set to a long text
+string consisting mostly of periods, which will result in
+numerous GDBM queries that will take an excessive amount of
+time to complete.
+
+gdbmopen
+- open gdbm file
+
+gdbmopen
+(file [, mode])
+
+gdbmopen
+opens the indicated GDBM file. The optional second argument
+specifies the following:
+
+"R"
+
+Open this
+GDBM file for reading.
+
+"W"
+
+Open this
+GDBM file for reading and writing.
+
+"C"
+
+Open this
+GDBM file for reading and writing. If the GBDM file doesn't
+exist, create it.
+
+"N"
+
+Create a
+new GDBM file. If the file exists, the existing file is
+deleted. The file is opened for reading and
+writing.
+
+The
+mode argument defaults to "R" is used. In
+embedded mode, only "R" is allowed.
+
+The
+GDBM library allows multiple processes to read the same GDBM
+file at the same time, but it does not allow multiple access
+when the GDBM file is open for writing. Using
+flock
+[2]
+or
+dotlock
+[3]
+is highly recommended.
+
+In
+delivery mode, maildrop runs from the recipient's
+home directory. Keep that in mind while specifying the
+filename.
+
+The
+gdbmopen function returns 0 if the GDBM file was
+successfully opened, non-zero otherwise.
+
+gdbmstore
+- store data
+
+gdbmstore(key,
+value)
+
+key
+is the key value to store in the GDBM file. value is
+the value to store. If key already exists in the GDBM
+file, value replacest the old value. The
+gdbmstore function is only permitted if the GDBM file
+is opened for writing. If gdbmopen opened the GDBM
+file for reading only, gdbmstore will return -1.
+Otherwise, gdbmstore returns 0.
+
+AUTHOR
+
+Sam
+Varshavchik
+
+Author
+
+NOTES
+
+1. 
+
+tolower 
+
+http://www.courier-mta.org/maildrop/maildropfilter.html#tolower
+
+2. 
+
+flock 
+
+http://www.courier-mta.org/maildrop/maildropfilter.html#flock
+
+3. 
+
+dotlock 
+
+http://www.courier-mta.org/maildrop/maildropfilter.html#dotlock

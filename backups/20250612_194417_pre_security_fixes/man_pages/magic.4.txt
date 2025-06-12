@@ -1,0 +1,133 @@
+NAME
+
+magic −
+file command’s magic number file
+
+SYNOPSIS
+
+/etc/magic
+
+DESCRIPTION
+
+The
+file(1) command identifies the type of a file using,
+among other tests, a test for whether the file begins with a
+certain magic number. The /etc/magic file
+specifies what magic numbers are to be tested for, what
+message to print if a particular magic number is found, and
+additional information to extract from the file.
+
+Each line of
+the file specifies a test to perform. A test compares the
+data starting at a particular offset in the file with a
+1-byte, 2-byte, 
+or 4-byte numeric value or a string. If the test succeeds, a
+message is 
+printed. The line consists of the following fields
+(separated by tabs):
+
+offset
+type value message 
+offset
+
+A number specifying the offset,
+in bytes, into the file of the data which is to be
+tested.
+
+type
+
+The type of the data to be tested. The possible values
+are: 
+
+byte
+
+A one-byte
+value.
+
+short
+
+A two-byte value.
+
+long
+
+A four-byte value.
+
+string
+
+A string of bytes.
+
+The types byte,
+short, and long may optionally be followed by
+a mask specifier of the form &number. If a
+mask specifier is given, the value is AND’ed
+with the number before any comparisons are done. The
+number is specified in C form. For instance,
+13 is decimal, 013 is octal, and 0x13
+is hexadecimal.
+
+value
+
+The value to be compared with the value from the file.
+If the type is numeric, this value is specified in C
+form. If it is a string, it is specified as a C
+string with the usual escapes permitted (for instance, \n
+for NEWLINE).
+
+Numeric
+values may be preceded by a character indicating the
+operation to be performed. 
+It may be ’=’, to specify that the value
+from the file must equal the specified value,
+’’, to specify that the value from
+the file must be less than the specified value,
+’>’, to specify that the value from
+the file must be greater than the specified value,
+’&’, to specify that all the bits in
+the specified value must be set in the value from the file,
+’^’, to specify that at least one of the
+bits in the specified value must not be set in the value
+from the file, or x to specify that any value will
+match. If the character is omitted, it is assumed to be
+’=’.
+
+For string
+values, the byte string from the file must match the
+specified byte string. The byte string from the file which
+is matched is the same length as the specified byte
+string.
+
+message
+
+The message to be printed if the
+comparison succeeds. If the string contains a
+printf(3C) format specification, the value from the
+file (with any specified masking performed) is printed using
+the message as the format string.
+
+Some file formats contain
+additional information which is to be printed along with the
+file type. A line which begins with the character
+’>’ indicates additional tests and
+messages to be printed. If the test on the line preceding
+the first line with a ’>’ succeeds,
+the tests specified in all the subsequent lines beginning
+with ’>’ are performed, and the
+messages printed if the tests succeed. The next line which
+does not begin with a ’>’ terminates
+this.
+
+FILES
+
+/etc/magic
+
+SEE ALSO
+
+file(1),
+file(1B), printf(3C)
+
+BUGS
+
+There should be
+more than one level of subtests, with the level indicated by
+the number of ’>’ at the beginning of
+the line.

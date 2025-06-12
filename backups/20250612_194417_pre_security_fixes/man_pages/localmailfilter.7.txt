@@ -1,0 +1,313 @@
+NAME
+
+localmailfilter
+- Local mail filtering
+
+SYNOPSIS
+
+echo
+/usr/bin/maildrop >/etc/courier/maildropfilter
+
+mkdir
+$HOME/.mailfilters
+
+vi
+$HOME/.mailfilters/rcptfilter
+$HOME/.mailfilters/rcptfilter-ext
+
+vi
+$HOME/.mailfilters/smtpfilter
+$HOME/.mailfilters/smtpfilter-ext
+
+chmod 700
+$HOME/.mailfilters
+
+chmod 600
+$HOME/.mailfilters/*
+
+DESCRIPTION
+
+The
+maildrop mail filter can be used by the Courier mail
+server as a mail filtering engine, rejecting unwanted mail
+on a per-recipient basis.
+
+The actual
+filtering interface used by the Courier mail server does not
+really require that maildrop must be used as a mail
+filtering engine, it just so happens that maildrop
+has a compatible interface that can be used right out of the
+box. The following brief information can be used to craft a
+homebrewed mail filter to take maildrop's place.
+
+The local mail
+filter only works for addresses that correspond to local
+accounts. This filtering is not used if the recipient is a
+remote address on another mail server. The local mail filter
+is disabled by default. To enable local mail filtering you
+will need to initialize the /etc/courier/maildropfilter
+configuration file to contain the pathname to your local
+mail filter.
+
+Local mail
+filtering is performed in two distinct phases:
+
+Recipient
+filters
+
+When the Courier mail server
+receives an address naming a local mail recipient, the local
+mail recipient's mail filter is executed before the Courier
+mail server acknowledges the address. The local mail filter
+tells the Courier mail server whether to: A) accept message
+unconditionally - the message is whitelisted; B) reject the
+message unconditionally - the Courier mail server tells the
+other mail server that the recipient address is invalid; or
+C) accept this recipient, but run the content mail filter,
+once the message's contents are available.
+
+Content
+filters
+
+After receiving the contents of
+the message, the mail filter is executed again for any
+recipients whose recipient filters used the third option.
+The content filter can now examine the contents of the
+message, and indicate whether the message should be accepted
+or rejected. Content filtering is not available for alias
+addresses.
+
+It should be
+noted that mail filtering is executed as an integral part of
+receiving a message from a remote mail server. If the
+message is rejected, the Courier mail server refuses to
+accept the message for delivery.
+
+The local mail
+filter will be invoked as follows:
+
+HOME=$HOME
+FILTER -D uid/gid -M filter
+
+The local mail
+filter will NOT be invoked as root, so if it needs to access
+files in the recipient's account, it must be installed
+setuid to root (as maildrop is installed by
+default).
+
+"uid/gid"
+is the recipient account's system userid and group id,
+respectively. The recipient account's home directory is
+placed in the HOME environment variable, prior to
+running FILTER, and "filter" is set
+as follows:
+
+rcptfilter
+
+The mail filter is invoked
+initially when the remote mail server specifies this address
+as a recipient. FILTER should terminate with one of
+the following exit codes: 0 - this sender is acceptable; 99
+- this sender is acceptable, but I want to run the content
+filter for this the message; any other non-zero exit code -
+the sender is not acceptable, reject the message.
+
+smtpfilter
+
+If FILTER terminates
+with exit code 99, FILTER runs again with this
+parameter set to the word smtpfilter. FILTER will be invoked
+once the message has been received from the remote mail
+server, but not yet acknowledged. If FILTER
+terminates with a non-zero exit code, the message is
+rejected. If FILTER terminated with the exit code of
+zero, the message is accepted.
+
+rcptfilter-ext,
+smtpfilter-ext
+
+If the recipient created
+sub-addresses - see
+dot-courier(5)
+[1]
+- a dash followed by the subaddress
+"ext" is appended to the name of the
+filter.
+
+rcptfilter-alias-ext
+
+This is
+how FILTER gets invoked if the address is a locally
+defined mail alias (ext is the alias name).
+
+The
+rcptfilter invocation must terminate with a zero exit code
+when the message originates from a mailing list or any other
+source that should be considered as "whitelisted".
+This filtering model does not fit very well with some mail
+transfer protocols, so unless trusted sources are explicitly
+declared to be whitelisted, there is a remote possibility
+that the recipient will be removed from a mailing list
+because of a poorly-written mail filter from some other
+recipient of the same message. The 0 return exit code (which
+is the implied default if no mail filtering is installed)
+protects the recipient from being adversely affected, in any
+way, by anyone else's mail filter.
+
+The
+mail filters may print a diagnostic message before rejecting
+a message. The diagnostic message will be returned to the
+sending mail relay, where possible.
+
+The
+mail filters inherit environment variables that describe the
+incoming mail. The following environment variables are
+provided by default:
+
+SENDER
+
+The
+return address on the message.
+
+TCPREMOTEHOST,
+TCPREMOTEIP
+
+When the
+message is received via ESMTP, these variables specify the
+remote IP address and the corresponding hostname. Hostname
+is empty if the IP address does not have a reverse DNS
+record, or is set to "softdnserr" if there was a
+temporary failure while looking up this IP
+address.
+
+BLOCK2
+
+The
+default the Courier mail server configuration sets this
+environment variable if the remote IP address is listed in
+an unsecured relay blacklist. See /etc/courier/esmtpd for
+more information. Other environment variables may also be
+available. For mail received via ESMTP, environment
+variables are usually set in the /etc/courier/smtpaccess
+configuration file.
+
+maildrop
+implementation 
+Maildrop implements this mail filtering API as
+follows:
+
+$HOME/.mailfilters
+
+This
+directory contains the filtering recipes. This directory,
+and its contents, cannot have any group or world
+permissions.
+
+smtpfilter*,
+rcptfilter*
+
+These
+mail filtering recipes directly correspond to the events
+defined in the previous section. Maildrop's
+"import" statement can be used to gain access to
+the environment variables (these mail filters are executed
+in maildrop's embedded mode). The mail filtering
+recipes can set the EXITCODE variable appropriately
+before terminating, in order to accept or reject the
+message.
+
+See
+maildrop(1)
+[2]
+for more information.
+
+Filtering
+mail to aliases 
+The /etc/courier/aliases configuration file is used to mail
+aliases, see
+makealiases(8)
+[3]
+. The system administrator may set
+aside a reserved local account that will be used to specify
+a local mail filter for messages addressed to aliases. The
+configuration file /etc/courier/aliasfilteracct specifies
+the home directory of the mail account that will be used to
+filter alias recipients.
+
+For
+example, if /etc/courier/aliasfilteracct contains
+/home/admin, then the Courier mail server runs the mail
+filter as follows:
+
+HOME=/home/admin
+FILTER -D uid/gid -M
+rcptfilter-alias-name
+
+Here,
+"uid/gid" is owner uid and gid of the specified
+directory NOTE: "name" is a fully qualified
+address, and the local aliases listed in
+/etc/courier/aliases do not typically include the domain
+name. If defines an alias called "system", for
+example, the -M option will probably be
+"system [AT] example.com", if example.com is the
+contents of /etc/courier/me configuration file.
+
+Unfortunately,
+currently it is not possible to specify content filters
+(a.k.a. smtpfilters) for aliases, only recipient
+filters.
+
+FILES
+
+/etc/courier/maildropfilter
+
+Local
+mail filtering engine.
+
+/etc/courier/aliasfilteracct
+
+Account
+that is used to filter mail to aliases.
+
+SEE ALSO
+
+courierfilter(8)
+[4]
+,
+maildrop(1)
+[2]
+.
+
+AUTHOR
+
+Sam
+Varshavchik
+
+Author
+
+NOTES
+
+1. 
+
+dot-courier(5) 
+
+http://www.courier-mta.org/dot-courier.html
+
+2. 
+
+maildrop(1) 
+
+http://www.courier-mta.org/maildrop.html
+
+3. 
+
+makealiases(8) 
+
+http://www.courier-mta.org/makealiases.html
+
+4. 
+
+courierfilter(8) 
+
+http://www.courier-mta.org/courierfilter.html

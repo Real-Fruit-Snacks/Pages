@@ -1,0 +1,208 @@
+LIBPASSWDQC(3) BSD Library Functions Manual
+LIBPASSWDQC(3)
+
+NAME
+
+passwdqc_params_reset,
+passwdqc_params_load, passwdqc_params_parse,
+passwdqc_params_free, passwdqc_check,
+passwdqc_random — password strength checking
+functions
+
+LIBRARY
+
+Password strength checking
+library (libpasswdqc, -lpasswdqc)
+
+SYNOPSIS
+
+#include
+
+typedef struct
+{
+
+passwdqc_params_qc_t qc;
+
+passwdqc_params_pam_t pam;
+
+} passwdqc_params_t;
+
+void
+
+passwdqc_params_reset(passwdqc_params_t *params);
+
+int
+
+passwdqc_params_load(passwdqc_params_t *params,
+char **reason,
+const char *pathname);
+
+int
+
+passwdqc_params_parse(passwdqc_params_t *params,
+char **reason, int argc,
+const char *const *argv);
+
+void
+
+passwdqc_params_free(passwdqc_params_t *params);
+
+const char
+*
+
+passwdqc_check(const passwdqc_params_qc_t *params,
+const char *newpass,
+const char *oldpass,
+const struct passwd *pw);
+
+char
+*
+
+passwdqc_random(const passwdqc_params_qc_t *params);
+
+DESCRIPTION
+
+The
+passwdqc_params_reset() function initializes the
+passwdqc_params_t structure specified by params
+argument to compile-time defaults.
+
+The
+passwdqc_params_load() function fills in the
+passwdqc_params_t structure specified by params
+argument according to the configuration options listed in
+the file specified by pathname argument. When the
+passwdqc_params_t structure is no longer needed, the memory
+allocated by this function should be released using
+passwdqc_params_free().
+
+The
+passwdqc_params_parse() function fills in the
+passwdqc_params_t structure specified by params
+argument according to the configuration options specified by
+argc and argv arguments. When the
+passwdqc_params_t structure is no longer needed, the memory
+allocated by this function should be released using
+passwdqc_params_free().
+
+The
+passwdqc_params_free() function frees the memory
+allocated by passwdqc_params_load() and
+passwdqc_params_parse() functions when filling in the
+passwdqc_params_t structure specified by params
+argument.
+
+The
+passwdqc_check() function checks the quality of the
+passphrase specified by newpass argument according to
+the configuration specified by params argument. If an
+optional old passphrase is specified by oldpass
+argument, newpass is additionally checked against
+oldpass for similarity. If an optional passwd record
+is specified by pw argument, newpass is
+additionally checked whether it is based on the personal
+login information in the passwd record.
+
+The
+passwdqc_random() function generates a random
+passphrase according to the configuration specified by
+params argument.
+
+RETURN VALUES
+
+The
+passwdqc_params_reset() and
+passwdqc_params_free() functions do not return a
+value.
+
+Upon successful
+completion the passwdqc_params_load() and
+passwdqc_params_parse() functions return 0.
+Otherwise, -1 is returned and a pointer to dynamically
+allocated memory containing the error string is assigned to
+*reason. This memory should be released using free(3)
+when no longer needed.
+
+Upon successful
+completion the passwdqc_check() function returns
+NULL. Otherwise, a string describing the error is returned.
+The returned string is statically allocated and valid for
+the lifetime of the program.
+
+Upon successful
+completion the passwdqc_random() function returns a
+dynamically allocated string containing the generated
+passphrase. Otherwise, NULL is returned. The string should
+be released using free(3) when no longer needed.
+
+FILES
+
+/etc/passwdqc.conf (not
+read unless this suggested file location is specified with
+the pathname argument or with
+config=/etc/passwdqc.conf configuration
+option).
+
+EXAMPLES
+
+The following example shows how
+to use the libpasswdqc library with system configuration
+options to check a passphrase.
+
+#include
+
+#include  
+#include  
+#include 
+
+bool 
+check(const char *newpass, const char *oldpass, const struct
+passwd *pw) 
+{ 
+static const char config[] = "/etc/passwdqc.conf";
+
+char *parse_reason; 
+const char *check_result = ""; 
+passwdqc_params_t params; 
+passwdqc_params_reset(¶ms); 
+if (passwdqc_params_load(¶ms, &parse_reason,
+config)) { 
+fprintf(stderr, "passwdqc_params_load: %s\n", 
+parse_reason ? parse_reason : "Out of memory");
+
+free(parse_reason); 
+goto out; 
+} 
+check_result = passwdqc_check(¶ms.qc, newpass,
+oldpass, pw); 
+if (check_result) 
+fprintf(stderr, "passwdqc_check: %s\n",
+check_result); 
+out: 
+passwdqc_params_free(¶ms); 
+return !check_result; 
+}
+
+SEE ALSO
+
+passwdqc.conf(5), pwqcheck(1),
+pwqgen(1), pam_passwdqc(8).
+
+https://www.openwall.com/passwdqc/
+
+HISTORY
+
+The pam_passwdqc module was
+written for Openwall GNU/*/Linux by Solar Designer. The
+libpasswdqc library was originally written for ALT
+GNU/*/Linux by Dmitry V. Levin, reusing code from
+pam_passwdqc. The passwdqc_params_free() function was
+added in version 2.0.0 by Solar Designer.
+
+AUTHORS
+
+This manual page was written by
+Dmitry V. Levin.
+
+Openwall Project
+March 19, 2021 Openwall Project

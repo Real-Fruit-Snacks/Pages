@@ -1,0 +1,308 @@
+NAME
+
+virt-v2v-inspector
+- Estimate disk space needed before virt-v2v conversion
+
+SYNOPSIS
+
+virt-v2v-inspector
+[-i* options] guest [-O output.xml]
+
+DESCRIPTION
+
+Virt-v2v-inspector
+is a companion tool for virt-v2v(1) which can be used
+before conversion to estimate the number of output disks and
+disk space that will be required to complete the virt-v2v
+conversion. The common use for this is to preallocate target
+disks on management systems that need this (like
+Kubevirt).
+
+This manual
+page only documents the estimation feature, not all of the
+-i* options which are the same as virt-v2v. You
+should read virt-v2v(1) first.
+
+Selecting
+the input guest 
+You can run virt-v2v-inspector with the same -i*
+options as virt-v2v. (Don’t use any -o*
+options). This will select the guest that you want to
+estimate.
+
+For example to
+estimate the space required for a guest in a stored local
+disk called filename.img you could do:
+
+virt-v2v-inspector
+-i disk filename.img
+
+Output
+
+The output from this tool is an XML document.
+
+•
+
+Fields which are annotated with an
+"estimated='true'" attribute are estimated.
+Virt-v2v cannot always know exactly the final size of some
+things, such as the exact real size of the output disk,
+since there might be small perturbations between runs.
+Estimates are usually very close to the final values.
+
+•
+
+Numbers representing sizes are always given in
+bytes. 
+
+•
+
+By default the output is written to stdout. This is
+useful when using the program interactively. However if you
+want to use this tool from another program it is better to
+send the output to a specific file using -O
+output.xml 
+
+virt-v2v-inspector 
+virt-v2v 
+2.1.9
+
+The
+,  and 
+elements refer to the current version of virt-v2v-inspector
+and are useful for debugging. Make sure you use the same
+version of virt-v2v-inspector and virt-v2v.
+
+6442450944 
+1400897536 
+
+6442450944 
+45131520
+
+The
+ element lists information about each guest
+disk. The example virtual machine above has two disks.
+ describes the size of the disk as seen
+from inside the guest, while  is an
+estimate of how much storage will be needed on the host
+after conversion. This is assuming you use
+-oa sparse - see the notes below.
+
+linux 
+fedora 
+fedora32 
+x86_64 
+[...] 
+
+The
+ element lists information about the
+guest operating system gleaned during conversion, in a
+manner similar to the virt-inspector(1) tool from
+guestfs-tools.
+
+Output
+allocation mode and output format 
+Virt-v2v supports selecting the output allocation mode
+(-oa option) and output format (-of option,
+eg. -of qcow2). Since it is difficult to predict
+the effect of these options on the actual space occupied by
+the final image this tool does not account for them.
+
+As a rule of
+thumb: 
+virt-v2v -oa preallocated
+
+causes the disk images on the
+target to consume their full virtual size (excluding the
+effect of zero allocations will depends so much on the
+underlying storage that it is often hard even for experts to
+predict).
+
+virt-v2v -of qcow2
+
+uses the QCOW2 format where
+supported which means that the apparent size of the file
+will be equal to its sparse size, but otherwise should not
+affect estimates very much.
+
+OPTIONS
+
+--help
+
+Display help.
+
+-O output.xml
+
+Write the output to a file
+called output.xml.
+
+-O -
+
+Write the output to stdout.
+This is also the default if the -O option is
+omitted.
+
+-v
+
+--verbose
+
+Enable verbose messages for
+debugging.
+
+-V
+
+--version
+
+Display version number and
+exit.
+
+-x
+
+Enable tracing of libguestfs API calls.
+
+-i ... 
+-ic ... 
+-if ... 
+-io ... 
+-ip ... 
+-it ...
+
+All of the -i* options
+supported by virt-v2v and also supported by
+virt-v2v-inspector.
+
+-b ... 
+--bridge ... 
+--colors 
+--colours 
+--echo-keys 
+--key ... 
+--keys-from-stdin 
+--mac ... 
+--machine-readable 
+--machine-readable=format 
+-n ... 
+--network ...
+
+-q
+
+--quiet 
+--root ... 
+--wrap
+
+These options work in the same
+way as the equivalent virt-v2v options.
+
+FILES
+
+Files used are
+the same as for virt-v2v. See "FILES" in
+virt-v2v(1).
+
+ENVIRONMENT VARIABLES
+
+Environment
+variables used are the same as for virt-v2v. See
+"ENVIRONMENT VARIABLES" in virt-v2v(1).
+
+SEE ALSO
+
+virt-v2v(1),
+virt-p2v(1), virt-inspector(1),
+guestfs(3), guestfish(1), qemu-img(1),
+nbdkit(1), http://libguestfs.org/.
+
+AUTHORS
+
+Matthew
+Booth
+
+Cédric
+Bosdonnat
+
+Laszlo
+Ersek
+
+Tomáš
+Golembiovský
+
+Shahar
+Havivi
+
+Richard W.M.
+Jones
+
+Roman Kagan
+
+Mike
+Latimer
+
+Nir Soffer
+
+Pino
+Toscano
+
+Xiaodai
+Wang
+
+Ming Xie
+
+Tingting
+Zheng
+
+COPYRIGHT
+
+Copyright (C)
+2009-2022 Red Hat Inc.
+
+LICENSE
+
+This program is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have
+received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation,
+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
+USA.
+
+BUGS
+
+To get a list
+of bugs against libguestfs, use this link:
+https://bugzilla.redhat.com/buglist.cgi?component=libguestfs&product=Virtualization+Tools
+
+To report a new
+bug against libguestfs, use this link:
+https://bugzilla.redhat.com/enter_bug.cgi?component=libguestfs&product=Virtualization+Tools
+
+When reporting
+a bug, please supply:
+
+•
+
+The version of libguestfs.
+
+•
+
+Where you got libguestfs (eg. which Linux distro,
+compiled from source, etc)
+
+•
+
+Describe the bug accurately and give a way to reproduce
+it. 
+
+•
+
+Run libguestfs-test-tool(1) and paste the
+complete, unedited output into the bug report.

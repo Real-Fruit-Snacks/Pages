@@ -1,0 +1,138 @@
+NAME
+
+nbd_opt_starttls
+- request the server to initiate TLS
+
+SYNOPSIS
+
+#include
+
+int nbd_opt_starttls ( 
+struct nbd_handle *h 
+);
+
+DESCRIPTION
+
+Request that
+the server initiate a secure TLS connection, by sending
+"NBD_OPT_STARTTLS". This can only be used if
+nbd_set_opt_mode(3) enabled option mode; furthermore,
+if you use nbd_set_tls(3) to request anything other
+than the default of "LIBNBD_TLS_DISABLE", then
+libnbd will have already attempted a TLS connection prior to
+allowing you control over option negotiation. This command
+is disabled if nbd_supports_tls(3) reports false.
+
+This function
+is mainly useful for integration testing of corner cases in
+server handling; in particular, misuse of this function when
+coupled with a server that is not careful about resetting
+stateful commands such as nbd_opt_structured_reply(3)
+could result in a security hole (see CVE-2021-3716 against
+nbdkit, for example). Thus, when security is a concern, you
+should instead prefer to use nbd_set_tls(3) with
+"LIBNBD_TLS_REQUIRE" and let libnbd negotiate TLS
+automatically.
+
+This function
+returns true if the server replies with success, false if
+the server replies with an error, and fails only if the
+server does not reply (such as for a loss of connection,
+which can include when the server rejects credentials
+supplied during the TLS handshake). Note that the NBD
+protocol documents that requesting TLS after it is already
+enabled is a client error; most servers will gracefully fail
+a second request, but that does not downgrade a TLS session
+that has already been established, as reported by
+nbd_get_tls_negotiated(3).
+
+RETURN VALUE
+
+This call
+returns a boolean value.
+
+ERRORS
+
+On error -1 is
+returned.
+
+Refer to
+"ERROR HANDLING" in libnbd(3) for how to
+get further details of the error.
+
+The following
+parameters must not be NULL: "h". For more
+information see "Non-NULL parameters" in
+libnbd(3).
+
+HANDLE STATE
+
+nbd_opt_starttls
+can be called when the handle is in the following state:
+
+┌─────────────────────────────────────┬─────────────────────────┐
+
+│ Handle created, before connecting │ ❌
+error │ 
+│ Connecting │ ❌ error │ 
+│ Connecting & handshaking (opt_mode) │
+✅ allowed │ 
+│ Connected to the server │ ❌ error
+│ 
+│ Connection shut down │ ❌ error │
+
+│ Handle dead │ ❌ error │ 
+
+└─────────────────────────────────────┴─────────────────────────┘
+
+VERSION
+
+This function
+first appeared in libnbd 1.16.
+
+If you need to
+test if this function is available at compile time check if
+the following macro is defined:
+
+#define
+LIBNBD_HAVE_NBD_OPT_STARTTLS 1
+
+SEE ALSO
+
+nbd_aio_opt_starttls(3),
+nbd_create(3), nbd_get_tls_negotiated(3),
+nbd_opt_structured_reply(3),
+nbd_set_opt_mode(3), nbd_set_tls(3),
+nbd_supports_tls(3), libnbd(3).
+
+AUTHORS
+
+Eric Blake
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+This library is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This library is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have
+received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301 USA

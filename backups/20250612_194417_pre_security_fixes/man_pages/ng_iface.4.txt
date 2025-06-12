@@ -1,0 +1,147 @@
+NG_IFACE(4) BSD Kernel Interfaces Manual NG_IFACE(4)
+
+NAME
+
+ng_iface —
+interface netgraph node type
+
+SYNOPSIS
+
+#include
+
+DESCRIPTION
+
+An iface node is both a
+netgraph node and a system networking interface. When an
+iface node is created, a new interface appears which
+is accessible via ifconfig(8). Iface node interfaces
+are named ng0, ng1, etc. When a node is shutdown, the
+corresponding interface is removed and the interface name
+becomes available for reuse by future iface nodes;
+new nodes always take the first unused interface. The node
+itself is assigned the same name as its interface, unless
+the name already exists, in which case the node remains
+unnamed.
+
+An iface
+node has a single hook corresponding to each supported
+protocol. Packets transmitted via the interface flow out the
+corresponding protocol-specific hook. Similarly, packets
+received on a hook appear on the interface as packets
+received into the corresponding protocol stack. The
+currently supported protocols are IP, IPv6, ATM, NATM, and
+NS.
+
+An iface
+node can be configured as a point-to-point interface or a
+broadcast interface. The configuration can only be changed
+when the interface is down. The default mode is
+point-to-point.
+
+Iface
+nodes support the Berkeley Packet Filter (BPF).
+
+HOOKS
+
+This node type supports the
+following hooks:
+
+inet
+
+Transmission
+and reception of IP packets.
+
+inet6
+
+Transmission
+and reception of IPv6 packets.
+
+atm
+
+Transmission
+and reception of ATM packets.
+
+natm
+
+Transmission
+and reception of NATM packets.
+
+ns
+
+Transmission
+and reception of NS packets.
+
+CONTROL MESSAGES
+
+This node type supports the
+generic control messages, plus the following:
+
+NGM_IFACE_GET_IFNAME
+(getifname)
+
+Returns the name of the
+associated interface as a NUL-terminated ASCII string.
+Normally this is the same as the name of the node.
+
+NGM_IFACE_GET_IFINDEX
+(getifindex)
+
+Returns the global index of the
+associated interface as a 32 bit integer.
+
+NGM_IFACE_POINT2POINT
+(point2point)
+
+Set the interface to
+point-to-point mode. The interface must not currently be
+up.
+
+NGM_IFACE_BROADCAST
+(broadcast)
+
+Set the interface to broadcast
+mode. The interface must not currently be up.
+
+SHUTDOWN
+
+This node shuts down upon
+receipt of a NGM_SHUTDOWN control message. The associated
+interface is removed and becomes available for use by future
+iface nodes.
+
+Unlike most
+other node types, an iface node does not go
+away when all hooks have been disconnected; rather, and
+explicit NGM_SHUTDOWN control message is required.
+
+ALTQ Support
+
+The ng_iface interface
+supports ALTQ bandwidth management feature. However,
+ng_iface is a special case, since it is not a
+physical interface with limited bandwidth. One should not
+turn ALTQ on ng_iface if the latter corresponds to
+some tunneled connection, e.g. PPPoE or PPTP. In this case,
+ALTQ should be configured on the interface that is used to
+transmit the encapsulated packets. In case when your graph
+ends up with some kind of serial line, either synchronous or
+modem, the ng_iface is the right place to turn ALTQ
+on.
+
+SEE ALSO
+
+altq(4), bpf(4), netgraph(4),
+ng_cisco(4), ifconfig(8), ngctl(8)
+
+HISTORY
+
+The iface node type was
+implemented in FreeBSD 4.0.
+
+AUTHORS
+
+Archie Cobbs
+archie [AT] FreeBSD.org>
+
+BSD
+January 12, 2015 BSD

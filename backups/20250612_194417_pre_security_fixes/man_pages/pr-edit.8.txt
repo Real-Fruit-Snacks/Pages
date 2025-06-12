@@ -1,0 +1,293 @@
+NAME
+
+pr−edit
+− creates, edits or deletes PRs
+
+SYNOPSIS
+
+pr−edit
+
+[ −−lock=username | −l username ]
+[ −−unlock | −u ]
+
+[ −−lockdb | −L ] [ −−unlockdb | −U ]
+
+[ −−check | −c ]
+[ −−check−initial | −C ]
+
+[ −−submit | −s ]
+
+[ −−append=field | −a field ]
+[ −−replace=field | −r field ]
+
+[ −−reason=reason | −R reason ]
+
+[ −−delete−pr ] 
+
+[ −−process=process−id | −p process−id ]
+
+[ −−database=database | −d database ]
+
+[ −−filename=filename | −f filename ]
+
+[ −−version | −V ]
+[ −−help | −h ]
+
+[ −−user=username | −v username ]
+
+[ −−passwd=password | −w password ]
+
+[ −−host=host | −H host ]
+
+[ −−port=port | −P port ]
+
+[ −−debug | −D ]
+
+[ PR ]
+
+DESCRIPTION
+
+pr−edit
+can be used to edit an existing PR by either
+replacing or appending to particular fields within the
+PR, or providing a new PR to replace the
+existing one. pr−edit can also be used to
+create new PRs from scratch, or delete existing
+ones.
+
+pr−edit
+also provides miscellaneous services for locking and
+unlocking PRs, locking or unlocking an entire
+database, or verifying that proposed PR contents are
+valid and correct.
+
+OPTIONS
+
+−−lockdb, −L
+
+Locks the specified database.
+No PRs may be edited, created or deleted while the database
+is locked.
+
+This option is
+generally used when editing the index file.
+
+−−unlockdb, −U
+
+Unlocks the database. No check
+is made that the invoking user actually had locked the
+database in the first place; hence, it is possible for
+anyone to steal a database lock.
+
+−−check, −c
+
+−−check−initial, −C
+
+The −−check
+options are used to verify that a proposed PR’s
+field contents are valid. The PR is read in (either
+from stdin or a file specified with
+−−filename), and its fields are compared
+against the rules specified by the database configuration of
+the selected database. Warnings are given for enumerated
+fields whose contents do not contain one of the required
+values or fields that do not match required regexps.
+
+−−check−initial
+is used to verify initial PRs, rather than proposed
+edits of existing PRs.
+
+−−submit, −s
+
+Used to submit a new PR
+to the database. The PR is read in and verified for
+content; if the PR is valid as an initial PR,
+it is then added to the database.
+
+A zero exit
+code is returned if the submission was successful.
+Otherwise, the reason(s) for the PR being rejected
+are printed to stdout, and a non-zero exit code is
+returned.
+
+The following
+options require a PR number to be given. 
+−−delete−pr
+
+Deletes the specified PR
+from the database. The PR must be in a closed state,
+and not locked.
+
+Only the GNATS
+user (by default gnats) is permitted to delete
+PRs.
+
+−−lock=username, −l username
+
+Locks the PR.
+username is associated with the lock, so the system
+administrator can determine who actually placed the lock on
+the PR. However, anyone is permitted to remove locks
+on a PR.
+
+If the optional
+−−process−id option is also given,
+that process−id is associated with the
+lock.
+
+−−unlock, −u
+
+Unlocks the PR.
+
+−−append=field, −a field
+
+−−replace=field, −r field
+
+−−append and
+−−replace are used to append or replace
+content of a specific field within a PR. The new
+field content is read in from stdin (or from the file
+specified with the −−filename option),
+and either appended or replaced to the specified field. The
+field contents are verified for correctness before the
+PR is rewritten.
+
+If the edit is
+successful, a zero exit status is returned. If the edit
+failed, a non-zero exit status is returned, and the reasons
+for the failure are printed to stdout.
+
+−−reason=reason, −R reason
+
+Certain PR fields are
+configured in the database configuration to require a short
+text describing the reason for every change that is made to
+them. If you edit a PR and change any such fields, you must
+provide a short text, the reason for the change,
+through this option. If the option is used and no
+change-reason requiring field is actually changed, the
+option has no effect.
+
+[PR]
+
+If only a PR number is specified with no other
+options, a replacement PR is read in (either from
+stdin or the file specified with
+−−filename). If the PR contents
+are valid and correct, the existing PR is replaced
+with the new PR contents.
+
+If the edit is
+successful, a zero exit status is returned. If the edit
+failed, a non-zero exit status is returned, and the reasons
+for the failure are printed to stdout.
+
+−−database=database, −d database
+
+Specifies the database which is
+to be manipulated. If no database is specified, the database
+named default is assumed. This option overrides the
+database specified in the GNATSDB environment
+variable.
+
+−−filename=filename, −f filename
+
+For actions that require
+reading in a PR or field content, this specifies the
+name of a file to read. If −−filename is
+not specified, the PR or field content is read in
+from stdin.
+
+−−version, −V
+
+Displays the version number of
+the program.
+
+−−help, −h
+
+Prints a brief usage
+message.
+
+−−host=host, −H host
+
+Hostname of the GNATS
+server.
+
+−−port=port, −P port
+
+The port that the GNATS server
+runs on.
+
+−−user=username, −v username
+
+Username used when logging into
+the GNATS server.
+
+−−passwd=password, −w password
+
+Password used when logging into
+the GNATS server.
+
+−−debug, −D
+
+Used to debug network
+connections.
+
+ENVIRONMENT VARIABLES
+
+The
+GNATSDB environment variable is used to determine
+which database to use. For a local database, it contains the
+name of the database to access.
+
+For network
+access via gnatsd, it contains a colon-separated list
+of strings that describe the remote database, in the form
+
+server:port:databasename:username:password
+
+Any of the
+fields may be omitted, but at least one colon must appear;
+otherwise, the value is assumed to be the name of a local
+database.
+
+If
+GNATSDB is not set and the --database option is not
+supplied, it is assumed that the database is local and that
+its name is default.
+
+SEE ALSO
+
+Keeping
+Track: Managing Messages With GNATS (also installed as
+the GNU Info file gnats.info)
+
+databases(5),
+dbconfig(5), delete-pr(8), edit-pr(1)
+file-pr(8), gen-index(8), gnats(7),
+gnatsd(8), mkcat(8), mkdb(8),
+pr-edit(8), query-pr(1), queue-pr(8),
+send-pr(1).
+
+COPYING
+
+Copyright (c)
+2000, 2003, Free Software Foundation, Inc.
+
+Permission is
+granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission
+notice are preserved on all copies.
+
+Permission is
+granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+
+Permission is
+granted to copy and distribute translations of this manual
+into another language, under the above conditions for
+modified versions, except that this permission notice may be
+included in translations approved by the Free Software
+Foundation instead of in the original English.

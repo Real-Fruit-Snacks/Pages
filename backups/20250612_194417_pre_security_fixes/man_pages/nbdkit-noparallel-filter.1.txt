@@ -1,0 +1,138 @@
+NAME
+
+nbdkit-noparallel-filter
+- nbdkit noparallel filter
+
+SYNOPSIS
+
+nbdkit
+--filter=noparallel plugin [serialize=MODE]
+[plugin-args...]
+
+DESCRIPTION
+
+"nbdkit-noparallel-filter"
+is a filter that intentionally disables parallelism in
+handling requests from clients. It is mainly useful for
+evaluating timing differences between various levels of
+parallelism. It can also be used as a way to work around any
+bugs in a plugin’s claimed level of parallel support,
+without recompiling the plugin, or to ease efforts when
+connecting with a client that can batch up several requests
+but is not prepared to handle out-of-order replies.
+
+To limit the
+number of concurrent clients it’s usually better to
+use nbdkit-limit-filter(1).
+
+PARAMETERS
+
+serialize=requests
+
+serialize=all-requests 
+serialize=connections
+
+Optional, controls how much
+serialization the filter will enforce. Mode requests
+(default) prevents a single client from having more than one
+in-flight request, but does not prevent parallel requests
+from a second connection (if the plugin supports that). Mode
+all-requests is stricter, enforcing that at most one
+request (regardless of connection) will be active, but does
+not prevent parallel connections (if the plugin supports
+that). Mode connections is strictest, where there can
+be at most one client at a time, and where the server will
+no longer advertise "NBD_FLAG_MULTI_CONN" to
+clients.
+
+EXAMPLES
+
+Serve the file
+disk.img, but disallow out-of-order transaction
+completion to a given client:
+
+nbdkit
+--filter=noparallel file disk.img
+
+Serve the file
+disk.img, but allowing only one client at a time:
+
+nbdkit
+--filter=noparallel file serialize=connections disk.img
+
+FILES
+
+$filterdir/nbdkit-noparallel-filter.so
+
+The filter.
+
+Use
+"nbdkit --dump-config" to find the location of
+$filterdir.
+
+VERSION
+
+"nbdkit-noparallel-filter"
+first appeared in nbdkit 1.14.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-file-plugin(1), nbdkit-filter(3),
+nbdkit-fua-filter(1), nbdkit-limit-filter(1),
+nbdkit-multi-conn-filter(1),
+nbdkit-nocache-filter(1),
+nbdkit-noextents-filter(1),
+nbdkit-nozero-filter(1).
+
+AUTHORS
+
+Eric Blake
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+•
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+•
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+•
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS ’’AS
+IS’’ AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

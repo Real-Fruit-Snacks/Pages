@@ -1,0 +1,154 @@
+NAME
+
+LIST_HEAD_INIT,
+LIST_HEAD, INIT_LIST_HEAD, list_add, list_add_tail,
+list_del, list_del_init, list_empty, list_join, list_sort,
+list_entry, list_for_each, list_for_each_prev - manipulate
+linked lists
+
+LIBRARIES
+
+Abz Library
+(-labz), Debug Library (-ldebug)
+
+SYNOPSIS
+
+#include
+
+LIST_HEAD_INIT(name)
+
+LIST_HEAD(name) 
+void INIT_LIST_HEAD(struct list_head *head);
+
+void list_add(struct list_head *entry, struct
+list_head *head); 
+void list_add_tail(struct list_head *entry,
+struct list_head *head); 
+void list_del(struct list_head *entry); 
+void list_del_init(struct list_head *entry);
+
+int list_empty(struct list_head *head); 
+void list_join(struct list_head *list, struct
+list_head *head); 
+void list_sort(struct list_head *head,
+
+int(*"compar)(struct
+list_head *,struct list_head *));
+
+type
+*list_entry(ptr,type,member); 
+list_for_each(pos,tmp,head) 
+list_for_each_prev(pos,tmp,head)
+
+DESCRIPTION
+
+These routines
+and macros can be used to implement and manipulate doubly
+linked lists.
+
+Initialization
+
+There are three macros to help you declare and initialize a
+linked list.
+
+struct
+list_head list = LIST_HEAD_INIT(list); 
+LIST_HEAD(list); 
+struct list_head list; INIT_LIST_HEAD(&list);
+
+The three lines
+above all accomplish the same thing.
+
+Manipulation
+
+You would normally declare a structure with all the relevant
+members and at least one list_head pointer for use by the
+functions below. For example:
+
+struct my_list
+{
+
+...
+
+struct list_head node;
+
+};
+
+Once the
+structure have been added to the list, you can get a pointer
+to your structure using the list_entry() macro. For
+example:
+
+struct
+list_head *ctr,*tmp; 
+struct my_list *entry;
+
+list_for_each(ctr,tmp,&list)
+{
+
+entry = list_entry(ctr,struct my_list,node);
+
+/* entry points to your ’struct my_list’
+*/ 
+
+}
+
+list_add()
+adds a new entry after the specified head. This is
+good for implementing stacks.
+
+list_add_tail()
+adds a new entry before the specified head. This is
+good for implementing queues.
+
+list_del()
+deletes an antry. list_empty() on entry does
+not return true after this. The entry is in an undefined
+state.
+
+list_del_init()
+deletes an entry and reinitializes init.
+
+list_join()
+joins two lists. list will be prepended to
+head. list is undefined after this
+operation.
+
+list_sort()
+sorts a list. The contents of the list are sorted in
+ascending order according to a comparison function pointed
+to by compar, which is called with two arguments that
+point to the objects being compared.
+
+The comparison
+function must return an integer less than, equal to, or
+greater than zero if the first argument is considered to be
+respectively less than, equal to, or greater than the
+second. If two members compare as equal, their order in the
+sorted list is undefined.
+
+Traversal
+
+Two for-loop macros are provided to traverse lists.
+
+list_for_each
+iterates over a list. pos is the &struct
+list_head to use as a loop counter, tmp is another
+&struct list_head to use as temporary storage, and
+head is the head of the list.
+
+list_for_each_prev
+iterates over a list in reverse order. The parameters are
+the same as those in the list_for_each macro.
+
+NOTES
+
+None of the
+libabz routines are thread-safe. I’m not planning to
+change this either! For more information, please see
+http://threading.2038bug.com/
+
+AUTHOR
+
+Written by
+Abraham vd Merwe abz [AT] blio.com>

@@ -1,0 +1,993 @@
+NAME
+
+pmrep -
+performance metrics reporter
+
+SYNOPSIS
+
+pmrep
+[-12357CdgGHIjkLmnprRuUvVxz?] [-4
+action] [-6 sort-metric]
+[-8|-9 limit] [-a
+archive] [-A align]
+[--archive-folio folio] [-b|-B
+space-scale] [-c config]
+[--container container] [--daemonize]
+[-e derived] [-E lines]
+[-f format] [-F outfile]
+[-h host] [-i instances]
+[--include-texts] [-J rank] [-K
+spec] [-l delimiter] [-N
+predicate] [--no-inst-info] [-o
+output] [-O origin]
+[-P|-0 precision] [-q|-Q
+count-scale] [-s samples] [-S
+starttime] [-t interval] [-T
+endtime] [-w|-W width]
+[-X label] [-y|-Y
+time-scale] [-Z timezone]
+metricspec [...]
+
+DESCRIPTION
+
+pmrep is
+a customizable performance metrics reporting tool. Any
+available performance metric, live or archived, system
+and/or application, can be selected for reporting using one
+of the output alternatives listed below together with
+applicable formatting options.
+
+pmrep
+collects selected metric values through the facilities of
+the Performance Co-Pilot (PCP), see PCPIntro(1). The
+metrics to be reported are specified on the command line, in
+configuration files, or both. Metrics can be automatically
+converted and scaled using the PCP facilities, either by
+default or by per-metric scaling specifications. In addition
+to the existing metrics, derived metrics can be defined
+using the arithmetic expressions described in
+pmRegisterDerived(3).
+
+A wide range of
+metricsets (see below) is included by default, providing
+reports on per-process details, NUMA performance, mimicking
+other tools like sar(1) and more, see the
+pmrep configuration files in
+$PCP_SYSCONF_DIR/pmrep (typically
+/etc/pcp/pmrep) for details. Tab completion for
+options, metrics, and metricsets is available for bash and
+zsh.
+
+Unless directed
+to another host by the -h option, pmrep will
+contact the Performance Metrics Collector Daemon (PMCD, see
+pmcd(1)) on the local host.
+
+The -a
+option causes pmrep to use the specified set of
+archives rather than connecting to a PMCD. The -a and
+-h options are mutually exclusive.
+
+The -L
+option causes pmrep to use a local context to collect
+metrics from DSO PMDAs (Performance Metrics Domain Agents,
+’’plugins’’) on the local host
+without PMCD. Only some metrics are available in this mode.
+The -a, -h, and -L options are mutually
+exclusive.
+
+The metrics of
+interest are named in the metricspec argument(s). If
+a metricspec specifies a non-leaf node in the Performance
+Metrics Name Space (PMNS), then pmrep will
+recursively descend the PMNS and report on all leaf nodes
+(i.e., metrics) for that metricspec. Use pminfo(1) to
+list all the metrics (PMNS lead nodes) and their
+descriptions.
+
+A
+metricspec has three different forms. First, on the
+command line it can start with a colon
+(’’:’’) to indicate a
+metricset to be read from pmrep configuration
+files (see -c and pmrep.conf(5)), which may
+then consist of any number of metrics. Second, a
+metricspec starting with non-colon specifies a PMNS
+node as described above, optionally followed by metric
+output formatting definitions. This so-called compact
+form of a metricspec is defined as follows:
+
+metric[,label[,instances[,unit/scale[,type[,width[,precision[,limit]]]]]]]
+
+A valid PMNS
+node (metric) is mandatory. It may be followed by a
+text label used with stdout output. The
+optional instances definition restricts csv
+and stdout reporting to the specified instances of
+the metric so non-matching instances will be filtered out
+(see -i). An optional unit/scale is applicable
+for dimension-compatible, non-string metrics. See below for
+supported unit/scale specifications. By default,
+cumulative counter metrics are converted to rates, an
+optional type can be set to raw to disable
+this rate conversion. For stdout output a numeric
+width can be used to set the width of the output
+column for this metric. Too wide strings in the output will
+be truncated to fit the column. A metric-specific
+precision can be provided for numeric non-integer
+output values. Lastly, a metric-specific limit can be
+set for filtering out numeric values per the limit.
+
+As a special
+case for metrics that are counters with time units
+(nanoseconds to hours), the unit/scale can be used to
+change the default reporting (for example, milliseconds /
+second) to normalize to the range zero to one by setting
+this to sec (see also -y and -Y).
+
+The following
+metricspec requests the metric
+kernel.all.sysfork to be reported under the text
+label forks, converting to the metric default rate
+count/s in an 8 wide column. Although the definitions
+in this compact form are optional, they must always
+be provided in the order specified above, thus the
+commas.
+
+kernel.all.sysfork,forks,,,,8
+
+The third form
+of a metricspec, verbose form, is described and valid
+only in pmrep.conf(5).
+
+Derived metrics
+are specified like regular PMNS leaf node metrics.
+
+Options via
+environment values (see pmGetOptions(3)) override the
+corresponding built-in default values (if any).
+Configuration file options override the corresponding
+environment variables (if any). Command line options
+override the corresponding configuration file options (if
+any).
+
+OPTIONS
+
+The available
+command line options are: 
+-0 precision,
+--precision-force=precision
+
+Like -P but this option
+will override per-metric specifications.
+
+-1,
+--dynamic-header
+
+Print a new dynamically
+adjusted header every time changes in the availability of
+metric and instance values occur. By default a static header
+that never changes is printed once. See also -4,
+-7, and -E.
+
+-2,
+--overall-rank
+
+Perform overall ranking of
+instances in archive. By default ranking (see -J) and
+reporting happens on each interval. With this option all
+instances and values are ranked before a summary is
+reported. See pmlogsummary(1) for further archive
+summary reporting alternatives, including averages and peak
+times for values.
+
+-3,
+--overall-rank-alt
+
+Like -2 but print metric
+instances in pmrep metricspec format, to allow
+easily selecting the instances for further
+investigation.
+
+-4 action,
+--names-change=action
+
+Specify which action to
+take on receiving a metric names change event during
+sampling. These events occur when a PMDA discovers new
+metrics sometime after starting up, and informs running
+client tools like pmrep. Valid values for
+action are update (refresh metrics being
+sampled), ignore (do nothing - the default behaviour)
+and abort (exit the program if such an event occurs).
+update implies --dynamic-header.
+
+-5,
+--ignore-unknown
+
+Silently ignore any metric name
+that cannot be resolved. At least one metric must be found
+for the tool to start.
+
+-6,
+--sort-metric=sort-metric
+
+Specify a sort reference metric
+to sort output by values with -X. By default sorting
+order is descending, prepending the metric name with the
+minus sign (’’-’’) will change the
+order to be ascending. See also -J and -N.
+
+-7,
+--fixed-header
+
+With -X print a fixed
+header once (unless using -E) including all metrics
+being reported. Unlike with the default (static) header,
+only instances with values available are reported. Unlike
+with the dynamic header, the header is not updated even if
+values for some metrics later become (un)available. See also
+-1 and -E.
+
+-8 limit,
+--limit-filter=limit
+
+Limit results to instances with
+values above/below limit. A positive integer will
+include instances with values at or above the limit in
+reporting. A negative integer will include instances with
+values at or below the limit in reporting. A value of zero
+performs no limit filtering. This option will not
+override possible per-metric specifications. See also
+-J and -N.
+
+-9 limit,
+--limit-filter-force=limit
+
+Like -8 but this option
+will override per-metric specifications.
+
+-a archive,
+--archive=archive
+
+Performance metric values are
+retrieved from the set of Performance Co-Pilot (PCP) archive
+files identified by the archive argument, which is a
+comma-separated list of names, each of which may be the base
+name of an archive or the name of a directory containing one
+or more archives. See also -u.
+
+-A align,
+--align=align
+
+Force the initial sample to be
+aligned on the boundary of a natural time unit align.
+Refer to PCPIntro(1) for a complete description of
+the syntax for align.
+
+--archive-folio=folio
+
+Read metric source archives
+from the PCP archive folio created by tools like
+pmchart(1) or, less often, manually with
+mkaf(1).
+
+-b scale,
+--space-scale=scale
+
+Unit/scale for space
+(byte) metrics, possible values include bytes,
+Kbytes, KB, Mbytes, MB, and so
+forth. This option will not override possible
+per-metric specifications. See also
+pmParseUnitsStr(3).
+
+-B scale,
+--space-scale-force=scale
+
+Like -b but this option
+will override per-metric specifications.
+
+-c config,
+--config=config
+
+Specify the config file
+or directory to use. In case config is a directory
+all files in it ending .conf will be included. The
+default is the first found of: ./pmrep.conf,
+$HOME/.pmrep.conf, $HOME/pcp/pmrep.conf,
+$PCP_SYSCONF_DIR/pmrep/pmrep.conf, and
+$PCP_SYSCONF_DIR/pmrep. See pmrep.conf(5).
+
+--container=container
+
+Fetch performance metrics from
+the specified container, either local or remote (see
+-h).
+
+-C, --check
+
+Exit before reporting any
+values, but after parsing the configuration and metrics and
+printing possible headers.
+
+-d, --delay
+
+When replaying from an archive,
+this option requests that the prevailing real-time delay be
+applied between samples (see -t) to effect a pause,
+rather than the default behaviour of replaying at full
+speed.
+
+--daemonize
+
+Daemonize on startup.
+
+-e derived,
+--derived=derived
+
+Specify derived
+performance metrics. If derived starts with a slash
+(’’/’’) or with a dot
+(’’.’’) it will be interpreted as a
+PCP derived metrics configuration file, otherwise it will be
+interpreted as comma- or semicolon-separated derived metric
+expressions. For complete description of derived metrics and
+PCP derived metrics configuration files see
+pmLoadDerivedConfig(3) and
+pmRegisterDerived(3). Alternatively, using
+pmrep.conf(5) configuration syntax allows defining
+derived metrics as part of metricsets.
+
+-E lines,
+--repeat-header=lines
+
+Repeat the header every
+lines of output. When not using -1 or
+-7 use auto to repeat the header based on
+terminal height. See also -1 and -7.
+
+-f format,
+--timestamp-format=format
+
+Use the format string
+for formatting the timestamp. The format will be used with
+Python’s datetime.strftime method which is
+mostly the same as that described in strftime(3). An
+empty format string (i.e., "") will remove
+the timestamps from the output. Defaults to %H:%M:%S
+when using the stdout output target. Defaults to
+%Y-%m-%d %H:%M:%S when using the csv output
+target.
+
+-F outfile,
+--output-file=outfile
+
+Specify the output file
+outfile. See -o.
+
+-g,
+--separate-header
+
+Output the column number and
+complete metric information, one-per-line, before printing
+the metric values.
+
+-G,
+--no-globals
+
+Do not include global metrics
+in reporting (see pmrep.conf(5)).
+
+-h host,
+--host=host
+
+Fetch performance metrics from
+pmcd(1) on host, rather than from the default
+localhost.
+
+-H,
+--no-header
+
+Do not print any headers.
+
+-i instances,
+--instances=instances
+
+Retrieve and report only the
+specified metric instances. By default all initially
+present instances are reported, except when writing an
+archive (see -o), where also all future instances
+will be reported.
+
+The specified
+instances are filtered from the initially present
+instances when the tool is starting up. Thus instances which
+would match the filter appearing after the tool has started
+up will not be reported, use -j to change this.
+
+This is a
+global option that is used for all set-valued metrics unless
+a metric-specific instance filter is provided as part of a
+metricspec. By default single-valued
+’’flat’’ metrics without instances
+are still reported as usual, use -v to change
+this.
+
+instances
+is a comma-separated list of one or more instance filter
+specifications. Filters containing commas or whitespace must
+be quoted with single (’) or double (") quotes.
+Note that as part of a metricspec on command line a
+list with more than one filter both the list and each filter
+must be quoted as shown below. It is also possible to define
+a single filter with bars (|) as instance separating regex
+in order to make quoting easier, see below.
+
+Multiple
+-i options are allowed as an alternative way of
+specifying more than one non-metric-specific instance
+filters.
+
+An individual
+instance filter can be one of the following:
+
+name
+
+Full instance name. For example, sda for
+disk.dev instances or eth0 for
+network.interface instances.
+
+PID
+
+Process ID for proc instances.
+
+command
+
+Base name of a process for proc instances. For
+example, pmcd would match all pmcd(1)
+processes regardless of their path or PID.
+
+regex
+
+Regular expression. For example, .*python.* would
+match all instances having the string python as part
+of their instance name, meaning that this would match all
+Python processes regardless of their path, PID, or
+version. 
+
+As an example,
+the following would report the same instances:
+
+$ pmrep -i
+’. minute’ kernel.all.load 
+$ pmrep -i ’1 minute’,’5 minute’
+kernel.all.load 
+$ pmrep -i "’1 minute’,’5
+minute’" kernel.all.load 
+$ pmrep -i ’1 minute’ -i ’5 minute’
+kernel.all.load 
+$ pmrep kernel.all.load,,"’1
+minute’,’5 minute’" 
+$ pmrep kernel.all.load,,’1 minute|5
+minute’
+
+However, this
+would report only the 1-minute instance:
+
+$ pmrep -i
+’1 minute’,’5 minute’
+kernel.all.load,,’1 minute’
+
+And this would
+report all instances (due to per-metric regex):
+
+$ pmrep -i
+’1 minute’,’5 minute’
+’kernel.all.load,,.*’
+
+-I,
+--ignore-incompat
+
+Ignore incompatible metrics. By
+default incompatible metrics (that is, their type is
+unsupported or they cannot be scaled as requested) will
+cause pmrep to terminate with an error message. With
+this option all incompatible metrics are silently omitted
+from reporting. This may be especially useful when
+requesting non-leaf nodes of the PMNS tree for
+reporting.
+
+--include-texts
+
+When writing a PCP archive,
+include PCP metric help texts in the created archive.
+
+-j,
+--live-filter
+
+Perform instance live
+filtering. This allows capturing all named instances even if
+processes are restarted at some point (unlike without live
+filtering). Performing live filtering over a huge number of
+instances will add some internal overhead so a bit of user
+caution is advised. See also -1 and -n.
+
+-J rank,
+--rank=rank
+
+Limit results to highest/lowest
+ranked instances of set-valued metrics. A positive
+integer will include highest valued instances in reporting.
+A negative integer will include lowest valued instances in
+reporting. A value of zero performs no ranking. Ranking does
+not imply sorting, see -6. See also -2 and
+-8.
+
+-k,
+--extended-csv
+
+Write extended CSV output,
+similar to sadf(1).
+
+-K spec,
+--spec-local=spec
+
+When fetching metrics from a
+local context (see -L), the -K option may be
+used to control the DSO PMDAs that should be made
+accessible. The spec argument conforms to the syntax
+described in pmSpecLocalPMDA(3). More than one
+-K option may be used.
+
+-l delimiter,
+--delimiter=delimiter
+
+Specify the delimiter
+that separates each column of csv or stdout
+output. The default for stdout is two spaces
+(’’ ’’) and comma
+(’’,’’) for csv. When using a
+non-whitespace delimiter, all instances of the delimiter in
+string values will be replaced by the underscore
+(’’_’’) character.
+
+-L,
+--local-PMDA
+
+Use a local context to collect
+metrics from DSO PMDAs on the local host without PMCD. See
+also -K.
+
+-m,
+--include-labels
+
+Include PCP metric labels in
+the output.
+
+-n,
+--invert-filter
+
+Perform ranking before live
+filtering. By default instance live filtering (when
+requested, see -j) happens before instance ranking
+(when requested, see -J). With this option the logic
+is inverted and ranking happens before live filtering.
+
+-N predicate,
+--predicate=predicate
+
+Specify a comma-separated list
+of predicate filter reference metrics. By default
+ranking (see -J) happens for each metric
+individually. With predicates, ranking is done only for the
+specified predicate metrics. When reporting, rest of the
+metrics sharing the same instance domain (see
+PCPIntro(1)) as the predicate will include only the
+highest/lowest ranking instances of the corresponding
+predicate. Ranking does not imply sorting, see
+-6.
+
+So for example,
+using proc.memory.rss (resident memory size of
+process) as the predicate metric together with
+proc.io.total_bytes and mem.util.used as
+metrics to be reported, only the processes using most/least
+(as per -J) memory will be included when reporting
+total bytes written by processes. Since mem.util.used
+is a single-valued metric (thus not sharing the same
+instance domain as the process related metrics), it will be
+reported as usual.
+
+--no-inst-info
+
+Omit instance information from
+headers. Not applicable with separate header (see
+-g).
+
+-o output,
+--output=output
+
+Use output target for
+reporting. The default target is stdout. The
+available output target alternatives are: 
+archive
+
+Record metrics into a PCP
+archive which can later be replayed with PCP tools,
+including pmrep itself. See LOGARCHIVE(5) and
+PCPIntro(1) for details about PCP archive files.
+Requires -F.
+
+csv
+
+Print metrics in CSV format
+(subject to formatting options).
+
+stdout
+
+Print metrics to stdout (format
+subject to formatting options).
+
+-O origin,
+--origin=origin
+
+When reporting archived
+metrics, start reporting at origin within the time
+window (see -S and -T). Refer to
+PCPIntro(1) for a complete description of the syntax
+for origin.
+
+-p,
+--timestamps
+
+Print timestamps. By default no
+timestamps are printed.
+
+-P precision,
+--precision=precision
+
+Use precision for
+numeric non-integer output values. If the value is too wide
+for its column width, precision is reduced one by one
+until the value fits, or not printed at all if it does not.
+The default is to use 3 decimal places (when applicable).
+This option will not override possible per-metric
+specifications.
+
+-q scale,
+--count-scale=scale
+
+Unit/scale for count
+metrics, possible values include count x 10^-1,
+count, count x 10, count x 10^2, and so
+forth from 10^-8 to 10^7. (These values are
+currently space-sensitive.) This option will not
+override possible per-metric specifications. See also
+pmParseUnitsStr(3).
+
+-Q scale,
+--count-scale-force=scale
+
+Like -q but this option
+will override per-metric specifications.
+
+-r, --raw
+
+Output raw metric values, do
+not convert cumulative counters to rates. When writing
+archives, raw values are always used. This option
+will override possible per-metric specifications.
+
+-R,
+--raw-prefer
+
+Like -r but this option
+will not override per-metric specifications.
+
+-s samples,
+--samples=samples
+
+The samples argument
+defines the number of samples to be retrieved and reported.
+If samples is 0 or -s is not specified,
+pmrep will sample and report continuously (in real
+time mode) or until the end of the set of PCP archives (in
+archive mode). See also -T.
+
+-S starttime,
+--start=starttime
+
+When reporting archived
+metrics, the report will be restricted to those records
+logged at or after starttime. Refer to
+PCPIntro(1) for a complete description of the syntax
+for starttime.
+
+-t interval,
+--interval=interval
+
+Set the reporting
+interval to something other than the default 1
+second. The interval argument follows the syntax
+described in PCPIntro(1), and in the simplest form
+may be an unsigned integer (the implied units in this case
+are seconds). See also the -T and -u
+options.
+
+-T endtime,
+--finish=endtime
+
+When reporting archived
+metrics, the report will be restricted to those records
+logged before or at endtime. Refer to
+PCPIntro(1) for a complete description of the syntax
+for endtime.
+
+When used to
+define the runtime before pmrep will exit, if no
+samples is given (see -s) then the number of
+reported samples depends on interval (see -t).
+If samples is given then interval will be
+adjusted to allow reporting of samples during
+runtime. In case all of -T, -s, and -t
+are given, endtime determines the actual time
+pmrep will run.
+
+-u,
+--no-interpol
+
+When reporting archived
+metrics, by default values are reported according to the
+selected sample interval (-t option), not according
+to the actual record interval in an archive. To this effect
+PCP interpolates the values to be reported based on the
+records in the archive. With the -u option
+uninterpolated reporting is enabled, every recorded value
+for the selected metrics is reported and the requested
+sample interval (-t) is ignored.
+
+So for example,
+if a PCP archive contains recorded values for every 10
+seconds and the requested sample interval is 1 hour, by
+default pmrep will use an interpolation scheme to
+compute the values of the requested metrics from the values
+recorded in the proximity of these requested metrics and
+values for every 1 hour are reported. With -u every
+record every 10 seconds are reported as such (the reported
+values are still subject to rate conversion, use -r
+or -R to disable).
+
+-U,
+--no-unit-info
+
+Omit unit information from
+headers.
+
+-v,
+--omit-flat
+
+Report only set-valued metrics
+with instances (e.g. disk.dev.read) and omit single-valued
+’’flat’’ metrics without instances
+(e.g. kernel.all.sysfork). See -i and -I.
+
+-V, --version
+
+Display version number and
+exit.
+
+-w width,
+--width=width
+
+Set the stdout output
+column width. Strings will be truncated to this
+width. The default width is the shortest that can fit
+the metric text label, the forced minimum is 3. This option
+will not override possible per-metric
+specifications.
+
+-W width,
+--width-force=width
+
+Like -w but this option
+will override per-metric specifications.
+
+-x,
+--extended-header
+
+Print extended header.
+
+-X label,
+--colxrow=label
+
+Swap columns and rows in
+stdout output, reporting one instance per line, using
+label as the text label for the instance column. Use
+an empty string ("") to enable swapping without a
+specific column label. This change in output allows using
+grep(1) to filter results or to more closely mimic
+other tools. See also -i and -6.
+
+-y scale,
+--time-scale=scale
+
+Unit/scale for time
+metrics, possible values include nanosec, ns,
+microsec, us, millisec, ms, and
+so forth up to hour, hr. This option will
+not override possible per-metric specifications. See
+also pmParseUnitsStr(3).
+
+-Y scale,
+--time-scale-force=scale
+
+Like -y but this option
+will override per-metric specifications.
+
+-z,
+--hostzone
+
+Use the local timezone of the
+host that is the source of the performance metrics, as
+identified by either the -h or the -a options.
+The default is to use the timezone of the local host.
+
+-Z timezone,
+--timezone=timezone
+
+Use timezone for the
+date and time. Timezone is in the format of the
+environment variable TZ as described in
+environ(7). Note that when including a timezone
+string in output, ISO 8601 -style UTC offsets are used (so
+something like -Z EST+5 will become UTC-5).
+
+-?, --help
+
+Display usage message and
+exit.
+
+EXAMPLES
+
+The following
+examples use the standard PCP facilities for collecting the
+metric values, no external utilities are needed. The
+referenced colon-starting metricsets are part of the
+default pmrep configuration. With bash and zsh tab
+completes available options, metrics, and after a colon
+metricsets.
+
+Display network
+interface metrics on the local host:
+
+$ pmrep
+network.interface.total.bytes
+
+Display all
+outgoing network metrics for the wlan0 interface:
+
+$ pmrep -i wlan0 -v
+network.interface.out
+
+Display the
+slab total usage (in MB) of two specific slab instances:
+
+$ pmrep
+mem.slabinfo.slabs.total_size,,’kmalloc-4k|xfs_inode’,MB
+
+Display
+timestamped vmstat(8) like information using
+megabytes instead of kilobytes and also include the number
+of inodes used:
+
+$ pmrep -p -B MB :vmstat
+vfs.inodes.count
+
+Display
+per-device disk reads and writes from the host
+server1 using two seconds interval and sadf(1)
+like CSV output format:
+
+$ pmrep -h server1 -t 2s -o
+csv -k disk.dev.read disk.dev.write
+
+Display
+processes using at least 100MB of memory using dynamic
+headers, additionally use -g to display instance
+(process) names in full:
+
+$ pmrep -b MB --limit-filter
+100 --dynamic-header proc.memory.rss
+
+Display the
+predefined set of metrics from the default
+pmrep.conf(5) containing details about I/O requests
+by current pmlogger process(es):
+
+$ pmrep -gp -i pmlogger
+:proc-io
+
+Display the
+three most CPU-using processes:
+
+$ pmrep -1gUJ 3
+proc.hog.cpu
+
+Display sar
+-w and sar -W like information at the same time
+from the PCP archive ./20150921.09.13 showing values
+recorded between 3 - 5 PM:
+
+$ pmrep -a ./20150921.09.13
+-S @15:00 -T @17:00 :sar-w :sar-W
+
+Record most
+relevant CPU, memory, and I/O related information about
+every Java process on the system, present and future, to an
+archive ./a on one minute interval at every full
+minute in a background process:
+
+$ pmrep --daemonize -A 1m -t
+1m -i ’.*java.*’ -j -o archive -F ./a \ 
+:proc-info :proc-cpu :proc-mem :proc-io
+
+Record all 389
+Directory Server, XFS file system, and CPU/memory/disk
+metrics every five seconds for five minutes to a PCP archive
+./a:
+
+$ pmrep -t 5s -T 5m -o
+archive -F ./a ds389 xfs kernel.all.cpu mem disk
+
+Record process
+memory and I/O information for those processes which are the
+three most memory-consuming processes:
+
+$ pmrep -o archive -F ./a -J
+3 -N proc.memory.rss proc.memory proc.io
+
+FILES
+
+pmrep.conf
+
+pmrep configuration file
+(see -c)
+
+$PCP_SYSCONF_DIR/pmrep/*.conf
+
+system provided default
+pmrep configuration files
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+For environment
+variables affecting PCP tools, see
+pmGetOptions(3).
+
+SEE ALSO
+
+PCPIntro(1),
+mkaf(1), pcp(1), pcp-atop(1),
+pcp2elasticsearch(1), pcp2graphite(1),
+pcp2influxdb(1), pcp2json(1),
+pcp2spark(1), pcp2xlsx(1), pcp2xml(1),
+pcp2zabbix(1), pmcd(1), pmchart(1),
+pmdiff(1), pmdumplog(1), pmdumptext(1),
+pminfo(1), pmiostat(1),
+pmlogextract(1), pmlogsummary(1),
+pmprobe(1), pmstat(1), pmval(1),
+sadf(1), sar(1), pmGetOptions(3),
+pmLoadDerivedConfig(3), pmParseUnitsStr(3),
+pmRegisterDerived(3), pmSpecLocalPMDA(3),
+strftime(3), LOGARCHIVE(5),
+pcp.conf(5), pmrep.conf(5), PMNS(5),
+environ(7) and vmstat(8).

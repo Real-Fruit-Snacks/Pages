@@ -1,0 +1,140 @@
+NAME
+
+fns_dns −
+overview of FNS over DNS implementation
+
+DESCRIPTION
+
+Federated
+Naming Service (FNS) provides a method for federating
+multiple naming services under a single, simple interface
+for the basic naming operations. One of the naming services
+supported by FNS is the Internet Domain Name System,
+or DNS (see in.named(1M)). DNS is a
+hierarchical collection of name servers that provide the
+Internet community with host and domain name resolution.
+FNS uses DNS to name entities globally. Names
+can be constructed for any enterprise that is accessible on
+the Internet; consequently, names can also be constructed
+for objects exported by these enterprises.
+
+FNS
+provides the XFN interface for performing naming
+resolution on DNS domains and hosts. In addition,
+enterprise namespaces such as those served by NIS+
+and NIS can be federated with DNS by adding
+TXT records to DNS. To federate an NIS+
+or NIS namespace under DNS, you first obtain
+the root reference for the NIS+ hierarchy or
+NIS domain. This reference is referred to as the
+next naming system reference because it refers to the
+next naming system beneath the DNS domain.
+This reference contains information about how to communicate
+with the NIS+ or NIS servers and has the
+following format:
+
+domainname>
+server name> [ server
+address> ]
+
+where
+domainname> is the fully qualified domain
+name. Notice that NIS+ and NIS have slightly
+different syntaxes for domain names. For NIS+, the
+fully qualified domain name is case-insensitive and
+terminated by a dot character (’.’). For
+NIS, the fully qualified domain name is
+case-sensitive and is not terminated by a dot
+character. For both NIS+ and NIS,
+server address> is optional. If it is not
+supplied, a host name lookup will be performed to get the
+machine’s address.
+
+For example, if
+the machine wiz-nisplus-server with address
+133.33.33.33 serves the NIS+ domain
+wiz.com., the reference would look like this:
+
+wiz.com.
+wiz-nisplus-server 133.33.33.33
+
+For NIS,
+the reference information is of the form:
+
+domainname>
+server name>
+
+For example, if
+the machine woz-nis-server serves the NIS
+domain Woz.COM, the reference would look like
+this:
+
+Woz.COM
+woz-nis-server
+
+After obtaining
+this information, you then edit the DNS table (see
+in.named(1M)) and add a TXT record with this
+reference information. The TXT record must be
+associated with a DNS domain that includes an
+NIS record. For example, the reference information
+shown in the examples above would be entered as follows.
+
+For
+NIS+:
+
+TXT
+"XFNNISPLUS wiz.com. wiz-nisplus-server
+133.33.33.33"
+
+For
+NIS:
+
+TXT
+"XFNNIS woz.com woz-nis-server"
+
+Note the
+mandatory double quotes (’"’)
+delimiting the contents of the TXT record. After
+making any changes to the DNS table, you must notify
+the server by either restarting it or sending it a signal to
+reread the table:
+
+#kill -HUP
+’cat /etc/named.pid’
+
+This update
+effectively adds the next naming system reference to
+DNS. You can look up this reference using
+fnlookup(1) to see if the information has been added
+properly. For example, the following command looks up the
+next naming system reference of the DNS domain
+Wiz.COM:
+
+#fnlookup -v
+.../Wiz.COM/
+
+Note the
+mandatory trailing slash (’/’).
+
+After this
+administrative step has been taken, clients outside of the
+NIS+ hierarchy or NIS domain can access and
+perform operations on the contexts in the NIS+
+hierarchy or NIS domain. Foreign NIS+ clients
+access the hierarchy as unauthenticated NIS+ clients.
+Continuing the example above, and assuming that NIS+
+is federated underneath the DNS domain
+Wiz.COM, you can now list the root of the NIS+
+enterprise using the command:
+
+#fnlist
+.../Wiz.COM/
+
+SEE ALSO
+
+fnlist(1),
+fnlookup(1), nis+(1), in.named(1M),
+ypserv(1M), xfn(3XFN), fns(5),
+fns_nis(5), fns_nis+(5),
+fns_references(5), fns_x500(5)

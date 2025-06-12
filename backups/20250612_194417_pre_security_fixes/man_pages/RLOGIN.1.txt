@@ -1,0 +1,170 @@
+RLOGIN(1) BSD General Commands Manual RLOGIN(1)
+
+NAME
+
+rlogin — remote
+login
+
+SYNOPSIS
+
+rlogin
+[−468DEd] [−e char]
+[−i localname]
+[−l username] host
+
+DESCRIPTION
+
+The rlogin utility starts
+a terminal session on a remote host host.
+
+The
+rlogin utility first attempts to use the Kerberos
+authorization mechanism, described below. If the remote host
+does not support Kerberos the standard Berkeley
+rhosts authorization mechanism is used.
+
+The following
+options are available:
+
+−4
+
+Use IPv4
+addresses only.
+
+−6
+
+Use IPv6
+addresses only.
+
+−8
+
+Allow an
+eight-bit input data path at all times; otherwise parity
+bits are stripped except when the remote side’s stop
+and start characters are other than ^S/^Q.
+
+−D
+
+Set the
+TCP_NODELAY socket option which can improve interactive
+response at the expense of increased network load.
+
+−E
+
+Stop any
+character from being recognized as an escape character. When
+used with the −8 option, this provides a
+completely transparent connection.
+
+−d
+
+Turn on socket
+debugging (see setsockopt(2)) on the TCP sockets used for
+communication with the remote host.
+
+−e
+
+Allow user
+specification of the escape character, which is
+’’~’’ by default. This specification
+may be as a literal character, or as an octal value in the
+form \nnn.
+
+−i
+
+Allow the
+caller to specify a different local name to be used for
+authentication. This option is restricted to processes with
+uid 0.
+
+−l
+
+Specify a
+different username for the remote login. If this
+option is not specified, your local username will be
+used.
+
+A line of the
+form ’’⟨
+
+escape char ⟩ .’’ disconnects from the
+remote host. Similarly, the line ’’⟨ 
+escape char ⟩ ^Z’’ will suspend the
+rlogin session, and ’’⟨ 
+escape char ⟩ ⟨ 
+delayed-suspend char ⟩ ’’ suspends the
+send portion of the rlogin session, but allows output
+from the remote system. By default, the tilde
+(’’~’’) character is the escape
+character, and normally control-Y
+(’’^Y’’) is the delayed-suspend
+character.
+
+All echoing
+takes place at the remote site, so that (except for delays)
+the rlogin is transparent. Flow control via ^S/^Q and
+flushing of input and output on interrupts are handled
+properly.
+
+KERBEROS
+AUTHENTICATION
+
+Each user may have a private
+authorization list in the file .klogin in their home
+directory. Each line in this file should contain a Kerberos
+principal name of the form principal.instance@realm.
+If the originating user is authenticated to one of the
+principals named in .klogin, access is granted to the
+account. The principal accountname.@localrealm is
+granted access if there is no .klogin file. Otherwise
+a login and password will be prompted for on the remote
+machine as in login(1). To avoid certain security problems,
+the .klogin file must be owned by the remote
+user.
+
+If Kerberos
+authentication fails, a warning message is printed and the
+standard Berkeley rlogin is used instead.
+
+ENVIRONMENT
+
+The following environment
+variable is utilized by rlogin:
+
+TERM
+
+Determines the
+user’s terminal type.
+
+SEE ALSO
+
+login(1), rsh(1), telnet(1),
+setsockopt(2), kerberos(3), krb_realmofhost(3),
+krb_sendauth(3), ruserok(3), tty(4), auth.conf(5), hosts(5),
+hosts.equiv(5), rlogind(8), rshd(8)
+
+FILES 
+/etc/hosts 
+/etc/hosts.equiv 
+/etc/auth.conf 
+$HOME/.rhosts 
+$HOME/.klogin
+
+HISTORY
+
+The rlogin command
+appeared in 4.2BSD.
+
+IPv6 support was
+added by WIDE/KAME project.
+
+BUGS
+
+The rlogin utility will
+be replaced by telnet(1) in the near future.
+
+More of the
+environment should be propagated.
+
+BSD
+September 26, 2003 BSD

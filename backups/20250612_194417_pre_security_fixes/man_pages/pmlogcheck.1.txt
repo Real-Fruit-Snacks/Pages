@@ -1,0 +1,214 @@
+NAME
+
+pmlogcheck
+- checks for invalid data in a PCP archive
+
+SYNOPSIS
+
+pmlogcheck
+[-lmvwz?] [-n pmnsfile] [-S
+start] [-T finish] [-Z
+timezone] archive
+
+DESCRIPTION
+
+pmlogcheck
+prints information about the nature of any invalid data
+which it detects in the files of a PCP archive.
+
+The archive has
+the base name archive and must have been previously
+created using pmlogger(1).
+
+OPTIONS
+
+The available
+command line options are: 
+-l, --label
+
+Print the archive label,
+showing the archive format version, the time and date for
+the start and (current) end of the archive, and the host
+from which the performance metrics values were
+collected.
+
+-m,
+--metadataonly
+
+Skip Pass 3 (see below)
+and only check the archive meta data. This can run
+substantially faster in cases where the volume data
+doesn’t need to be checked, especially on archives
+with compressed data volume(s).
+
+-n pmnsfile,
+--namespace=pmnsfile
+
+Load an alternative Performance
+Metrics Name Space (PMNS(5)) from the file
+pmnsfile.
+
+-S starttime,
+--start=starttime
+
+Specify the starttime of
+time window over which metrics should be checked in Pass 3
+(see below). Refer to PCPIntro(1) for a complete
+description of the syntax for starttime.
+
+-T endtime,
+--finish=endtime
+
+Specify the endtime of
+time window over which metrics should be checked in Pass 3
+(see below). Refer to PCPIntro(1) for a complete
+description of the syntax for endtime.
+
+-v, --verbose
+
+Enable verbose mode.
+
+-w, --nowrap
+
+Suppress reporting of counter
+wraps.
+
+-z,
+--hostzone
+
+Use the local timezone of the
+host that is the source of the performance metrics archive.
+The default is to use the timezone of the local host.
+
+-Z timezone,
+--timezone=timezone
+
+Use timezone for the
+date and time. Timezone is in the format of the
+environment variable TZ as described in
+environ(7). The default is to use the timezone of the
+local host.
+
+-?, --help
+
+Display usage message and
+exit.
+
+OPERATION
+
+The checking
+proceeds in a number of passes, each designed to validate
+progressively more complex semantic relationships between
+the information in a PCP archive.
+
+Pass 0
+
+Each physical file of the PCP archive is processed to ensure
+the label records are valid and consistent, and that each
+file contains an integral number of physical records with
+correct header and trailer fields.
+
+Any errors at
+this stage are usually fatal. The PCP archive is probably
+damaged beyond repair, and no more passes of
+pmlogcheck are attempted.
+
+Pass 1
+
+Validates the integrity of the temporal index, usually
+archive.index.
+
+As the temporal
+index is (strictly speaking) optional, errors at this stage
+are handled by marking the index as bad and ignoring it for
+the remainder of the pmlogcheck passes.
+
+Permanent
+repair can be achieved by removing the temporal index file
+and then making a copy of the PCP archive using
+pmlogrewrite(1) or pmlogextract(1). This will
+create a new temporal index for the copied archive as a
+side-effect.
+
+Pass 2
+
+Validates the integrity of the metadata file, usually
+archive.meta.
+
+Pass 3
+
+Validates the integrity of each of the volumes of the PCP
+archive, usually archive.0,
+archive.1, etc.
+
+There is some
+basic integrity checks to ensure the encoding of values for
+each metric remains consistent and the values are well
+formed across all the observations in the archive.
+
+Also the
+timestamps for the observations are expected to be
+monotonically increasing as the archive is tranversed.
+
+Additional
+attention is given to counter metrics (type from
+pmLookupDesc(3) is PM_SEM_COUNTER) which are
+expected to have monotonically increasing values. If the
+values are not monotonic increasing this may suggest a
+counter wrap has happened or there has been some
+interruption or reset to the underlying source of the
+performance data that is no captured in the archive.
+
+For each
+counter metric which has been detected as having wrapped at
+some point in the archive, pmlogcheck produces output
+describing the metric name (with instance identifiers where
+appropriate), the internal storage type for the metric, the
+value of the metric before the counter wrap (with its
+associated timestamp), and the value of the metric after the
+wrap (also with a timestamp).
+
+The -w
+option may be used to suppress reporting of counter
+wraps.
+
+pmlogcheck
+produces two different timestamp formats, depending on the
+interval over which it is run. For an interval greater than
+24 hours, the date is displayed in addition to the time at
+which the counter wrap occurred. If the extent of the data
+being checked is less than 24 hours, a more precise format
+is used (time is displayed with millisecond precision, but
+without the date).
+
+FILES
+
+$PCP_VAR_DIR/pmns/*
+
+default PMNS specification
+files
+
+$PCP_LOG_DIR/pmlogger/
+
+default directory for PCP
+archives containing performance data collected from the host
+hostname.
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+SEE ALSO
+
+PCPIntro(1),
+pmdumplog(1), pmlogextract(1),
+pmlogger(1), pmlogrewrite(1),
+pmlogsummary(1), pmLookupDesc(3),
+pcp.conf(5), pcp.env(5) and
+PMNS(5).

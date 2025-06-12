@@ -1,0 +1,1463 @@
+NAME
+
+FBB::DateTime -
+Performs Date and Time Computations
+
+SYNOPSIS
+
+#include
+
+Linking option: -lbobcat
+
+DESCRIPTION
+
+FBB::DateTime
+objects contain and represent date and time values.
+Individual date and time fields can be requested or
+modified, returning ’sanitized’ times (e.g., a
+date like March 33 or a time like 56 hours are never
+returned; instead the next month or day is returned). Times
+may be specified in local time (according to the
+computer’s idea of what the local time is), in
+Universal Time Coordinated (UTC) time values,
+as a time in a named timezone, or as a time in a
+user-defined timezone. Refer to the section TIMEZONES
+below for a detailed description of how timezones can be
+specified.
+
+Dates/times
+represented by DateTime objects may be modified by
+adding, subtracting, or setting (std::chrono)
+seconds, minutes, or hours, or by specifying (a selection
+of) fields of tm structs.
+
+Date/time
+modificationsthese are always performed relative to the
+DateTime object’s current timezone (which may
+be UTC, local or another timezone). Conversions
+between timezones (including the UTC
+’timezone’) are also supported.
+
+DateTime
+objects can be constructed in many ways. Dates and times may
+be specified as UTC time, as local time, as
+(std::chrono::minutes) shifts with respect to UTC
+time, or as a date and time in other (user defined) time
+zones. Negative time offsets refer to timezones West of
+Greenwich, and positive offsets refer to timezones East of
+Greenwich: these offsets represent the zones’ local
+time differences with UTC time. Timezone offsets are always
+computed modulo 12 hours, as timezones may at most differ 12
+hours from UTC.
+
+DateTime
+objects always contain date and time points in seconds since
+the beginning of the ’epoch’ (midnight Jan 1,
+1970 UTC). The C function time(2) returns this
+value for the current date and time (assuming that the
+computer’s clock has properly been synchronized).
+
+Daylight Saving
+Time (DST), when defined for DateTime objects’
+zones is automatically applied when DST is active. E.g.,
+when a DateTime object’s time represents 12:00
+hr., and it zone’s DST (using a standard +1 hour
+shift) becomes active tomorrow, then the object’s time
+shows 13:00 hr. when 1 day is added to its current
+date/time.
+
+Handling time
+is complex. The C function time(2) returns the
+time in seconds since the beginning of the epoch. Beyond
+that, simplicity ends, and the reader is referred to Eric S.
+Raymond’s (2007) coverage of the complexities of
+handling time: see http://www.catb.org/esr/time-programming
+(this document is also included in bobcat’s
+repository).
+
+TIMEZONES
+
+DateTime’s
+nested class Zone is used to specify time zones. Time
+zones have various configurable components:
+
+o
+
+The time shift itself. E.g., Central European Time (CET)
+uses a shift of one hour: when UTC time is noon, then
+it’s 13:00 h. CET. The time shift doesn’t have
+to be multiples of full hours. E.g., India uses a time shift
+of +5:30 h relative to UTC.
+
+o
+
+Maybe a Daylight Saving Time. Most timezones use a +1
+hour DST shift: when in the previous example DST is active
+then CET’s local time is 14:00 h. Some countries do
+not use DST shifts. E.g., Afghanistan doesn’t use a
+DST shift.
+
+o
+
+A date-interval in which the DST is used may be
+standard. E.g., it starts at 02:00 h. (local time, becoming
+03:00 DST), the last Sunday in March, and ends at 02:00 h.
+(local time, resetting DST 03:00 to 02:00) the last Sunday
+in October.
+
+o
+
+Other calendar intervals may apply. E.g., in 2019 New
+Zealand’s DST starts September 29, and ends April
+7th. 
+
+o
+
+In practice, DST shifts are equal to 1 hour, although
+there’s no formal requirement for that.
+
+DataTime::Zone’s
+class offers a variety of means for specifying time zones
+with or without support for DST. Time shifts can be positive
+or negative and are specified in hours and optionally
+minutes. E.g., -8 or -8:00 for a timezone 8 hours earlier
+than UTC (noon at UTC becomes 04:00 in this timezone) or
++5:30 for a time zone later than UTC (noon at UTC becomes
+17:30 in that timezone). Timezones can be given names (which
+may or may not be the names of the ’standard’
+time zones like CET or PST) but can also be constructed by
+providing
+
+o
+
+a mere shift relative to UTC, no
+DST. 
+
+o
+
+a shift relative to UTC, using a standard DST (1 hour)
+time shift. In this case the computer’s idea of the
+calendar interval in which DST is active is used;
+
+o
+
+a shift relative to UTC, using a specified DST time
+shift as well as a specified calendar interval, optionally
+specifying the time when the DST calendar interval starts
+and/or ends.
+
+NAMESPACE
+
+FBB 
+All constructors, members, operators and manipulators,
+mentioned in this man-page, are defined in the namespace
+FBB.
+
+INHERITS FROM
+
+-
+
+ENUMS
+
+The class
+DateTime defines the following enums:
+
+DateTime::Month
+
+This enumeration has the following values which are ordered
+using the default C++ enum values:
+
+o
+
+JANUARY,
+
+o
+
+FEBRUARY,
+
+o
+
+MARCH,
+
+o
+
+APRIL,
+
+o
+
+MAY,
+
+o
+
+JUNE,
+
+o
+
+JULY,
+
+o
+
+AUGUST,
+
+o
+
+SEPTEMBER,
+
+o
+
+OCTOBER,
+
+o
+
+NOVEMBER,
+
+o
+
+DECEMBER.
+
+Standard
+3-letter abbreviations can also be used (e.g.,
+DateTime::Jul):
+
+o
+
+Jan,
+
+o
+
+Feb,
+
+o
+
+Mar,
+
+o
+
+Apr,
+
+o
+
+May ,
+
+o
+
+Jun,
+
+o
+
+Jul,
+
+o
+
+Aug,
+
+o
+
+Sep,
+
+o
+
+Oct,
+
+o
+
+Nov,
+
+o
+
+Dec.
+
+DateTime::Relative
+
+This enumeration is used with the setMonth() member
+(see below). It has the following values:
+
+o
+
+THIS_WEEK,
+
+o
+
+THIS_YEAR,
+
+o
+
+LAST,
+
+o
+
+NEXT
+
+DateTime::TimeFields
+
+This enumeration has the following values which can be
+bit_or-ed when calling the member
+setFields():
+
+o
+
+SECONDS
+
+o
+
+MINUTES
+
+o
+
+HOURS
+
+o
+
+MONTHDAY
+
+o
+
+MONTH
+
+o
+
+YEAR
+
+DateTime::TimeType
+
+This enumeration has the following values:
+
+o
+
+LOCALTIME: the
+DateTime object’s date and time use a shift
+relative to UTC according to the object’s configured
+time zone.
+
+o
+
+UTC: the object’s date and time represent
+the Universal Time Coordinated.
+
+DateTime::Weekday
+
+This enumeration has the following values which are ordered
+using the default C++ enum values:
+
+o
+
+SUNDAY,
+
+o
+
+MONDAY,
+
+o
+
+TUESDAY,
+
+o
+
+WEDNESDAY,
+
+o
+
+THURSDAY,
+
+o
+
+FRIDAY,
+
+o
+
+SATURDAY.
+
+Standard
+3-letter abbreviations can also be used (e.g.,
+DateTime::Wed):
+
+o
+
+Sun,
+
+o
+
+Mon,
+
+o
+
+Tue,
+
+o
+
+Wed,
+
+o
+
+Thu,
+
+o
+
+Fri,
+
+o
+
+Sat.
+
+TEXTUAL TIME REPRESENTATIONS
+
+DateTime
+objects may also be defined using textual
+time-representations. In addition, the date/time represented
+by DateTime objects may be altered using textual time
+representations extracted from istreams.
+
+The following
+time formats (shown by example) are recognized:
+
+o
+
+Mon Dec 3 13:29:11 2018,
+as displayed by put_time(..., "%c");
+
+o
+
+Mon Dec 3 13:29:11 CET 2018, as displayed by the
+date(1) program. When this format is used the
+specified zone name must have been defined. CET is
+defined by default, other time zones can easily be defined
+using, e.g., the member DateTime::Zone::read (see
+section ZONE MEMBERS).
+
+o
+
+Mon, 03 Dec 2018 13:29:11 +0100, as displayed by
+the date -R command (and the rfc2822() member,
+see below);
+
+o
+
+2018-12-03 13:29:11+01:00, as displayed by the
+date --rfc-3339=seconds command.
+
+ZONE CONSTRUCTORS
+
+The class
+DateTime::Zone defines how time zones can be defined
+and used. Time zone objects are expected by several
+DateTime constructors and by the
+DateTime::setZone member. The class
+DateTime::Zone supports the following
+constructors:
+
+o
+
+Zone(std::string const
+&name): 
+
+The argument name refers
+to a predefined zone name. By default the zone CET is
+available. Other zone names can be defined using the members
+DateTime::Zone::read and
+DateTime::Zone::store;
+
+o
+
+Zone(std::string const
+&specification): 
+
+The argument
+specification refers to a zone specification
+that’s available under the directory referred to by
+/etc/localtime (e.g., /usr/share/zoneinfo).
+The specification must start with a colon, followed by the
+name of an entry that is found below
+/usr/share/zoneinfo. E.g, to specify the
+Europe/Amsterdam zone use DateTime::Zone{
+":Europe/Amsterdam" }. If the specified zone
+uses DST then a +1 hour DST shift is used;
+
+o
+
+Zone(std::string const
+&shift): 
+
+The argument shift
+defines the zone’s shift in hours and minutes relative
+to UTC. Shift’s format is [+-]hh[:mm], where
+negative time shifts refer to time zones West of Greenwich
+and positive time shifts to time zones East of Greenwich. No
+DST is used;
+
+o
+
+Zone(std::string const
+&shift, string const &dstSpec):
+
+The argument shift
+defines the zone’s shift in hours and minutes relative
+to UTC. Shift’s format is [+-]hh[:mm], where
+negative time shifts refer to time zones West of Greenwich
+and positive time shifts to time zones East of Greenwich.
+The dstSpec argument defines the time shift to use
+when DST is active. It uses the same format as shift,
+or = may be specified, in which case the (standard)
+DST shift of +1:00 hour is used;
+
+o
+
+Zone(std::string const
+&shift, std::string const &dstSpec, std::string
+const &beginDST, std::string const &endDST):
+
+Like the previous constructor,
+but in addition beginDST and endDST are used
+to define the date/time interval in which the DST is active.
+These arguments use the following format:
+
+Mon, weekSpec
+Day [hh[:mm]]
+
+For Mon
+a standard 3-letter month specification is used, like
+"Jan" for January, for Day a
+standard 3-letter day specification is used, like
+"Sun" for Sunday (cf. the standard 3-letter
+abbreviations listed in the section ENUMS).
+
+The
+weekSpec defines the number of the week of the month
+containing Day. Use 1st, 2nd, 3rd, 4th, 5th or
+last. Here, 1st refers to the first week
+having day Day, while last and 5th
+refer to the last week (so not necessarily the 5th week)
+having day Day.
+
+The time
+specification defines the time when the DST starts or ends.
+Some examples:
+
+Mar, last
+Sunday 02:00 
+Oct, 1st Monday 03:00
+
+Copy and move
+constructors as well as assignment operators are
+available.
+
+ZONE MEMBERS
+
+o
+
+std::string const &spec()
+const: 
+
+The constructors’ zone
+specifications are converted to a form recognized by the
+function tzset(3). This member returns the converted
+string;
+
+o
+
+int dstSeconds()
+const: 
+
+If DST is active for a local
+date/time point then the DST shift in seconds is returned by
+this member. Use the member DateTime::dst() to
+determine whether or not DST is active.
+
+o
+
+int zoneSeconds()
+const: 
+
+The zone’s time shift
+relative to UTC in seconds. Negative values represent zone
+shifts West of Greenwich, positive values represent zone
+shifts East of Greenwich.
+
+ZONE STATIC MEMBERS
+
+o
+
+DateTime::Zone const
+&DateTime::Zone::get(std::string const
+&name): 
+
+The time zone object named
+name is returned. E.g., to retrieve the time zone
+object for CET use
+DateTime::Zone::get("CET"). If the named
+zone has not been defined an std::exception is
+thrown;
+
+o
+
+DateTime::Zone const
+&DateTime::Zone::store(std::string const &name,
+...): 
+
+A time zone object is defined
+and stored as zone name. Zone names must consists of
+(at least three) letters. The ellipsis should be replaced by
+the arguments of the Zone constructors (except for
+the arguments of the first, copy, and move constructors). A
+reference to the newly defined Zone object is
+returned;
+
+o
+
+std::string const
+&DateTime::Zone::defaultTZ(): 
+
+The TZ specification that is
+active when the program using DateTime objects
+starts. It returns the return value of
+getenv("TZ") or an empty string if the
+TZ environment variable was not defined;
+
+o
+
+void
+DateTime::Zone::read(std::string const &fname):
+
+Time zone specifications as
+expected by the above store member are read from the
+file named fname (one specification per line, using
+blanks between the elements, and inserting until
+between the dstBegin and dstEnd specifications
+(if provided)). For cosmetic reasons a colon may be appended
+to zone names. Examples:
+
+ccu: +5:50 
+nyc: -5:00 +1:00 
+cal: -8:00 = 
+eet: +2:00 +1:00 Mar, last Sun 02:00 until Oct, last Sun
+02:00 
+same: +2:00 = Mar, last Sun 02:00 until Oct, last Sun
+02:00
+
+If the first
+character on a line is a hash-tag (#) or if a line
+only contains blanks it is ignored;
+
+o
+
+time_t
+DateTime::Zone::thisZoneShift(): 
+
+Returns this computer’s
+zone shift in seconds.
+
+DATETIME CONSTRUCTORS
+
+o
+
+DateTime(TimeType type =
+UTC): 
+
+The object’s date/time is
+initialized to the current date and time. By default UTC
+time (no zone-shift or dst correction) is used. When
+specifying LOCALTIME, the computer’s timezone
+and DST correction are used;
+
+o
+
+DateTime(std::chrono::minutes
+zoneMinutes): 
+
+The object’s local time
+is initialized to the current UTC time to which a zone shift
+of zoneMinutes minutes is added. DST is not used. Note that
+by specifying a zone shift in, e.g.,
+std::chrono::hours a conversion to minutes is
+automatically applied;
+
+o
+
+DateTime(Datetime::Zone const
+&zone): 
+
+The object’s local time
+is initialized to the the current UTC time to which a zone
+shift defined by the Zone argument is added;
+
+o
+
+DateTime(time_t time,
+TimeType type = UTC):
+
+The object uses time to
+set its UTC time in seconds since the epoch. When
+LOCALTIME is specified its local time is obtained by
+applying the computer’s timezone and DST
+correction;
+
+o
+
+DateTime(time_t time,
+std::chrono::minutes zoneMinutes):
+
+The object’s uses
+time to set its UTC time in seconds since the epoch.
+Its local time is then obtained by adding a zone shift of
+zoneMinutes minutes. DST is not used.;
+
+o
+
+DateTime(time_t time,
+Datetime::Zone const &zone):
+
+The object’s uses
+time to set its UTC time in seconds since the epoch.
+Its local time is then obtained by adding a zone shift as
+defined by the Zone argument.
+
+o
+
+DateTime(tm const &ts,
+TimeType type = UTC):
+
+The tm argument is a
+struct defined as:
+
+struct tm 
+{ 
+int tm_sec; // seconds 0..59, or 60: leap second 
+int tm_min; // minutes 0..59 
+int tm_hour; // hours 0..23 
+int tm_mday; // day of the month 1..31 
+int tm_mon; // month 0..11 
+int tm_year; // year see below!! 
+int tm_wday; // day of the week 0..6 
+int tm_yday; // day in the year 0..365 
+int tm_isdst; // daylight saving time 
+// > 0: yes, 0: no, 
+};
+
+Values outside
+of these ranges may be specified to compute points in time
+in the future or in the past. E.g., tm_hour == 30 is
+normalized to tm_hour == 6 of the next day.
+
+Note that
+functions like mktime(3) expect tm_year to be
+specified relative to 1900. The DateTime constructor
+does not expect this: the tm_year field should
+be the specified as the (calendar) year, e.g., 2019.
+
+Using
+tm’s fields the object’s date/time is
+initialized to either UTC or LOCALTIME. The DST, day of the
+year, and day of the week fields of the tm argument
+are ignored;
+
+o
+
+DateTime(tm const &ts,
+Datetime::Zone const &zone):
+
+The fields of ts (see
+the previous constructor) define a LOCALTIME time
+point in the specified Zone.
+
+o
+
+DateTime(std::string const
+&timeStr, TimeType type = UTC):
+
+The object’s date/time is
+initialized to either UTC or LOCALTIME using
+DateTime’s supported textual time
+representations. The time representation without explicit
+timezone shift (e.g., Mon Dec 3 13:29:11 2018 is
+interpreted as UTC time when type == UTC is
+specified, otherwise as local time (type ==
+LOCALTIME), using the computer’s time zone and DST
+correction). The other textual time representations provide
+zone specifications which are used to obtain the requested
+time representation (e.g., when UTC is requested, and the
+textual time specification contains 13:29:11 +0100
+then the object’s (UTC) time is set to
+12:29:11). DST specifications are ignored, except
+when named time zones are used, as in on Dec 3 13:29:11
+CET 2018;
+
+o
+
+DateTime(std::istream
+&in, TimeType type = UTC):
+
+The object’s date/time is
+initialized to either UTC or LOCALTIME extracting a
+supported textual time representation from in as
+destribed at the DateTime(std::string const &timeStr,
+...) constructor. The std::istream &in stream
+may also be a rvalue reference.
+
+o
+
+DateTime(std::istream
+&&in, TimeType type = UTC):
+
+Same as the previous
+constructor, but receeiving an r-value reference as its
+first argumnt.
+
+Copy and move
+constructors are available.
+
+OVERLOADED OPERATORS
+
+All class-less
+overloaded operators are defined in the FBB
+namespace. All overloaded operators modifying
+DateTime objects support ’commit or
+roll-back’: if the operation cannot be performed an
+exception is thrown, without modifying the destination
+object.
+
+o
+
+std::ostream
+&std::operator:
+
+Inserts dt’s
+date/time into str using the zone-less supported
+textual time representation (e.g., Mon Dec 3 13:29:11
+2018);
+
+o
+
+std::istream
+&std::operator>>(std::istream &str, DateTime
+&dt): 
+
+Extracts a supported textual
+time representation from str and assigns the implied
+date/time point to dt;
+
+o
+
+bool operator==(DateTime
+const &left, DateTime const &right):
+
+Returns true if
+left represents the same UTC time as
+right;
+
+o
+
+bool operator!=(DateTime
+const &left, DateTime const &right):
+
+Returns true if
+left represents a different UTC time as
+right;
+
+o
+
+bool operator:
+
+Returns true if
+left represents an earlier UTC time as
+right;
+
+o
+
+bool operator:
+
+Returns true if
+left represents an earlier or equal UTC time as
+right;
+
+o
+
+bool operator>(DateTime
+const &left, DateTime const &right):
+
+Returns true if
+left represents a later UTC time as right;
+
+o
+
+bool operator>=(DateTime
+const &left, DateTime const &right):
+
+Returns true if
+left represents a later or equal UTC time as
+right.
+
+o
+
+DateTime operator+(DateTime
+const &obj, std::chrono::seconds seconds):
+
+Returns a copy of obj to
+which seconds were added;
+
+o
+
+DateTime operator+(DateTime
+const &obj, tm const &ts):
+
+Returns a copy of obj to
+which the tm_sec, tm_min, tm_hour, tm_mday, tm_mon
+and tm_year fields of ts were added;
+
+Caveat: note
+that this is an addition operation: if you want to
+add 1 year specify ts.tm_year = 1, and not the
+finally expected calendar year!
+
+o
+
+DateTime
+&operator+=(std::chrono::seconds seconds):
+
+Adds seconds to the time
+represented by the current object;
+
+o
+
+DateTime &operator+=(tm
+const &ts):
+
+Adds the tm_sec, tm_min,
+tm_hour, tm_mday, tm_mon and tm_year fields of
+ts to the time represented by the current object.
+
+Caveat: note
+that this is an addition operation: if you want to
+add 1 year specify ts.tm_year = 1, and not the
+finally expected calendar year!
+
+o
+
+DateTime operator-(DateTime
+const &obj, std::chrono::seconds seconds):
+
+Returns a copy of obj to
+which seconds were subtracted;
+
+o
+
+DateTime operator-(DateTime
+const &obj, tm const &ts):
+
+Returns a copy of obj to
+which the tm_sec, tm_min, tm_hour, tm_mday, tm_mon
+and tm_year fields of ts were subtracted.
+
+Caveat: note
+that this is an addition operation: if you want to
+subtract 1 year specify ts.tm_year = 1, and not the
+finally expected calendar year!
+
+o
+
+DateTime
+&operator-=(std::chrono::seconds seconds):
+
+Subtracts seconds from
+the time represented by the current object;
+
+o
+
+DateTime &operator-=(tm
+const &ts):
+
+Subtracts the tm_sec,
+tm_min, tm_hour, tm_mday, tm_mon and tm_year
+fields of ts from the time represented by the current
+object.
+
+Caveat: note
+that this is an addition operation: if you want to
+subtract 1 year specify ts.tm_year = 1, and not the
+finally expected calendar year!
+
+E.g., the
+following program fragment displays midnight, December 31,
+1969: 
+DateTime dt{ 0, DateTime::UTC }; // set UTC at begin of
+era
+
+tm era{ 0 }; //
+define a tm with tm_mday == 1 
+era.tm_mday = 1;
+
+dt -= era; //
+subtract from dt and display 
+cout 
+
+Copy and move
+assignment operators are available.
+
+MEMBER FUNCTIONS
+
+All members
+returning a time-element do so according to the latest
+time-representation (i.e., UTC, LOCALTIME, or
+using an explicitly set display zone shift value). All
+members returning numeric values use 0 as their smallest
+return value, except for the ...Nr() members, which
+start at 1.
+
+o
+
+bool dst() const:
+
+Returns true if the
+current object’s time includes a DST shift, otherwise
+false is returned.
+
+o
+
+unsigned hours()
+const: 
+
+Returns the number of hours
+represented by the current object’s time (0-23);
+
+o
+
+unsigned minutes()
+const: 
+
+Returns the number of minutes
+represented by the current object (0-59);
+
+o
+
+DateTime::Month month()
+const: 
+
+Returns the Month
+represented by the current object;
+
+o
+
+unsigned monthDayNr()
+const: 
+
+Returns the day number of the
+month represented by the current object’s date
+(1-31);
+
+o
+
+string rfc2822()
+const: 
+
+Returns the current
+object’s date/time displayed according to the RFC 2822
+format. This format is used, e.g., by the date -R
+command (cf. date(1)). For example:
+
+Mon, 3 Dec 2018
+13:49:10 +0100
+
+o
+
+string rfc3339()
+const: 
+
+Returns the current
+object’s date/time displayed according to the the RFC
+3339 format. This format is used, e.g., by the date
+--rfc-3339=seconds command (cf. date(1)). For
+example:
+
+2018-12-03
+13:29:11+01:00
+
+o
+
+unsigned seconds()
+const: 
+
+Returns the number of seconds
+represented by the current object’s time (0-59, but 60
+and 61 may occur at leap seconds). Note that this member
+does not return the current UTC time in seconds (since the
+epoch): if that’s required use the member
+utcSeconds;
+
+o
+
+void setDay(int
+dayNr): 
+
+Assigns dayNr to the day
+number of the object’s current month.
+
+Caveat: since
+day numbers start at 1, passing 0 or negative values to
+setDay results in resetting the objects date to an
+earlier month;
+
+o
+
+void setFields(tm const
+&ts, DateTime::TimeFields fields):
+
+Assigns the fields of ts
+indicated by a bit_or combination of TimeFields
+fields’ value to the corresponding current
+object’s date/time tm fields;
+
+o
+
+void setHours(int
+hours): 
+
+Assigns hours to the
+number of hours of the current object’s time;
+
+o
+
+void setMinutes(int
+minutes): 
+
+Assigns minutes to the
+number of minutes of the current object’s time;
+
+o
+
+void setMonth(int
+month): 
+
+Assigns month to the
+current object’s month. January is represented by 0,
+December by 11. Smaller or larger values refer to previous
+or future years;
+
+o
+
+void setMonth(DateTime::Month
+month): 
+
+Assigns month to the
+current object’s month;
+
+o
+
+void setMonth(DateTime::Month
+month, DateTime::Relative where = THIS_YEAR):
+
+Assigns month to the
+current object’s month. By default the month of the
+current year is updated (where == THIS_YEAR). Use
+LAST to ensure that the month is set before the
+current object’s month (e.g., if the current month is
+JUNE, then requesting AUGUST, LAST will
+decrement the object’s year, but requesting MAY,
+LAST won’t). Analogously, when specifying
+DateTime::NEXT the resulting month is set after the
+current object’s month.
+
+Caveat: If the
+day number of the current month exceeds the number of days
+in the requested month, the object’s month and day
+number are updated to the next month. E.g., if the current
+day number equals 31, and NOVEMBER is requested, then
+the object’s date is updated to December 1;
+
+o
+
+void setSeconds(int
+seconds): 
+
+Assigns seconds to the
+number of seconds of the current object’s time;
+
+o
+
+void setUTCseconds(time_t
+utcSeconds): 
+
+Assigns utcSeconds as
+the number of seconds since the epoch to the current
+object’s UTC time;
+
+o
+
+void setWeekday(Weekday day,
+Relative where = NEXT):
+
+Assigns day to the
+current object’s day of the week. By default (where
+== NEXT) the day will be the next occurrence of
+day (maybe the current week, maybe in the next week:
+if the current day equals Monday and Friday is specified,
+the current week is used. If the current day equals Friday
+and Monday is requested the next week is used). By
+specifying where = LAST the day will be most recent
+occurrence of day: if the current day equals Friday
+and Monday is requested, the current week is used. By
+specifying where = THIS_WEEK then day is
+selected in the current week;
+
+o
+
+void setYear(unsigned
+year): 
+
+Assigns year to the
+current object’s date. Note that year is the
+actual calendar year, and not, e.g., the year relative to
+the beginning of the epoch or 1900;
+
+o
+
+void setZone(Datetime::Zone
+const &zone):
+
+The current object’s time
+zone is set to zone. This does not alter the
+object’s UTC time, but merely its time zone. If the
+object represented UTC time before calling setZone it
+will represent a local time after calling
+setZone;
+
+o
+
+void swap(DateTime
+&other): 
+
+Swaps the current and other
+DateTime object;
+
+o
+
+DateTime thisTime()
+const: 
+
+Returns a DateTime
+object using the current object’s UTC time, applying
+the computer’s default time zone;
+
+o
+
+tm const *timeStruct()
+const: 
+
+Returns a pointer to the
+object’s current tm representing its
+object’s broken down time elements. If the object
+holds a local time the tm struct represents the local
+time (if applicable: including a DST shift), otherwise it
+represents UTC;
+
+o
+
+DateTime utc() const:
+
+Returns a copy of the current
+object representing its UTC time;
+
+o
+
+time_t utcSeconds()
+const: 
+
+Returns the current
+object’s (UTC) time in seconds since the epoch;
+
+o
+
+DateTime::Weekday weekday()
+const: 
+
+Returns the current
+object’s Weekday value;
+
+o
+
+unsigned weekNr()
+const: 
+
+Returns the week number of the
+current object’s date. Week numbers are numbers of
+complete weeks. If Jan 1st is a Sunday then the week numbers
+of Jan 1st through Jan 6th are returned as 1, otherwise the
+week numbers of Jan 1st through the date of the first
+Saturday of the year (which could very well be Jan 1st) are
+returned as 52;
+
+o
+
+unsigned year()
+const: 
+
+Returns the year of the current
+object’s date (note: this is the actual calendar year,
+not the year since the epoch or relative to 1900);
+
+o
+
+unsigned yearDay()
+const: 
+
+Returns the day in the year of
+the current object’s date. January 1st is returned as
+0;
+
+o
+
+unsigned yearDayNr()
+const: 
+
+Returns the day in the year of
+the current object’s date. January 1 is returned as
+1;
+
+o
+
+DateTime::Zone const
+&zone() const:
+
+Returns the current
+object’s Zone object.
+
+STATIC MEMBER
+
+o
+
+void tm2cout(char const
+*label, TM const &ts):
+
+This static member is primarily
+used for debugging purposes. It displays the values of
+ts’s fields, preceded by label and
+": ".
+
+EXAMPLES
+
+Many examples
+illustrating the use of DateTime objects are provided
+in the source archive’s bobcat/datetime/driver
+directory. Here is an example: 
+#include 
+
+#include
+"../datetime"
+
+using namespace
+std; 
+using namespace FBB;
+
+void
+show(DateTime const &dt, char const *label) 
+{ 
+cout 
+label 
+"dst: " 
+"hh:mm:ss: " 
+dt.seconds() 
+"year-month-monthdaynr: " 
+dt.monthDayNr() 
+"weekday/weeknr/yearday/yeardaynr: " 
+dt.weekday() 
+dt.yearDay() 
+"\n"; 
+}
+
+int main() 
+{ 
+time_t now = time(0);
+
+DateTime utc{
+now, DateTime::UTC }; 
+show(utc, "Current UTC time");
+
+DateTime local{
+utc.thisTime() };
+
+cout 
+
+DateTime dt{
+now, DateTime::LOCALTIME }; 
+show(dt, "Current LOCAL TIME");
+
+DateTime utc2{
+dt.utc() }; 
+cout 
+
+DateTime jan1{
+"2019-01-01 13:00:00+01:00", DateTime::LOCALTIME
+}; 
+cout 
+show(jan1, "Jan 1, details:");
+
+cout 
+"\n"; 
+}
+
+FILES
+
+bobcat/datetime
+defines the class interface.
+
+SEE ALSO
+
+bobcat(7),
+Exception(3bobcat), gmtime_r(3),
+localtime_r(3), mktime(3), time(2),
+tzset(3), 
+http://www.catb.org/esr/time-programming, 
+https://www.timeanddate.com/time/dst/events.html
+
+BUGS
+
+See
+bobcat’s changelog file for an overview of members
+that were discontinued at release 5.00.00. 
+The class DateTime assumes that time(2)
+returns the time in UTC. 
+English is used/expected when specifying named date
+components.
+
+BOBCAT PROJECT FILES
+
+o
+
+https://fbb-git.gitlab.io/bobcat/:
+gitlab project page;
+
+o
+
+bobcat_6.06.01-x.dsc: detached signature;
+
+o
+
+bobcat_6.06.01-x.tar.gz: source archive;
+
+o
+
+bobcat_6.06.01-x_i386.changes: change log;
+
+o
+
+libbobcat1_6.06.01-x_*.deb: debian package
+containing the libraries;
+
+o
+
+libbobcat1-dev_6.06.01-x_*.deb: debian package
+containing the libraries, headers and manual pages;
+
+BOBCAT
+
+Bobcat is an
+acronym of ’Brokken’s Own Base Classes And
+Templates’.
+
+COPYRIGHT
+
+This is free
+software, distributed under the terms of the GNU General
+Public License (GPL).
+
+AUTHOR
+
+Frank B.
+Brokken (f.b.brokken [AT] rug.nl).

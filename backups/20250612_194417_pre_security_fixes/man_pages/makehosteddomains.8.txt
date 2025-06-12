@@ -1,0 +1,165 @@
+NAME
+
+makehosteddomains
+- Build a database of hosted domains
+
+SYNOPSIS
+
+makehosteddomains
+
+DESCRIPTION
+
+makehosteddomains
+rebuilds the contents of the /etc/courier/hosteddomains.dat
+database from the contents of /etc/courier/hosteddomains.
+This can be either a file or a directory. If it's a
+directory, the contents of all the files in this directory
+are simply concatenated. The makehosteddomains script
+must be run in order for any changes to
+/etc/courier/hosteddomains to take effect.
+
+The function of
+/etc/courier/hosteddomains is very similar to the one of
+/etc/courier/locals. Both configuration files specify a list
+of domains that are considered to be local domains - domains
+whose mailboxes are stored locally.
+
+The difference
+is that domains listed in /etc/courier/locals are removed
+from addresses before their mailbox is looked up. For
+example, if the domain "example.com" is listed in
+/etc/courier/locals, then the address
+user [AT] example.com> is delivered to a local mailbox
+named "user". If this domain is listed, instead,
+in /etc/courier/hosteddomains, then the address
+user [AT] example.com> is delivered to a local mailbox
+named "user [AT] example.com". Usually you would use
+/etc/courier/locals to specify domains that correspond to
+your local system accounts, that are looked up in your
+system's password database. The /etc/courier/hosteddomains
+file is usually used when you have database-based virtual
+domains, that are maintained via an LDAP or a MySQL server.
+The Courier mail server's LDAP and MySQL authentication
+modules will use the full E-mail address to query the LDAP
+or MySQL server for the location of the local mailbox that
+correspond to the E-mail address. The Courier mail server's
+authuserdb authentication module can also use full E-mail
+addresses.
+
+Contents of
+hosteddomains 
+The file /etc/courier/hosteddomains simply contains a list
+of domains, one per line, for example:
+
+domain.com 
+example.org
+
+Each domain can
+optionally be followed by a single tab character, in order
+to specify an alias for a domain, for example:
+
+domain.com 
+mail.domain.comdomain.com 
+example.comdomain.com
+
+First, we list
+the domain "domain.com" as a hosted domain. Then,
+we also list the domain "mail.domain.com", which
+is an alias for domain.com. The Courier mail server will
+take any address of the form
+address [AT] mail.com>, rewrite it as
+address [AT] domain.com>, and attempt to deliver the mail
+to a local mailbox for that name. The third entry does the
+same for "example.com"; mail addressed to
+address [AT] example.com> is delivered to the local
+mailbox address [AT] domain.com>.
+
+alias@hosteddomain
+
+This is a special local mail delivery rule for
+hosteddomain-listed domains. This rule allows the Courier
+mail server accept mail to any address@hosteddomain, where
+"hosteddomain" is a domain listed in the
+hosteddomains file, but there is no corresponding account
+for address@hosteddomain. To provide delivery instructions
+for any non-existing address in a hosteddomain-listed
+domain:
+
+1) Create the
+local address alias@hosteddomain. For example, if the
+hosteddomains file contains "example.com", create
+the local account alias [AT] example.com. This should be a normal
+account, with its own home directory, userid and
+groupid.
+
+2) Create
+$HOME/.courier-default file in this account, containing the
+delivery instructions. See the
+dot-courier(5)
+[1]
+manual page for available delivery
+instructions.
+
+NOTE
+that alias [AT] example.com must be a real account, not a mail
+alias. If you want to forward alias [AT] example.com to another
+address, put forwarding instructions in the .courier-default
+file. However, alias [AT] example.com can be a clone of another
+account (with the same home directory, userid, and
+groupid).
+
+“WILDCARD
+DNS” 
+Wildcard DNS is supported for hosteddomains by placing a
+single period character before the domain name. For example,
+the hosted domain entry “.domain.com” will cause
+the Courier mail server to accept mail for
+“anything.domain.com”.
+
+The
+Courier mail server will accept mail for
+address [AT] any.com> and attempt to
+deliver it to the local mailbox
+address [AT] any.com>, and if that
+fails then attempt to deliver the mail to the local mailbox
+address@.thing.domain.com>, then finally
+address@.domain.com>
+
+Note
+
+There is a period after the '@' character. If you want all
+mail for “any.thing.domain.com” to be delivered
+as though it were sent to “domain.com”, you
+should define an alias for the domain, for
+example:
+
+domain.com
+
+.domain.comdomain.com
+
+SEE ALSO
+
+esmtpd(8)
+[2]
+.
+
+AUTHOR
+
+Sam
+Varshavchik
+
+Author
+
+NOTES
+
+1. 
+
+dot-courier(5) 
+
+http://www.courier-mta.org/dot-courier.html
+
+2. 
+
+esmtpd(8) 
+
+http://www.courier-mta.org/esmtpd.html

@@ -1,0 +1,1379 @@
+NAME
+
+afio -
+manipulate archives and files
+
+SYNOPSIS
+
+... |
+afio -o [ options ] archive : write (create)
+archive 
+afio -i [ options ] archive : install (unpack)
+archive 
+afio -t [ options ] archive : list
+table-of-contents of archive 
+afio -r [ options ] archive : verify archive
+against filesystem 
+afio -p [ options ] directory [ ... ] : copy
+files
+
+DESCRIPTION
+
+Afio
+manipulates groups of files, copying them within the
+(collective) filesystem or between the filesystem and an
+afio archive.
+
+With -o,
+reads pathnames from the standard input and writes an
+archive.
+
+With -t,
+reads an archive and writes a table-of-contents to
+the standard output.
+
+With -i,
+installs the contents of an archive relative to the
+working directory.
+
+With -p,
+reads pathnames from the standard input and copies the files
+to each directory. Cannot be combined with the
+-Z option.
+
+With -r,
+reads archive and verifies it against the filesystem.
+This is useful for verifying tape archives, to ensure they
+have no bit errors. The verification compares file contents,
+but not permission bits and non-file filesystem entities, so
+it cannot be used as a reliable tool to detect every
+possible change made to a filesystem.
+
+Creates missing
+directories as necessary, with permissions to match their
+parents.
+
+Removes leading
+slashes from pathnames, making all paths relative to the
+current directory. This is a safety feature to prevent
+inadvertent overwriting of system files when doing restores.
+To suppress this safety feature, the -A option must
+be used while writing an archive, but also when reading
+(installing), verifying, and cataloging an existing
+archive.
+
+Supports
+compression while archiving, with the -Z option. Will
+compress individual files in the archive, not the entire
+archive datastream, which makes afio compressed
+archives much more robust than
+’tar zc’ type archives.
+
+Supports
+multi-volume archives during interactive operation (i.e.,
+when /dev/tty is accessible and SIGINT is not
+being ignored).
+
+OPTIONS
+
+-@ address
+
+Send email to address
+when a volume change (tape change, floppy change) is needed,
+and also when the entire operation is complete. Uses
+sendmail(1) to send the mail.
+
+-a
+
+Preserve the last access times (atimes) of the files
+read when making or verifying an archive. Warning: if
+this option is used, afio will change the last inode
+changed times (ctimes) of these files. Thus, this option
+cannot be used together with an incremental backup scheme
+that relies on the ctimes being preserved.
+
+-b size
+
+Read or write size-character archive blocks.
+Suffices of b, k, m and g denote
+multiples of 512, kilobytes, megabytes
+and gigabytes, respectively. Defaults to 5120
+for compatibility with cpio(1). In some cases,
+notably when using ftape with some tape drives, -b
+10k is needed for compatibility. Note that -b 10k
+is the default block size used by tar(1), so it is
+usually a good choice if the tape setup is known to work
+with tar(1).
+
+-c count
+
+Buffer count archive blocks between I/O
+operations. A large count is recommended for
+efficient use with streaming magnetic tape drives, in order
+to reduce the number of tape stops and restarts.
+
+-d
+
+Don’t create missing directories.
+
+-e bound
+
+Pad the archive to a multiple of bound
+characters. Recognizes the same suffices as -s.
+Defaults to 1x (the -b block size) for
+compatibility with cpio(1).
+
+-f
+
+Spawn a child process to actually write to the archive;
+provides a clumsy form of double-buffering. Requires
+-s for multi-volume archive support.
+
+-g
+
+Change to input file directories. Avoids quadratic
+filesystem behavior with long similar pathnames. Requires
+all absolute pathnames, including those for the -o
+archive and the -p directories.
+
+-h
+
+Follow symbolic links, treating them as ordinary files
+and directories.
+
+-j
+
+Don’t generate sparse filesystem blocks on
+restoring files. By default, afio creates sparse
+filesystem blocks (with lseek(2)) when possible when
+restoring files from an archive, but not if these files were
+stored in a compressed form. Unless stored in a compressed
+form, sparse files are not archived efficiently: they will
+take space equal to the full file length. (The sparse file
+handling in afio does not make much sense except in a
+historical way.)
+
+-k
+
+Rather than complaining about unrecognizable input, skip
+unreadable data (or partial file contents) at the
+beginning of the archive file being read, and search
+for the next valid archive header. This option is needed to
+deal with certain types of backup media damage. It is also
+useful to support quick selective restores from multi-volume
+archives, or from searchable block devices, if the volume or
+location of the file to be restored is known in advance (see
+the -B option). If, for example, a selective restore
+is done with the fourth volume of a multi-volume afio
+archive, then the -k option needs to be used, else
+afio will complain about the input not being a
+well-formed archive.
+
+-l
+
+With -o, write file contents with each hard
+link. 
+
+With -t,
+report hard links.
+
+With -p,
+attempt to link files rather than copying them.
+
+-m
+
+Mark output files with a common
+current timestamp (rather than with input file modification
+times). 
+
+-n
+
+Protect newer existing files (comparing file
+modification times).
+
+-s size
+
+Restrict each portion of a multi-volume archive to
+size characters. This option recognizes the same size
+suffices as -b. Also, the suffix x denotes a
+multiple of the -b block size (and must follow any
+-b specification). size can be a single size
+or a comma-seperated list of sizes, for example
+’2m,5m,8m’, to specify different sizes for the
+subsequent volumes. If there are more volumes than sizes,
+the last specified size is used for all remaining volumes.
+If this option is used, the special character sequences
+%V and %S in the input/output filename or
+command string are replaced by the current volume number and
+volume size. Use %% to produce a single % character.
+The -s option is useful with finite-length devices
+which do not return short counts at end of media (sigh);
+output to magnetic tape typically falls into this category.
+When an archive is being read or written, using -s
+causes afio to prompt for the next volume if the
+specified volume length is reached. The -s option
+will also cause afio to prompt if there is a
+premature EOF while reading the input. The special case
+-s 0 will activate this prompting for the next volume
+on premature EOF without setting a volume length. When
+writing an archive, afio will prompt for the next
+volume on end-of-media, even without -s 0 being
+supplied, if the device is capable of reporting
+end-of-media. If the volume size specified is not a
+multiple of the block size set with the -b option,
+then afio(1) will silently round down the volume size
+to the nearest multiple of the block size. This rounding
+down can be suppressed using the -9 option: if
+-9 is used, afio(1) will write a small block
+of data, smaller than the -b size, at the end of the
+volume to completely fill it to the specified size. Some
+devices are not able to handle such small block writes.
+
+-u
+
+Report files with unseen links.
+
+-v
+
+Verbose. Report pathnames (to stderr) as they are
+processed. When used with -t, gives an ls -l
+style report (including link information) to stdout instead.
+When used twice (-vv) with -o, gives an ls
+-l style report to stdout while writing the archive.
+(But this use of -vv will not work if the archive is
+also being written to stdout.)
+
+-w filename
+
+Treats each line in filename as an -y
+pattern, see -y.
+
+-x
+
+Retain file ownership and setuid/setgid permissions.
+This is the default for the super-user; he may use -X
+to override it.
+
+-y pattern
+
+Restrict processing of files to names matching shell
+wildcard pattern pattern. Use this flag once for each
+pattern to be recognized. With the possible exception of the
+presence of a leading slash, the complete file name as
+appearing in the archive table-of-contents must match the
+pattern, for example the file name ’etc/passwd’
+is matched by the pattern ’*passwd’ but NOT by
+the pattern ’passwd’. See ’man 7
+glob’ for more information on shell wildcard
+pattern matching. The only difference with shell wildcard
+pattern matching is that in afio the wildcards will
+also match ’/’ characters in file names. For
+example the pattern ’/usr/src/*’ will match the
+file name ’/usr/src/linux/Makefile’, and any
+other file name starting with ’/usr/src’. Unless
+the -S option is given, any leading slash in the
+pattern or the filename is ignored when matching, e.g.
+/etc/passwd will match etc/passwd. Use
+-Y to supply patterns which are not to be
+processed. -Y overrides -y if a filename
+matches both. See also -w and -W.
+See also the -7 option, which can be used to modify
+the meaning of -y, -Y, -w, and
+-W when literal matching without wildcard processing
+is needed. Note: if afio was compiled without
+using the GNU fnmatch library, then the full shell wildcard
+pattern syntax cannot be used, and matching support is
+limited to patterns which are a full literal file name and
+patterns which end in ’*’.
+
+-z
+
+Print execution statistics. This is meant for human
+consumption; use by other programs is officially
+discouraged. 
+
+-A
+
+Do not turn absolute paths into relative paths. That is
+don’t remove the leading slash. Applies to the path
+names written in an archive, but also to the path names read
+out of an archive during read (install), verify, and
+cataloging operations.
+
+-B
+
+If the -v option is used, prints the byte offset
+of the start of each file in the archive. If your tape drive
+can start reading at any position in an archive, the output
+of -B can be useful for doing quick selective
+restores. 
+
+-D controlscript
+
+Set the control script name to
+controlscript, see the section on control
+files below.
+
+-E [+]filename
+| -E CS | -E CI
+
+While creating an archive with
+compressed files using the -Z option, disable
+(attempts at) compression for files with particular
+extensions. This option can be used to speed up the creation
+of the archive, by making afio avoid trying to use
+gzip on files that contain compressed data already.
+By default, if no specific -E option is given, all
+files with the extensions .Z .z .gz .bz2 .tgz .arc .zip
+.rar .lzh .lha .uc2 .tpz .taz .tgz .rpm .zoo .deb .gif .jpeg
+.jpg .tif .tiff .png .pdf .arj .avi .bgb .cab .cpn .hqx .jar
+.mp3 .mpg .mpq .pic .pkz .psn .sit .ogg and .smk
+will not be compressed. Also by default, the file extension
+matching is case-insensitive (to do the right thing with
+respect to MS-DOS based filesystems). The
+-E filename form of this option will
+replace the default list of file extensions by reading a new
+list of file extensions, separated by whitespace, from
+filename. filename may contain comments
+preceded by a #. The extensions in filename should
+usually all start with a dot, but they do not need to start
+with a dot, for example the extension ’tz’ will
+match the file name ’hertz’. The
+-E +filename form (with a + sign in front
+of filename) can be used to specify extensions in
+addition to the built-in default list, instead of replacing
+the whole default list. To make extension matching
+case-sensitive, add the special option form -E CS to
+the command line. The form -E CI invokes the
+(default) case-insensitive comparison. See also the
+-6 option, which offers an additional way to suppress
+compression.
+
+-F
+
+This is a floppy disk, -s is required. Causes
+floppy writing in O_SYNC mode under Linux. With
+kernel version 1.1.54 and above, this allows afio to
+detect some floppy errors while writing. Uses shared memory
+if compiled in otherwise mallocs as needed (a 3b1 will not
+be able to malloc the needed memory w/o shared memory),
+afio assumes either way you can malloc/shmalloc a
+chunk of memory the size of one disk. Examples: 795k:
+3.5" (720k drive), 316k (360k drive)
+
+At the end of each disk this
+message occurs: 
+Ready for disk [#] on [output] 
+(remove the disk when the light goes out) 
+Type "go" (or "GO") when ready to
+proceed 
+(or "quit" to abort):
+
+-G factor 
+
+Specifies the gzip(1)
+compression speed factor, used when compressing files with
+the -Z option. Factor 1 is the fastest with least
+compression, 9 is slowest with best compression. The default
+value is 6. See also the gzip(1) manual page. If you
+have a slow machine or a fast backup medium, you may want to
+specify a low value for factor to speed up the
+backup. On large (>200k) files, -G 1 typically
+zips twice as fast as -G 6, while still achieving a
+better result than compress(1). The zip speed for
+small files is mainly determined by the invocation time of
+gzip (1), see the -T option.
+
+-H
+promptscript
+
+Specify a script to run, in
+stead of using the normal prompt, before advancing to the
+next archive volume. The script will be run with the volume
+number, archive specification, and the reason for changing
+to the next volume as arguments. The script should exit with
+0 for OK and 1 for abort, other exit codes will be treated
+as fatal errors. As of afio version 2.5.2, the
+promptscript can be a file name containing spaces or other
+special characters.
+
+-J
+
+Try to continue after a media write error when doing a
+backup (normal behavior is to abort with a fatal error).
+
+-K
+
+Verify the output against what is in the memory copy of
+the disk (-F required). If the writing or verifying fails
+the following menu pops up
+
+[Writing/Verify] of disk [disk
+#] has FAILED!
+
+Enter 1 to RETRY this disk
+
+Enter 2 to REFORMAT this disk before a RETRY
+
+Enter quit to ABORT this backup
+
+Currently, afio will not
+process the answers 1 and 2 in the right way. The menu above
+is only useful in that it signifies that something is
+wrong.
+
+-L
+Log_file_path
+
+Specify the name of the file to
+log errors and the final totals to.
+
+-M size
+
+Specifies the maximum amount of memory to use for the
+temporary storage of compression results when using the
+-Z option. The default is -M 250m (250
+megabytes). If the compressed version of a file is larger
+than this (or if afio runs out of virtual memory),
+gzip(1) is run twice of the file, the first time to
+determine the length of the result, the second time to get
+the compressed data itself.
+
+-P progname
+
+Use the program progname instead of the standard
+gzip(1) for compression and decompression with the
+-Z option. For example, use the options -Z -P
+bzip2 to write and install archives using
+bzip2(1) compression. If progname does not
+have command line options (-c, -d, and -) in
+the style of gzip(1) then the -Q option can be
+used to supply the right options. The compression program
+used must have the property that, if the output file size
+exceeds the value of the -M option, then when the
+compression program is run for a second time on the same
+input, it must produce an output with exactly the same size.
+(See also the -M option description.) The GnuPG
+(gpg) encryption program does not satisfy this
+lenght-preserving criterion unless its built-in compression
+is disabled (see examples in the afio source script3/
+directory). See also the -Q, -U and -3
+options. 
+
+-Q opt
+
+Pass the option opt to the compression or
+decompression program used with the -Z option. For
+passing multiple options, use -Q multiple times. If
+no -Q flag is present, the standard options are
+passed. The standard options are -c -6 when the
+program is called for compression and -c -d when the
+program is called for decompression. Use the special case
+-Q "" if no options at all are to be passed
+to the program.
+
+-R Disk format
+command string
+
+This is the command that is run
+when you enter 2 to reformat the disk after a failed verify.
+The default (fdformat /dev/fd0H1440) can be changed to a
+given system’s default by editing the Makefile. You
+are also prompted for formatting whenever a disk change is
+requested.
+
+-S
+
+Do not ignore a leading slash in the pattern or the file
+name when matching -y and -Y patterns. See
+also -A.
+
+-T threshold
+
+Only compress a file when using the -Z option if
+its length is at least threshold. The default is
+-T 0k. This is useful if you have a slow machine or a
+fast backup medium. Specifying -T 3k typically halves
+the number of invocations of gzip(1), saving some 30%
+computation time, while creating an archive that is only 5%
+longer. The combination -T 8k -G 1 typically saves
+70% computation time and gives a 20% size increase. The
+latter combination may be a good alternative to not using
+-Z at all. These figures of course depend heavily on
+the kind of files in the archive and the processor - i/o
+speed ratio on your machine. See also the -2
+option. 
+
+-U
+
+If used with the -Z option, forces compressed
+versions to be stored of all files, even if the compressed
+versions are bigger than the original versions, and
+disregarding any (default) values of the -T and
+-2 options. This is useful when the -P and
+-Q options are used to replace the compression
+program gzip with an encryption program in order to
+make an archive with encrypted files. Due to internal
+limitations of afio, use of this flag forces the
+writing of file content with each hard linked file, rather
+than only once for every set of hard linked files.
+WARNING: use of the -U option will also cause
+compression (or whatever operation the -P option
+indicates) on files larger than 2 GB, if these are present
+in the input. Not all compression programs might handle such
+huge files correctly (recent Linux versions of gzip, bzip2,
+and gpg have all been tested and seem to work OK). If your
+setup is obscure, some testing might be warranted.
+
+-W filename
+
+Treats each line in filename as an -Y
+pattern, see -Y.
+
+-Y pattern
+
+Do not process files whose names match shell
+wildcard pattern pattern. See also -y and
+-W. 
+
+-Z
+
+Compress the files that go into the archive when
+creating an archive, or uncompress them again when
+installing an archive. afio -Z will compress each
+file in the archive individually, while keeping the archive
+headers uncompressed. Compared to tar zc style
+archives, afio -Z archives are therefore much more
+fault-tolerant against read errors on the backup medium.
+When creating an archive with the -Z option,
+afio will run gzip on each file encountered,
+and, if the result is smaller than the original, store the
+compressed version of the file. Requires gzip(1) to
+be in your path. Mainly to speed up afio operation,
+compression is not attempted on a file if: 1) the file is
+very small (see the -T option), 2) the file is very
+large (see the -2 option), 3) the file has a certain
+extension, so it probably contains compressed data already
+(see the -E option), 4) the file pathname matches a
+certain pattern, as set by the -6 option, 5) the file
+has hard links (this due to an internal limitation of afio,
+but this limitation does not apply if the -l option
+is also used). Regardless of the above, if the -U
+option is used then the compression program is always run,
+and the compressed result is always stored. When installing
+an archive with compressed files, the -Z option needs
+to be used in order to make afio automatically uncompress
+the files that it compressed earlier. The -P option
+can be used to do the (un)compression with programs other
+than gzip, see the -P (and -Q and
+-3) options in this manpage for details. See also the
+-G option which provides yet another way to tune the
+compression process.
+
+-0
+
+Use filenames terminated with ’\0’ instead
+of ’\n’. When used as follows: find ...
+-print0 | afio -o -0 ..., it ensures that any input
+filename can be handled, even a file name containing
+newlines. When used as afio -t -0 ... | ..., this
+allows the table of contents output to be parsed
+unambiguosly even if the filenames contain newlines. The
+-0 option also affects the parsing of the files
+supplied by -w file and -W file options: if
+the option -0 precedes them in the command line then
+the pattern lines contained in the files should be
+terminated with ’\0’ in stead of
+’\n’. A second use of -0 toggles the
+option. This can be useful when using multiple pattern files
+or when combining with the -t option.
+
+-1 warnings-to-ignore
+
+Control if afio(1)
+should exit with a nonzero code after printing certain
+warning messages, and if certain warning messages should be
+printed at all. This option is sometimes useful when calling
+afio(1) from inside a backup script or program.
+afio(1) will exit with a nonzero code on encountering
+various ’hard’ errors, and also (with the
+default value of the -1 option) when it has printed
+certain warning messages during execution.
+warnings-to-ignore is a list of letters which
+determines the behavior related to warning messages. The
+default value for this option is -1 mc. For
+afio versions 2.4.3 and earlier, the default was
+-1 a. For afio versions 2.4.4 and 2.4.5, the
+default was -1 ’’. The defined
+warnings-to-ignore letters are as follows. a
+is for for ignoring all possible warnings on exit: if
+this letter is used, the printing of a warning message will
+never cause a nonzero exit code. m is for ignoring in
+the exit code any warning about missing files, which
+will be printed when, on creating an archive, a file whose
+name was read from the standard input is not found. c
+is for ignoring in the exit code the warning that the
+archive being created will not be not fully compatible with
+cpio or afio versions 2.4.7 or lower. C is the
+same as c, but in addition the warning message will
+not even be printed. M will suppress the printing of
+all warning messages asssociated with Multivolume
+archive handling, messages like "Output limit
+reached" and "Continuing". d is for
+ignoring in the exit code any warnings about changed files,
+which will be printed when, on creating an archive, a file
+that is being archived changes while it is being written
+into the archive, where the changing is detected by
+examining the file modification time stamp. r is for
+ignoring certain warnings during the verify (-r) operation.
+If this letter is used, some verification errors that are
+very probably due to changes in the filesystem, during or
+after the backup was made, are ignored in determining the
+exit code. The two verification errors that are ignored are:
+1) a file in the archive is no longer present on the
+filesystem, and 2) the file contents in the archive and on
+the filesystem are different, but the file lengths or the
+file modification times are also different, so the
+difference in contents is probably due to the file on the
+file system having been changed. s is for ignoring in
+the exit code the warning printed when the protection code
+(as described in the section about the -8 option)
+rewrites a suspicious path name for a file or symlink that
+is being unpacked. l is for ignoring in the exit code
+the warning printed when the -8 nosymlinks option is
+used and a symlink is encountered. n is for ignoring
+in the exit code a particular class of no-such-file
+warnings: it ignores these warnings when they happen after
+the file has already been successfully opened. This unusual
+warning situation can occur when archiving files on Windows
+smbfs filesystems -- due to a Windows problem, smbfs files
+with non-ASCII characters in their names can sometimes be
+opened but not read. When the -Z option is used, the
+n letter function is (currently) only implemented for
+files with sizes smaller than indicated by the -T
+option, so in that case the -T option is also needed
+for this letter to have any effect.
+
+-2
+maximum-file-size-to-compress
+
+Do not compress any files which
+are larger than this size when making a compressed archive
+with the -Z option. The default value is -2
+200m (200 Megabytes). This maximum size cutoff lowers
+the risk that a major portion of a large file will be
+irrecoverable due to small media errors. If a media error
+occurs while reading a file that afio has stored in a
+compressed form, then afio and gzip will not
+be able to restore the entire remainder of that file. This
+is usually an acceptable risk for small files. However for
+very large files the risk of loosing a large amount of data
+because of this effect will usually be too big. The special
+case -2 0 eliminates any maximum size cutoff.
+
+-3
+filedescriptor-nr
+
+Rewind the filedescriptor
+before invoking the (un)compression program if using the
+-Z option. This is useful when the -P and
+-Q options are used to replace the compression
+program gzip with some types of encryption programs
+in order to make or read an archive with encrypted files.
+The rewinding is needed to interface correctly with some
+encryption programs that read their key from an open
+filedescriptor. If the -P program name matches
+’pgp’ or ’gpg’, then the -3
+option must be used to avoid afio(1) reporting
+an error. Use the special case -3 0 to suppress the
+error message without rewinding any file descriptor. The
+-3 0 option may also be needed to successfully read
+back encrypted archives made with afio version 2.4.5
+and older.
+
+-4
+
+(Deprecated, the intended effect of this option is now
+archived by default as long as the -5 option is not
+used. This option could still be useful for compatibility
+with machines running an older version of afio.)
+Write archive with the ’extended ASCII’ format
+headers which use 4-byte inode numbers. Archives using the
+extended ASCII format headers are not compatible with
+any other archiver. This option was useful for reliably
+creating and restoring sets of files with many internal hard
+links, for example a news spool.
+
+-5
+
+Refuse to create an archive that is incompatible with
+cpio(1). If this option is used, afio will
+never write any ’large ASCII’ file headers that
+are incompatible with cpio(1), but fail with an error
+code instead. See the ARCHIVE PORTABILITY section above for
+more information on the use of ’large ASCII’
+file headers.
+
+-6  filename
+
+While creating an archive with compressed files using
+the -Z option, disable (attempts at) compression for
+files that match particular shell patterns. This option can
+be used to speed up the creation of the archive, by making
+afio avoid trying to use gzip on files that
+contain compressed data already. Reads shell wildcard
+patterns from filename, treating each line in the
+file as a pattern. Files whose names match these patterns
+are not to be compressed when using the -Z option.
+Pattern matching is done in exactly the same way as
+described for the -y option. See also the -E
+option: the (default) settings of the -E option will
+further restrict compression attempts. The -E option
+controls compression attempts based on file extensions; the
+-6 option is mainly intended as a method for
+excluding all files in certain subdirectory trees from
+compression.. 
+
+-7
+
+Switch between shell wildcard pattern matching and exact
+name matching (without interpreting any wildcard characters)
+for the patterns supplied in the -y, -Y,
+-w, and -W options. If the -7 option is
+used in front of any option -y, -Y, -w,
+or -W, then the patterns supplied in these options
+are not intrerpreted as wildcard patterns, but as character
+strings that must match exactly to the file name, except
+possibly in leading slashes. This option can be useful for
+handling the exceptional cases where file names in the
+archive, or the names of files to be archived, contain
+wildcard characters themselves. For example, find /tmp
+-print0 | afio -ov -Y ’*.jpg’ -7 -Y
+’/tmp/a[12]*4’ -0 archive can be used to
+archive files all files under /tmp, even files with a
+’\n’ character in the name, except for .jpg
+files and the file with the exact name /tmp/a[12]*4.
+A second use of -7 toggles the matching for
+subsequently occurring -y, -Y, -w, and
+-W back to shell wildcard pattern matching.
+
+-8 directive
+
+Modify various behavior regarding symlinks. The
+directive nosymlinks applies to both archive creation
+and archive unpacking. During archive creation, it
+suppresses the inclusion of any symlink entry in the
+archive. In unpacking, it suppresses the unpacking of any
+symlink entry in the archive. This directive does not affect
+the interpretation of existing symlinks on the filesystem
+during the path resolution process where afio resolves the
+directory name components in front of the last / in a path
+name. The directive allowinsecurepaths applies to the
+security of archive unpacking. As of version 2.5.2, afio has
+protection mechanisms that apply to the unpacking of
+potentially untrusted archives. On unpacking, afio will by
+default (since version 2.5.2) inspect every pathname in the
+archive to detect the occurrence of a .. subpath in it. If
+one or more of these are present this is almost almost
+certainly due to the archive having been constructed by an
+attacker. The goal of the attack would be to have the afio
+unpacking operation over-write system or user files with new
+contents, via the use of using specially constructed path
+names like ../../../../../etc/password or
+../../../../../home/a_user/.bashrc that resolve to the
+location of such configuration files. Therefore, if any ..
+subpaths are detected in a path name in an archive being
+unpacked, afio issues a warning, and then rewrites every
+’..’ in the path name to ’XX’, and
+the archive entry is unpacked to the rewritten path name
+instead. The allowinsecurepaths directive disables
+the above rewriting of likely-insecure path names. Note that
+afio, while unpacking an archive, will also protect against
+that archive including potentially insecure path names that
+start with a leading /, by stripping off the leading /
+before using the path name is used, which has the effect of
+the archive entry relative to the current working directory.
+This stripping behavior can be disabled with the -A
+option. The directive allowinsecuresymlinks applies
+to a further the protection mechanism that applies to the
+unpacking of potentially untrusted archives. On unpacking,
+afio will by default (since version 2.5.2) inspect every
+symlink destination in the archive to detect the occurrence
+of a leading / or a .. subpath in it. If a leading / or ..
+subpaths are detected in the symlink destination, afio
+issues a warning, rewrites them to X or XX, and the result
+is used as the unpacked symlink destination instead. The
+allowinsecuresymlinks directive disables this
+protective rewriting behavior. Some further background: an
+attacking archive with an insecure symlink will typically
+include, as an entry after the insecure symlink, a file
+entry with a path that follows the insecure symlink leading
+to a location in the filesystem where a system or user
+configuration file can be overwritten. An archive with an
+insecure symlink may be created most easily an attacker who
+has the entire archive creation process under their control.
+However, in another case, the attacker is an untrusted end
+user on a multi-user system, where a trusted system
+administrator is creating a backup of a live file system
+containing directories under control of the untrusted end
+user. The untrusted end user can potentially exploit race
+conditions in the backup process, by creating temporary
+symlinks and files in their own home directory, resulting in
+in archive contents that would modify system configuration
+files when later unpacked if the protection mechanism were
+disabled using the allowinsecuresymlinks directive.
+The above described protection mechanisms are limited to
+symlinks. A untrusted archive attack that uses specially
+constructed hard link entries in the archive is
+theoretically possible with some archivers, but is not
+possible with afio, because of the special way that afio
+represents hard links in an archive.
+
+-9
+
+Do not round down any -s volume sizes to the
+nearest -b block size. See the -s option.
+
+ARCHIVE PORTABILITY
+
+afio
+archives are portable between different types of UNIX
+systems, as they contain only ASCII-formatted header
+information.
+
+Except in
+special cases discussed below, afio will create
+archives with the same format as ASCII cpio(1)
+archives. Therefore cpio(1) can usually be used to
+restore an afio archive in the case that afio
+is not available on a system. (With most cpio
+versions, to unpack an ASCII format archive, use cpio
+-c, and for GNU cpio(1) use cpio -H odc.)
+When unpacking with cpio, any compressed files inside
+an afio -Z archive are not uncompressed by
+cpio, but will be created on the file system as
+compressed files with a .z extension.
+
+Unfortunately,
+the ASCII cpio archive format cannot represent some files
+and file properties that can be present in a modern UNIX
+filesystem. If afio creates an archive with such things,
+then it uses an afio-specific ’large ASCII’
+header for the files concerned. Archives with large ASCII
+headers cannot be unpacked completely by cpio or
+afio versions before 2.4.8.
+
+When creating
+an archive, the ’large ASCII’ header is used by
+afio to cover the following situations:
+
+o
+
+A file has a size larger than 2
+GB 
+
+o
+
+The archive contains more than 64K files which have hard
+links 
+
+o
+
+A file, directory, or special file has a UID or GID
+value larger than 65535.
+
+The -5
+option can be used to always preserve cpio
+compatibility, it will cause afio to fail rather than
+produce an incompatible archive in the cases above.
+
+Archives made
+using the (deprecated) -4 option are also not
+compatible with cpio, but they are compatible with
+afio versions 2.4.4 and later.
+
+ARCHIVE FILE FORMAT
+
+An afio
+archive file has a simple format. The archive starts with a
+file header for the first file, followed by the contents of
+the first file (which will either be the exact contents
+byte-for-byte, or the exact contents in some compressed
+format). The data of the first file is immediately followed
+by the file header of the second file, and so on. At the
+end, there is a special ’end of archive’ header,
+usually followed by some padding bytes.
+
+A multi-volume
+afio archive is simply a normal archive split up into
+multiple parts. There are no special volume-level data
+headers. This means that that volumes can be split and
+merged by external programs, as long as the data stays in
+the correct order. It also implies that the contents of a
+single file can cross volume boundaries. Selective restores
+of files at known volume locations can be done by feeding
+only the needed volumes to afio, provided that the
+-k option is used.
+
+The contents of
+hard linked files are (unless the -l option is used)
+only stored once in the archive. The file headers for the
+second, third, and later occurrence of a hard linked file
+have no data after them. This makes selective restores of
+hard-liked files difficult: if later occurrences are to be
+restored correctly, the first occurrence always needs to be
+selected too.
+
+NOTES
+
+Special-case
+archive names:
+
+o
+
+Specify - to read or
+write the standard input or output, respectively. This
+disables multi-volume archive handling.
+
+o
+
+Prefix a command string to be executed with an
+exclamation mark (!). The command is executed once
+for each archive volume, with its standard input or output
+piped to afio. It is expected to produce a zero exit
+code when all is well.
+
+o
+
+Use system:file to access an archive in
+file on system. This is really just a special
+case of pipelining. It requires a 4.2BSD-style remote shell
+(rsh(1C)) and a remote copy of afio.
+
+o
+
+A more elaborate case of the above is
+[user@]host[%rsh][=afio]:file where the optional
+user@ component specifies the user name on the remote
+host, the optional %rsh specifies the (local) name of
+the remote shell command to use, and the optional
+=afio specifies the name of the remote copy of the
+afio command.
+
+o
+
+Anything else specifies a local file or device. An
+output file will be created if it does not already
+exist. 
+
+o
+
+When the -s option is used to invoke multi-volume
+archive processing, any %V in the file/device name or
+command string is subsisuted by the current volume number,
+and any %S by the current volume size. Use %%
+to produce a single % character.
+
+Recognizes
+obsolete binary cpio(1) archives (including those
+from machines with reversed byte order), but cannot write
+them.
+
+Recovers from
+archive corruption by searching for a valid magic number.
+This is rather simplistic, but, much like a disassembler,
+almost always works.
+
+CONTROL FILES
+
+Afio
+archives can contain so-called control files. Unlike normal
+archive entries, a control file in not unpacked to the
+filesystem. A control file has a label and some
+data. When afio encounters a control file in
+the archive it is reading, it will feed the label and
+data to a so-called control script. The control
+script is supplied by the user. It can perform special
+actions based on the label and data it
+receives from afio.
+
+Control file
+labels. The control file mechanism can be used for many
+things. Examples are putting archive descriptions at the
+beginning of the archive and embedding lists of files to
+move before unpacking the rest or the archive.
+
+To distinguish
+between different uses, the label of a control file
+should indicate the program that made the control file and
+the purpose of the control file data. It should have the
+form
+
+programname.kindofdata
+
+where
+programname is the name of the backup program that
+generated the control file, and kindofdata is the
+meaning of the control file data. Some examples are
+
+tbackup.movelist
+tbackup.updatescript 
+blebberfiler.archivecontents 
+backup_script_of_Joe_User.archivedescription
+
+The
+user-supplied control script should look at the label to
+decide what to do with the control data. This way, control
+files with unknown labels can be ignored, and afio archives
+maintain some degree of portability between different
+programs that restore or index them.
+
+Control file
+labels that are intended to be portable between different
+backup programs could be defined in the future.
+
+Making
+control files. When making an archive, afio reads a
+stream containing the names of the files (directories, ...)
+to put in the archive. This stream may also contain
+’control file generators’, which are lines with
+the following format:
+
+//--sourcename
+label
+
+Here, the //--
+sequence signals that a control file is to be made,
+sourcename is the path to a file containing the
+control file data, and label is the control file
+label. The sourcename must be a regular file or a
+symlink to a regular file.
+
+A control file
+will show up as
+
+//--CONTROL_FILE/label
+
+in an archive
+listing, where label is the control file label.
+
+Control
+scripts. A control script is supplied to afio with
+the
+
+-D
+controlscript
+
+command line
+option. The controlscript must be an executable
+program. The script is run whenever afio encounters a
+control file while doing a -i -t or -r
+operation. Afio will supply the control file label as
+an argument to the script. The script should read the
+control file data from its standard input. If the
+script exits with a non-zero exit status, afio will
+issue a warning message.
+
+If a control
+file is encountered and no -D option is given,
+afio will issue a warning message. To suppress the
+warning message and ignore all control scripts, -D
+"" can be used.
+
+An example of a
+control script is
+
+#!/bin/sh 
+if [ $1 = "afio_example.headertext" ]; then 
+#the headertext control file is supposed to be packed as the
+first 
+#entry of the archive 
+echo Archive header: 
+cat - 
+echo Unpack this archive? y/n 
+#stdout is still connected to the tty, read the reply from
+stdout 
+read yn 
+if [ "$yn" = n ]; then 
+#abort 
+kill $PPID 
+fi 
+else 
+echo Ignoring unknown control file. 
+cat - >/dev/null 
+fi
+
+Afio
+never compresses the control file data when storing it in an
+archive, even when the -Z option is used. When a
+control file is encountered by cpio(1) or an
+afio with a version number below 2.4.1, the data will
+be unpacked to the filesystem, and named
+CONTROL_FILE/label where label is the control
+file label.
+
+BUGS
+
+There are too
+many options.
+
+Restricts
+pathnames to 1023 characters, and 255 meaningful elements
+(where each element is a pathname component separated by a
+/).
+
+Does not use
+the same default block size as tar(1). tar(1)
+uses 10 KB, afio uses 5 KB by default. Some tape
+drives only work with a 10 KB block size, in that case the
+afio option -b 10k is needed to make the tape
+work.
+
+There is no
+sequence information within multi-volume archives. Input
+sequence errors generally masquerade as data corruption. A
+solution would probably be mutually exclusive with
+cpio(1) compatibility.
+
+The afio
+code for handling floppies (-F and -f and
+-K options) has buggy error handling. afio
+does not allow one to retry a failed floppy write on a
+different floppy, and it cannot recover from a verify error.
+If the floppy handling code is used and write or verify
+errors do occur, it is best to restart afio
+completely. Making backups to floppies should really be done
+with a more specialised backup program that wraps
+afio.
+
+The Linux
+floppy drivers below kernel version 1.1.54 do not allow
+afio to find out about floppy write errors while
+writing. If you are running a kernel below 1.1.54,
+afio will happily fail to write to (say) a write
+protected disk and not report anything wrong! The only way
+to find out about write errors in this case is by watching
+the kernel messages, or by switching on the verify
+(-K) option.
+
+The remote
+archive facilites (host:/file archive names) have not been
+exhaustively tested. These facilities have seen a lot of
+real-life use though. However, there may be bugs in the code
+for error handling and error reporting with remote
+archives.
+
+An archive
+created with a command like ’find /usr/src/linux
+-print | afio -o ...’ will not contain the
+ownership and permissions of the /usr and
+/usr/src directories. If these directories are
+missing when restoring the archive, afio will
+recreate them with some default ownership and
+permissions.
+
+Afio can not
+restore time stamps on symlinks. Also, on operating systems
+without an lchown(2) system call, afio can not
+restore owner/group information on symlinks. (Linux has
+lchown since kernel version 2.1.86.)
+
+Afio tries to
+restore modification time stamps of directories in the
+archive correctly. However, if it exits prematurely, then
+the modification times will not be restored correctly.
+
+A restore using
+decompression will fail if the gzip binary used by
+afio is overwritten, by afio or by another
+program, during the restore. The restore will also fail if
+any shared libraries needed to start gzip are
+overwritten during the restore. afio should not
+normally be used to overwrite the system files on a running
+system. If it is used in this way, a flag like -Y
+/bin/gzip can often be added to prevent failure.
+
+The -r
+option verifies the file contents of the files in the
+archive against the files on the filesystem, but does not
+cross-check details like permission bits on files, nor does
+it cross-check that archived directories or other non-file
+entities still exist on the filesystem.
+
+There are
+several problems with archiving hard links. 1) Due to
+internal limitations, files with hard links cannot be stored
+in compressed form, unless the -l or -U
+options are used which force each hard linked file to be
+stored separately. 2) Archives which contain hard links and
+which were made with older (pre-2.4.8) versions of
+afio or with cpio can not always be correctly
+unpacked. This is really a problem in the archives and not
+in the current version of afio. The risk of incorrect
+unpacking will be greater if the number of files or hard
+links in the archives is larger. 3) In a selective restore,
+if the selection predicates do not select the first copy of
+a file with archive-internal hard links, then all subsequent
+copies, if selected, will not be correctly restored. 4)
+Unless the -4 option is used, the inode number fields
+in the archive headers for files with hard links of the
+archive will sometimes not contain the actual (least
+significant 16 bits of) the inode number of the original
+file.
+
+Some Linux
+kernels no not allow one to create a hard link to a symbolic
+link. afio will try to re-create such hard links when
+unpacking an archive, but might fail due to kernel
+restrictions.
+
+Due to internal
+limitations of afio, the use of the -U option
+forces the writing of file content with each hard linked
+file, rather than only once for every set of hard linked
+files.
+
+When it is run
+without super-user privileges, afio is not able to
+unpack a file into a directory for which it has no write
+permissions, even if it just created that directory itself.
+This can be a problem when trying to restore directory
+structures created by some source code control tools like
+RCS.
+
+When block or
+character device files are packed into an archive on one
+operating system (e.g. Linux) and unpacked on another
+operating system, which uses different sizes for the major
+and minor device number data types (e.g. Solaris), the major
+and minor numbers of the device files will not be restored
+correctly. This can be a problem if the operating systems
+share a cross-mounted filesystem. A workaround is to use
+tar(1) for the device files.
+
+SECURITY CONSIDERATIONS
+
+Security
+considerations arise when unpacking archives from untrusted
+sources. The recommended technique is to unpack such
+archives into a temporary, empty destination directory,
+unaccessible to other system users, while running
+afio as a normal user, so without superuser
+privileges. As of version 2.5.2, afio has security
+measures, enabled by default, to guard against a class of
+attacks where specially constructed path names and/or
+symlink destinations in an archive cause afio to to
+create or modify system or user files outside of the
+destination directory. See the -8 option for a more
+detailed description of these attacks and measures.
+
+On UNIX
+multi-user systems with untrusted users, there are several
+known attacks where, unless the system administrator is very
+careful, end users can exploit backup and restore activites
+on the user filesystems to subvert data or operational
+security. See e.g. the security section of the GNU
+tar manual, at 
+
+http://www.gnu.org/software/tar/manual/html_node/Security.html
+
+for a description of some issues and precautions.
+
+An archive from
+an untrusted source could in theory contain mal-formatted
+data designed to implement a buffer overflow attack when
+afio reads the archive during a -t or
+-i operation. While the afio archive procesing
+code is fairly robust, and has passed some automated code
+checking tools, no formal review has been done to guarantee
+the absence of buffer overflow attack vulnerabilities.
+Running afio in a sandboxed virtual machine or from
+inside chroot(8) will improve the security of
+handling archives from untrusted sources, but the most
+secure option is to never touch such archives at all.
+
+EXAMPLES
+
+Create an
+archive with compressed files: 
+find .... | afio -o -v -Z /dev/fd0H1440
+
+Install
+(unpack) an archive with compressed files: 
+afio -i -v -Z archive
+
+Install
+(unpack) an archive with compressed files, protecting newer
+existing files: 
+afio -i -v -Z -n archive
+
+Create an
+archive with compressed files on floppy disks: 
+find .... | afio -o -v -s 1440k -F -Z /dev/fd0H1440
+
+Create an
+archive with all file contents encrypted by pgp: 
+export PGPPASSFD=3 
+find .... | afio -ovz -Z -U -P pgp -Q -fc -Q +verbose=0 -3 3
+archive 3
+
+Create an
+archive on recordable CDs using the cdrecord utility
+to write each CD: 
+find .... | afio -o -b 2048 -s325000x -v ’!cdrecord
+.... -’
+
+Extract a
+single named file from an archive on /dev/tape: 
+afio -i -v -Z -y /home/me/thedir/thefile /dev/tape 
+(If these do not exist yet, afio will also create the
+enclosing directories home/me/myfiledir under current
+working directory.)
+
+Extract files
+matching a pattern from an archive on /dev/tape: 
+afio -i -v -Z -y ’/home/me/*’ /dev/tape 
+(If these do not exist yet, afio will also create the
+enclosing directories home/me under current working
+directory.)
+
+If your
+filesystem cannot handle files larger than 2GB, but you want
+to make an archive on that filesystem that is larger than
+2GB, you use the following trick to split the archive into
+multiple files of each 1 GB: 
+find /home | afio -o ... - | split -b1024m - archive.
+
+the files will be called archive.aa, archive.ab, etc. You
+can restore the whole archive using: 
+cat archive.* | afio -i ... - 
+The wildcard expansion by the shell will ensure that
+cat will read the parts in the right (alphabetic)
+order.
+
+SEE ALSO
+
+cpio(1),
+find(1), tar(1), compress(1), gzip(1).
+
+WEB SITE AND INTERNET RESOURCES
+
+The afio home
+page is at http://members.chello.nl/~k.holtman/afio.html
+
+See the home page for information on submitting questions,
+bug reports, patches, etc.
+
+AUTHORS
+
+Mark Brukhartz
+
+Jeff Buhrt 
+Dave Gymer 
+Andrew Stevens 
+Koen Holtman (current maintainer)
+koen.holtman [AT] ieee.org 
+Anders Baekgaard 
+Too many other people to list here have contributed code,
+patches, ideas, and bug reports. Many of these are mentioned
+in the HISTORY file that is included with the sources.

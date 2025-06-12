@@ -1,0 +1,343 @@
+NAME
+
+guestfs-lua -
+How to use libguestfs from Lua
+
+SYNOPSIS
+
+local G =
+require "guestfs" 
+g = G.create () 
+g:add_drive ("test.img", { format =
+"raw", readonly = true }) 
+g:launch () 
+devices = g:list_devices () 
+g:close ()
+
+DESCRIPTION
+
+This manual
+page documents how to call libguestfs from the Lua
+programming language. This page just documents the
+differences from the C API and gives some examples. If you
+are not familiar with using libguestfs, you also need to
+read guestfs(3).
+
+REQUIRING
+THE MODULE 
+"require "guestfs"" returns the module,
+so you have to assign it to a local variable. Typical usage
+is:
+
+local G =
+require "guestfs"
+
+(you can use
+any name you want instead of "G", but in the
+examples in this man page we always use "G").
+
+OPENING AND
+CLOSING THE HANDLE 
+To create a new handle, call:
+
+g = G.create
+()
+
+You can also
+use the optional arguments:
+
+g = G.create {
+environment = 0, close_on_exit = 0 }
+
+to set the
+flags "GUESTFS_CREATE_NO_ENVIRONMENT" and/or
+"GUESTFS_CREATE_NO_CLOSE_ON_EXIT".
+
+The handle will
+be closed by the garbage collector, but you can also close
+it explicitly by doing:
+
+g:close ()
+
+CALLING
+METHODS 
+Use the ordinary Lua convention for calling methods on the
+handle. For example:
+
+g:set_verbose
+(true)
+
+FUNCTIONS
+WITH OPTIONAL ARGUMENTS 
+For functions that take optional arguments, the first
+arguments are the non-optional ones. The optional final
+argument is a table supplying the optional arguments.
+
+g:add_drive
+("test.img")
+
+or:
+
+g:add_drive
+("test.img", { format = "raw", readonly
+= true })
+
+64 BIT
+VALUES 
+Currently 64 bit values must be passed as strings, and are
+returned as strings. This is because 32 bit Lua cannot
+handle 64 bit integers properly. We hope to come up with a
+better solution later.
+
+ERRORS
+
+Most (but not all) errors are converted into objects (ie.
+tables) containing the following fields:
+
+msg
+
+The error message (corresponding to
+"guestfs_last_error" in guestfs(3)).
+
+code
+
+The "errno"
+(corresponding to "guestfs_last_errno" in
+guestfs(3)).
+
+These objects
+also have "__tostring" functions attached to them
+so you can use "tostring" (or implicit conversion)
+to convert them into printable strings.
+
+Note that the
+library also throws some errors as plain strings. You may
+need to check the type.
+
+EVENTS
+
+Events can be registered by calling
+"set_event_callback":
+
+eh =
+g:set_event_callback (cb, "close")
+
+or to register
+a single callback for multiple events make the second
+argument a list:
+
+eh =
+g:set_event_callback (cb, { "appliance",
+"library", "trace" })
+
+A list of all
+valid event types (strings) is in the global variable
+"G.event_all".
+
+The callback
+("cb") is called with the following
+parameters:
+
+function cb (g,
+event, eh, flags, buf, array) 
+-- g is the guestfs handle 
+-- event is a string which is the name of the event that
+fired 
+-- flags is always zero 
+-- buf is the data buffer (eg. log message etc) 
+-- array is the array of 64 bit ints (eg. progress bar
+status etc) 
+... 
+end
+
+You can also
+remove a callback using the event handle ("eh")
+that was returned when you registered the callback:
+
+g:delete_event_callback
+(eh)
+
+EXAMPLE 1: CREATE A DISK IMAGE
+
+-- Example
+showing how to create a disk image. 
+local G = require "guestfs" 
+local output = "disk.img" 
+local g = G.create () 
+-- Create a raw-format sparse disk image, 512 MB in size.
+
+file = io.open (output, "w") 
+file:seek ("set", 512 * 1024 * 1024) 
+file:write (' ') 
+file:close () 
+-- Set the trace flag so that we can see each libguestfs
+call. 
+g:set_trace (true) 
+-- Attach the disk image to libguestfs. 
+g:add_drive (output, { format = "raw", readonly =
+false }) 
+-- Run the libguestfs back-end. 
+g:launch () 
+-- Get the list of devices. Because we only added one drive
+
+-- above, we expect that this list should contain a single
+
+-- element. 
+devices = g:list_devices () 
+if table.getn (devices) ~= 1 then 
+error "expected a single device from list-devices"
+
+end 
+-- Partition the disk as one single MBR partition. 
+g:part_disk (devices[1], "mbr") 
+-- Get the list of partitions. We expect a single element,
+which 
+-- is the partition we have just created. 
+partitions = g:list_partitions () 
+if table.getn (partitions) ~= 1 then 
+error "expected a single partition from
+list-partitions" 
+end 
+-- Create a filesystem on the partition. 
+g:mkfs ("ext4", partitions[1]) 
+-- Now mount the filesystem so that we can add files. 
+g:mount (partitions[1], "/") 
+-- Create some files and directories. 
+g:touch ("/empty") 
+message = "Hello, world\n" 
+g:write ("/hello", message) 
+g:mkdir ("/foo") 
+-- This one uploads the local file /etc/resolv.conf into
+
+-- the disk image. 
+g:upload ("/etc/resolv.conf",
+"/foo/resolv.conf") 
+-- Because we wrote to the disk and we want to detect write
+
+-- errors, call g:shutdown. You don't need to do this: 
+-- g:close will do it implicitly. 
+g:shutdown () 
+-- Note also that handles are automatically closed if they
+are 
+-- reaped by the garbage collector. You only need to call
+close 
+-- if you want to close the handle right away. 
+g:close ()
+
+EXAMPLE 2: INSPECT A VIRTUAL MACHINE DISK IMAGE
+
+-- Example
+showing how to inspect a virtual machine disk. 
+local G = require "guestfs" 
+if table.getn (arg) == 1 then 
+disk = arg[1] 
+else 
+error ("usage: inspect_vm disk.img") 
+end 
+local g = G.create () 
+-- Attach the disk image read-only to libguestfs. 
+g:add_drive (disk, { -- format:"raw" 
+readonly = true }) 
+-- Run the libguestfs back-end. 
+g:launch () 
+-- Ask libguestfs to inspect for operating systems. 
+local roots = g:inspect_os () 
+if table.getn (roots) == 0 then 
+error ("inspect_vm: no operating systems found")
+
+end 
+for _, root in ipairs (roots) do 
+print ("Root device: ", root) 
+-- Print basic information about the operating system. 
+print (" Product name: ",
+g:inspect_get_product_name (root)) 
+print (" Version: ", 
+g:inspect_get_major_version (root), 
+g:inspect_get_minor_version (root)) 
+print (" Type: ", g:inspect_get_type (root)) 
+print (" Distro: ", g:inspect_get_distro (root))
+
+-- Mount up the disks, like guestfish -i. 
+-- 
+-- Sort keys by length, shortest first, so that we end up
+
+-- mounting the filesystems in the correct order. 
+mps = g:inspect_get_mountpoints (root) 
+table.sort (mps, 
+function (a, b) 
+return string.len (a) 
+end) 
+for mp,dev in pairs (mps) do 
+pcall (function () g:mount_ro (dev, mp) end) 
+end 
+-- If /etc/issue.net file exists, print up to 3 lines. 
+filename = "/etc/issue.net" 
+if g:is_file (filename) then 
+print ("--- ", filename, " ---") 
+lines = g:head_n (3, filename) 
+for _, line in ipairs (lines) do 
+print (line) 
+end 
+end 
+-- Unmount everything. 
+g:umount_all () 
+end
+
+SEE ALSO
+
+guestfs(3),
+guestfs-examples(3), guestfs-erlang(3),
+guestfs-gobject(3), guestfs-golang(3),
+guestfs-java(3), guestfs-ocaml(3),
+guestfs-perl(3), guestfs-python(3),
+guestfs-recipes(1), guestfs-ruby(3),
+http://www.lua.org/, http://libguestfs.org/.
+
+AUTHORS
+
+Richard W.M.
+Jones ("rjones at redhat dot com")
+
+COPYRIGHT
+
+Copyright (C)
+2012 Red Hat Inc.
+
+LICENSE
+
+This manual
+page contains examples which we hope you will use in your
+programs. The examples may be freely copied, modified and
+distributed for any purpose without any restrictions.
+
+BUGS
+
+To get a list
+of bugs against libguestfs, use this link:
+https://bugzilla.redhat.com/buglist.cgi?component=libguestfs&product=Virtualization+Tools
+
+To report a new
+bug against libguestfs, use this link:
+https://bugzilla.redhat.com/enter_bug.cgi?component=libguestfs&product=Virtualization+Tools
+
+When reporting
+a bug, please supply:
+
+•
+
+The version of libguestfs.
+
+•
+
+Where you got libguestfs (eg. which Linux distro,
+compiled from source, etc)
+
+•
+
+Describe the bug accurately and give a way to reproduce
+it. 
+
+•
+
+Run libguestfs-test-tool(1) and paste the
+complete, unedited output into the bug report.

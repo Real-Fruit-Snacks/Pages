@@ -1,0 +1,140 @@
+NAME
+
+INSERT −
+create new rows in a table
+
+SYNOPSIS
+
+INSERT INTO
+table [ ( column [, ...] ) ] 
+{ DEFAULT VALUES | VALUES ( { expression | DEFAULT }
+[, ...] ) | query }
+
+DESCRIPTION
+
+INSERT
+allows one to insert new rows into a table. One can insert a
+single row at a time or several rows as a result of a
+query.
+
+The columns in
+the target list may be listed in any order. Each column not
+present in the target list will be inserted using a default
+value, either its declared default value or null.
+
+If the
+expression for each column is not of the correct data type,
+automatic type conversion will be attempted.
+
+You must have
+INSERT privilege to a table in order to insert into it. If
+you use the query clause to insert rows from a query,
+you also need to have SELECT privilege on any table used in
+the query.
+
+PARAMETERS
+
+table
+
+The name (optionally
+schema-qualified) of an existing table.
+
+column
+
+The name of a column in table.
+
+DEFAULT VALUES
+
+All columns will be filled with
+their default values.
+
+expression
+
+An expression or value to
+assign to column.
+
+DEFAULT
+
+This column will be filled with
+its default value.
+
+query
+
+A query (SELECT statement) that supplies the rows
+to be inserted. Refer to the SELECT statement for a
+description of the syntax.
+
+OUTPUTS
+
+On successful
+completion, an INSERT command returns a command tag
+of the form
+
+INSERT oid
+count
+
+The
+count is the number of rows inserted. If count
+is exactly one, and the target table has OIDs, then
+oid is the OID assigned to the inserted row.
+Otherwise oid is zero.
+
+EXAMPLES
+
+Insert a single
+row into table films:
+
+INSERT INTO
+films VALUES 
+(’UA502’, ’Bananas’, 105,
+’1971-07-13’, ’Comedy’, ’82
+minutes’);
+
+In this second
+example, the last column len is omitted and therefore it
+will have the default value of null:
+
+INSERT INTO
+films (code, title, did, date_prod, kind) 
+VALUES (’T_601’, ’Yojimbo’, 106,
+’1961-06-16’, ’Drama’);
+
+The third
+example uses the DEFAULT clause for the date columns rather
+than specifying a value:
+
+INSERT INTO
+films VALUES 
+(’UA502’, ’Bananas’, 105, DEFAULT,
+’Comedy’, ’82 minutes’); 
+INSERT INTO films (code, title, did, date_prod, kind) 
+VALUES (’T_601’, ’Yojimbo’, 106,
+DEFAULT, ’Drama’);
+
+This examples
+inserts several rows into table films from table tmp:
+
+INSERT INTO
+films SELECT * FROM tmp;
+
+This example
+inserts into array columns:
+
+-- Create an
+empty 3x3 gameboard for noughts-and-crosses 
+-- (all of these commands create the same board) 
+INSERT INTO tictactoe (game, board[1:3][1:3]) 
+VALUES
+(1,’{{"","",""},{},{"",""}}’);
+
+INSERT INTO tictactoe (game, board[3][3]) 
+VALUES (2,’{}’); 
+INSERT INTO tictactoe (game, board) 
+VALUES (3,’{{,,},{,,},{,,}}’);
+
+COMPATIBILITY
+
+INSERT
+conforms fully to the SQL standard. Possible limitations of
+the query clause are documented under SELECT
+[select(7)].

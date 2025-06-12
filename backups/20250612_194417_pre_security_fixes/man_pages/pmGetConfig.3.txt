@@ -1,0 +1,104 @@
+NAME
+
+pmGetConfig,
+pmGetOptionalConfig, pmGetAPIConfig - return
+values for Performance Co-Pilot configuration variables
+
+C SYNOPSIS
+
+#include
+
+char
+*pmGetConfig(const char *variable); 
+char *pmGetOptionalConfig(const char
+*variable); 
+char *pmGetAPIConfig(const char
+*feature);
+
+cc ...
+-lpcp
+
+DESCRIPTION
+
+The
+pmGetConfig and pmGetOptionalConfig functions
+search for variable first in the environment and
+then, if not found, in the Performance Co-Pilot (PCP)
+configuration file and returns the string result. If
+variable is not already in the environment, it is
+added with a call to setenv(3) before returning.
+
+The
+pmGetOptionalConfig function allows for failures -
+either from variable not being set at all, or due to
+the configuration file being missing. pmGetConfig is
+less tolerant to a missing configuration file, which it
+treats as a critical PCP installation failure - see the
+’’RETURN VALUE’’ section below for
+further details.
+
+The default
+location of the PCP configuration file is
+/etc/pcp.conf but this may be changed by setting
+PCP_CONF in the environment to a new location, as
+described in pcp.conf(5).
+
+The
+pmGetAPIConfig function reports on features of the
+PCP library. It can be used to query support for
+multi-threading, security extensions, and other
+features.
+
+The
+pmconfig(1) utility provides command line access to
+both of these interfaces, and also provides a mechanism for
+listing all available variables and features
+that are valid arguments to these routines.
+
+RETURN VALUE
+
+If
+variable is not found in either the environment or
+the PCP configuration file, or if the configuration file is
+inaccessible, then pmGetOptionalConfig returns
+NULL.
+
+If
+variable is found in neither the environment nor the
+PCP configuration file, then pmGetConfig returns an
+empty string. If the PCP configuration file is not found
+then a fatal error message is printed and the process will
+exit(2) - although this sounds drastic, it is the
+only course of action available because the PCP
+configuration/installation is deemed fatally flawed.
+
+The
+pmGetAPIConfig routine returns NULL on failure to
+lookup the requested feature. It does not modify the
+environment, and returns a pointer to a static read-only
+string.
+
+The value
+returned by all of these routines is either a static pointer
+or pointer into the environment, and so changing it is a bad
+idea.
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5). Values for these
+variables may be obtained programmatically using the
+pmGetConfig(3) function.
+
+SEE ALSO
+
+PCPIntro(1),
+pmconfig(1), pmGetVersion(3), exit(2),
+PMAPI(3), getenv(3), setenv(3),
+pcp.conf(5), pcp.env(5) and
+environ(7).

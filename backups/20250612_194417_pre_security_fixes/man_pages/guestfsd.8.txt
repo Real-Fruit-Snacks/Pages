@@ -1,0 +1,218 @@
+NAME
+
+guestfsd -
+guestfs daemon
+
+SYNOPSIS
+
+guestfsd [-r]
+[-v|--verbose]
+
+DESCRIPTION
+
+"guestfsd"
+is the libguestfs daemon. Normal users never need to run
+this program explicitly. This man page discusses what
+"guestfsd" does in both the libguestfs appliance
+and when using libguestfs live.
+
+LIBGUESTFS
+APPLIANCE 
+For the architecture of the libguestfs appliance, see
+"ARCHITECTURE" in guestfs(3).
+
+After the
+appliance boots, the /init script in the appliance
+starts "guestfsd" with no arguments.
+"guestfsd" opens the virtio-serial port on a known
+path (see "FILES"). It initiates the protocol (see
+"COMMUNICATION PROTOCOL" in guestfs(3)) and
+processes requests one at a time from the library until the
+appliance is destroyed.
+
+Filesystems are
+mounted under /sysroot and all filesystem operations
+happen relative to this directory.
+
+LIBGUESTFS
+LIVE 
+In the libguestfs live case, "guestfsd -r" is
+started from the rc-scripts, systemd, etc.
+
+The
+"-r" option causes the daemon to operate on the
+root filesystem instead of /sysroot.
+
+Currently
+(because of limitations in virtio-serial) only one client
+can connect at a time, and "guestfsd" must be
+restarted after each client disconnects. If libguestfs live
+were changed to use a different transport such as TCP/IP
+then this limitation could be removed.
+
+OPTIONS
+
+-?
+
+--help
+
+Display brief help.
+
+-c CHANNEL 
+--channel CHANNEL 
+--channel fd:N
+
+Pass the name of the
+virtio-serial channel, serial port, etc. over which guestfsd
+will communicate with the library. If this parameter is not
+given, then an internal default port is used.
+
+The
+"fd:N" form causes guestfsd to use the file
+descriptor "N" directly.
+
+-l
+
+--listen
+
+Instead of opening the
+"guestfs_channel" and thus expecting that it
+already exists, create the channel as a Unix domain socket,
+listen on it, and accept a single connection. This is mainly
+used for testing the daemon.
+
+-n
+
+--network
+
+Enable network features in the
+daemon.
+
+-r
+
+Set the root filesystem to be / (instead of the
+default which is /sysroot). Also do not unmount
+filesystems when the daemon exits.
+
+This option is
+used to enable libguestfs live.
+
+-v
+
+--verbose
+
+Enable verbose messages for
+debugging.
+
+The verbose
+flag is also set if the Linux command line contains the
+substring "guestfs_verbose=1".
+
+EXIT STATUS
+
+This program
+returns 0 if successful, or non-zero if there was an
+error.
+
+FILES
+
+/dev/virtio-ports/org.libguestfs.channel.0
+
+The virtio serial port which
+"guestfsd" connects to.
+
+/proc/cmdline
+
+The Linux command line is
+parsed to discover "guestfs_*" flags. The
+following flags are understood: 
+guestfs_verbose=1
+
+Enable verbose messages. This
+flag is passed by the libguestfs library to the appliance to
+make the daemon more verbose (it acts like the -v
+flag on the command line). Unrelated to the daemon, it also
+causes the appliance init script to print out a lot more
+debugging information.
+
+guestfs_channel=PATH
+
+Set the path to the
+virtio-serial channel to something other than the default
+(which is
+/dev/virtio-ports/org.libguestfs.channel.0). This is
+used by the User-Mode Linux backend to use a regular
+emulated serial port instead of virtio-serial.
+
+guestfs_network=1
+
+This is set if the appliance
+network is enabled (see
+"guestfs_set_network").
+
+SEE ALSO
+
+guestfs(3),
+http://libguestfs.org/.
+
+AUTHOR
+
+Richard W.M.
+Jones http://people.redhat.com/~rjones/
+
+COPYRIGHT
+
+Copyright (C)
+2009-2023 Red Hat Inc.
+
+LICENSE
+
+This program is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have
+received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation,
+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
+USA.
+
+BUGS
+
+To get a list
+of bugs against libguestfs, use this link:
+https://bugzilla.redhat.com/buglist.cgi?component=libguestfs&product=Virtualization+Tools
+
+To report a new
+bug against libguestfs, use this link:
+https://bugzilla.redhat.com/enter_bug.cgi?component=libguestfs&product=Virtualization+Tools
+
+When reporting
+a bug, please supply:
+
+•
+
+The version of libguestfs.
+
+•
+
+Where you got libguestfs (eg. which Linux distro,
+compiled from source, etc)
+
+•
+
+Describe the bug accurately and give a way to reproduce
+it. 
+
+•
+
+Run libguestfs-test-tool(1) and paste the
+complete, unedited output into the bug report.

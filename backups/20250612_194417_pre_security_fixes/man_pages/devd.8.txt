@@ -1,0 +1,87 @@
+DEVD(8) BSD System Manager’s Manual DEVD(8)
+
+NAME
+
+devd — device state
+change daemon
+
+SYNOPSIS
+
+devd
+[−Ddn]
+
+DESCRIPTION
+
+The devd daemon provides
+a way to have userland programs run when certain kernel
+events happen.
+
+The following
+options are accepted.
+
+−D
+
+Enable
+debugging messages.
+
+−d
+
+Run in the
+foreground instead of becoming a daemon.
+
+−n
+
+Do not process
+all pending events before becoming a daemon. Instead, call
+daemon right away.
+
+IMPLEMENTATION NOTES
+
+The devd utility is a
+system daemon that runs in the background all the time.
+Whenever a device is added to or removed from the device
+tree, devd will execute actions specified in
+devd.conf(5). For example, devd might execute
+dhclient(8) when an Ethernet adapter is added to the system,
+and kill the dhclient(8) instance when the same adapter is
+removed. Another example would be for devd to use a
+table to locate and load via kldload(8) the proper driver
+for an unrecognized device that is added to the system.
+
+The devd
+utility hooks into the devctl(4) device driver. This device
+driver has hooks into the device configuration system. When
+nodes are added or deleted from the tree, this device will
+deliver information about the event to devd. Once
+devd has parsed the message, it will search its
+action list for that kind of event and perform the action
+with the highest matching value. For most mundane uses, the
+default handlers are adequate. However, for more advanced
+users, the power is present to tweak every aspect of what
+happens.
+
+The devd
+utility reads /etc/devd.conf and uses that file to
+drive the rest of the process. While the format of this file
+is described in devd.conf(5), some basics are covered here.
+In the options section, one can define multiple
+directories to search for config files. All files in each of
+these directories are parsed. These files are intended to be
+installed by third party vendors that wish to hook into the
+devd system without modifying the user’s other
+config files.
+
+All messages
+that devd receives are forwarded to the UNIX domain
+socket at /var/run/devd.pipe.
+
+SEE ALSO
+
+devctl(4), devd.conf(5)
+
+AUTHORS
+
+M. Warner Losh
+
+BSD
+October 17, 2002 BSD

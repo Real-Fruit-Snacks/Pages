@@ -1,0 +1,269 @@
+NAME
+
+mh-mail -
+message format for nmh message system
+
+DESCRIPTION
+
+nmh
+processes messages in a particular format. It should be
+noted that although neither Bell nor Berkeley mailers
+produce message files in the format that nmh prefers,
+nmh can read message files in that format.
+
+Each user
+possesses a mail drop which initially receives all messages
+processed by post. inc will read from that
+mail drop and incorporate new messages found there into the
+user’s own mail folders (typically
+“+inbox”). The mail drop consists of one
+or more messages.
+
+Messages are
+expected to consist of lines of text. Graphics and binary
+data are not handled. No data compression is accepted. All
+text is clear ASCII 7-bit data.
+
+The general
+“memo” framework of RFC 822 is used. A message
+consists of a block of information in a rigid format,
+followed by general text with no specified format. The
+rigidly formatted first part of a message is called the
+header, and the free-format portion is called the body. The
+header must always exist, but the body is optional. These
+parts are separated by an empty line, i.e., two consecutive
+newline characters. Within nmh, the header and body
+may be separated by a line consisting of dashes:
+
+From: Local
+Mailbox user [AT] example.com> 
+To: 
+cc: 
+Fcc: +outbox 
+Subject:
+
+The header is
+composed of one or more header items. Each header item can
+be viewed as a single logical line of ASCII characters. If
+the text of a header item extends across several real lines,
+the continuation lines are indicated by leading spaces or
+tabs.
+
+Each header
+item is called a component and is composed of a keyword or
+name, along with associated text. The keyword begins at the
+left margin, may not contain spaces or tabs, may not
+exceed 63 characters (as specified by RFC 822), and is
+terminated by a colon (’:’). Certain components
+(as identified by their keywords) must follow rigidly
+defined formats in their text portions.
+
+The text for
+most formatted components (e.g., “Date:” and
+“Message-Id:”) is produced automatically. The
+only ones entered by the user are address fields such as
+“To:”, “cc:”, etc. Internet
+addresses are assigned mailbox names and host computer
+specifications. The rough format is
+“local@domain”, such as “MH@UCI”, or
+“MH [AT] UCI-ICSA.ARPA”. Multiple addresses are
+separated by commas. A missing host/domain is assumed to be
+the local host/domain.
+
+As mentioned
+above, a blank line (or a line of dashes) signals that all
+following text up to the end of the file is the body. No
+formatting is expected or enforced within the body.
+
+Following is a
+list of header components that are considered meaningful to
+various nmh programs.
+
+Date:
+
+Added by post, contains
+date and time of the message’s entry into the mail
+transport system.
+
+From:
+
+This header is filled in by
+default with the system’s idea of the user’s
+local mailbox. This can be changed with the
+Local-Mailbox profile entry. It contains the address
+of the author or authors (may be more than one if a
+“Sender:” field is present). For a standard
+reply (using repl), the reply address is constructed
+by checking the following headers (in this order):
+“Mail-Reply-To:”, “Reply-To:”,
+“From:”, “Sender:”. A
+“From:” header MUST exist when the message is
+sent to post, otherwise the message will be
+rejected.
+
+Envelope-From:
+
+Used by post to specify
+a value for the sender’s envelope address to the mail
+transport system. If omitted, post will use the value
+of the “Sender:” or the “From:”
+header. See send(1) for more details.
+
+Mail-Reply-To:
+
+For a standard reply (using
+repl), the reply address is constructed by checking
+the following headers (in this order):
+“Mail-Reply-To:”, “Reply-To:”,
+“From:”, “Sender:”.
+
+Mail-Followup-To:
+
+When making a
+“group” reply (using repl -group), any
+addresses in this field will take precedence, and no other
+reply address will be added to the draft. If this header is
+not available, then the return addresses will be constructed
+from the “Mail-Reply-To:”, or
+“Reply-To:”, or “From:”, along with
+adding the addresses from the headers “To:”,
+“cc:”, as well as adding your personal
+address.
+
+Reply-To:
+
+For a standard reply (using
+repl), the reply address is constructed by checking
+the following headers (in this order):
+“Mail-Reply-To:”, “Reply-To:”,
+“From:”, “Sender:”.
+
+Sender:
+
+Required by post in the
+event that the message has multiple addresses on the
+“From:” line. It is otherwise optional. This
+line should contain the address of the actual sender.
+
+To:
+
+Contains addresses of primary
+recipients.
+
+cc:
+
+Contains addresses of secondary
+recipients.
+
+Bcc:
+
+Still more recipients. However,
+the “Bcc:” line is not copied onto the message
+as delivered, so these recipients are not listed. nmh
+uses an encapsulation method for blind copies, see
+send(1).
+
+Dcc:
+
+Still more recipients. However,
+the “Dcc:” line is not copied onto the messages
+as delivered. Recipients on the “Dcc:” line
+receive the same message as recipients on the
+“To:” and “cc:” lines. See
+send(1) for more details. Dcc is not supported
+with the sendmail/pipe mail transport method.
+
+Fcc:
+
+Causes post to copy the
+message into the specified folder for the sender, if the
+message was successfully given to the transport system.
+
+Message-ID:
+
+A unique message identifier
+added by post if the -msgid flag is set.
+
+Subject:
+
+Sender’s commentary. It
+is displayed by scan.
+
+In-Reply-To:
+
+A commentary line added by
+repl when replying to a message.
+
+Resent-Date:
+
+Added when redistributing a
+message by post.
+
+Resent-From:
+
+Used instead of the
+“From:” header when post redistributes a
+message. See “From:”.
+
+Resent-To:
+
+New recipients for a message
+resent by dist.
+
+Resent-cc:
+
+Still more recipients. See
+“cc:” and “Resent-To:”.
+
+Resent-Bcc:
+
+Even more recipients. See
+“Bcc:” and “Resent-To:”.
+
+Resent-Fcc:
+
+Copy resent message into a
+folder. See “Fcc:” and
+“Resent-To:”.
+
+Resent-Message-Id:
+
+A unique identifier glued on by
+post if the -msgid flag is set. See
+“Message-Id:” and “Resent-To:”.
+
+Resent:
+
+Annotation for dist
+under the -annotate option.
+
+Forwarded:
+
+Annotation for forw
+under the -annotate option.
+
+Replied:
+
+Annotation for repl
+under the -annotate option.
+
+Attach:
+
+Used by mhbuild to
+specify a filename to attach to this message. See
+mhbuild(1) for more information.
+
+FILES
+
+/var/mail/$USER
+
+Location of mail drop.
+
+SEE ALSO
+
+Standard for
+the Format of ARPA Internet Text Messages (RFC 822)
+
+CONTEXT
+
+None

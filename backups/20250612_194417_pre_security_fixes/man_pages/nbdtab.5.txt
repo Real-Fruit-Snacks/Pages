@@ -1,0 +1,196 @@
+NAME
+
+/etc/nbdtab -
+configuration file for nbd-client
+
+SYNOPSIS
+
+/etc/nbdtab
+
+DESCRIPTION
+
+This file
+allows to configure predefined connections for nbd-client.
+It may contain multiple definitions, one per line, each of
+which contains four space-separated fields.
+
+To connect a
+device specified in the nbdtab file, run
+nbd-client(8) with the short name of that device as
+the sole argument. It will then look up the required
+information in nbdtab, and make the connection.
+
+Fields are
+separated from one another by any number of space or tab
+characters; records are separated from one another by
+newline characters. The file may also contain any number of
+comments, which start with a ’#’ character and
+continue until the end of the line or the end of the file,
+whichever is first.
+
+FIELDS
+
+The file contains the following fields:
+
+1.
+
+The short name of the device file. That is, it should
+contain the name of the device without the leading
+/dev/ part; e.g., it could say nbd0.
+
+2.
+
+The hostname (in case of a TCP socket) or filename (in
+case of a unix domain socket) on which the server is
+listening. 
+
+3.
+
+The name of the export as exported by
+nbd-server. 
+
+4.
+
+Any extra options. This field is optional (no pun
+intended), and need not appear in a file if no options are
+necessary. The options recognized by nbd-client(8)
+are specified below, in the section "Options". Any
+unknown options in this field will produce a warning by
+nbd-client, unless they are prepended by an
+underscore (’_’) character; the underscore is
+specifically reserved for local use, or for distribution
+customization. 
+
+OPTIONS
+
+Every command-line nbd-client option which allows to
+configure specific options for a particular device node has
+a corresponding option in the nbdtab file, and vice
+versa; where this isn’t the case, that is a bug.
+
+Individual
+options in this field should be separated from one another
+by the comma character. 
+bs=block size
+
+The block size for this export.
+If this option is not used, the kernel’s default will
+be used instead.
+
+Corresponds to
+the -b option on the command line.
+
+cacertfile=certificate
+file
+
+The CA certificate file for
+TLS. Corresponds to the -A option on the command
+line.
+
+certfile=certificate
+file
+
+The certificate file for TLS.
+Corresponds to the -F option on the command line.
+
+conns=number
+
+The number of connections to
+use for this device. Corresponds to the -C option on
+the command line; see nbd-client(8) for more details on that
+option.
+
+keyfile=key
+file
+
+The private key file for TLS.
+Corresponds to the -K option on the command line.
+
+no_optgo
+
+Disable the use of NBD_OPT_GO
+in the conversation. Corresponds to the -g option on
+the command line.
+
+port=port
+number
+
+The port on which to
+communicate with the nbd-server. Defaults to the
+IANA-assigned port for NBD, 10809.
+
+timeout=timeout
+
+The timeout. If this option is
+not specified, no timeout is configured.
+
+Corresponds to
+the -t option on the command line.
+
+persist
+
+Persist the connection, using
+the semantics of the -p command-line option.
+
+swap
+
+Optimize for swap; -s.
+
+sdp
+
+Use the Socket Direct protocol; -S.
+
+tlshostname=TLS
+hostname
+
+The hostname for TLS purposes;
+-H
+
+unix
+
+Use a Unix Domain socket to connect to the server;
+-u. 
+
+SEE ALSO
+
+nbd-server (1),
+nbd-client (8), nbd-trdump (8)
+
+AUTHOR
+
+The NBD kernel
+module and the NBD tools were originally written by Pavel
+Machek (pavel [AT] ucw.cz)
+
+The Linux
+kernel module is now maintained by Paul Clements
+(Paul.Clements [AT] steeleye.com), while the userland tools are
+maintained by Wouter Verhelst
+(wouter [AT] debian.org>)
+
+On The Hurd
+there is a regular translator available to perform the
+client side of the protocol, and the use of
+nbd-client is not required. Please see the relevant
+documentation for more information.
+
+This manual
+page was written by Wouter Verhelst
+(wouter [AT] debian.org>). Permission is granted to copy,
+distribute and/or modify this document under the terms of
+the GNU General Public License, version 2, as published by
+the Free Software Foundation.
+
+EXAMPLES
+
+A simple
+nbdtab file could look like this:
+
+# swap space,
+called "swapexport" on the server 
+# optimize for swap, and try to reconnect upon disconnect.
+
+nbd0 nbdserver.example.com swapexport swap,persist 
+# other export, called "data" on the server. No
+options for this one. 
+nbd1 nbdserver.example.com data

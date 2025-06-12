@@ -1,0 +1,895 @@
+CAMCONTROL(8) BSD System Manager’s Manual
+CAMCONTROL(8)
+
+NAME
+
+camcontrol — CAM
+control program
+
+SYNOPSIS
+
+camcontrol ⟨
+command⟩ [device id] [generic args]
+[command args] 
+camcontrol devlist [−v] 
+camcontrol periphlist [device id]
+[−n dev_name]
+[−u unit_number] 
+camcontrol tur [device id] [generic args]
+
+camcontrol inquiry [device id] [generic args]
+[−D] [−S] [−R]
+
+camcontrol start [device id] [generic args]
+
+camcontrol stop [device id] [generic args]
+
+camcontrol load [device id] [generic args]
+
+camcontrol eject [device id] [generic args]
+
+camcontrol rescan ⟨
+all | bus[:target:lun]⟩ 
+camcontrol reset ⟨
+all | bus[:target:lun]⟩ 
+camcontrol defects [device id] [generic args]
+⟨ −f format⟩
+[−P] [−G] 
+camcontrol modepage [device id] [generic args]
+⟨
+−m page | −l⟩
+[−P pgctl]
+[−b | −e]
+[−d] 
+camcontrol cmd [device id] [generic args]
+⟨ −c cmd [args]⟩
+[−i len fmt]
+[−o len fmt [args]]
+
+camcontrol debug [−I] [−P]
+[−T] [−S] [−X]
+[−c] ⟨ all|off|bus[:target[:lun]]⟩
+
+camcontrol tags [device id] [generic args]
+[−N tags] [−q]
+[−v] 
+camcontrol negotiate [device id]
+[generic args] [−c]
+[−D enable|disable]
+[−O offset] [−q]
+[−R syncrate]
+[−T enable|disable]
+[−U] [−W bus_width]
+[−v] 
+camcontrol format [device id] [generic args]
+[−q] [−w] [−y]
+
+camcontrol help
+
+DESCRIPTION
+
+The camcontrol utility is
+designed to provide a way for users to access and control
+the FreeBSD CAM subsystem.
+
+The
+camcontrol utility can cause a loss of data and/or
+system crashes if used improperly. Even expert users are
+encouraged to exercise caution when using this command.
+Novice users should stay away from this utility.
+
+The
+camcontrol utility has a number of primary functions,
+many of which support an optional device identifier. A
+device identifier can take one of three forms:
+
+deviceUNIT
+
+Specify a
+device name and unit number combination, like
+"da5" or "cd3". Note that character
+device node names (e.g. /dev/da0) are not allowed
+here.
+
+bus:target
+
+Specify a bus
+number and target id. The bus number can be determined from
+the output of ’’camcontrol
+devlist’’. The lun defaults to 0.
+
+bus:target:lun
+
+Specify the
+bus, target and lun for a device. (e.g. 1:2:0)
+
+The device
+identifier, if it is specified, must come immediately
+after the function name, and before any generic or
+function-specific arguments. Note that the −n
+and −u arguments described below will override
+any device name or unit number specified beforehand. The
+−n and −u arguments will
+not override a specified bus:target or
+bus:target:lun, however.
+
+Most of the
+camcontrol primary functions support these generic
+arguments:
+
+−C count
+
+SCSI command
+retry count. In order for this to work, error recovery
+(−E) must be turned on.
+
+−E
+
+Instruct the
+kernel to perform generic SCSI error recovery for the given
+command. This is needed in order for the retry count
+(−C) to be honored. Other than retrying
+commands, the generic error recovery in the code will
+generally attempt to spin up drives that are not spinning.
+It may take some other actions, depending upon the sense
+code returned from the command.
+
+−n
+dev_name
+
+Specify the
+device type to operate on, e.g. "da",
+"cd".
+
+−t
+timeout
+
+SCSI command
+timeout in seconds. This overrides the default timeout for
+any given command.
+
+−u
+unit_number
+
+Specify the
+device unit number, e.g. "1", "5".
+
+−v
+
+Be verbose,
+print out sense information for failed SCSI commands.
+
+Primary command
+functions:
+
+devlist
+
+List all
+physical devices (logical units) attached to the CAM
+subsystem. This also includes a list of peripheral drivers
+attached to each device. With the −v argument,
+SCSI bus number, adapter name and unit numbers are printed
+as well.
+
+periphlist
+
+List all
+peripheral drivers attached to a given physical device
+(logical unit).
+
+tur
+
+Send the SCSI
+test unit ready (0x00) command to the given device. The
+camcontrol utility will report whether the device is
+ready or not.
+
+inquiry
+
+Send a SCSI
+inquiry command (0x12) to a device. By default,
+camcontrol will print out the standard inquiry data,
+device serial number, and transfer rate information. The
+user can specify that only certain types of inquiry data be
+printed:
+
+−D
+
+Get the
+standard inquiry data.
+
+−S
+
+Print out the
+serial number. If this flag is the only one specified,
+camcontrol will not print out "Serial
+Number" before the value returned by the drive. This is
+to aid in script writing.
+
+−R
+
+Print out
+transfer rate information.
+
+start
+
+Send the SCSI
+Start/Stop Unit (0x1B) command to the given device with the
+start bit set.
+
+stop
+
+Send the SCSI
+Start/Stop Unit (0x1B) command to the given device with the
+start bit cleared.
+
+load
+
+Send the SCSI
+Start/Stop Unit (0x1B) command to the given device with the
+start bit set and the load/eject bit set.
+
+eject
+
+Send the SCSI
+Start/Stop Unit (0x1B) command to the given device with the
+start bit cleared and the load/eject bit set.
+
+rescan
+
+Tell the kernel
+to scan all busses in the system (with the all
+argument), the given bus (XPT_SCAN_BUS), or bus:target:lun
+(XPT_SCAN_LUN) for new devices or devices that have gone
+away. The user may specify a scan of all busses, a single
+bus, or a lun. Scanning all luns on a target isn’t
+supported.
+
+reset
+
+Tell the kernel
+to reset all busses in the system (with the all
+argument) or the given bus (XPT_RESET_BUS) by issuing a SCSI
+bus reset for that bus, or to reset the given bus:target:lun
+(XPT_RESET_DEV), typically by issuing a BUS DEVICE RESET
+message after connecting to that device. Note that this can
+have a destructive impact on the system.
+
+defects
+
+Send the SCSI
+READ DEFECT DATA (10) command (0x37) to the given device,
+and print out any combination of: the total number of
+defects, the primary defect list (PLIST), and the grown
+defect list (GLIST).
+
+−f
+format
+
+The three
+format options are: block, to print out the list as
+logical blocks, bfi, to print out the list in bytes
+from index format, and phys, to print out the list in
+physical sector format. The format argument is required.
+Most drives support the physical sector format. Some drives
+support the logical block format. Many drives, if they
+don’t support the requested format, return the data in
+an alternate format, along with sense information indicating
+that the requested data format isn’t supported. The
+camcontrol utility attempts to detect this, and print
+out whatever format the drive returns. If the drive uses a
+non-standard sense code to report that it doesn’t
+support the requested format, camcontrol will
+probably see the error as a failure to complete the
+request.
+
+−G
+
+Print out the
+grown defect list. This is a list of bad blocks that have
+been remapped since the disk left the factory.
+
+−P
+
+Print out the
+primary defect list.
+
+If neither
+−P nor −G is specified,
+camcontrol will print out the number of defects given
+in the READ DEFECT DATA header returned from the drive.
+
+modepage
+
+Allows the user
+to display and optionally edit a SCSI mode page. The mode
+page formats are located in
+/usr/share/misc/scsi_modes. This can be overridden by
+specifying a different file in the SCSI_MODES environment
+variable. The modepage command takes several
+arguments:
+
+−d
+
+Disable block
+descriptors for mode sense.
+
+−b
+
+Displays mode
+page data in binary format.
+
+−e
+
+This flag
+allows the user to edit values in the mode page. The user
+may either edit mode page values with the text editor
+pointed to by his EDITOR environment variable, or supply
+mode page values via standard input, using the same format
+that camcontrol uses to display mode page values. The
+editor will be invoked if camcontrol detects that
+standard input is terminal.
+
+−l
+
+Lists all
+available mode pages.
+
+−m
+mode_page
+
+This specifies
+the number of the mode page the user would like to view
+and/or edit. This argument is mandatory unless
+−l is specified.
+
+−P pgctl
+
+This allows the
+user to specify the page control field. Possible values
+are:
+
+0
+
+Current
+values
+
+1
+
+Changeable
+values
+
+2
+
+Default
+values
+
+3
+
+Saved
+values
+
+cmd
+
+Allows the user
+to send an arbitrary SCSI CDB to any device. The cmd
+function requires the −c argument to specify
+the CDB. Other arguments are optional, depending on the
+command type. The command and data specification syntax is
+documented in cam_cdbparse(3). NOTE: If the CDB specified
+causes data to be transfered to or from the SCSI device in
+question, you MUST specify either −i or
+−o.
+
+−c cmd
+[args]
+
+This specifies
+the SCSI CDB. CDBs may be 6, 10, 12 or 16 bytes.
+
+−i len
+fmt
+
+This specifies
+the amount of data to read, and how it should be displayed.
+If the format is ’-’, len bytes of data
+will be read from the device and written to standard
+output.
+
+−o len fmt
+[args]
+
+This specifies
+the amount of data to be written to a device, and the data
+that is to be written. If the format is ’-’,
+len bytes of data will be read from standard input
+and written to the device.
+
+debug
+
+Turn on CAM
+debugging printfs in the kernel. This requires options
+CAMDEBUG in your kernel config file. WARNING: enabling
+debugging printfs currently causes an EXTREME number of
+kernel printfs. You may have difficulty turning off the
+debugging printfs once they start, since the kernel will be
+busy printing messages and unable to service other requests
+quickly. The debug function takes a number of
+arguments:
+
+−I
+
+Enable
+CAM_DEBUG_INFO printfs.
+
+−P
+
+Enable
+CAM_DEBUG_PERIPH printfs.
+
+−T
+
+Enable
+CAM_DEBUG_TRACE printfs.
+
+−S
+
+Enable
+CAM_DEBUG_SUBTRACE printfs.
+
+−X
+
+Enable
+CAM_DEBUG_XPT printfs.
+
+−c
+
+Enable
+CAM_DEBUG_CDB printfs. This will cause the kernel to print
+out the SCSI CDBs sent to the specified device(s).
+
+all
+
+Enable
+debugging for all devices.
+
+off
+
+Turn off
+debugging for all devices
+
+bus[:target[:lun]]
+
+Turn on
+debugging for the given bus, target or lun. If the lun or
+target and lun are not specified, they are wildcarded.
+(i.e., just specifying a bus turns on debugging printfs for
+all devices on that bus.)
+
+tags
+
+Show or set the
+number of "tagged openings" or simultaneous
+transactions we attempt to queue to a particular device. By
+default, the tags command, with no command-specific
+arguments (i.e., only generic arguments) prints out the
+"soft" maximum number of transactions that can be
+queued to the device in question. For more detailed
+information, use the −v argument described
+below.
+
+−N tags
+
+Set the number
+of tags for the given device. This must be between the
+minimum and maximum number set in the kernel quirk table.
+The default for most devices that support tagged queueing is
+a minimum of 2 and a maximum of 255. The minimum and maximum
+values for a given device may be determined by using the
+−v switch. The meaning of the −v
+switch for this camcontrol subcommand is described
+below.
+
+−q
+
+Be quiet, and
+don’t report the number of tags. This is generally
+used when setting the number of tags.
+
+−v
+
+The verbose
+flag has special functionality for the tags argument.
+It causes camcontrol to print out the tagged queueing
+related fields of the XPT_GDEV_TYPE CCB:
+
+dev_openings
+
+This is the
+amount of capacity for transactions queued to a given
+device.
+
+dev_active
+
+This is the
+number of transactions currently queued to a device.
+
+devq_openings
+
+This is the
+kernel queue space for transactions. This count usually
+mirrors dev_openings except during error recovery operations
+when the device queue is frozen (device is not allowed to
+receive commands), the number of dev_openings is reduced, or
+transaction replay is occurring.
+
+devq_queued
+
+This is the
+number of transactions waiting in the kernel queue for
+capacity on the device. This number is usually zero unless
+error recovery is in progress.
+
+held
+
+The held count
+is the number of CCBs held by peripheral drivers that have
+either just been completed or are about to be released to
+the transport layer for service by a device. Held CCBs
+reserve capacity on a given device.
+
+mintags
+
+This is the
+current "hard" minimum number of transactions that
+can be queued to a device at once. The dev_openings
+value above cannot go below this number. The default value
+for mintags is 2, although it may be set higher or
+lower for various devices.
+
+maxtags
+
+This is the
+"hard" maximum number of transactions that can be
+queued to a device at one time. The dev_openings
+value cannot go above this number. The default value for
+maxtags is 255, although it may be set higher or
+lower for various devices.
+
+negotiate
+
+Show or
+negotiate various communication parameters. Some controllers
+may not support setting or changing some of these values.
+For instance, the Adaptec 174x controllers do not support
+changing a device’s sync rate or offset. The
+camcontrol utility will not attempt to set the
+parameter if the controller indicates that it does not
+support setting the parameter. To find out what the
+controller supports, use the −v flag. The
+meaning of the −v flag for the negotiate
+command is described below. Also, some controller drivers
+don’t support setting negotiation parameters, even if
+the underlying controller supports negotiation changes. Some
+controllers, such as the Advansys wide controllers, support
+enabling and disabling synchronous negotiation for a device,
+but do not support setting the synchronous negotiation
+rate.
+
+−a
+
+Attempt to make
+the negotiation settings take effect immediately by sending
+a Test Unit Ready command to the device.
+
+−c
+
+Show or set
+current negotiation settings. This is the default.
+
+−D
+enable|disable
+
+Enable or
+disable disconnection.
+
+−O
+offset
+
+Set the command
+delay offset.
+
+−q
+
+Be quiet,
+don’t print anything. This is generally useful when
+you want to set a parameter, but don’t want any status
+information.
+
+−R
+syncrate
+
+Change the
+synchronization rate for a device. The sync rate is a
+floating point value specified in MHz. So, for instance,
+’20.000’ is a legal value, as is
+’20’.
+
+−T
+enable|disable
+
+Enable or
+disable tagged queueing for a device.
+
+−U
+
+Show or set
+user negotiation settings. The default is to show or set
+current negotiation settings.
+
+−v
+
+The verbose
+switch has special meaning for the negotiate
+subcommand. It causes camcontrol to print out the
+contents of a Path Inquiry (XPT_PATH_INQ) CCB sent to the
+controller driver.
+
+−W
+bus_width
+
+Specify the bus
+width to negotiate with a device. The bus width is specified
+in bits. The only useful values to specify are 8, 16, and 32
+bits. The controller must support the bus width in question
+in order for the setting to take effect.
+
+In general,
+sync rate and offset settings will not take effect for a
+device until a command has been sent to the device. The
+−a switch above will automatically send a Test
+Unit Ready to the device so negotiation parameters will take
+effect.
+
+format
+
+Issue the SCSI
+FORMAT UNIT command to the named device.
+
+WARNING!
+WARNING! WARNING!
+
+Low level
+formatting a disk will destroy ALL data on the disk. Use
+extreme caution when issuing this command. Many users
+low-level format disks that do not really need to be
+low-level formatted. There are relatively few scenarios that
+call for low-level formatting a disk. One reason for
+low-level formatting a disk is to initialize the disk after
+changing its physical sector size. Another reason for
+low-level formatting a disk is to revive the disk if you are
+getting "medium format corrupted" errors from the
+disk in response to read and write requests.
+
+Some disks take
+longer than others to format. Users should specify a timeout
+long enough to allow the format to complete. The default
+format timeout is 3 hours, which should be long enough for
+most disks. Some hard disks will complete a format operation
+in a very short period of time (on the order of 5 minutes or
+less). This is often because the drive doesn’t really
+support the FORMAT UNIT command -- it just accepts the
+command, waits a few minutes and then returns it.
+
+The
+’format’ subcommand takes several arguments that
+modify its default behavior. The −q and
+−y arguments can be useful for scripts.
+
+−q
+
+Be quiet,
+don’t print any status messages. This option will not
+disable the questions, however. To disable questions, use
+the −y argument, below.
+
+−w
+
+Issue a
+non-immediate format command. By default, camcontrol
+issues the FORMAT UNIT command with the immediate bit set.
+This tells the device to immediately return the format
+command, before the format has actually completed. Then,
+camcontrol gathers SCSI sense information from the
+device every second to determine how far along in the format
+process it is. If the −w argument is specified,
+camcontrol will issue a non-immediate format command,
+and will be unable to print any information to let the user
+know what percentage of the disk has been formatted.
+
+−y
+
+Don’t ask
+any questions. By default, camcontrol will ask the
+user if he/she really wants to format the disk in question,
+and also if the default format command timeout is
+acceptable. The user will not be asked about the timeout if
+a timeout is specified on the command line.
+
+help
+
+Print out
+verbose usage information.
+
+ENVIRONMENT
+
+The SCSI_MODES variable allows
+the user to specify an alternate mode page format file.
+
+The EDITOR
+variable determines which text editor camcontrol
+starts when editing mode pages.
+
+FILES 
+/usr/share/misc/scsi_modes
+
+is the SCSI
+mode format database.
+
+/dev/xpt0
+
+is the
+transport layer device.
+
+/dev/pass*
+
+are the CAM
+application passthrough devices.
+
+EXAMPLES
+
+camcontrol eject -n cd -u 1
+-v
+
+Eject the CD
+from cd1, and print SCSI sense information if the command
+fails.
+
+camcontrol tur
+da0
+
+Send the SCSI
+test unit ready command to da0. The camcontrol
+utility will report whether the disk is ready, but will not
+display sense information if the command fails since the
+−v switch was not specified.
+
+camcontrol tur
+da1 -E -C 4 -t 50 -v
+
+Send a test unit
+ready command to da1. Enable kernel error recovery. Specify
+a retry count of 4, and a timeout of 50 seconds. Enable
+sense printing (with the −v flag) if the
+command fails. Since error recovery is turned on, the disk
+will be spun up if it is not currently spinning. The
+camcontrol utility will report whether the disk is
+ready.
+
+camcontrol cmd
+-n cd -u 1 -v -c "3C 00 00 00 00 00 00 00 0e 00"
+\
+
+-i 0xe "s1 i3 i1 i1 i1 i1 i1 i1 i1 i1 i1
+i1" 
+
+Issue a READ
+BUFFER command (0x3C) to cd1. Display the buffer size of
+cd1, and display the first 10 bytes from the cache on cd1.
+Display SCSI sense information if the command fails.
+
+camcontrol cmd
+-n cd -u 1 -v -c "3B 00 00 00 00 00 00 00 0e 00"
+\
+
+-o 14 "00 00 00 00 1 2 3 4 5 6 v v v v" 7 8 9
+8 
+
+Issue a WRITE
+BUFFER (0x3B) command to cd1. Write out 10 bytes of data,
+not including the (reserved) 4 byte header. Print out sense
+information if the command fails. Be very careful with this
+command, improper use may cause data corruption.
+
+camcontrol
+modepage da3 -m 1 -e -P 3
+
+Edit mode page 1
+(the Read-Write Error Recover page) for da3, and save the
+settings on the drive. Mode page 1 contains a disk
+drive’s auto read and write reallocation settings,
+among other things.
+
+camcontrol
+rescan all
+
+Rescan all SCSI
+busses in the system for devices that have been added,
+removed or changed.
+
+camcontrol
+rescan 0
+
+Rescan SCSI bus
+0 for devices that have been added, removed or changed.
+
+camcontrol
+rescan 0:1:0
+
+Rescan SCSI bus
+0, target 1, lun 0 to see if it has been added, removed, or
+changed.
+
+camcontrol tags
+da5 -N 24
+
+Set the number
+of concurrent transactions for da5 to 24.
+
+camcontrol
+negotiate -n da -u 4 -T disable
+
+Disable tagged
+queueing for da4.
+
+camcontrol
+negotiate -n da -u 3 -R 20.000 -O 15 -a
+
+Negotiate a sync
+rate of 20MHz and an offset of 15 with da3. Then send a Test
+Unit Ready command to make the settings take effect.
+
+SEE ALSO
+
+cam(3), cam_cdbparse(3), cam(4),
+pass(4), xpt(4)
+
+HISTORY
+
+The camcontrol utility
+first appeared in FreeBSD 3.0.
+
+The mode page
+editing code and arbitrary SCSI command code are based upon
+code in the old scsi(8) utility and scsi(3) library, written
+by Julian Elischer and Peter Dufault. The scsi(8) program
+first appeared in 386BSD 0.1.2.4, and first appeared in
+FreeBSD in FreeBSD 2.0.5.
+
+AUTHORS
+
+Kenneth Merry
+ken [AT] FreeBSD.org>
+
+BUGS
+
+The code that parses the generic
+command line arguments doesn’t know that some of the
+subcommands take multiple arguments. So if, for instance,
+you tried something like this:
+
+camcontrol cmd
+-n da -u 1 -c "00 00 00 00 00 v" 0x00 -v
+
+The sense
+information from the test unit ready command would not get
+printed out, since the first getopt(3) call in
+camcontrol bails out when it sees the second argument
+to −c (0x00), above. Fixing this behavior would
+take some gross code, or changes to the getopt(3) interface.
+The best way to circumvent this problem is to always make
+sure to specify generic camcontrol arguments before
+any command-specific arguments.
+
+BSD
+September 14, 1998 BSD

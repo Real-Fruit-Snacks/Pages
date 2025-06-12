@@ -1,0 +1,111 @@
+NAME
+
+corosync-qdevice-tool
+- corosync-qdevice control interface.
+
+SYNOPSIS
+
+corosync-qdevice-tool
+[-Hhsv] [-p qdevice_ipc_socket_path]
+
+DESCRIPTION
+
+corosync-qdevice-tool
+is a frontend to the internal corosync-qdevice IPC. Its main
+purpose is to show important information about the current
+internal state of corosync-qdevice.
+
+OPTIONS
+
+-H
+
+Properly shutdown the
+corosync-qdevice process
+
+-h
+
+Display a short usage text
+
+-s
+
+Display the status of the corosync-qdevice
+process. The output is described in its own section
+below. 
+
+-v
+
+Display more verbose output for the -s
+option. 
+
+-p
+
+Path to the corosync-qdevice communication
+socket. 
+
+STATUS COMMAND OUTPUT
+
+Qdevice
+information 
+------------------- 
+Model: Net 
+Node ID: 1 
+HB interval: 10000ms 
+Sync HB interval: 30000ms 
+Configured node list: 
+0 Node ID = 1 
+Heuristics: Enabled 
+Ring ID: 1.a00000000021b48 
+Membership node list: 1 
+Quorate: Yes 
+Quorum node list: 
+0 Node ID = 1, State = member 
+Expected votes: 2 
+Last poll call: 2016-06-24T17:05:20 (cast vote)
+
+Qdevice-net
+information 
+---------------------- 
+Cluster name: Cluster 
+QNetd host: localhost:5403 
+Connect timeout: 8000ms 
+HB interval: 8000ms 
+VQ vote timer interval: 5000ms 
+TLS: Supported 
+Algorithm: Fifty-Fifty split 
+Tie-breaker: Node with lowest node ID 
+KAP Tie-breaker: Enabled 
+Poll timer running: Yes (cast vote) 
+State: Connected 
+Heuristics result: Pass (regular: Pass, membership: Fail,
+connect: Fail) 
+TLS active: Yes (client certificate sent) 
+Connected since: 2016-06-24T17:02:35 
+Echo reply received: 2016-06-24T17:05:15
+
+The output is
+split into a generic qdevice section and a model specific
+section. Most of the items are just taken from corosync.conf
+file. It’s helpful to note that the Membership node
+list is the membership list of the current node and
+should match the quorum node list. Last poll call is
+the timestamp (in iso format) of the last call to the
+votequorum_qdevice_poll function.
+
+For model net,
+it’s good to check the Poll timer running
+state. Internally, model net supports 3 states. Not voting
+(when Poll timer running is No, which means
+corosync-qdevice is waiting for corosync-qnetd
+to reply), voting (without cast vote, it means that the
+corosync-qnetd algorithm decides that the current
+node shouldn’t get a vote) and voting (with cast
+vote).
+
+SEE ALSO
+
+corosync-qnetd(8)
+corosync-qdevice(8)
+
+AUTHOR
+
+Jan Friesse

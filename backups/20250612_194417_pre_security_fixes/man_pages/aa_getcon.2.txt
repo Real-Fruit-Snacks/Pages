@@ -1,0 +1,162 @@
+NAME
+
+aa_getprocattr_raw,
+aa_getprocattr - read and parse procattr data
+
+aa_getcon,
+aa_gettaskcon - get task confinement information
+
+aa_getpeercon -
+get the confinement of a socket’s other end (peer)
+
+SYNOPSIS
+
+#include
+
+int
+aa_getprocattr_raw(pid_t tid, const char *attr, char *buf,
+int len, char **mode);
+
+int
+aa_getprocattr(pid_t tid, const char *attr, char **label,
+char **mode);
+
+int
+aa_gettaskcon(pid_t target, char **label, char
+**mode);
+
+int
+aa_getcon(char **label, char **mode);
+
+int
+aa_getpeercon_raw(int fd, char *buf, int *len, char
+**mode);
+
+int
+aa_getpeercon(int fd, char **label, char **mode);
+
+Link with
+-lapparmor when compiling.
+
+DESCRIPTION
+
+The aa_getcon
+function gets the current AppArmor confinement context for
+the current task. The confinement context consists of a
+label and a mode. The label is usually just the name of the
+AppArmor profile restricting the task, but it may include
+the profile namespace or in some cases a set of profile
+names (known as a stack of profiles). The mode is a string
+that describes how the kernel is enforcing the policy
+defined in the profile. Profiles loaded in
+"enforce" mode will result in enforcement of the
+policy defined in the profile as well as reporting policy
+violation attempts. Profiles in "complain" mode
+will not enforce policy but instead report policy violation
+attempts.
+
+Some examples
+of possible returned *label strings are
+"unconfined", "/sbin/dhclient", and
+"Firefox". The string can consist of any non-NUL
+characters but it will be NUL-terminated. The *label string
+must be freed using free().
+
+The possible
+*mode strings are "enforce" and
+"complain". Additionally, *mode may be NULL when
+*label is "unconfined". The *mode string must
+not be freed. The *label and *mode strings come from a
+single buffer allocation and are separated by a NUL
+character.
+
+The
+aa_gettaskcon function is like the aa_getcon function except
+it will work for any arbitrary task in the system.
+
+The
+aa_getpeercon function is similar to that of aa_gettaskcon
+except that it returns the confinement information for task
+on the other end of a socket connection.
+
+The
+aa_getpeercon_raw function is the backend for the
+aa_getpeercon function and does not handle buffer
+allocation.
+
+The
+aa_getprocattr function is the backend for the aa_getcon and
+aa_gettaskcon functions and handles the reading and parsing
+of the confinement data from different arbitrary attr files
+and returns the processed results in an allocated
+buffer.
+
+The
+aa_getprocattr_raw() is the backend for the
+aa_getprocattr function and does not handle buffer
+allocation.
+
+RETURN VALUE
+
+On success size
+of data placed in the buffer is returned, this includes the
+mode if present and any terminating characters. On error, -1
+is returned, and errno(3) is set appropriately.
+
+ERRORS
+
+EINVAL
+
+The apparmor kernel module is
+not loaded or the communication via the
+/proc/*/attr/file did not conform to protocol.
+
+ENOMEM
+
+Insufficient kernel memory was
+available.
+
+EACCES
+
+Access to the specified
+file/task was denied.
+
+ENOENT
+
+The specified file/task
+does not exist or is not visible.
+
+ERANGE
+
+The confinement data is too
+large to fit in the supplied buffer.
+
+ENOPROTOOPT
+
+The kernel doesn’t
+support the SO_PEERLABEL option in sockets. This happens
+mainly when the kernel lacks ’fine grained unix
+mediation’ support. It also can happen on LSM stacking
+kernels where another LSM has claimed this interface and
+decides to return this error, although this is really a
+corner case.
+
+NOTES
+
+If
+aa_getpeercon_raw returns -1 and errno is ERANGE, the value
+of *len can be used to reallocate buf so that it is
+sufficiently large enough to store the confinement data.
+
+BUGS
+
+None known. If
+you find any, please report them at
+https://gitlab.com/apparmor/apparmor/-/issues>.
+
+SEE ALSO
+
+apparmor(7),
+apparmor.d(5), apparmor_parser(8),
+aa_change_profile(2), aa_splitcon(3) and
+https://wiki.apparmor.net>.

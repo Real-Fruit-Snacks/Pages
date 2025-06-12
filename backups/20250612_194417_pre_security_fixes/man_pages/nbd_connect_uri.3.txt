@@ -1,0 +1,401 @@
+NAME
+
+nbd_connect_uri
+- connect to NBD URI
+
+SYNOPSIS
+
+#include
+
+int nbd_connect_uri ( 
+struct nbd_handle *h, const char *uri 
+);
+
+DESCRIPTION
+
+Connect
+(synchronously) to an NBD server and export by specifying
+the NBD URI. NBD URIs are a standard way to specify a
+network block device endpoint, using a syntax like
+"nbd://example.com" which is convenient, well
+defined and future proof.
+
+This call works
+by parsing the URI parameter and calling
+nbd_set_export_name(3) and nbd_set_tls(3) and
+other calls as needed, followed by
+nbd_connect_tcp(3), nbd_connect_unix(3) or
+nbd_connect_vsock(3).
+
+This call
+returns when the connection has been made. By default, this
+proceeds all the way to transmission phase, but
+nbd_set_opt_mode(3) can be used for manual control
+over option negotiation performed before transmission
+phase.
+
+Example URIs
+supported 
+"nbd://example.com"
+
+Connect over TCP, unencrypted,
+to "example.com" port 10809.
+
+"nbds://example.com"
+
+Connect over TCP with TLS, to
+"example.com" port 10809. If the server does not
+support TLS then this will fail.
+
+"nbd+unix:///foo?socket=/tmp/nbd.sock"
+
+Connect over the Unix domain
+socket /tmp/nbd.sock to an NBD server running
+locally. The export name is set to "foo" (note
+without any leading "/" character).
+
+"nbds+unix://alice@/?socket=/tmp/nbd.sock&tls-certificates=certs"
+
+Connect over a Unix domain
+socket, enabling TLS and setting the path to a directory
+containing certificates and keys.
+
+"nbd+vsock:///"
+
+In this scenario libnbd is
+running in a virtual machine. Connect over
+"AF_VSOCK" to an NBD server running on the
+hypervisor.
+
+Supported
+URI formats 
+The following schemes are supported in the current version
+of libnbd: 
+"nbd:"
+
+Connect over TCP without using
+TLS.
+
+"nbds:"
+
+Connect over TCP. TLS is
+required and the connection will fail if the server does not
+support TLS.
+
+"nbd+unix:" 
+"nbds+unix:"
+
+Connect over a Unix domain
+socket, without or with TLS respectively. The
+"socket" parameter is required.
+
+"nbd+vsock:" 
+"nbds+vsock:"
+
+Connect over the
+"AF_VSOCK" transport, without or with TLS
+respectively. You can use nbd_supports_vsock(3) to
+see if this build of libnbd supports
+"AF_VSOCK".
+
+The authority
+part of the URI ("[username@][servername][:port]")
+is parsed depending on the transport. For TCP it specifies
+the server to connect to and optional port number. For
+"+unix" it should not be present. For
+"+vsock" the server name is the numeric CID (eg. 2
+to connect to the host), and the optional port number may be
+present. If the "username" is present it is used
+for TLS authentication.
+
+For all
+transports, an export name may be present, parsed in
+accordance with the NBD URI specification.
+
+Finally the
+query part of the URI can contain: 
+socket=SOCKET
+
+Specifies the Unix domain
+socket to connect on. Must be present for the
+"+unix" transport and must not be present for the
+other transports.
+
+tls-certificates=DIR
+
+Set the certificates directory.
+See nbd_set_tls_certificates(3). Note this is not
+allowed by default - see next section.
+
+tls-psk-file=PSKFILE
+
+Set the PSK file. See
+nbd_set_tls_psk_file(3). Note this is not allowed by
+default - see next section.
+
+tls-verify-peer=false
+
+Do not verify the server
+certificate. See nbd_set_tls_verify_peer(3). The
+default is "true".
+
+Disable URI
+features 
+For security reasons you might want to disable certain URI
+features. Pre-filtering URIs is error-prone and should not
+be attempted. Instead use the libnbd APIs below to control
+what can appear in URIs. Note you must call these functions
+on the same handle before calling nbd_connect_uri(3)
+or nbd_aio_connect_uri(3). 
+TCP, Unix domain socket or "AF_VSOCK"
+transports
+
+Default: all allowed
+
+To select which
+transports are allowed call
+nbd_set_uri_allow_transports(3).
+
+TLS
+
+Default: both non-TLS and TLS connections allowed
+
+To force TLS
+off or on in URIs call nbd_set_uri_allow_tls(3).
+
+Connect to Unix domain socket
+in the local filesystem
+
+Default: allowed
+
+To prevent this
+you must disable the "+unix" transport using
+nbd_set_uri_allow_transports(3).
+
+Read from local files
+
+Default: denied
+
+To allow URIs
+to contain references to local files (eg. for parameters
+like "tls-psk-file") call
+nbd_set_uri_allow_local_file(3).
+
+Overriding
+the export name 
+It is possible to override the export name portion of a URI
+by using nbd_set_opt_mode(3) to enable option mode,
+then using nbd_set_export_name(3) and
+nbd_opt_go(3) as part of subsequent negotiation.
+
+Optional
+features 
+This call will fail if libnbd was not compiled with libxml2;
+you can test whether this is the case with
+nbd_supports_uri(3).
+
+Support for
+URIs that require TLS will fail if libnbd was not compiled
+with gnutls; you can test whether this is the case with
+nbd_supports_tls(3).
+
+Constructing
+a URI from an existing connection 
+See nbd_get_uri(3).
+
+RETURN VALUE
+
+If the call is
+successful the function returns 0.
+
+ERRORS
+
+On error -1 is
+returned.
+
+Refer to
+"ERROR HANDLING" in libnbd(3) for how to
+get further details of the error.
+
+The following
+parameters must not be NULL: "h", "uri".
+For more information see "Non-NULL parameters" in
+libnbd(3).
+
+HANDLE STATE
+
+nbd_connect_uri
+can be called when the handle is in the following state:
+
+┌─────────────────────────────────────┬─────────────────────────┐
+
+│ Handle created, before connecting │ ✅
+allowed │ 
+│ Connecting │ ❌ error │ 
+│ Connecting & handshaking (opt_mode) │
+❌ error │ 
+│ Connected to the server │ ❌ error
+│ 
+│ Connection shut down │ ❌ error │
+
+│ Handle dead │ ❌ error │ 
+
+└─────────────────────────────────────┴─────────────────────────┘
+
+VERSION
+
+This function
+first appeared in libnbd 1.0.
+
+If you need to
+test if this function is available at compile time check if
+the following macro is defined:
+
+#define
+LIBNBD_HAVE_NBD_CONNECT_URI 1
+
+EXAMPLE
+
+This example is
+also available as examples/connect-uri.c in the
+libnbd source code.
+
+/* This example
+shows how to connect to an NBD 
+* server using the server's NBD URI. 
+* 
+* To test this with a recent version of nbdkit 
+* that supports the '$uri' syntax, do: 
+* 
+* nbdkit -U - random 1M \ 
+* --run './connect-uri $uri' 
+* 
+* To test connecting to a remote NBD server 
+* listening on port 10809, do: 
+* 
+* ./connect-uri nbd://remote/ 
+*/ 
+#include  
+#include  
+#include  
+#include  
+#include  
+#include  
+#include  
+int 
+main (int argc, char *argv[]) 
+{ 
+struct nbd_handle *nbd; 
+char *s; 
+int64_t size; 
+if (argc != 2) { 
+fprintf (stderr, "usage: %s URI\n", 
+argv[0]); 
+exit (EXIT_FAILURE); 
+} 
+/* Create the libnbd handle. */ 
+nbd = nbd_create (); 
+if (nbd == NULL) { 
+fprintf (stderr, "%s\n", nbd_get_error ()); 
+exit (EXIT_FAILURE); 
+} 
+/* Request full information 
+* (for nbd_get_canonical_export_name below) 
+*/ 
+#if LIBNBD_HAVE_NBD_SET_FULL_INFO 
+if (nbd_set_full_info (nbd, true) == -1) { 
+fprintf (stderr, "%s\n", nbd_get_error ()); 
+exit (EXIT_FAILURE); 
+} 
+#endif 
+/* Connect to the NBD URI. */ 
+printf ("connecting to %s ...\n", argv[1]); 
+fflush (stdout); 
+if (nbd_connect_uri (nbd, argv[1]) == -1) { 
+fprintf (stderr, "%s\n", nbd_get_error ()); 
+exit (EXIT_FAILURE); 
+} 
+printf ("connected\n"); 
+/* Print the URI, export name, size and other info. */ 
+printf ("requested URI: %s\n", argv[1]); 
+s = nbd_get_uri (nbd); 
+printf ("generated URI: %s\n", s ? s :
+"NULL"); 
+free (s); 
+size = nbd_get_size (nbd); 
+if (size == -1) { 
+fprintf (stderr, "%s\n", nbd_get_error ()); 
+exit (EXIT_FAILURE); 
+} 
+printf ("size: %" PRIi64 "\n", size);
+
+s = nbd_get_export_name (nbd); 
+printf ("requested export name: %s\n", s ? s :
+"NULL"); 
+free (s); 
+#if LIBNBD_HAVE_NBD_GET_CANONICAL_EXPORT_NAME 
+s = nbd_get_canonical_export_name (nbd); 
+printf ("canonical export name: %s\n", s ? s :
+"NULL"); 
+free (s); 
+#endif 
+#if LIBNBD_HAVE_NBD_GET_EXPORT_DESCRIPTION 
+s = nbd_get_export_description (nbd); 
+printf ("export description: %s\n", s ? s :
+"NULL"); 
+free (s); 
+#endif 
+/* Close the libnbd handle. */ 
+nbd_close (nbd); 
+exit (EXIT_SUCCESS); 
+}
+
+SEE ALSO
+
+nbd_aio_connect_uri(3),
+nbd_connect_tcp(3), nbd_connect_unix(3),
+nbd_connect_uri(3), nbd_connect_vsock(3),
+nbd_create(3), nbd_get_uri(3),
+nbd_opt_go(3), nbd_set_export_name(3),
+nbd_set_opt_mode(3), nbd_set_tls(3),
+nbd_set_tls_certificates(3),
+nbd_set_tls_psk_file(3),
+nbd_set_tls_verify_peer(3),
+nbd_set_uri_allow_local_file(3),
+nbd_set_uri_allow_tls(3),
+nbd_set_uri_allow_transports(3),
+nbd_supports_tls(3), nbd_supports_uri(3),
+nbd_supports_vsock(3), libnbd(3),
+https://github.com/NetworkBlockDevice/nbd/blob/master/doc/uri.md.
+
+AUTHORS
+
+Eric Blake
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+This library is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This library is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have
+received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301 USA

@@ -1,0 +1,311 @@
+MDMFS(8) BSD System Manager’s Manual MDMFS(8)
+
+NAME
+
+mdmfs, mount_mfs
+— configure and mount an in-memory file system using
+the md(4) driver
+
+SYNOPSIS
+
+mdmfs
+[−DLlMNSUX]
+[−a maxcontig]
+[−b block-size]
+[−c cylinders]
+[−d rotdelay]
+[−e maxbpg]
+[−F file]
+[−f frag-size]
+[−i bytes]
+[−m percent-free]
+[−n rotational-positions]
+[−O optimization]
+[−o mount-options]
+[−p permissions]
+[−s size]
+[−v version]
+[−w user:group] md-device
+mount-point 
+mdmfs −C [−lNU]
+[−a maxcontig]
+[−b block-size]
+[−c cylinders]
+[−d rotdelay]
+[−e maxbpg]
+[−F file]
+[−f frag-size]
+[−i bytes]
+[−m percent-free]
+[−n rotational-positions]
+[−O optimization]
+[−o mount-options]
+[−s size]
+[−v version] md-device
+mount-point
+
+DESCRIPTION
+
+The mdmfs utility is
+designed to be a work-alike and look-alike of the deprecated
+mount_mfs(8). The end result is essentially the same, but is
+accomplished in a completely different way. The mdmfs
+utility configures an md(4) disk using mdconfig(8), puts a
+UFS file system on it using newfs(8), and mounts it using
+mount(8). All the command line options are passed to the
+appropriate program at the appropriate stage in order to
+achieve the desired effect.
+
+By default,
+mdmfs creates a swap-based (MD_SWAP) disk with
+soft-updates enabled and mounts it on mount-point. It
+uses the md(4) device specified by md-device. If
+md-device is ’md’ (no unit number), it
+will use md(4)’s auto-unit feature to automatically
+select an unused device. Unless otherwise specified with one
+of the options below, it uses the default arguments to all
+the helper programs.
+
+The following
+options are available. Where possible, the option letter
+matches the one used by mount_mfs(8) for the same thing.
+
+−a
+maxcontig
+
+Specify the maximum number of
+contiguous blocks that will be laid out before forcing a
+rotational delay (see the −d option).
+
+−b
+block-size
+
+The block size of the file
+system, in bytes.
+
+−C
+
+Enable full
+compatibility mode with mount_mfs(8). See the
+COMPATIBILITY section for more information.
+
+−c
+cylinders
+
+The number of cylinders per
+cylinder group in the file system.
+
+−D
+
+If not using
+auto-unit, do not run mdconfig(8) to try to detach the unit
+before attaching it.
+
+−d
+rotdelay
+
+Specify the minimum time in
+milliseconds required to initiate another disk transfer on
+the same cylinder. Modern disks with read/write-behind
+achieve higher performance without this feature, so it is
+best to leave it at 0 milliseconds.
+
+−e
+maxbpg
+
+Indicate the maximum number of
+blocks any single file can allocate out of a cylinder group
+before it is forced to begin allocating blocks from another
+cylinder group.
+
+−F file
+
+Create a vnode-backed
+(MD_VNODE) memory disk backed by file.
+
+−f
+frag-size
+
+The fragment size of the file
+system in bytes.
+
+−i bytes
+
+Number of bytes per inode.
+
+−l
+
+Enable
+multilabel MAC on the new file system.
+
+−L
+
+Show the output
+of the helper programs. By default, it is sent to
+/dev/null.
+
+−M
+
+Create a
+malloc(9) backed disk (MD_MALLOC) instead of a swap-backed
+disk.
+
+−m
+percent-free
+
+The percentage of space
+reserved for the superuser.
+
+−N
+
+Do not actually
+run the helper programs. This is most useful in conjunction
+with −X.
+
+−n
+rotational-positions
+
+The default number of
+rotational positions to distinguish.
+
+−O
+optimization
+
+Select the optimization
+preference; valid choices are space and time,
+which will optimize for minimum space fragmentation and
+minimum time spent allocating blocks, respectively.
+
+−o
+mount-options
+
+Specify the mount options with
+which to mount the file system. See mount(8) for more
+information.
+
+−p
+permissions
+
+Set the file (directory)
+permissions of the mount point mount-point to
+permissions. The permissions argument can be
+in any of the mode formats recognized by chmod(1). If
+symbolic permissions are specified, the operation characters
+’’+’’ and
+’’-’’ are interpreted relative to
+the initial permissions of
+’’a=rwx’’.
+
+−S
+
+Do not enable
+soft-updates on the file system.
+
+−s size
+
+Specify the size of the disk to
+create. This only makes sense if −F is
+not specified. That is, this will work for the
+default swap-backed (MD_SWAP) disks, and the optional
+(−M) malloc(9) backed disks (MD_MALLOC).
+
+−U
+
+Enable
+soft-updates on the file system. This is the default, even
+in compatibility mode, and is accepted only for
+compatibility. It is only really useful to negate the
+−S flag, should such a need occur.
+
+−v
+version
+
+Specify the UFS version number
+for use on the file system; it may be either 1 or 2. The
+default is derived from the default of the newfs(8)
+command.
+
+−w
+user:group
+
+Set the owner and group to
+user and group, respectively. The arguments
+have the same semantics as with chown(8), but specifying
+just a user or just a group is not
+supported.
+
+−X
+
+Print what
+command will be run before running it, and other assorted
+debugging information.
+
+The
+−F and −s options are passed to
+mdconfig(8) as −f and −s,
+respectively. The −a, −b,
+−c, −d, −e,
+−f, −i, −m and
+−n options are passed to newfs(8) with the same
+letter; the −O option is passed to newfs(8) as
+−o. The −o option is passed to
+mount(8) with the same letter. See the programs that the
+options are passed to for more information on their
+semantics.
+
+EXAMPLES
+
+Create and mount a 32 megabyte
+swap-backed file system on /tmp:
+
+mdmfs -s 32m md
+/tmp
+
+The same file
+system created as an entry in /etc/fstab:
+
+md /tmp mfs
+rw,-s32m 2 0
+
+Create and mount
+a 16 megabyte malloc-backed file system on /tmp using
+the /dev/md1 device; furthermore, do not use
+soft-updates on it and mount it async:
+
+mdmfs -M -S -o
+async -s 16m md1 /tmp
+
+COMPATIBILITY
+
+The mdmfs utility, while
+designed to be fully compatible with mount_mfs(8), can be
+useful by itself. Since mount_mfs(8) had some silly
+defaults, a ’’full compatibility’’
+mode is provided for the case where bug-to-bug compatibility
+is desired.
+
+Full
+compatibility is enabled with the −C flag, or
+by starting mdmfs with the name mount_mfs or mfs (as
+returned by getprogname(3)). In this mode, only the options
+which would be accepted by mount_mfs(8) are valid.
+Furthermore, the following behavior, as done by
+mount_mfs(8), is duplicated:
+
+•
+
+The file mode of
+mount-point is set to 01777 as if −p
+1777 was given on the command line.
+
+SEE ALSO
+
+md(4), fstab(5), mdconfig(8),
+mount(8), newfs(8)
+
+AUTHORS
+
+Dima Dorfman
+
+BSD
+February 26, 2004 BSD

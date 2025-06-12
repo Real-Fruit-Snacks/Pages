@@ -1,0 +1,112 @@
+NAME
+
+zbxpcp -
+Zabbix Agent Loadable PCP Module
+
+DESCRIPTION
+
+The
+zbxpcp loadable module extends Zabbix agent by making
+Performance Co-Pilot (PCP) metrics available to it. With the
+zbxpcp module configured in zabbix_agentd.conf
+all the PCP metrics are available from the Zabbix agent like
+any other agent items. As a loadable module (DSO)
+zbxpcp does not rely on any external programs but
+directly uses the PCP APIs to fetch PCP metrics when
+requested.
+
+A typical Linux
+PCP installation offers over 1,000 metrics by default and is
+in turn extensible with its own plugins, or PMDAs
+(’’Performance Metrics Domain
+Agents’’). In addition to very complete
+/proc based statistics, readily available PCP PMDAs
+provide support for such system and application level
+components as 389 Directory Server, Apache, containers,
+HAProxy, GFS2, Gluster, libvirt, MySQL, NFS, Oracle,
+Postfix, PostgreSQL, Samba, and Sendmail, among others. PCP
+also runs on many platforms, including Linux, Mac OS X,
+FreeBSD, NetBSD, Solaris, and Windows.
+
+For PCP
+introduction, see PCPIntro(1). To investigate the
+available PCP metrics, use for example pminfo(1). The
+PCP Quick Reference Guide is available at the PCP
+home page https://pcp.io/.
+
+For general
+information about Zabbix data collection and loadable
+modules, see
+https://www.zabbix.com/documentation/3.0/manual/config/items.
+For Zabbix introduction and downloads, see
+https://www.zabbix.com/.
+
+zbxpcp
+is compatible with the Zabbix module API version
+1.
+
+CONFIGURATION
+
+First make sure
+PCP is installed and configured properly, see the above
+references for instructions and use for example
+pminfo(1) to make sure the PCP metrics can be
+fetched. To enable the zbxpcp loadable module in a
+Zabbix agent, the following lines must be added to the
+Zabbix agent configuration file zabbix_agentd.conf
+(make sure to use the correct LoadModulePath):
+
+LoadModulePath=/usr/lib64/zabbix/agent/
+
+LoadModule=zbxpcp.so
+
+After
+restarting the Zabbix agent all the PCP metrics will be
+available with the ’’pcp.’’
+prefix like all the other agent items. This can be verified
+with the commands:
+
+$ pminfo -t
+
+$ zabbix_agentd -p 
+$ pminfo -f kernel.all.sysfork 
+$ zabbix_get -s 127.0.0.1 -p 10050 -k
+pcp.kernel.all.sysfork
+
+Then to collect
+PCP metrics from Zabbix agents, the Zabbix server side
+configuration is as usual (see Zabbix documentation if
+needed).
+
+The PCP
+pmcd service must always be running when starting up
+a zbxpcp enabled Zabbix agent, otherwise the module
+will fail to load and the PCP metrics will not become
+available. Special care must be taken to make sure this
+happens also when rebooting the system.
+
+FILES
+
+/etc/zabbix/zabbix_agentd.conf
+
+Typical Zabbix agent
+configuration file location.
+
+/etc/zabbix/zbxpcp-derived-metrics.conf
+
+Optional PCP derived metrics
+configuration file for zbxpcp. See
+pmLoadDerivedConfig(3) for more info on derived
+metrics.
+
+$PCP_LIB_DIR/zabbix/agent/zbxpcp.so
+
+Zabbix agent loadable PCP
+module.
+
+SEE ALSO
+
+PCPIntro(1),
+pminfo(1), pmrep(1), zabbix_get(1),
+pmLoadDerivedConfig(3) and
+zabbix_agentd(8).

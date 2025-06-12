@@ -1,0 +1,224 @@
+NAME
+
+addresses -
+formats for Internet mail addresses
+
+INTRODUCTION
+
+A mail
+address is a string of characters containing @.
+
+Every mail
+address has a local part and a domain part.
+The domain part is everything after the final @. The local
+part is everything before.
+
+For example,
+the mail addresses
+
+   God [AT] heaven.mil
+   @heaven.af.mil
+   @at@@heaven.af.mil
+
+all have domain
+part heaven.af.mil. The local parts are God,
+empty, and @at@.
+
+Some domains
+have owners. It is up to the owner of heaven.af.mil
+to say how mail messages will be delivered to addresses with
+domain part heaven.af.mil.
+
+The domain part
+of an address is interpreted without regard to case, so
+
+   God [AT] heaven.mil
+   God [AT] HEAVEN.MIL
+   God [AT] Heaven.Mil
+
+all refer to
+the same domain.
+
+There is one
+exceptional address that does not contain an @: namely, the
+empty string. The empty string cannot be used as a recipient
+address. It can be used as a sender address so that the real
+sender doesn’t receive bounces.
+
+QMAIL EXTENSIONS
+
+The
+qmail system allows several further types of
+addresses in mail envelopes.
+
+First, an
+envelope recipient address without an @ is interpreted as
+being at envnoathost. For example, if
+envnoathost is heaven.af.mil, the address
+God will be rewritten as
+God [AT] heaven.mil.
+
+Second, the
+address #@[] is used as an envelope sender address
+for double bounces.
+
+Third, envelope
+sender addresses of the form
+pre@host-@[] are used to support
+variable envelope return paths (VERPs). qmail-send
+will rewrite pre@host-@[] as
+prerecip=domain@host for
+deliveries to recip@domain. Bounces
+directly from qmail-send will come back to
+pre@host.
+
+CHOOSING MAIL ADDRESSES
+
+Here are some
+suggestions on choosing mail addresses for the Internet.
+
+Do not use
+non-ASCII characters. Under RFC 822 and RFC 821, these
+characters cannot be used in mail headers or in SMTP
+commands. In practice, they are regularly corrupted.
+
+Do not use
+ASCII control characters. NUL is regularly corrupted. CR and
+LF cannot be used in some combinations and are corrupted in
+all. None of these characters are usable on business
+cards.
+
+Avoid spaces
+and the characters
+
+   \"<>()[],;:
+
+These all
+require quoting in mail headers and in SMTP. Many existing
+mail programs do not handle quoting properly.
+
+Do not use @ in
+a local part. @ requires quoting in mail headers and in
+SMTP. Many programs incorrectly look for the first @, rather
+than the last @, to find the domain part of an address.
+
+In a local
+part, do not use two consecutive dots, a dot at the
+beginning, or a dot at the end. Any of these would require
+quoting in mail headers.
+
+Do not use an
+empty local part; it cannot appear in SMTP commands.
+
+Avoid local
+parts longer than 64 characters.
+
+Be wary of
+uppercase letters in local parts. Some mail programs (and
+users!) will incorrectly convert God [AT] heaven.mil to
+god [AT] heaven.mil.
+
+Be wary of the
+following characters:
+
+   $&!#~’’^*|{}
+
+Some users will
+not know how to feed these characters safely to their mail
+programs.
+
+In domain
+names, stick to letters, digits, dash, and dot. One popular
+DNS resolver has, under the banner of security, recently
+begun destroying domain names that contain certain other
+characters, including underscore. Exception: A
+dotted-decimal IP address in brackets, such as
+[127.0.0.1], identifies a domain owned by whoever
+owns the host at that IP address, and can be used
+safely.
+
+In a domain
+name, do not use two consecutive dots, a dot at the
+beginning, or a dot at the end. This means that, when a
+domain name is broken down into components separated by
+dots, there are no empty components.
+
+Always use at
+least one dot in a domain name. If you own the mil
+domain, don’t bother using the address
+root@mil; most users will be unable to send messages
+to that address. Same for the root domain.
+
+Avoid domain
+names longer than 64 characters.
+
+ENCODED ADDRESSES IN SMTP COMMANDS
+
+RFC 821 defines
+an encoding of mail addresses in SMTP. For example, the
+addresses
+
+   God [AT] heaven.mil
+   a"quote [AT] heaven.mil
+   The Almighty.One [AT] heaven.mil
+
+could be
+encoded in RCPT commands as
+
+   RCPT TO:God [AT] heaven.mil>
+   RCPT TO:quote [AT] heaven.mil>
+   RCPT TO:Almighty.One [AT] heaven.mil>
+
+There are
+several restrictions in RFC 821 on the mail addresses that
+can be used over SMTP. Non-ASCII characters are prohibited.
+The local part must not be empty. The domain part must be a
+sequence of elements separated by dots, where each element
+is either a component, a sequence of digits preceded by #,
+or a dotted-decimal IP address surrounded by brackets. The
+only allowable characters in components are letters, digits,
+and dashes. Every component must (believe it or not) have at
+least three characters; the first character must be a
+letter; the last character must not be a hyphen.
+
+ENCODED ADDRESSES IN MAIL HEADERS
+
+RFC 822 defines
+an encoding of mail addresses in certain header fields in a
+mail message. For example, the addresses
+
+   God [AT] heaven.mil
+   a"quote [AT] heaven.mil
+   The Almighty.One [AT] heaven.mil
+
+could be
+encoded in a To field as
+
+   To: God [AT] heaven.mil,
+     ,
+       "The Almighty".One [AT] heaven.mil
+
+or perhaps
+
+   To: ,
+     "a\"quote" (Who?) @ heaven . af.  mil
+     , God
+
+There are
+several restrictions on the mail addresses that can be used
+in these header fields. Non-ASCII characters are prohibited.
+The domain part must be a sequence of elements separated by
+dots, where each element either (1) begins with [ and ends
+with ] or (2) is a nonempty string of printable ASCII
+characters not including any of
+
+   \".<>()[],;:
+
+and not
+including space.
+
+SEE ALSO
+
+envelopes(5),
+qmail-header(5), qmail-inject(8), qmail-remote(8),
+qmail-smtpd(8)

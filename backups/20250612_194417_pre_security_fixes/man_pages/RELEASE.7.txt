@@ -1,0 +1,550 @@
+RELEASE(7) BSD Miscellaneous Information Manual
+RELEASE(7)
+
+NAME
+
+release — release
+building infrastructure
+
+DESCRIPTION
+
+FreeBSD provides a complete
+build environment suitable for users to make full releases
+of the FreeBSD operating system. All of the tools necessary
+to build a release are available from the CVS repository in
+src/release. A complete release can actually be built
+with only a single command, including the creation of ISO
+images suitable for burning to CD-ROM, installation
+floppies, and an FTP install directory. This command is
+aptly named ’’make release’’.
+
+Before
+attempting to build a release, the user is expected to be
+familiar with the contents of build(7), and should have
+experience upgrading systems from source. The release build
+process requires that /usr/obj be populated with the
+output of a native ’’make
+buildworld’’ compiled from sources matching the
+currently running kernel. This is necessary so that the
+object files for a complete system can be installed into a
+clean chroot(8) environment. The release procedure also
+requires that the md(4) (memory disk) device driver be
+present in the kernel (either by being compiled in or
+available as a module).
+
+This document
+does not cover source code management, quality assurance, or
+other aspects of the release engineering process.
+
+TARGETS
+
+The release makefile
+(src/release/Makefile) is fairly abstruse. Most
+developers will only be concerned with the release
+target.
+
+release
+
+Uses
+’’make installworld’’ to install a
+clean system into a chroot(8) environment on the file
+system. Checks out the specified version of the source code
+and then rebuilds the entire system in the clean environment
+with ’’make buildworld’’. The
+detailed steps that follow are then executed to package up
+the different distributions, build the installation floppy
+disks, build release documentation, and so on.
+
+This target
+must be built as root with the kern.securelevel
+sysctl set to −1 (the default).
+
+rerelease
+
+Assumes that
+the output of a release build has been manually modified,
+and performs the minimal number of steps to rebuild the
+release using the intermediate output of the previous
+’’make release’’.
+
+floppies
+
+Generate a new
+set of boot and fixit floppies. This will call the
+release.4, release.8, floppies.1,
+floppies.2, and floppies.3 targets to
+re-generate the floppy images of a previous
+’’make release’’. This is most often
+used to build custom boot floppies.
+
+Targets called
+by ’’make release’’:
+
+release.1
+
+Cleans out the
+${CHROOTDIR}/R directory and uses mtree(8) to build
+the directory hierarchy for the system.
+
+release.2
+
+Installs the
+system into the distribution directories.
+
+release.3
+
+Makes and
+installs the GENERIC kernel as well as any other
+kernels listed in KERNELS.
+
+release.4
+
+Uses
+crunchgen(1) to build ’’crunched’’
+binaries to live on the installation floppies.
+
+release.5
+
+Builds
+synthetic distributions, and cleans up the previously built
+distribution trees.
+
+release.6
+
+Creates
+tarballs of the assembled distribution trees.
+
+release.7
+
+Makes source
+distributions.
+
+release.8
+
+Creates the MFS
+root file systems.
+
+floppies.1
+
+Creates the
+boot and kernel floppies.
+
+floppies.2
+
+Creates the
+fixit floppy.
+
+floppies.3
+
+Finalizes the
+${CHROORDIR}/R/ftp/stage/floppies staging
+directory.
+
+ftp.1
+
+Sets up a
+suitable area for FTP installations in
+${CHROOTDIR}/R/ftp.
+
+cdrom.1
+
+Sets up a
+suitable area to build CD-ROM images in
+${CHROOTDIR}/R/cdrom.
+
+iso.1
+
+Builds two ISO
+images (installation and ’’live’’
+file system) from the CD-ROM release area (disabled by
+default, see MAKE_ISOS below).
+
+fetch-distfiles
+
+Fetches
+distfiles needed during the release build that are not
+already in RELEASEDISTFILES.
+
+doc.1
+
+Builds all of
+the necessary tools to turn the FreeBSD Documentation
+Project source documents (SGML, XML) into HTML and text
+documents that will accompany the release. Also, builds and
+installs the actual user documentation. This includes the
+Handbook, FAQ, articles, and so on.
+
+doc.2
+
+Builds the
+release documentation. This includes the release notes,
+hardware guide, and installation instructions.
+
+ENVIRONMENT
+
+Variables that must be
+specified:
+
+BUILDNAME
+
+The name of the
+release to be built. This is used to set the RELEASE
+value in sys/conf/newvers.sh, which affects the
+output of uname(1).
+
+CHROOTDIR
+
+The directory
+to be used as the chroot(8) environment for the entire
+release build. This file system should have at least 3.2
+gigabytes of free space on the i386 architecture.
+
+CVSROOT
+
+The location of
+the FreeBSD CVS repository. This path name is in reference
+to the real system root, not the root of the
+chroot(8) directory tree.
+
+Optional
+variables:
+
+CVSCMDARGS
+
+Additional
+arguments for cvs(1) checkout and update
+commands. For example, setting this variable to
+’’-D ’01/01/2002 00:00:00
+GMT’’’ for ’’make
+release’’ or ’’make
+rerelease’’ will ask cvs(1) to check out or
+update sources as of 00:00:00 GMT, January 1 2002,
+respectively.
+
+DOC_LANG
+
+The list of
+languages and encodings the SGML-based documentation should
+be built for. If not set, the documentation is built for all
+available languages.
+
+DOCRELEASETAG
+
+The CVS tag to
+use when checking out the documentation tree. Usually, the
+head of the documentation tree is used by default. If
+RELEASETAG specifies a release tag, then the
+associated release version is used as the default
+instead.
+
+EXTLOCALDIR
+
+The directory
+that will be copied to ${CHROOTDIR}/usr/local.
+
+EXTSRCDIR
+
+The directory
+specified by this variable will be copied into
+${CHROOTDIR}/usr/src instead of that directory being
+populated by a CVS checkout. For
+’’rerelease’’, this will NOT be
+copied; cvs update will be used instead.
+
+KERNEL_FLAGS
+
+The contents of
+this variable are passed to make(1) when building kernels
+during the release build. For example, setting this variable
+to ’’-j 4’’ will instruct make(1) to
+execute up to four processes at a time.
+
+KERNELS
+
+Specifies a
+list of additional kernel configurations to compile and
+install into the ’’base’’
+distribution. Each kernel is installed into
+/boot/ so that it can be booted from
+the loader via ’’boot
+’’.
+
+LOCAL_PATCHES
+
+Patch files
+against /usr/src that will be applied in the
+chroot(8) environment before the release build begins.
+
+PATCH_FLAGS
+
+Arguments for
+the patch(1) command used to apply LOCAL_PATCHES
+patch file.
+
+LOCAL_SCRIPT
+
+A script that
+will be run in the chroot(8) environment immediately after
+any local patches are applied.
+
+MAKE_ISOS
+
+If defined,
+bootable ISO CD-ROM images will be created from the contents
+of the CD-ROM stage directory.
+
+DISC1_LABEL
+
+The label used
+for the CD-ROM created from the disc1 contents, the default
+label will be ’’fbsd_miniinst’’.
+
+DISC1_NAME
+
+The name used
+as part of the ISO file name for the CD-ROM created from the
+disc1 contents, the default will be
+’’miniinst’’.
+
+DISC2_LABEL
+
+The label used
+for the CD-ROM created from the disc2 contents, the default
+label will be ’’fbsd_livefs’’.
+
+DISC2_NAME
+
+The name used
+as part of the ISO file name for the CD-ROM created from the
+disc2 contents, the default will be
+’’disc2’’.
+
+NOCDROM
+
+If defined, the
+CD-ROM stage directories will not be created.
+
+NODOC
+
+If defined, the
+SGML-based documentation from the FreeBSD Documentation
+Project will not be built. However, the
+’’doc’’ distribution will still be
+created with the minimal documentation set provided in
+src/share/doc.
+
+NO_FLOPPIES
+
+If defined, no
+boot and fixit floppy disk images will be created (for those
+platforms supporting them).
+
+NOPORTS
+
+If defined, the
+Ports Collection will be omitted from the release.
+
+NOPORTREADMES
+
+If defined,
+readme files will not be created for each individual port in
+the Ports Collection. The default behavior is for
+’’make release’’ to run
+’’make readmes’’ from
+${CHROOTDIR}/usr/ports, which can be a very time
+consuming operation.
+
+PORTSRELEASETAG
+
+The CVS tag to
+use when checking out the ports tree. Usually, the head of
+the ports tree is used by default. If RELEASETAG
+specifies a release tag, then the associated release version
+is used as the default instead.
+
+NO_PREFETCHDISTFILES
+
+If this
+variable is defined, then distfiles needed during the
+release build will not be downloaded prior to entering the
+chroot(8) environment. Note that if
+NO_PREFETCHDISTFILES is not set, the fetching is done
+after any distfiles are obtained via
+RELEASEDISTFILES.
+
+RELEASEDISTFILES
+
+The directory
+where the distribution files for ports required by the
+release build can be found. This may save a significant
+amount of time over downloading the distfiles through a slow
+link.
+
+RELEASENOUPDATE
+
+If this
+variable is defined for ’’make
+rerelease’’, the source code will not be updated
+with ’’cvs update’’.
+
+RELEASETAG
+
+The CVS tag
+corresponding to the release that is to be built. If
+undefined, the release will be built from the HEAD of the
+CVS tree (a ’’-CURRENT
+snapshot’’).
+
+TARGET_ARCH
+
+The target
+machine processor architecture. This is analogous to the
+’’uname −p’’ output.
+Set this to cross-build for a different architecture.
+
+TARGET
+
+The target
+hardware platform. This is analogous to the
+’’uname −m’’ output.
+This is necessary to cross-build some target architectures.
+For example, cross-building for PC98 machines requires
+TARGET_ARCH=i386 and TARGET=pc98.
+
+WORLDDIR
+
+The directory
+where ’’make buildworld’’ was run;
+defaults to ${.CURDIR}/.. which usually points to
+/usr/src.
+
+WORLD_FLAGS
+
+The contents of
+this variable are passed to make(1) when building world
+during the release build. For example, setting this variable
+to ’’-j 4’’ will instruct make(1) to
+execute up to four processes at a time.
+
+FILES 
+/etc/make.conf 
+/usr/doc/Makefile 
+/usr/doc/share/mk/doc.project.mk 
+/usr/ports/Mk/bsd.port.mk 
+/usr/ports/Mk/bsd.sites.mk 
+/usr/share/examples/etc/make.conf 
+/usr/src/Makefile 
+/usr/src/Makefile.inc1 
+/usr/src/release/Makefile 
+/usr/src/release/${arch}/drivers.conf 
+/usr/src/release/${arch}/boot_crunch.conf 
+/usr/src/release/${arch}/fixit_crunch.conf
+
+EXAMPLES
+
+The following sequence of
+commands was used to build the FreeBSD 4.9 release:
+
+cd /usr 
+cvs co -rRELENG_4_9_0_RELEASE src 
+cd src 
+make buildworld 
+cd release 
+make release CHROOTDIR=/local3/release BUILDNAME=4.9-RELEASE
+\ 
+CVSROOT=/host/cvs/usr/home/ncvs
+RELEASETAG=RELENG_4_9_0_RELEASE
+
+After running
+these commands, a complete system suitable for FTP or CD-ROM
+distribution is available in the /local3/release/R
+directory.
+
+The following
+sequence of commands can be used to build a
+’’-CURRENT snapshot’’ of a locally
+modified source tree:
+
+cd /usr/src
+
+cvs diff -u > /path/to/local.patch 
+make buildworld 
+cd release 
+make release CHROOTDIR=/local3/release BUILDNAME=5.0-CURRENT
+\ 
+CVSROOT=/host/cvs/usr/home/ncvs
+LOCAL_PATCHES=/path/to/local.patch
+
+SEE ALSO
+
+cc(1), crunchgen(1), cvs(1),
+install(1), make(1), patch(1), uname(1), md(4),
+drivers.conf(5), make.conf(5), build(7), ports(7),
+chroot(8), mtree(8), sysctl(8)
+
+FreeBSD Release
+Engineering
+
+,
+
+http://www.FreeBSD.org/doc/en_US.ISO8859-1/articles/releng/
+.
+
+FreeBSD Release Engineering
+of Third Party Packages
+
+,
+
+http://www.FreeBSD.org/doc/en_US.ISO8859-1/articles/releng-packages/
+.
+
+FreeBSD Developers’
+Handbook
+
+,
+
+http://www.FreeBSD.org/doc/en_US.ISO8859-1/books/developers-handbook/
+.
+
+HISTORY
+
+FreeBSD 1.x used a manual
+checklist, compiled by Rod Grimes, to produce a release.
+Apart from being incomplete, the list put a lot of specific
+demands on available file systems and was quite torturous to
+execute.
+
+As part of the
+FreeBSD 2.0 release engineering effort, significant
+effort was spent getting src/release/Makefile into a
+shape where it could at least automate most of the
+tediousness of building a release in a sterile
+environment.
+
+With its almost
+1000 revisions spread over multiple branches, the cvs(1) log
+of src/release/Makefile contains a vivid historical
+record of some of the hardships release engineers go
+through.
+
+AUTHORS
+
+src/release/Makefile was
+originally written by Rod Grimes, Jordan Hubbard, and
+Poul-Henning Kamp. This manual page was written by Murray
+Stokely murray [AT] FreeBSD.org>.
+
+BUGS
+
+Infrastructure changes are
+occasionally made to the FreeBSD documentation set in such a
+way that release builds on security branches can fail. To
+work around this, release builds can be made to checkout the
+documentation from the last fully supported release of
+FreeBSD. For example:
+
+make release
+RELEASETAG=RELENG_4_9 DOCRELEASETAG=RELEASE_4_9_0 ...
+
+BSD
+August 10, 2004 BSD

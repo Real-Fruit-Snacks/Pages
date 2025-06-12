@@ -1,0 +1,82 @@
+NAME
+
+git-annex-smudge
+- git filter driver for git-annex
+
+SYNOPSIS
+
+git annex
+smudge [--clean] file
+
+git annex
+smudge --update
+
+DESCRIPTION
+
+This command
+lets git-annex be used as a git filter driver which lets
+annexed files in the git repository to be unlocked, instead
+of being symlinks, and lets git add store files in
+the annex.
+
+When adding a
+file with git add, the annex.largefiles config is
+consulted to decide if a given file should be added to git
+as-is, or if its content are large enough to need to use
+git-annex. The annex.gitaddtoannex setting overrides that;
+setting it to false prevents git add from adding
+files to the annex.
+
+However, if
+git-annex can tell that a file was annexed before, it will
+still be added to the annex even when those configs would
+normally prevent it. Two examples of this are adding a
+modified version of an annexed file, and moving an annexed
+file to a new filename and adding that.
+
+The git
+configuration to use this command as a filter driver is as
+follows. This is normally set up for you by git-annex init,
+so you should not need to configure it manually.
+
+[filter
+"annex"] 
+smudge = git-annex smudge %f 
+clean = git-annex smudge --clean %f
+
+To make git use
+that filter driver, it needs to be configured in the
+.gitattributes file or in
+.git/info/attributes. The latter is normally
+configured when a repository is initialized, with the
+following contents:
+
+*
+filter=annex
+
+The smudge
+filter does not provide git with the content of annexed
+files, because that would be slow and triggers memory leaks
+in git. Instead, it records which worktree files need to be
+updated, and git annex smudge --update later updates
+the work tree to contain the content. That is run by several
+git hooks, including post-checkout and post-merge. However,
+a few git commands, notably git stash and git
+cherry-pick, do not run any hooks, so after using those
+commands you can manually run git annex smudge
+--update to update the working tree.
+
+OPTIONS
+
+The
+git-annex-common-options(1) can be used.
+
+SEE ALSO
+
+git-annex(1)
+git-annex-filter-process(1)
+
+AUTHOR
+
+Joey Hess
+id [AT] joeyh.name>

@@ -1,0 +1,191 @@
+NVME(4) BSD Kernel Interfaces Manual NVME(4)
+
+NAME
+
+nvme — NVM Express
+core driver
+
+SYNOPSIS
+
+To compile this driver into your
+kernel, place the following line in your kernel
+configuration file:
+
+device
+nvme
+
+Or, to load the
+driver as a module at boot, place the following line in
+loader.conf(5):
+
+nvme_load="YES"
+
+Most users will
+also want to enable nvd(4) to expose NVM Express namespaces
+as disk devices which can be partitioned. Note that in NVM
+Express terms, a namespace is roughly equivalent to a SCSI
+LUN.
+
+DESCRIPTION
+
+The nvme driver provides
+support for NVM Express (NVMe) controllers, such as:
+
+•
+
+Hardware initialization
+
+•
+
+Per-CPU IO queue pairs
+
+•
+
+API for registering NVMe
+namespace consumers such as nvd(4)
+
+•
+
+API for submitting NVM commands
+to namespaces
+
+•
+
+Ioctls for controller and
+namespace configuration and management
+
+The nvme
+driver creates controller device nodes in the format
+/dev/nvmeX and namespace device nodes in the format
+/dev/nvmeXnsY. Note that the NVM Express
+specification starts numbering namespaces at 1, not 0, and
+this driver follows that convention.
+
+CONFIGURATION
+
+By default, nvme will
+create an I/O queue pair for each CPU, provided enough MSI-X
+vectors and NVMe queue pairs can be allocated. If not enough
+vectors or queue pairs are available, nvme(4) will use a
+smaller number of queue pairs and assign multiple CPUs per
+queue pair.
+
+To force a
+single I/O queue pair shared by all CPUs, set the following
+tunable value in loader.conf(5):
+
+hw.nvme.per_cpu_io_queues=0
+
+To assign more
+than one CPU per I/O queue pair, thereby reducing the number
+of MSI-X vectors consumed by the device, set the following
+tunable value in loader.conf(5):
+
+hw.nvme.min_cpus_per_ioq=X
+
+To force legacy
+interrupts for all nvme driver instances, set the
+following tunable value in loader.conf(5):
+
+hw.nvme.force_intx=1
+
+Note that use of
+INTx implies disabling of per-CPU I/O queue pairs.
+
+SYSCTL VARIABLES
+
+The following controller-level
+sysctls are currently implemented:
+
+dev.nvme.0.num_cpus_per_ioq
+
+(R) Number of CPUs associated
+with each I/O queue pair.
+
+dev.nvme.0.int_coal_time
+
+(R/W) Interrupt coalescing
+timer period in microseconds. Set to 0 to disable.
+
+dev.nvme.0.int_coal_threshold
+
+(R/W) Interrupt coalescing
+threshold in number of command completions. Set to 0 to
+disable.
+
+The following
+queue pair-level sysctls are currently implemented. Admin
+queue sysctls take the format of dev.nvme.0.adminq and I/O
+queue sysctls take the format of dev.nvme.0.ioq0.
+
+dev.nvme.0.ioq0.num_entries
+
+(R) Number of entries in this
+queue pair’s command and completion queue.
+
+dev.nvme.0.ioq0.num_tr
+
+(R) Number of nvme_tracker
+structures currently allocated for this queue pair.
+
+dev.nvme.0.ioq0.num_prp_list
+
+(R) Number of nvme_prp_list
+structures currently allocated for this queue pair.
+
+dev.nvme.0.ioq0.sq_head
+
+(R) Current location of the
+submission queue head pointer as observed by the driver. The
+head pointer is incremented by the controller as it takes
+commands off of the submission queue.
+
+dev.nvme.0.ioq0.sq_tail
+
+(R) Current location of the
+submission queue tail pointer as observed by the driver. The
+driver increments the tail pointer after writing a command
+into the submission queue to signal that a new command is
+ready to be processed.
+
+dev.nvme.0.ioq0.cq_head
+
+(R) Current location of the
+completion queue head pointer as observed by the driver. The
+driver increments the head pointer after finishing with a
+completion entry that was posted by the controller.
+
+dev.nvme.0.ioq0.num_cmds
+
+(R) Number of commands that
+have been submitted on this queue pair.
+
+dev.nvme.0.ioq0.dump_debug
+
+(W) Writing 1 to this sysctl
+will dump the full contents of the submission and completion
+queues to the console.
+
+SEE ALSO
+
+nvd(4), pci(4), nvmecontrol(8),
+disk(9)
+
+HISTORY
+
+The nvme driver first
+appeared in FreeBSD 9.2.
+
+AUTHORS
+
+The nvme driver was
+developed by Intel and originally written by Jim Harris
+jimharris [AT] FreeBSD.org>, with contributions
+from Joe Golio at EMC.
+
+This man page
+was written by Jim Harris
+jimharris [AT] FreeBSD.org>.
+
+BSD
+January 7, 2016 BSD

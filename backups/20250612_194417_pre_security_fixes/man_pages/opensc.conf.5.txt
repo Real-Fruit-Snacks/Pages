@@ -1,0 +1,1243 @@
+NAME
+
+opensc.conf -
+configuration file for OpenSC
+
+DESCRIPTION
+
+OpenSC obtains
+configuration data from the following sources in the
+following order
+
+1. command-line
+options
+
+2. environment
+variables
+
+3. Windows
+registry key in HKEY_CURRENT_USER (if available)
+
+4. Windows
+registry key in HKEY_LOCAL_MACHINE (if available)
+
+5. system-wide
+configuration file (/etc/opensc.conf)
+
+The
+configuration file, opensc.conf, is composed of
+blocks, which, in general, have the following
+format:
+
+key
+[, name...] {
+
+block_contents
+
+}
+
+block_contents
+is one or more block_items where a block_item
+is one of
+
+• #
+comment string
+
+•
+key[, name...] = value;
+
+•
+block
+
+At the root
+level, opensc.conf should contain one or more application
+specific configuration blocks:
+
+app
+application {
+
+block_contents
+
+}
+
+application
+specifies one of:
+
+•
+filename: Configuration block for the application
+with specified file path.
+
+• default:
+The fall-back configuration block for all applications
+
+•
+opensc-pkcs11: Configuration block for the PKCS#11 module
+(opensc-pkcs11.so)
+
+•
+onepin-opensc-pkcs11: Configuration block for the PKCS#11
+one-PIN-module (onepin-opensc-pkcs11.so)
+
+• cardmod:
+Configuration block for Windows' minidriver
+(opensc-minidriver.dll)
+
+• tokend:
+Configuration block for macOS' tokend (OpenSC.tokend)
+
+•
+cardos-tool, cryptoflex-tool, dnie-tool, egk-tool, eidenv,
+gids-tool, iasecc-tool, netkey-tool, npa-tool, openpgp-tool,
+opensc-asn1, opensc-explorer, opensc-notify, opensc-tool,
+piv-tool, pkcs11-tool, pkcs15-crypt, pkcs15-init,
+pkcs15-tool, sc-hsm-tool, westcos-tool: Configuration block
+for OpenSC tools
+
+CONFIGURATION OPTIONS
+
+debug =
+num;
+
+Amount of debug info to print
+(Default: 0). A greater value means more debug info.
+
+The environment
+variable OPENSC_DEBUG overwrites this setting.
+
+debug_file
+= filename;
+
+The file to which debug output
+will be written (Default: stderr). Special values stdout and
+stderr are recognized.
+
+profile_dir
+= filename;
+
+PKCS#15
+initialization/personalization profiles directory for
+pkcs15-init(1) (Default: /usr/share/opensc).
+
+If this
+configuration value is not found on Windows, the registry
+key Software\OpenSC Project\OpenSC\ProfileDir is
+checked.
+
+disable_colors
+= bool;
+
+Disable colors of log messages
+(Default: false if attached to a console, true
+otherwise).
+
+disable_popups
+= bool;
+
+Disable pop-ups of built-in GUI
+(Default: false).
+
+enable_default_driver
+= bool;
+
+Enable default card driver
+(Default: false). Default card driver is explicitly enabled
+for opensc-explorer(1) and opensc-tool(1)
+
+card_drivers
+= name...;
+
+Allowlist of card drivers to
+load at start-up. The special value internal (the default)
+will load all statically linked drivers.
+
+If an unknown
+(i.e. not internal or old) driver is supplied, a separate
+configuration block has to be written for the driver. A
+special value old will load all statically linked drivers
+that may be removed in the future.
+
+The list of
+supported card driver names can be retrieved from the output
+of opensc-tool --list-drivers.
+
+The environment
+variable OPENSC_DRIVER overwrites this setting.
+
+ignored_readers
+= name...;
+
+List of readers to ignore
+(Default: empty). If any of the comma separated strings
+listed is matched in a reader name (case sensitive, partial
+matching possible), the reader is ignored by OpenSC. Use
+opensc-tool --list-readers to see all currently
+connected readers.
+
+reader_driver
+name { block_contents }
+
+Configuration of the smart card
+reader driver where name is one of:
+
+• ctapi:
+See the section called “Configuration of CT-API
+Readers”
+
+• pcsc:
+See the section called “Configuration of PC/SC
+Readers”
+
+• openct:
+See the section called “Configuration of OpenCT
+Readers”
+
+•
+cryptotokenkit: Configuration block for CryptoTokenKit
+readers
+
+See the section
+called “Configuration of Smart Card Reader
+Driver”.
+
+card_driver
+name { block_contents }
+
+Configuration of the card
+driver where name is one of:
+
+• npa: See
+the section called “Configuration Options for German
+ID Card”
+
+• dnie:
+See the section called “Configuration Options for
+DNIe”
+
+• edo: See
+the section called “Configuration Options for Polish
+eID Card”
+
+• eoi: See
+the section called “Configuration Options for
+Slovenian eID Card”
+
+• myeid:
+See the section called “Configuration Options for
+MyEID Card”
+
+• Any
+other value: Configuration block for an externally loaded
+card driver
+
+card_atr
+hexstring { block_contents }
+
+In addition to the built-in
+list of known cards in the card driver, you can configure a
+new card for the driver using the card_atr block.
+
+For details see
+the section called “Configuration based on
+ATR”.
+
+disable_hw_pkcs1_padding
+= value;
+
+Disabling PKCS#1 v1.5 padding
+in HW when card supports doing raw RSA operations. Known
+parameters:
+
+• no:
+PKCS#1 v1.5 padding is enabled in HW when card supports
+it.
+
+• sign:
+PKCS#1 v1.5 padding is disabled only for signatures (PKCS#1
+v1.5 type 1).
+
+•
+decipher: PKCS#1 v1.5 padding is disabled only for
+decryption (PKCS#1 v1.5 type 2).
+
+• both:
+PKCS#1 v1.5 padding is disabled both for signatures and
+decryption (PKCS#1 v1.5 type 1 and 2).
+
+(Default:
+decipher).
+
+secure_messaging
+name { block_contents }
+
+Configuration options for the
+secure messaging profile name:
+
+module_name
+= filename;
+
+Name of external SM module
+(Default: libsmm-local.so).
+
+module_path
+= filename;
+
+Directory with external SM
+module (Default: /usr/lib/i386-linux-gnu).
+
+If this
+configuration value is not found on Windows, the registry
+key Software\OpenSC Project\OpenSC\SmDir is checked.
+
+module_data
+= value;
+
+Specific data to tune the
+module initialization.
+
+mode =
+value;
+
+Secure messaging mode. Known
+parameters:
+
+•
+transmit: In this mode the procedure to securize an APDU is
+called by the OpenSC general APDU transmit procedure. In
+this mode all APDUs, except the ones filtered by the card
+specific procedure, are securized.
+
+• acl: In
+this mode APDU are securized only if needed by the ACLs of
+the command to be executed.
+
+flags =
+value;
+
+Secure messaging type specific
+flags.
+
+kmc =
+hexstring;
+
+Default KMC of the GP Card
+Manager for the Oberthur's Java cards.
+
+ifd_serial
+= hexstring;
+
+keyset[_aid]_num_enc
+= value;
+keyset[_aid]_num_mac =
+value;
+
+Keyset values from IAM profiles
+of the Gemalto IAS/ECC cards with an optional application
+identifier
+
+framework
+name { block_contents }
+
+Internal configuration options
+where name is one of:
+
+• pkcs15:
+See the section called “Configuration of PKCS#15
+Framework”
+
+• tokend:
+See the section called “Configuration of
+Tokend”
+
+pkcs11 {
+block_contents }
+
+Parameters for the OpenSC
+PKCS11 module.
+
+For details see
+the section called “Configuration of
+PKCS#11”.
+
+Configuration
+of Smart Card Reader Driver 
+Configuration Options for all Reader Drivers
+
+max_send_size =
+num; max_recv_size = num;
+
+Limit command and response
+sizes (Default: max_send_size = 255,
+max_recv_size = 256) . Some Readers don't propagate
+their transceive capabilities correctly. max_send_size and
+max_recv_size allow setting the limits manually, for example
+to enable extended length capabilities.
+
+enable_escape
+bool;
+
+Detect reader capabilities with
+escape commands (wrapped APDUs with CLA=0xFF as defined by
+PC/SC pt. 3 and BSI TR-03119, e.g. for getting the UID,
+escaped PIN commands and the reader's firmware version,
+Default: false)
+
+Configuration
+of CT-API Readers
+
+module filename
+{ ports = nums; }
+
+Load the specified CT-API
+module with the specified number of ports.
+
+Configuration
+of PC/SC Readers
+
+connect_exclusive =
+bool;
+
+Connect to reader in exclusive
+mode (Default: false)? This option has no effect in Windows'
+minidriver.
+
+disconnect_action
+= action;
+
+What to do when disconnecting
+from a card (SCardDisconnect). Valid values are leave,
+reset, unpower (Default: leave). This option has no effect
+in Windows' minidriver.
+
+transaction_end_action
+= action;
+
+What to do at the end of a
+transaction (SCardEndTransaction). Valid values are leave,
+reset, unpower (Default: leave). This option has no effect
+in Windows' minidriver.
+
+reconnect_action
+= action;
+
+What to do when reconnection to
+a card (SCardReconnect). Valid values are leave, reset,
+unpower (Default: leave). This option has no effect in
+Windows' minidriver.
+
+enable_pinpad
+= bool;
+
+Enable pinpad if detected
+(PC/SC v2.0.2 Part 10, Default: true)
+
+fixed_pinlength
+= num;
+
+Some pinpad readers can only
+handle one exact length of the PIN. fixed_pinlength
+sets this value so that OpenSC expands the padding to this
+length (Default: 0, i.e. not fixed).
+
+provider_library
+= filename;
+
+Use specific PC/SC provider
+(Default: libpcsclite.so.1).
+
+Configuration
+of OpenCT Readers
+
+readers =
+num;
+
+Virtual readers to allocate
+(Default: 2).
+
+Configuration
+Options for MyEID Card 
+disable_hw_pkcs1_padding = bool;
+
+The MyEID card can internally
+encapsulate the data (hash code) into a DigestInfo ASN.1
+structure according to the selected hash algorithm
+(currently only for SHA1). DigestInfo is padded to RSA key
+modulus length according to PKCS#1 v1.5, block type 01h.
+Size of the DigestInfo must not exceed 40% of the RSA key
+modulus length. If this limit is unsatisfactory (for example
+someone needs RSA 1024 with SHA512), the user can disable
+this feature. In this case, the card driver will do
+everything necessary before sending the data (hash code) to
+the card.
+
+PKCS#1 v1.5
+padding in HW can be globally disabled by option
+disable_hw_pkcs1_padding. When the global option is used to
+disable padding, the padding will be disabled even though
+the MyEID-specific option does not turn it off.
+
+Configuration
+Options for German ID Card 
+can = value;
+
+German ID card requires the CAN
+to be verified before QES PIN. This, however, is not part of
+the PKCS#15 profile of the card. So for verifying the QES
+PIN we actually need both. The CAN may be given here. If the
+CAN is not given here, it will be prompted on the command
+line or on the reader (depending on the reader's
+capabilities).
+
+st_dv_certificate
+= filename; st_certificate =
+filename; st_key = filename;
+
+QES is only possible with a
+Comfort Reader (CAT-K), which holds a cryptographic key to
+authenticate itself as signature terminal (ST). We usually
+will use the reader's capability to sign the data. However,
+during development you may specify soft certificates and
+keys for a ST.
+
+An example PKI
+can be found in the example data for the
+German ID card emulator
+[1]
+
+Configuration
+Options for DNIe 
+user_consent_enabled = bool;
+
+Configure
+the warning message when performing a signature operation
+with the DNIe. Only used if compiled with
+--enable-dnie-ui
+
+user_consent_app
+= filename;
+
+Specify
+the pinentry application to use if warning is configured to
+be displayed using pinentry (Default: /usr/bin/pinentry).
+Only used if compiled with
+--enable-dnie-ui
+
+Configuration
+Options for Polish eID Card 
+can = value;
+
+CAN (Card
+Access Number – 6 digit number printed on the right
+bottom corner of the front side of the document) is required
+to establish connection with the card. It might be
+overwritten by EDO_CAN environment variable. Currently, it
+is not possible to set it in any other way.
+
+Configuration
+Options for Slovenian eID Card 
+can = value;
+
+CAN (Card
+Access Number – 6 digit number printed on the right
+bottom corner of the front side of the document) is required
+to establish connection with the card. It might be
+overwritten by EOI_CAN environment variable. As CAN is also
+stored on the card (in encrypted form) it can be used to
+automatically establish secure connection, but only if the
+card is accessed over the contact interface.
+
+Configuration
+Options for PIV Card 
+Configuration based on ATR 
+atrmask = hexstring;
+
+The mask
+is logically AND'd with an card ATR prior to comparison with
+the ATR reference value above. Using this mask allows
+identifying and configuring multiple ATRs as the same card
+model.
+
+driver
+= name;
+
+When
+enabled, overrides all possible settings from the card
+drivers built-in card configuration list.
+
+name
+= name;
+
+Set card
+name for card drivers that allows it.
+
+type
+= num;
+
+Allows
+setting the exact type of the card internally used by the
+card driver. Allowed values can be found in the source code
+of cards.h.
+
+flags
+= value...;
+
+Card
+flags as an hex value. Multiple values are OR'd together.
+Depending on card driver, this allows fine-tuning the
+capabilities in the card driver for your card.
+
+Optionally,
+some known parameters can be specified as
+strings:
+
+•
+rng: On-board random number source
+
+•
+keep_alive: Request the card driver to send a "keep
+alive" command before each transaction to make sure
+that the required applet is still selected.
+
+pkcs15emu
+= name;
+
+When
+using PKCS#15 emulation, force the emulation driver for
+specific cards. Required for external drivers, but can be
+used with built-in drivers, too.
+
+force_protocol
+= value;
+
+Force
+protocol selection for specific cards. Known
+parameters:
+
+•
+t0
+
+•
+t1
+
+•
+raw
+
+read_only
+= bool;
+
+Mark card
+as read/only card in PKCS#11/Minidriver/BaseCSP interface
+(Default: false).
+
+md_supports_X509_enrollment
+= bool;
+
+Indicate
+X509 enrollment support at Minidriver/BaseCSP interface
+(Default: false).
+
+md_guid_as_id
+= bool;
+
+Use the
+GUID generated for the key as id in the PKCS#15 structure
+(Default: false, i.e. auto generated)
+
+md_guid_as_label
+= bool;
+
+Use the
+GUID generated for the key as label in the PKCS#15 structure
+(Default: false, i.e. no label set).
+
+md_supports_container_key_gen
+= bool;
+
+Card
+allows generating key pairs on the card (Default:
+false).
+
+md_supports_container_key_import
+= bool;
+
+Card
+allows importing private keys (Default: false).
+
+md_pinpad_dlg_title
+= value;
+
+Window
+title of the PIN pad dialog (Default: "Windows
+Security").
+
+md_pinpad_dlg_icon
+= filename;
+
+Filename
+of the icon for the PIN pad dialog; use "" for no
+icon (Default: Built-in smart card icon).
+
+md_pinpad_dlg_main
+= value;
+
+Main
+instruction of the PIN pad dialog (Default: "OpenSC
+Smart Card Provider").
+
+md_pinpad_dlg_content_user
+= value;
+
+Content
+of the PIN pad dialog for role "user" (Default:
+"Please enter your PIN on the PIN
+pad.").
+
+md_pinpad_dlg_content_user_sign
+= value;
+
+Content
+of the PIN pad dialog for role "user+signature"
+(Default: "Please enter your digital signature PIN on
+the PIN pad.").
+
+md_pinpad_dlg_content_admin
+= value;
+
+Content
+of the PIN pad dialog for role "admin" (Default:
+"Please enter your PIN to unblock the user PIN on the
+PIN pad.")
+
+md_pinpad_dlg_expanded
+= value;
+
+Expanded
+information of the PIN pad dialog (Default: "This
+window will be closed automatically after the PIN has been
+submitted on the PIN pad (timeout typically after 30
+seconds).")
+
+md_pinpad_dlg_enable_cancel
+= bool;
+
+Allow the
+user to cancel the PIN pad dialog (Default: false). If this
+value is set to true, the user needs to click "OK"
+to start the PIN verification on the PIN pad. The user can
+choose the default behavior by enabling or disabling the
+checkbox of the dialog. The setting is saved by the
+program's full path (program_path) that uses
+OpenSC.
+
+The
+registry key HKCU\Software\OpenSC
+Project\OpenSC\md_pinpad_dlg_enable_cancel\program_path
+overwrites this setting with a DWORD set to either 1
+(enabled) or 0 (disabled).
+
+md_pinpad_dlg_timeout
+= num;
+
+Time in
+seconds for the progress bar of the PIN pad dialog to tick.
+0 removes the progress bar (Default: 30).
+
+notify_card_inserted
+= value; notify_card_inserted_text =
+value;
+
+Notification
+title and text when card was inserted (Default: "Smart
+card detected", ATR of the card).
+
+notify_card_removed
+= value; notify_card_removed_text =
+value;
+
+Notification
+title and text when card was removed (Default: "Smart
+card removed", name of smart card reader).
+
+notify_pin_good
+= value; notify_pin_good_text =
+value;
+
+Notification
+title and text when PIN was verified (Default: "PIN
+verified", "Smart card is
+unlocked").
+
+notify_pin_bad
+= value; notify_pin_bad_text =
+value;
+
+Notification
+title and text when PIN was wrong (Default: "PIN not
+verified", "Smart card is
+locked").
+
+Configuration
+of PKCS#15 Framework 
+use_file_caching = value;
+
+Whether
+to cache the card's files (e.g. certificates) on disk in
+file_cache_dir. Possible parameters:
+
+•
+yes: Cache all files (public and private).
+
+•
+public: Cache only public files.
+
+•
+no: File caching disabled.
+
+(Default:
+public for the following card drivers atrust-acos, belpic,
+cac1, cac, coolkey, dnie, edo, esteid2018, flex, cyberflex,
+gemsafeV1, idprime, itacns, jpki, MaskTech, mcrd, npa,
+nqapplet, tcos and otherwise no).
+
+If
+caching is done by a system process, the cached files may be
+placed inaccessible from the user account. Use a globally
+readable and writable location if you wish to share the
+cached information. Note that the cached files may contain
+personal data such as name and mail address.
+
+file_cache_dir
+= filename;
+
+Where to
+cache the card's files. The default values are:
+
+•
+$XDG_CACHE_HOME/opensc/ (If $XDG_CACHE_HOME is
+defined)
+
+•
+$HOME/.cache/opensc/ (Unix)
+
+•
+$USERPROFILE\.eid-cache\ (Windows)
+
+If
+caching is done by a system process, the cached files may be
+placed inaccessible from a user account. Use a globally
+readable and writable location if you wish to share the
+cached information. Note that the cached files may contain
+personal data such as name and mail address.
+
+The
+PIV-II card driver supports the history object's list of
+retired keys and certificates if they are readable in the
+file cache directory. If the specified object's URL is
+"http://"DNS name"/"ASCII-HEX
+OffCardKeyHistoryFile, then the searches for the file
+name OffCardKeyHistoryFile in the cache
+directory.
+
+use_pin_caching
+= bool;
+
+Use PIN
+caching (Default: true)?
+
+pin_cache_counter
+= num;
+
+How many
+times to use a PIN from cache before re-authenticating it
+(Default: 10)?
+
+pin_cache_ignore_user_consent
+= bool;
+
+Older
+PKCS#11 applications not supporting CKA_ALWAYS_AUTHENTICATE
+may need to set this to get signatures to work with some
+cards (Default: false).
+
+It
+is recommended to enable also PIN caching using
+use_pin_caching option for OpenSC to be able to provide PIN
+for the card when needed.
+
+private_certificate
+= value;
+
+How to
+handle a PIN-protected certificate. Known
+parameters:
+
+•
+protect: The certificate stays PIN-protected.
+
+•
+declassify: Allow reading the certificate without enforcing
+verification of the PIN.
+
+•
+ignore: Ignore PIN-protected certificates.
+
+(Default:
+ignore in Tokend, protect otherwise).
+
+enable_pkcs15_emulation
+= bool;
+
+Enable
+pkcs15 emulation (Default: true).
+
+try_emulation_first
+= bool;
+
+Prefer
+pkcs15 emulation code before the normal pkcs15 processing
+(Default: no). Some cards work in emu-only mode, and do not
+depend on this option.
+
+enable_builtin_emulation
+= bool;
+
+Enable
+builtin emulators (Default: true).
+
+builtin_emulators
+= emulators;
+
+List of
+the builtin pkcs15 emulators to test (Default:
+internal)
+
+Special
+value of internal will try all not disabled builtin pkcs15
+emulators.
+
+Special
+value of old will try all disabled pkcs15
+emulators.
+
+pkcs11_enable_InitToken
+= bool;
+
+Enable
+initialization and card recognition (Default:
+false).
+
+emulate
+name { block_contents
+}
+
+Configuration
+options for a PKCS#15 emulator where name is a short
+name for an external card driver.
+
+module
+= filename;
+
+For
+pkcs15 emulators loaded from an external shared library/DLL,
+you need to specify the path name of the module and
+customize the card_atr example above correctly.
+
+function
+= name;
+
+Get the
+init function name of the emulator (Default:
+sc_pkcs15_init_func_ex)
+
+application
+hexstring { block_contents
+}
+
+Configuration
+of the on-card-application where hexstring is the
+application identifier (AID).
+
+type
+= name;
+
+Type of
+application where name is one of:
+
+•
+generic
+
+•
+protected
+
+Used
+to distinguish the common access application and application
+for which authentication to perform some operation cannot be
+obtained with the common procedures (ex. object creation
+protected by secure messaging). Used by PKCS#11 module
+configured to expose restricted number of slots. (for ex.
+configured to expose only User PIN slot, User and Sign PINs
+slots, ...)
+
+model
+= name;
+
+disable
+= bool;
+
+Do not
+expose application in PKCS#15 framework (Default:
+false)
+
+user_pin
+= name;
+
+Name of
+the User PIN object that will be used as the main
+PIN.
+
+sign_pin
+= name;
+
+Name of
+the PIN object that will be used for signing.
+
+Configuration
+of Tokend 
+score = num;
+
+Score for
+OpenSC.tokend (Default: 300). The tokend with the highest
+score shall be used.
+
+Configuration
+of PKCS#11 
+max_virtual_slots = num;
+
+Maximum
+Number of virtual slots (Default: 16). If there are more
+slots than defined here, the remaining slots will be hidden
+from PKCS#11.
+
+slots_per_card
+= num;
+
+Maximum
+number of PIN slots per smart card (Default: 4). If the card
+has fewer PINs than defined here, the remaining number of
+slots will be empty. For Firefox, Chrome and Chromium, the
+slots_per_card is set to 1, to avoid prompting for
+unrelated PINs. Typically, this effectively disables
+signature PINs and keys.
+
+lock_login
+= bool;
+
+By
+default, the OpenSC PKCS#11 module will not lock your card
+once you authenticate to the card via C_Login (Default:
+false). Thus the other users or other applications is not
+prevented from connecting to the card and perform crypto
+operations (which may be possible because you have already
+authenticated with the card). This setting is not very
+secure.
+
+Also,
+if your card is not locked, you can enconter problems due to
+limitation of the OpenSC framework, that still is not
+thoroughly tested in the multi threads
+environment.
+
+Your
+settings will be more secure if you choose to lock your
+card. Nevertheless this behavior is a known violation of
+PKCS#11 specification. Now once one application has started
+using your card with C_Login, no other application can use
+it, until the first is done and calls C_Logout or
+C_Finalize. In the case of many PKCS#11 application this
+does not happen until you exit the application.
+
+Thus
+it is impossible to use several smart card aware
+applications at the same time, e.g. you cannot run both
+Firefox and Thunderbird at the same time, if both are
+configured to use your smart card.
+
+atomic
+= bool;
+
+By
+default, interacting with the OpenSC PKCS#11 module may
+change the state of the token, e.g. whether a user is logged
+in or not (Default: false).
+
+Thus
+other users or other applications may change or use the
+state of the token unknowingly. Other applications may
+create signatures abusing an existing login or they may
+logout unnoticed.
+
+With
+this setting enabled the login state of the token is tracked
+and cached (including the PIN). Every transaction is
+preceded by restoring the login state. After every
+transaction a logout is performed. This setting by default
+also enables lock_login to disable access for other
+applications during the atomic transactions.
+
+Please
+note that any PIN-pad should be disabled (see
+enable_pinpad), because the user would have to input
+his PIN for every transaction.
+
+init_sloppy
+= bool;
+
+With this
+setting disabled, the OpenSC PKCS#11 module will initialize
+the slots available when the application calls
+C_GetSlotList. With this setting enabled, the slots will
+also get initialized when C_GetSlotInfo is called (Default:
+true).
+
+This
+setting is a workaround for Java which does not call
+C_GetSlotList when configured with a static slot instead of
+slotListIndex.
+
+user_pin_unblock_style
+= mode;
+
+User PIN
+unblock style mode is one of:
+
+•
+none (Default): PIN unblock is not possible with PKCS#11
+API
+
+•
+set_pin_in_unlogged_session: C_SetPIN in unlogged session:
+PUK is passed as the OldPin argument of the C_SetPIN
+call.
+
+•
+set_pin_in_specific_context: C_SetPIN in the
+CKU_SPECIFIC_CONTEXT logged session: PUK is passed as the
+OldPin argument of the C_SetPIN call.
+
+•
+init_pin_in_so_session: C_InitPIN in CKU_SO logged session:
+User PIN 'UNBLOCK' is protected by SOPIN. (PUK ==
+SOPIN).
+
+create_puk_slot
+= bool;
+
+Create
+slot for unblocking PIN with PUK (Default: false). This way
+PKCS#11 API can be used to login with PUK and change a PIN.
+May cause problems with some applications like Firefox and
+Thunderbird.
+
+create_slots_for_pins
+= mode...;
+
+Symbolic
+names of PINs for which slots are created where mode
+is a list of:
+
+•
+all (Default): All non-SO-PIN, non-unblocking
+PINs
+
+•
+user: The first global or first local PIN
+
+•
+sign: The second PIN (first local, second global or second
+local)
+
+Card
+can contain more then one PINs or more then one on-card
+application with its own PINs. Normally, to access all of
+them with the PKCS#11 API a slot has to be created for all
+of them. Many slots could be annoying for some of widely
+used application, like FireFox. This configuration parameter
+allows to select the PIN(s) for which PKCS#11 slot will be
+created.
+
+Only
+PINs initialised, non-SO-PIN, non-unblocking are associated
+with symbolic name.
+
+For
+the module to simulate the opensc-onepin module behavior the
+following option create_slots_for_pins =
+"user";
+
+ENVIRONMENT
+
+OPENSC_CONF
+
+Filename
+for a user defined configuration file
+
+If
+this environment variable is not found on Windows, the
+registry key Software\OpenSC Project\OpenSC\ConfigFile is
+checked.
+
+OPENSC_DEBUG
+
+See
+debug = num;
+
+OPENSC_DRIVER
+
+See
+card_drivers = name...;
+
+CARDMOD_LOW_LEVEL_DEBUG
+
+Write
+minidriver debug information to C:\tmp\md.log, if set to
+1.
+
+If
+this environment variable is not found on Windows, the
+registry key Software\OpenSC Project\OpenSC\MiniDriverDebug
+is checked.
+
+PIV_EXT_AUTH_KEY,
+PIV_9A_KEY, PIV_9C_KEY, PIV_9D_KEY,
+PIV_9E_KEY
+
+PIV
+configuration during initialization with
+piv-tool.
+
+PIV_USE_SM,
+PIV_PAIRING_CODE
+
+PIV
+configuration during initialization See Configuration
+Options for PIV Card.
+
+FILES
+
+/etc/opensc.conf
+
+System-wide
+configuration file
+
+/usr/share/doc/opensc/opensc.conf
+
+Extended
+example configuration file
+
+NOTES
+
+1. 
+
+German ID
+card emulator
+
+https://github.com/frankmorgner/vsmartcard/tree/master/virtualsmartcard/npa-example-data

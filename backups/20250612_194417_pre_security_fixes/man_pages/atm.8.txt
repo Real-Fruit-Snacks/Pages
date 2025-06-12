@@ -1,0 +1,949 @@
+NAME
+
+atm −
+user configuration and display command for HARP ATM
+interface
+
+SYNOPSIS
+
+Interface
+management subcommands:
+
+atm attach
+
+atm detach  
+atm set MAC  
+
+atm set netif  
+
+atm set prefix  
+
+atm show config [] 
+atm show interface [] 
+atm show netif [] 
+atm show stats interface [ [phy | dev |
+atm | aal0 | aal4 | aal5 | driver]]
+
+VCC management
+subcommands: 
+atm add PVC   
+   ... 
+atm delete PVC   
+
+atm delete SVC   
+
+atm show stats VCC [ [
+[]]] 
+atm show VCC [ [
+[] | SVC | PVC]]
+
+IP management
+subcommands: 
+atm add ARP []   
+atm add PVC   
+  IP  [ |
+dynamic]   ... 
+atm delete ARP []  
+atm set arpserver   |
+local [ ...] 
+atm show ARP [] 
+atm show arpserver [] 
+atm show IPVCC [ | ]
+
+Miscellaneous
+subcommands: 
+atm help 
+atm show version
+
+DESCRIPTION
+
+atm
+configures and displays the status of the Host ATM Research
+Platform (HARP) networking software. The subcommands fall
+into several categories:
+
+Interface
+management subcommands allow manipulation of the ATM
+interface. Functions include assigning a signalling manager
+to an interface, setting the ATM address, associating
+network interfaces with an interface, and displaying
+information about interfaces.
+
+VCC
+management subcommands allow for managing ATM virtual
+channel connections (VCCs). Functions include opening and
+closing VCCs and displaying information about them.
+
+IP
+management subcommands allow for managing the interface
+between IP and the ATM software. Functions include
+displaying and manipulating the ATMARP cache, opening a PVC
+connected to IP, assigning an ATMARP server to a network
+interface, and displaying information about IP VCCs.
+
+Miscellaneous
+subcommands allow for displaying the version of the ATM
+software and for getting help with the atm
+command.
+
+Signalling
+Managers 
+The signalling manager is responsible for the opening and
+closing of VCCs. Four signalling managers are supported:
+
+PVC - for PVCs
+only, 
+SPANS - supports SPANS, FORE’s proprietary signalling
+protocol, 
+UNI 3.0 - supports the signalling protocol from The ATM
+Forum’s ATM User-Network Interface Specification,
+Version 3.0. 
+UNI 3.1 - supports the signalling protocol from The ATM
+Forum’s ATM User-Network Interface Specification,
+Version 3.1.
+
+All four
+signalling managers support the opening and closing of PVCs
+(see the add and delete subcommands).
+
+A signalling
+manager must be attached to a physical interface (see the
+attach subcommand) before any VCCs can be created on
+the interface.
+
+Physical and
+Network Interfaces 
+Two types of interfaces are supported: physical interfaces
+and network interfaces. A physical interface represents a
+physical point of attachment to an ATM network. A physical
+interface has an ATM address associated with it, except when
+the PVC-only signalling manager is being used.
+
+A network
+interface is a logical interface. One or more network
+interfaces are associated with a physical interface; each
+network interface has an IP address associated with it. For
+UNI-controlled interfaces, there can be up to 256 network
+interfaces associated with a physical interface. In this
+case, the correspondence between the network interface and
+the ATM address is determined by the selector field (the
+last byte) of the physical interface’s ATM address.
+For PVC-only interfaces, there can be up to 256 logical
+interfaces associated with each physical interface. For
+interfaces controlled by the SPANS signalling manager, there
+must be one and only one network interface associated with
+each physical interface.
+
+Keyword and
+Documentation Conventions 
+Command and subcommand keywords can be abbreviated by simply
+giving enough of the first part of the keyword to make it
+unique. Thus, atm sh v gives the same result
+as atm show vcc.
+
+All keywords
+are case-insensitive.
+
+Where a host
+address needs to be given to the atm command, either
+a DNS name or an IP address in dotted decimal format can be
+used.
+
+ATM addresses
+are specified as strings of hex digits, with an optional
+leading "0x". Fields within the address may be
+separated by periods, but periods are for readability only
+and are ignored. SPANS addresses are 8 bytes long, while
+NSAP-format addresses are 20 bytes long. The full address,
+including any leading zeroes, must be given. For
+example:
+
+0x47.0005.80.ffe100.0000.f21a.0170.0020481a0170.00
+(NSAP format) 
+0x00000010.f2050aa9 (SPANS format)
+
+SUBCOMMANDS
+
+Interface
+Management Subcommands:
+
+atm add PVC
+
+  ...
+
+the format of
+the add PVC subcommand varies depending on the owner
+of the PVC. See the description under "IP Management
+Subcommands."
+
+atm attach
+
+where:
+
+specifies the physical interface to which the signalling
+manager is to be attached, 
+ specifies which signalling manager is to
+be attached. Valid choices are "SIGPVC",
+"SPANS", "UNI30", and
+"UNI31".
+
+This command
+attaches a signalling manager to an interface. Until this is
+done, VCCs cannot be opened or closed. Only one signalling
+manager at a time can be attached to an interface.
+
+atm detach
+
+where:
+
+specifies the physical interface whose signalling manager is
+to be detached.
+
+This command
+detaches a signalling manager from an interface. All VCCs
+that the signalling manager has created will be closed, and
+no new VCCs can be created until a signalling manager
+(either the same or a different one) is attached again.
+
+atm set MAC
+
+where:
+
+specifies the physical interface whose MAC address is to be
+set, 
+ specifies the 6-byte MAC part of
+the NSAP address for the interface. The MAC address is
+specified as a string of 12 hexadecimal digits with an
+optional leading "0x". Fields in the address may
+be separated by periods.
+
+This command
+sets the MAC address for a UNI-controlled interface. The
+first 13 bytes (the prefix) of the 20-byte NSAP-format
+address are set by the atm set prefix command or the
+ILMI daemon (ilmid (8)), the next 6 bytes (the End
+System Identifier (ESI)) are set by this command, and the
+last byte (the selector) will be determined by which network
+interface is to be associated with the address.
+
+The atm set
+MAC command can be used to override the MAC address in
+the interface hardware.
+
+atm set
+netif   
+
+where:
+
+specifies the physical interface that the network
+interface(s) are to be associated with, 
+ specifies the invariant part of the
+network interface name, 
+ specifies the number of network interface
+to be created.
+
+This command
+creates one or more network interfaces and associates them
+with the specified physical interface. The network interface
+names are determined by the prefix and the count. The names
+will be of the form , where
+ is the prefix specified in the set
+subcommand and  is a number in the range 0 -
+-1. For example, the command:
+
+atm set netif
+hfa0 ni 2
+
+would create
+two network interfaces, named ni0 and ni1, and associate
+them with physical interface hfa0.
+
+atm set
+prefix  
+
+where:
+
+specifies the physical interface whose NSAP prefix is to be
+set, 
+ specifies the first 13 bytes of the
+NSAP address for the interface. The prefix is specified as a
+string of hexadecimal digits with an optional leading
+"0x". Fields in the prefix may be separated by
+periods.
+
+This command
+sets the address for a UNI-controlled interface. The first
+13 bytes (the prefix) of the 20-byte NSAP-format address are
+set by this command, the next 6 bytes (the End System
+Identifier (ESI)) will be the MAC address taken from the
+physical interface or set by the set MAC subcommand,
+and the last byte (the selector) will be determined by which
+network interface is to be associated with the address.
+
+The NSAP prefix
+must be set before a UNI-controlled interface can become
+active. This can be accomplished either by the ILMI daemon
+(ilmid (8)) or the set prefix subcommand.
+
+atm show
+config []
+
+displays the
+following information:
+
+Interface
+− the name of the physical interface.
+
+Vendor
+− the name of the adapter vendor.
+
+Model
+− the model of the adapter.
+
+Media
+− the communications medium used by the adapter.
+
+Bus
+− the type of bus the adapter is attached to.
+
+Serial
+No. − the adapter’s serial number.
+
+MAC
+address − the MAC address of the interface. Note
+that this is the MAC address encoded in the hardware of the
+adapter, even if the atm set MAC command has been
+used to change the effective MAC address of the
+interface.
+
+Hardware
+version − the hardware revision level reported by
+the interface.
+
+Firmware
+version − the firmware revision level reported by
+the interface.
+
+If no
+parameters are specified on the show config
+subcommand, the configurations of all physical interfaces
+will be displayed. If an interface name is specified, only
+the configuration of the given interface is displayed.
+
+atm show
+interface []
+
+displays the
+following information:
+
+Interface
+− the name of the physical interface.
+
+Sigmgr
+− the name of the signalling manager which has been
+attached to the interface. A dash (-) is shown if no
+signalling manager has been attached.
+
+State
+− the state of the signalling manager for the
+interface. Each signalling manager has its own set of
+states. They are:
+
+PVC: 
+ACTIVE --- The signalling manager is active. 
+DETACH --- The signalling manager is being
+detached. 
+SPANS: 
+ACTIVE --- The signalling manager is active. 
+DETACH --- The signalling manager is being
+detached. 
+INIT ----- The signalling manager’s initial
+state. 
+PROBE ---- The signalling manager is attempting to
+make contact with the ATM switch. 
+UNI 3.0 or UNI 3.1: 
+NULL ----- The signalling manager’s initial
+state. 
+ADR_WAIT - The signalling manager is waiting for
+the NSAP prefix to be set. 
+INIT ----- The signalling manager is attempting to
+establish contact with the switch. 
+ACTIVE --- The signalling manager is active. 
+DETACH --- The signalling manager is being
+detached.
+
+ATM
+address − the ATM address of the interface.
+
+Network
+interfaces − the names of network interfaces, if
+any, associated with the physical interface.
+
+If no
+parameters are specified on the show interface
+subcommand, information about all physical interfaces will
+be displayed. If an interface name is specified, only
+information about the given interface is displayed.
+
+atm show
+netif []
+
+displays the
+following information:
+
+Net Intf
+− the name of the network interface.
+
+IP
+Address − the IP address of the network
+interface.
+
+If no
+parameters are specified on the show netif
+subcommand, information about all network interfaces will be
+displayed. If an interface name is specified, only
+information about the given network interface is
+displayed.
+
+atm show
+stats interface [ [phy | dev | atm | aal0 |
+aal4 | aal5 | driver]]
+
+displays
+statistics associated with one or more interfaces.
+Subject-area keywords (phy, dev, atm,
+aal0, aal4, aal5, or driver) can
+be specified to change the scope of the statistics
+displayed.
+
+If no subject
+area keyword is specified, the following information is
+displayed:
+
+Interface
+− the name of the physical ATM interface.
+
+Input
+PDUs − the number of Protocol Data Units (PDUs)
+which have been received by the interface.
+
+Input
+Bytes − the number of bytes which have been
+received by the interface.
+
+Input
+Errs − the number of input errors which the
+interface has experienced.
+
+Output
+PDUs − the number of Protocol Data Units (PDUs)
+which have been transmitted by the interface.
+
+Output
+Bytes − the number of bytes which have been
+transmitted by the interface.
+
+Output
+Errs − the number of output errors which the
+interface has experienced.
+
+Cmd Errs
+− the number of command errors which the interface has
+experienced.
+
+If a
+subject-area keyword is specified, then statistics for that
+subject are displayed. The statistics displayed depend on
+the adapter. If requested statistics are not available for
+an adaptor, an error will be noted.
+
+If no
+parameters are specified on the show stats interface
+subcommand, statistics for all ATM interfaces are displayed.
+If an interface name is specified, only statistics for the
+given interface are displayed.
+
+VCC
+Management Subcommands: 
+atm delete PVC   
+
+atm delete SVC  
+
+where:
+
+PVC specifies that the
+VCC to be closed is a PVC, 
+SVC specifies that the VCC to be closed is an SVC,
+
+ specifies the physical interface at
+which the VCC to be closed terminates, 
+ specifies the Virtual Path Identifier (VPI)
+of the VCC, 
+ specifies the Virtual Channel Identifier
+(VCI) of the VCC.
+
+This command
+closes a VCC. The two forms differ only in that the first
+specifies that the VCC is a PVC (that was created by the
+add PVC subcommand) and the second specifies that the
+VCC is an SVC. Reserved VCCs (with VCI values less than 32)
+cannot be closed with this command.
+
+atm show
+stats VCC [ [
+[]]]
+
+displays the
+following information:
+
+Interface
+− the physical interface on which the VCC
+terminates.
+
+VPI
+− the Virtual Path Identifier (VPI) for the VCC.
+
+VCI
+− the Virtual Channel Identifier (VCI) for the
+VCC.
+
+Input
+PDUs − the number of Protocol Data Units (PDUs)
+which have been received on the VCC.
+
+Input
+Bytes − the number of bytes which have been
+received on the VCC.
+
+Input
+Errs − the number of input errors which the VCC
+has experienced.
+
+Output
+PDUs − the number of Protocol Data Units (PDUs)
+which have been transmitted on the VCC.
+
+Output
+Bytes − the number of bytes which have been
+transmitted on the VCC.
+
+Output
+Errs − the number of output errors which the VCC
+has experienced.
+
+If no
+parameters are specified on the show VCC subcommand,
+all active VCCs are displayed. If an interface name is
+specified, all active VCCs for the given interface are
+displayed. If an interface and VPI are specified, all active
+VCCs for the VPI on the given interface are displayed. If an
+interface, VPI, and VCI are specified, only the specified
+VCC on the given interface is displayed (note that this
+could actually be two VCCs, since SPANS considers SVCs to be
+unidirectional).
+
+atm show VCC
+[ [ [] | SVC |
+PVC]]
+
+displays the
+following information:
+
+Interface
+− the physical interface on which the VCC
+terminates.
+
+VPI
+− the Virtual Path Identifier (VPI) for the VCC.
+
+VCI
+− the Virtual Channel Identifier (VCI) for the
+VCC.
+
+AAL
+− the ATM Adaptation Layer (AAL) in use on the VCC.
+Possible values are null and AAL 1-5.
+
+Type
+− specifies whether the VCC is an SVC or a PVC.
+
+Dir
+− the direction of information flow on the VCC. VCCs
+can be inbound, outbound, or both.
+
+State
+− the state of the VCC, as reported by the signalling
+manager. Each signalling manager has its own set of states.
+They are:
+
+PVC: 
+NULL ----- No state. 
+ACTIVE --- The VCC is active. 
+FREE ----- The VCC is closed and the signalling
+manager is waiting for its resources to be freed. 
+SPANS: 
+NULL ----- No state. 
+ACTIVE --- The VCC is a PVC and is active. 
+ACT_DOWN - The VCC is a PVC and the interface is
+down. 
+POPEN ---- The VCC is being opened. 
+R_POPEN -- The VCC is being opened by a remote
+host. 
+OPEN ----- The VCC is active. 
+CLOSE ---- The VCC is being closed. 
+ABORT ---- The VCC is being aborted. 
+FREE ----- The VCC is closed and the signalling
+manager is waiting for its resources to be freed. 
+UNI 3.0 or UNI 3.1: 
+NULL ----- No state. 
+C_INIT --- A VCC is being initiated. 
+C_OUT_PR - An outgoing VCC request is proceeding.
+
+C_PRES --- A VCC is being initiated by the
+network. 
+CONN_REQ - A VCC request has been accepted by a
+HARP user. 
+C_IN_PR -- An incoming VCC request is proceeding.
+
+ACTIVE --- The VCC is active. 
+REL_REQ -- The VCC is being closed. 
+REL_IND -- The network is clearing a VCC. 
+SSCF_REC - The SSCF session on the signalling
+channel is in recovery from an error. 
+FREE ----- The VCC is closed and the signalling
+manager is waiting for its resources to be freed. 
+ACT_DOWN - The VCC is a PVC and the interface is
+down.
+
+Encaps
+− the encapsulation in effect on the VCC. Possible
+encapsulations are null and LLC/SNAP.
+
+Owner
+− the owner or owners of the VCC. Shows the name(s) of
+the function(s) using the VCC.
+
+Destination
+− the ATM address of the host at the remote end of the
+VCC.
+
+If no
+parameters are specified on the show VCC subcommand,
+all active VCCs are displayed. If an interface name is
+specified, all active VCCs for the given interface are
+displayed. If an interface and VPI are specified, all active
+VCCs for the VPI on the given interface are displayed. If an
+interface, VPI, and VCI are specified, only the specified
+VCC on the given interface is displayed (note that this
+could actually be two VCCs, since SPANS considers SVCs to be
+unidirectional).
+
+IP
+Management Subcommands: 
+atm add ARP []  
+
+where:
+
+ is the
+optional name of the network interface the ATMARP entry is
+to be associated with. If no name is specified, a network
+interface is chosen depending on the IP address of the host
+being added. 
+ is the host name or IP address of the host
+to be added to the ATMARP table, 
+ is the ATM address of the host.
+
+This command
+adds an entry to the ATMARP table for ATM. The given
+host’s IP address is associated with the given ATM
+address. When IP needs to transmit data to the host, the
+specified ATM address will be used to open an SVC.
+
+The entry will
+be marked as permanent in the ATMARP table and will not be
+subject to aging.
+
+atm add PVC
+
+ IP  [ | dynamic]
+
+where:
+
+specifies the physical interface where the PVC is to
+terminate, 
+ specifies the Virtual Path Identifier (VPI)
+of the PVC, 
+ specifies the Virtual Channel Identifier
+(VCI) of the PVC, 
+ specifies the ATM Adaptation Layer (AAL) for
+the PVC. Valid choices are "null" or
+"AAL0" for the null AAL; "AAL1" for AAL
+1; "AAL2" for AAL 2; "AAL3",
+"AAL4", or "AAL3/4" for AAL 3/4; and
+"AAL5" for AAL 5, 
+ specifies the encapsulation for the PVC.
+Valid choices are "null" or "none" for
+null encapsulation, and "LLC/SNAP",
+"LLC", or "SNAP" for LLC/SNAP
+encapsulation, 
+IP specifies that the owner of the PVC is IP. 
+ specifies the network interface which the
+PVC is to be associated with. The network interface must
+exist and be associated with the specified physical
+interface, 
+ | dynamic gives the address of the host at
+the far end of the PVC, or the word "dynamic" if
+its address is to be determined with Inverse ARP. If
+"dynamic" is specified, LLC/SNAP encapsulation
+must also be specified. 
+ is the traffic type of the PVC and may
+be one of UBR, CBR or VBR. Following the traffic type the
+traffic parameters must be given. For UBR and CBR this is
+the peak cell rate and for VBR these are the peak and
+sustainable cell rate and the maximum burst size.
+
+This command
+creates a PVC with the specified attributes and attaches it
+to IP.
+
+atm delete
+ARP [] 
+
+where:
+
+ is the
+optional name of the network interface the ATMARP entry is
+associated with. If no name is specified, the specified host
+is deleted from the cache regardless of what network
+interface it is associated with. 
+ is the host name or IP address of the host
+to be deleted from the ATMARP table.
+
+This command
+deletes the specified host’s entry from the ATMARP
+table.
+
+atm set
+arpserver   | local [ ...]
+
+where:
+
+ specifies
+the network interface for which the ATMARP server address is
+to be set. 
+ specifies the ATM address of the
+host which is to provide ATMARP service. If
+"local" is specified instead of an ATM address,
+the host on which the command is issued will become the
+ATMARP server. 
+ ... is an optional list of IP prefixes
+that the ATMARP server will provide information about. An IP
+prefix is specified as a dotted decimal IP address, followed
+by a slash, followed a number specifying how many bits of
+the IP address are significant. For example, 10.0.0.0/8
+indicates that the ATMARP server will provide services for
+all addresses on IP network 10. The IP subnetwork which the
+network interface belongs to is automatically included.
+
+This command
+sets the address of the ATMARP server for a network
+interface.
+
+atm show ARP
+[]
+
+displays the
+following information:
+
+Net Intf
+− the network interface which traffic for the entry
+will use.
+
+Flags
+− flags showing whether the entry is valid and whether
+it is permanent. − flags giving further information
+about the ATMARP entry. The meanings of the characters in
+the flags are:
+
+P - the entry
+is permanent 
+R - the entry has been refreshed 
+V - the entry is valid
+
+Age
+− the number of minutes for which the entry will
+remain valid.
+
+Origin
+− the source of the ATMARP entry. Possible values
+are:
+
+LOCAL ---- The entry
+is for an interface on the host. 
+PERM ----- The entry is permanent. This is used
+for entries that are created with the add ARP
+command. 
+REG ------ The entry was created as the result of
+a host registering with the ATMARP server. 
+SCSP ----- The entry was learned via SCSP. 
+LOOKUP --- The entry was created as the result of
+a host performing an ATMARP lookup. 
+PEER_RSP - The entry was created as the result of
+a host answering an InARP Request. 
+PEER_REQ - The entry was created as the result of
+a host sending an InARP Request.
+
+ATM
+address − the ATM address of the host the entry
+refers to.
+
+IP
+address − the IP address or domain name of the
+host the entry refers to.
+
+If no
+parameters are specified on the show ARP subcommand,
+the whole ATMARP table will be displayed. If a host name or
+IP address is specified, only information about the given
+host is displayed.
+
+This command
+displays both information that has been learned dynamically
+(through one form or another of ATMARP and via SCSP) and
+information which has been configured by the user (through
+the add ARP subcommand).
+
+atm show
+arpserver []
+
+displays the
+following information:
+
+Net Intf
+− the network interface for which information is being
+displayed.
+
+State
+− the state of the connection to the ATMARP server.
+Possible values are:
+
+NOT_CONF - No ATMARP
+server has been configured for the interface. 
+SERVER --- The host is the ATMARP server. 
+PEND_ADR - No ATM address has been set for the
+interface. 
+POPEN ---- The host is attempting to open a VCC to
+the ATMARP server. 
+REGISTER - The host has a VCC open to the ATMARP
+server and is in the process of registering with the server.
+
+ACTIVE --- The ATMARP server connection is
+active.
+
+ATM
+Address − the ATM address of the ATMARP
+server.
+
+If no
+parameters are specified on the show arpserver
+subcommand, the ATMARP servers for all network interfaces
+will be displayed. If an interface name is specified, only
+information about the given network interface is
+displayed.
+
+atm show
+IPVCC [ | ]
+
+displays the
+following information:
+
+Net Intf
+− the name of the network interface at which the VCC
+terminates.
+
+VPI
+− the Virtual Path Identifier (VPI) for the VCC.
+
+VCI
+− the Virtual Channel Identifier (VCI) for the
+VCC.
+
+State
+− the state of the VCC. Possible values are:
+
+PMAP ---- The host
+has an IP packet to send and is waiting for an ATMARP
+mapping. 
+POPEN --- The VCC is being opened. 
+PACCEPT - A VCC from a remote host is being
+accepted. 
+ACTPENT - A PVC is open, but no ATMARP information
+is available for it yet. 
+ACTIVE -- The VCC is active.
+
+Flags
+− flags giving further information about the VCC. The
+meanings of the characters in the flags are:
+
+S - the VCC is
+an SVC 
+P - the VCC is a PVC 
+L - the VCC uses LLC/SNAP encapsulation 
+M - the IP-to-ATM address mapping for the VCC is valid 
+N - there is no idle timeout for the VCC
+
+IP
+Address − the name and IP address of the host at
+the remote end of the VCC.
+
+If no
+parameters are specified on the show IPVCC
+subcommand, all active VCCs are displayed. If a host name is
+specified, the active VCC(s) for the given host are
+displayed. If a network interface name is specified, the
+active VCC(s) for the given network interface are
+displayed.
+
+Miscellaneous
+Subcommands: 
+atm help
+
+displays a
+synopsis of the atm command with its subcommands and their
+parameters.
+
+atm show
+version displays the version of the running HARP
+software.
+
+SEE ALSO
+
+ilmid
+(8); scspd (8); atmarpd (8).
+
+BUGS
+
+Care must be
+taken to avoid confusing physical interfaces and network
+interfaces.
+
+Please report
+any bugs to harp-bugs [AT] magic.net.
+
+COPYRIGHT
+
+Copyright (c)
+1994-1998, Network Computing Services, Inc.
+
+AUTHORS
+
+John Cavanaugh,
+Network Computing Services, Inc. 
+Mike Spengler, Network Computing Services, Inc. 
+Joe Thomas, Network Computing Services, Inc.
+
+ACKNOWLEDGMENTS
+
+This software
+was developed with the support of the Defense Advanced
+Research Projects Agency (DARPA).

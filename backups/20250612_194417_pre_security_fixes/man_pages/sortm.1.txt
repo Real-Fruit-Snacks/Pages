@@ -1,0 +1,146 @@
+NAME
+
+sortm - sort
+nmh messages
+
+SYNOPSIS
+
+sortm
+
+[-help] [-version]
+[+folder] [msgs] [-all | -noall]
+[-datefield field] [-textfield
+field] [-notextfield] [-limit
+days] [-nolimit] [-check |
+-nocheck] [-verbose | -noverbose]
+
+DESCRIPTION
+
+sortm
+sorts the specified messages in the named folder according
+to the chronological order of the “Date:” field
+of each message.
+
+If no messages
+are specified, the default is all messages in the folder.
+However, if no messages are specified and the -noall
+switch is enabled, then sortm reports that as an
+error and exits with non-zero status. -noall is most
+useful in the user’s profile, to avoid inadvertent
+sorting of an entire folder. The -all switch can then
+be used on the command line to disable it. Of course, a
+message specification of all can be used in any
+case.
+
+The
+-verbose switch directs sortm to tell the user
+the general actions that it is taking to place the folder in
+sorted order.
+
+The
+-datefield field switch tells sortm the
+name of the field to use when making the date comparison. If
+the user has a special field in each message, such as
+“BB-Posted:” or “Delivery-Date:”,
+then the -datefield switch can be used to direct
+sortm which field to examine.
+
+The
+-textfield field switch causes sortm to
+sort messages by the specified text field. All characters
+except letters and numbers are stripped and the resulting
+strings are sorted datefield-major, textfield-minor, using a
+case insensitive comparison. If this field is
+“subject”, any leading "re:" is
+stripped off.
+
+With
+-textfield field, if -limit days
+is specified, messages with the same textfields that are
+dated within ’days’ of each other appear
+together. Specifying -nolimit makes the limit
+infinity. With -limit 0, the sort is instead
+simply textfield-major.
+
+For example, to
+order a folder by date-major, grouping messages with the
+same subject on the same date together, use:
+
+sortm
+-textfield subject +folder
+
+sortm
+always issues a warning for each message that is missing a
+“Date:” field, has a “Date:” field
+that cannot be parsed, or has a format error in any header
+field. With the -check switch, sortm inhibits
+all modifications to the folder if there are any such
+messages, and exits with non-zero status. With the default
+of -nocheck, sortm sorts messages with a
+missing or invalid “Date:” field using their
+file modification times.
+
+When ordering
+messages based on their dates, if they have the same dates,
+their original message order is preserved.
+
+FILES
+
+$HOME/.mh_profile
+The user profile
+
+PROFILE COMPONENTS
+
+Path: To
+determine the user’s nmh directory 
+Current-Folder: To find the default current folder
+
+SEE ALSO
+
+folder(1)
+
+DEFAULTS
+
+’+folder’
+defaults to the current folder 
+’msgs’ defaults to all without -noall,
+has no default with -noall 
+’-all’ 
+’-datefield’ defaults to date 
+’-notextfield’ 
+’-noverbose’ 
+’-nolimit’ 
+’-nocheck’
+
+CONTEXT
+
+If a folder is
+given, it will become the current folder. If the current
+message is moved, sortm will preserve its status as
+current.
+
+HISTORY
+
+Timezones used
+to be ignored when comparing dates: they aren’t any
+more.
+
+Messages which
+were in the folder, but not specified by ’msgs’,
+used to be moved to the end of the folder; now such messages
+are left untouched.
+
+sortm
+sometimes did not preserve the message numbering in a folder
+(e.g., messages 1, 3, and 5, might have been renumbered to
+1, 2, 3 after sorting). This was a bug, and has been fixed.
+To compress the message numbering in a folder, use
+“folder -pack” as always.
+
+BUGS
+
+When
+sortm complains about a message which it can’t
+temporally order, it complains about the message number
+prior to sorting. It should indicate what the message
+number will be after sorting.

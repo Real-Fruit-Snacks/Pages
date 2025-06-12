@@ -1,0 +1,386 @@
+NOM
+
+mksquashfs
+− Create or modify a Squash file system
+
+SYNOPSIS
+
+mksquashfs
+[−version] 
+
+mksquashfs
+source... dest [options]
+[−e list of exclude dirs/files]
+[−ef exclude_file] 
+
+DESCRIPTION
+
+A squashfs is a
+compressed read−only file system. Use the
+mksquashfs program to create a new squashed file
+system, and to append new data to an existing squashed file
+system.
+
+If a single
+source directory is specified (i.e. mksquashfs
+source output_fs), the squashfs filesystem will
+consist of that directory, with the top−level root
+directory corresponding to the source directory.
+
+If multiple
+source directories or files are specified, mksquashfs
+will merge the specified sources into a single filesystem,
+with the root directory containing each of the source
+files/directories. The name of each directory entry will be
+the basename of the source path. If more than one source
+entry maps to the same name, the conflicts are named
+xxx_1, xxx_2, etc. where xxx is the
+original name.
+
+The dest
+argument can either be a conventional file or a block
+device. If the file doesn’t exist it will be created,
+if it does exist and a squashfs filesystem exists on it,
+mksquashfs will append. The −noappend
+option will write a new filesystem irrespective of whether
+an existing filesystem is present.
+
+There are a
+large number of options that can be used to control the
+compression in mksquashfs. By and large the defaults
+are the most optimum settings and should only be changed in
+exceptional circumstances !
+
+The
+−noI, −noD and −noF
+options (also −noInodeCompression,
+−noDataCompression and
+−noFragmentCompression) can be used to force
+mksquashfs to not compress inodes/directories, data
+and fragments respectively. Giving all options generates an
+uncompressed filesystem.
+
+By default
+files in the generated filesystem inherit the UID and GID
+ownership of the original file. However, mksquashfs
+provides a number of options which can be used to override
+the ownership:
+
+•
+
+The options −all−root and
+−root−owned (both do exactly the same
+thing) force all file uids/gids in the generated Squashfs
+filesystem to be root. This allows root owned filesystems to
+be built without root access on the host machine.
+
+•
+
+The −force−uid uid option
+forces all files in the generated Squashfs filesystem to be
+owned by the specified uid. The uid can be specified
+either by name (i.e. root) or by number.
+
+•
+
+The −force−gid gid option
+forces all files in the generated Squashfs filesystem to be
+group owned by the specified gid. The gid can be
+specified either by name (i.e. root) or by number.
+
+The
+−e and −ef options allow
+files/directories to be specified which are excluded from
+the output filesystem. The −e option takes the
+exclude files/directories from the command line, the
+−ef option takes the exlude files/directories
+from the specified exclude file, one file/directory per
+line. If an exclude file/directory is absolute (i.e.
+prefixed with /, ../, or ./) the entry
+is treated as absolute, however, if an exclude
+file/directory is relative, it is treated as being relative
+to each of the sources in turn, i.e. mksquashfs
+/tmp/source1 source2 output_fs −e ex1 /tmp/source1/ex2
+out/ex3 Will generate exclude files
+/tmp/source1/ex2, /tmp/source1/ex1,
+source2/ex1, /tmp/source1/out/ex3 and
+source2/out/ex3.
+
+The
+−e and −ef exclude options are
+usefully used in archiving the entire filesystem, where it
+is wished to avoid archiving /proc, and the
+filesystem being generated, i.e. mksquashfs /
+/tmp/root.sqsh −e proc /tmp/root.sqsh
+
+Multiple
+−ef options can be specified on the command
+line, and the −ef option can be used in
+conjuction with the −e option.
+
+The
+−info option displays the files/directories as
+they are compressed and added to the filesystem. The
+original uncompressed size of each file is printed, along
+with DUPLICATE if the file is a duplicate of a file in the
+filesystem.
+
+The
+−le and −be options can be used to
+force mksquashfs to generate a little endian or big
+endian filesystem. Normally mksquashfs will generate
+a filesystem in the host byte order. Squashfs, for
+portability, will mount different ordered filesystems (i.e.
+it can mount big endian filesystems running on a little
+endian machine), but these options can be used for greater
+optimisation.
+
+OPTIONS
+
+−version
+
+print version, licence and
+copyright message.
+
+−info
+
+print files written to
+filesystem
+
+−b
+block_size
+
+set data block to
+block_size. This can be either 4096, 8192, 16384,
+32768 or 65536 bytes. Default is 65536 bytes
+
+−2.0
+
+create a 2.0 filesystem
+
+−noI
+or −noInodeCompression
+
+do not compress inode table
+
+−noDor
+−noDataCompression
+
+do not compress data blocks
+
+−noF
+or −noFragmentCompression
+
+do not compress fragment
+blocks
+
+−no−fragments
+
+do not use fragments: tells
+mksquashfs to not generate fragment blocks, and
+rather generate a filesystem similar to a Squashfs 1.x
+filesystem. It will of course still be a Squashfs 2.0
+filesystem but without fragments, and so it won’t be
+mountable on a Squashfs 1.x system.
+
+−always−use−fragments
+
+use fragment blocks for files
+larger than block size: tells mksquashfs to always
+generate fragments for files irrespective of the file
+length. By default only small files less than the block size
+are packed into fragment blocks. The ends of files which do
+not fit fully into a block, are NOT by default packed
+into fragments. To illustrate this, a 100K file has an
+initial 64K block and a 36K remainder. This 36K remainder is
+not packed into a fragment by default. This is because to do
+so leads to a 10 − 20% drop in sequential I/O
+performance, as a disk head seek is needed to seek to the
+initial file data and another disk seek is need to seek to
+the fragment block. Specify this option if you want file
+remainders to be packed into fragment blocks. Doing so may
+increase the compression obtained BUT at the expense
+of I/O speed.
+
+−no−duplicates
+
+do not perform duplicate
+checking: tells mksquashfs to not check the files
+being added to the filesystem for duplicates. This can
+result in quicker filesystem generation and appending
+although obviously compression will suffer badly if there is
+a lot of duplicate files.
+
+−noappend
+
+do not append to existing
+filesystem
+
+−keep−as−directory
+
+if one source directory is
+specified, create a root directory containing that
+directory, rather than the contents of the directory
+
+−root−becomes
+name
+
+when appending source
+files/directories, make the original root become a
+subdirectory in the new root called name, rather than
+adding the new source items to the original root
+
+−all−root
+or −root−owned
+
+make all files owned by
+root
+
+−force−uid
+uid
+
+set all file uids to
+uid
+
+−force−gid
+gid
+
+set all file gids to
+gid
+
+−le
+
+create a little endian
+filesystem
+
+−be
+
+create a big endian
+filesystem
+
+−nopad
+
+do not pad filesystem to a
+multiple of 4Ko. This is performed by default to enable the
+output filesystem file to be mounted by loopback, which
+requires files to be a 4K multiple. If the filesystem is
+being written to a block device, or is to be stored in a
+bootimage, the extra pad bytes are not needed.
+
+−check_data
+
+add checkdata for greater
+filesystem checks
+
+−sort
+sort_file
+
+sort files according to
+priorities in sort_file. One file or dir with
+priority per line. Priority −32768 to 32767, default
+priority 0
+
+−e
+list of exclude dirs/files
+
+inline list of files /
+directories to exclude
+
+−ef
+exclude_file
+
+file containing a list of files
+/ directories to exclude, one per line
+
+EXAMPLES
+
+For following
+examples, take two example directories:
+
+•
+
+Source directory
+/home/phillip/test contains file1,
+file2 and dir1.
+
+•
+
+Source directory goodies contains
+goodies1, goodies2 and goodies3.
+
+Exemple 1. 
+
+mksquashfs
+/home/phillip/test output_fs
+
+This will
+generate a squashfs filesystem with root entries
+file1, file2 and dir1.
+
+Exemple 2. 
+
+mksquashfs
+/home/phillip/test goodies output_fs
+
+This will
+create a squashfs filesystem with the root containing
+entries test and goodies corresponding to the
+source directories /home/phillip/test and
+goodies.
+
+Exemple 3. 
+
+mksquashfs
+/home/phillip/test goodies test output_fs
+
+This is the
+same as the previous example, except a third source
+directory test has been specified. This conflicts
+with the first directory named test and will be
+renamed test_1.
+
+Multiple
+sources allow filesystems to be generated without needing to
+copy all source files into a common directory. This
+simplifies creating filesystems.
+
+Exemple 4. 
+
+mksquashfs
+/home/phillip/test output_fs
+−keep−as−directory
+
+This is the
+same as the first example, except for
+−keep−as−directory. This will
+generate a root directory containing directory test,
+rather than the test directory contents file1,
+file2 and dir1.
+
+AUTHORS
+
+Squashfs was
+written by Phillip Lougher
+plougher [AT] users.net>, in Chepstow, Wales,
+UK. If you like the program, or have any problems, then
+please email me, as it’s nice to get feedback !
+
+This manual
+page was written by Frédéric Boiteux
+fboiteux [AT] calistel.com> for the Debian(TM) system (but
+may be used by others) using the SquashFS HOWTO from Artemiy
+I. Pavlov and squashfs’s README file.
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU General Public License,
+Version 2 any later version published by the Free Software
+Foundation.
+
+On Debian
+systems, the complete text of the GNU General Public License
+can be found in
+/usr/share/common−licenses/GPL.
+
+COPYRIGHT
+
+Copyright
+© 2005 Frédéric Boiteux

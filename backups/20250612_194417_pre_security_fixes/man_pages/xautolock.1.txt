@@ -1,0 +1,527 @@
+NAME
+
+xautolock -
+fire up programs in case of user inactivity under X
+
+VERSION
+
+This man page
+applies to xautolock version 2.2.
+
+SYNOPSIS
+
+xautolock
+
+[-help] [-version]
+[-time mins] [-locker locker]
+[-killtime killmins] [-killer
+killer] [-notify margin]
+[-notifier notifier] [-bell
+percent] [-corners xxxx]
+[-cornerdelay secs] [-cornerredelay
+altsecs] [-cornersize pixels]
+[-secure] [-resetsaver] [-nocloseout]
+[-nocloseerr] [-noclose] [-disable]
+[-enable] [-toggle] [-exit]
+[-locknow] [-unlocknow] [-nowlocker
+locker] [-restart] [-detectsleep]
+
+DESCRIPTION
+
+Xautolock
+monitors the user activity on an X Window display. If none
+is detected within mins minutes, a program is started
+as specified by the -locker option. Xautolock will
+typically be used to lock the screen (hence its primary
+name) but it really doesn’t care what program you make
+it start. For this reason, xautolock does not interfere with
+the default X screen saver, unless the -resetsaver
+option is used. This implies that it is the job of the
+locker or the user to take the appropriate actions if
+the default screen saver is to be disabled. The only real
+assumption made by xautolock is that a new countdown starts
+as soon as the locker exits.
+
+In the presence
+of the -notify option, a warning signal will be
+issued margin seconds before starting the
+locker. Warning signals come in two kinds:
+
+•
+
+You can use the -notifier
+option to specify the command to be issued to perform
+notification. 
+
+•
+
+Alternatively, you can let xautolock ring the bell. In
+this case, the -bell option specifies the loudness of
+the signal in percent, as described in the
+XBell man page.
+
+You can tell
+xautolock to take special actions when you move the mouse
+into one of the corners of the display and leave it there,
+by using the -corners, -cornerdelay,
+-cornerredelay and -cornersize options. This
+works as follows:
+
+The xxxx
+argument to the -corners option must consist of
+exactly 4 characters from the following set:
+’0’, ’+’, ’-’. Each one
+of these specifies what xautolock should do when the mouse
+enters a small square area located in each of the corners of
+the screen. The corners are considered in the following
+order: top left, top right, bottom left, bottom right. A
+’0’ indicates that xautolock should ignore the
+corner. A ’+’ indicates that xautolock should
+start the locker after secs or altsecs
+seconds (see below for the difference between both), unless
+the mouse is moved or keyboard input is received. A
+’-’ indicates that xautolock should not start
+the locker at all. The pixels argument
+specifies the size in pixels of the corner areas.
+
+Most users of
+the -corners option want the locker to
+activate within a very short time interval after they move
+the mouse into a ’+’ corner. This can be
+achieved by specifying a small value for the
+-cornerdelay option. However, if the mouse is
+subsequently left where it is, xautolock will almost
+immediately start a new locker right after the user
+quits the current one. To prevent this from happening, the
+-cornerredelay option can be used to specify the
+time-out interval to be used if and only if the mouse is
+sitting in a ’+’ corner and has not been moved
+since the previous locker exited.
+
+A running
+xautolock process can be disabled (unless if the
+-secure option has been specified), in which case it
+will not attempt to start the locker. To disable an
+already running xautolock process, use the -disable
+option. To re-enable it, use -enable. To toggle it
+between both states, use -toggle. Using this method
+is preferable to using sending it SIGSTOP and SIGCONT
+signals, because while disabled xautolock will still be
+emptying its event queue.
+
+A running
+xautolock process can also be told to exit (unless if the
+-secure option has been specified). To do this, use
+the -exit option.
+
+The
+-killtime and -killer options allow, amongst
+other things, to implement an additional automatic logout,
+on top of the automatic screen locking. In the presence of
+one or both of these options, a secondary timeout will be
+triggered killmins after starting the locker
+(unless user activity is detected in the mean time). Upon
+expiration of this secondary timer, the killer
+program is run. Note that, despite the name of the options,
+xautolock really doesn’t care what the killer
+does in reality. If it doesn’t (indirectly) cause
+xautolock to get killed, and assuming that no user activity
+is detected, the secondary trigger will periodically expire
+every killmins minutes for as long as the
+locker runs.
+
+In combination
+with -killtime and -killer, the -secure
+option allows system administrators to enforce xautolock as
+a part of their security procedures, and to prevent people
+from locking shared displays for an excessive amount of
+time. One way to achieve this is to start xautolock (using
+-secure and optionally -killtime and
+-killer) from within XDM’s Xsession file in
+such a way that the session automatically ends if xautolock
+itself is killed.
+
+By default
+xautolock closes stdout and stderr. This prevents the
+locker from writing error messages to these files in
+case you manually lock your display. The -nocloseout,
+-nocloseerr and -noclose options cause
+xautolock to not close stdout and/or stderr. On some
+platforms users of xnlock will need to use
+-nocloseout, in order to make xnlock’s witty
+sayings show up. These options can also be used for
+debugging cases in which locker invocation is not
+successful.
+
+Xautolock is
+capable of managing multi-headed displays.
+
+OPTIONS
+
+-help
+
+Print a help message and
+exit. 
+
+-version
+
+Print the version number and exit.
+
+-time
+
+Specifies the primary timeout interval. The default is
+10 minutes, the minimum is 1 minute.
+
+-locker
+
+Specifies the locker to be used. The default is
+xlock. Notice that if locker contains multiple words,
+it must be specified between quotes. In order to use your
+PATH to locate the program, xautolock feeds the
+locker command to /bin/sh, so it should be
+understandable for whatever shell your /bin/sh is. Because
+this typically is a Bourne shell, ~ expansion most likely
+will not work.
+
+-killtime
+
+Specifies the secondary timeout in minutes after
+starting the locker. This timer is only active as
+long as the locker is running, and is reset each time
+user activity is detected. If it expires before the
+locker exits, the killer command is run. The
+default is 20 minutes, the minimum is 10 minutes. This
+option is only useful in conjunction with
+-killer. 
+
+-killer
+
+Specifies the killer to be used. The default is
+none. Notice that if killer contains multiple words,
+it must be specified between quotes. In order to use your
+PATH to locate the program, xautolock feeds the killr
+command to /bin/sh, so it should be understandable for
+whatever shell your /bin/sh is. Because this typically is a
+Bourne shell, ~ expansion most likely will not work.
+
+-notify
+
+Warn the user margin seconds before locking. The
+default is to not warn the user. If used in conjunction with
+-cornerdelay or -cornerredelay, the
+notification margin iused is the minimum of margin,
+secs and/or altsecs.
+
+-notifier
+
+Specifies the notifier to be used. The default is
+none. This option is only useful in conjunction with
+-notify. Notice that if notifier contains
+multiple words, it must be specified between quotes. In
+order to use your PATH to locate the program, xautolock
+feeds the notifier command to /bin/sh, so it should
+be understandable for whatever shell your /bin/sh is.
+Because this typically is a Bourne shell, ~ expansion most
+likely will not work.
+
+-bell
+
+Specifies the loudness of the notification signal in the
+absence of the -notifier option. The default is 40
+percent. This option is only useful in conjunction with
+-notify. 
+
+-corners
+
+Define special actions to be taken when the mouse enters
+one of the corners of the display. The default is 0000,
+which means that no special action is taken.
+
+-cornerdelay
+
+Specifies the number of seconds to wait before reacting
+to the mouse entering a ’+’ corner. The default
+is 5 seconds.
+
+-cornerredelay
+
+Specifies the number of seconds to wait before reacting
+again if the current locker exits while the mouse is
+sitting in a ’+’ corner. The default is for
+altsecs to equal secs.
+
+-cornersize
+
+Specifies the size in pixels of the corner areas. The
+default is 10 pixels.
+
+-resetsaver
+
+Causes xautolock to reset the X screen saver after
+successfully starting the locker. This is typically
+used in case the locker is not really intended to lock the
+screen, but to replace the default X screen saver. Note that
+the default screen saver is not disabled, only reset. Also
+note that using -resetsaver will inferfere with the
+DPMS monitors, as the power down time out will also be also
+reset. The default is not to reset the screen saver.
+
+See the
+xset man page for more information about managing the
+X screen saver.
+
+-detectsleep
+
+Instructs xautolock to detect
+that computer has been put to sleep. This is done by
+detecting that time has jumped by more than 3 seconds. When
+this occurs, the lock timer is reset and locker program is
+not launched even if primary timeout has been reached. This
+option is typically used to prevent the locker program from
+being launched when awaking a laptop computer.
+
+-secure
+
+Instructs xautolock to run in secure mode. In this mode,
+xautolock becomes imune to the effects of -enable,
+-disable, -toggle, and -exit. The
+default is to honour these actions.
+
+-nocloseout
+
+Don’t close stdout.
+
+-nocloseerr
+
+Don’t close stderr.
+
+-noclose
+
+Close neither stdout nor stderr.
+
+-disable
+
+Disables an already running xautolock process (if there
+is one, and it does not have -secure switched on). In
+any case, the current invocation of xautolock exits.
+
+-enable
+
+Enables an already running xautolock process (if there
+is one, and it does not have -secure switched on). In
+any case, the current invocation of xautolock exits.
+
+-toggle
+
+Toggles an already running xautolock process (if there
+is one, and it does not have -secure switched on)
+between its disabled and enabled modes of operation. In any
+case, the current invocation of xautolock exits.
+
+-exit
+
+Causes an already running xautolock process (if there is
+one, and it does not have -secure switched on) to
+exit. In any case, the current invocation of xautolock also
+exits. 
+
+-locknow
+
+Causes an already running xautolock process (if there is
+one, if it does not have -secure switched on, and is
+not currently disabled) to lock the display immediately. In
+any case, the current invocation of xautolock exits.
+
+-unlocknow
+
+Causes an already running xautolock process (if there is
+one, if it does not have -secure switched on, and is
+not currently disabled) to unlock the display immediately
+(if it’s locked) by sending the locker a
+SIGTERM signal. In any case, the current invocation of
+xautolock exits.
+
+-nowlocker
+
+Specifies the locker to be used if the lock is
+initiated with -locknow option. The default is to use
+the locker program given with -locker option,
+which defaults to xlock.
+
+-restart
+
+Causes an already running xautolock process (if there is
+one and it does not have -secure switched on) to
+restart. In any case, the current invocation of xautolock
+exits. 
+
+RESOURCES
+
+time
+
+Specifies the primary timeout.
+Numerical. 
+
+locker
+
+Specifies the locker. No quotes are needed, even
+if the locker command contains multiple words.
+
+killtime
+
+Specifies the secondary timeout. Numerical.
+
+killer
+
+Specifies the killer. No quotes are needed, even
+if the killer command contains multiple words.
+
+notify
+
+Specifies the notification margin. Numerical.
+
+notifier
+
+Specifies the notifier. No quotes are needed,
+even if the notifier command contains multiple
+words. 
+
+bell
+
+Specifies the notification loudness. Numerical.
+
+corners
+
+Specifies the corner behaviour, as explained above.
+
+cornersize
+
+Specifies the size of the corner areas. Numerical.
+
+cornerdelay
+
+Specifies the delay of a ’+’ corner.
+Numerical. 
+
+cornerredelay
+
+Specifies the alternative delay of a ’+’
+corner. Numerical.
+
+resetsaver
+
+Reset the default X screen saver. Boolean.
+
+nocloseout
+
+Don’t close stdout. Boolean.
+
+nocloseerr
+
+Don’t close stderr. Boolean.
+
+noclose
+
+Close neither stdout nor stderr. Boolean.
+
+Resources can
+be specified in your ~/.Xresources or
+~/.Xdefaults file (whichever your system uses) and
+merged via the xrdb(1) command. They can be specified either
+for class Xautolock, or for whatever name your
+xautolock program has been given. This can be useful in case
+xautolock is to be used for other purposes than simply
+locking the screen. For example: if you have two copies of
+xautolock, one called "xmonitor", and one called
+"xlogout", then both will honour the
+following:
+
+Xautolock.corners:
+++++
+
+In addition,
+"xmonitor" will honour:
+
+xmonitor.cornersize:
+10
+
+while
+"xlogout" will honour:
+
+xlogout.cornersize:
+5
+
+Each command
+line option takes precedence over the corresponding
+(default) resource specification.
+
+KNOWN BUGS
+
+The
+-disable, -enable, -toggle,
+-exit, -locknow, -unlocknow, and
+-restart options depend on access to the X server to
+do their work. This implies that they will be suspended in
+case some other application has grabbed the server all for
+itself.
+
+If, when
+creating a window, an application waits for more than 30
+seconds before selecting KeyPress events on non-leaf
+windows, xautolock may interfere with the event propagation
+mechanism. This effect is theoretical and has never been
+observed in real life. It can only occur in case xautolock
+has been compiled without support for both the Xidle and the
+MIT ScreenSaver extensions, or in case the X server does not
+support these extensions.
+
+xautolock does
+not always properly handle the secure keyboard mode of
+terminal emulators like xterm, since that mode will prevent
+xautolock from noticing the keyboard events occurring on the
+terminal. Therefore, xautolock sometimes thinks that there
+is no keyboard activity while in reality there is. This can
+only occur in case xautolock has been compiled without
+support for both the Xidle and the MIT ScreenSaver
+extensions, or in case the X server does not support these
+extensions.
+
+xautolock does
+not check whether notifier and/or locker are
+available.
+
+The xautolock
+resources have dummy resource classes.
+
+SEE ALSO
+
+X(1), xset(1),
+xlock(1), xnlock(1), xscreensaver(1).
+
+COPYRIGHT
+
+Copyright 1990,
+1992-1999, 2001-2002, 2004, 2007 by Stefan De Troch and
+Michel Eyckmans.
+
+Versions 2.0
+and above of xautolock are available under version 2 of the
+GNU GPL. Earlier versions are available under other
+conditions. For more information, see the License file.
+
+AUTHORS
+
+Xautolock was
+conceived, written, and performed by:
+
+Michel Eyckmans
+(MCE) 
+Stefan De Troch
+
+Please send
+queries for help, feature suggestions, bug reports, etc. to
+mce [AT] scarlet.be.
+
+SPECIAL THANKS TO
+
+Kris Croes

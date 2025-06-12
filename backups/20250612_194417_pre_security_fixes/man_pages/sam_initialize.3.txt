@@ -1,0 +1,148 @@
+NAME
+
+sam_initialize
+- Initialize health checking
+
+SYNOPSIS
+
+#include
+
+cs_error_t
+sam_initialize (int time_interval,
+sam_recovery_policy_t recovery_policy);
+
+DESCRIPTION
+
+The
+sam_initialize function is used to initialize health
+checking of a process.
+
+Application can
+have only one instance of SAM. This function must be called
+before any other of SAM functions. It is recommended to
+initialize before the process begins any process
+initialization.
+
+The
+time_interval parameter is a timeout in milliseconds
+before taking recovery action after having not received a
+healthcheck.
+
+If
+time_interval parameter is zero, there is no time
+limit and no healthcheck must be sent by the process. In
+this operational mode, a process failure will continue to
+execute the recovery policy.
+
+The
+recovery_policy is defined as type:
+
+typedef enum
+{
+
+SAM_RECOVERY_POLICY_QUIT = 1,
+
+SAM_RECOVERY_POLICY_RESTART = 2,
+
+SAM_RECOVERY_POLICY_QUORUM =
+0x08, 
+SAM_RECOVERY_POLICY_QUORUM_QUIT = SAM_RECOVERY_POLICY_QUORUM
+| SAM_RECOVERY_POLICY_QUIT, 
+SAM_RECOVERY_POLICY_QUORUM_RESTART =
+SAM_RECOVERY_POLICY_QUORUM | SAM_RECOVERY_POLICY_RESTART,
+
+SAM_RECOVERY_POLICY_CMAP = 0x10, 
+SAM_RECOVERY_POLICY_CONFDB = 0x10, 
+} sam_recovery_policy_t;
+
+where 
+SAM_RECOVERY_POLICY_QUIT
+
+on failure, the process will
+terminate.
+
+SAM_RECOVERY_POLICY_RESTART
+
+on failure, the process will
+restart.
+
+SAM_RECOVERY_POLICY_QUORUM
+
+is not policy. Used only as
+flag meaning quorum integration
+
+SAM_RECOVERY_POLICY_QUORUM_QUIT
+
+same as
+SAM_RECOVERY_POLICY_QUIT but sam_start (3)
+will block until corosync becomes quorate and process will
+be terminated if quorum is lost.
+
+SAM_RECOVERY_POLICY_QUORUM_RESTART
+
+same as
+SAM_RECOVERY_POLICY_RESTART but sam_start (3)
+will block until corosync becomes quorate and process will
+be restarted if quorum is lost.
+
+SAM_RECOVERY_POLICY_CMAP
+
+is not policy. Used only as
+flag meaning cmap integration. It can be used with all
+previous policies. For backward compatibility,
+SAM_RECOVERY_POLICY_CONFDB with same meaning as
+SAM_RECOVERY_POLICY_CMAP is also provided.
+
+To perform
+event driven healthchecking, sam_register(3) and
+sam_start(3) functions must called. Event driven
+healthchecking causes the duplicate standby process running
+the SAM serve rto periodically request healthchecks from the
+active process.
+
+RETURN VALUE
+
+This call
+return CS_OK value if successful, otherwise and error is
+returned.
+
+ERRORS
+
+CS_ERR_BAD_HANDLE
+
+can happened in case of double
+initialization.
+
+CS_ERR_INVALID_PARAM
+
+recovery_policy has
+invalid value.
+
+SEE ALSO
+
+sam_register(3),
+sam_start(3), sam_hc_callback_register(3)
+
+CS_ERR_TRY_AGAIN
+Resource temporarily unavailable
+
+CS_ERR_INVALID_PARAM
+Invalid argument
+
+CS_ERR_ACCESS
+Permission denied
+
+CS_ERR_LIBRARY
+The connection failed
+
+CS_ERR_INTERRUPT
+System call interrupted by a signal
+
+CS_ERR_NOT_SUPPORTED
+The requested protocol/functionality not supported
+
+CS_ERR_MESSAGE_ERROR
+Incorrect auth message received
+
+CS_ERR_NO_MEMORY
+Not enough memory to complete the requested task

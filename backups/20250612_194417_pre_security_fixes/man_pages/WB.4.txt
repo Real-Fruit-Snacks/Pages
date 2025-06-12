@@ -1,0 +1,180 @@
+WB(4) BSD Kernel Interfaces Manual WB(4)
+
+NAME
+
+wb — Winbond
+W89C840F Fast Ethernet device driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, place the following lines in your kernel
+configuration file:
+
+device
+miibus 
+device wb
+
+Alternatively,
+to load the driver as a module at boot time, place the
+following line in loader.conf(5):
+
+if_wb_load="YES"
+
+DEPRECATION NOTICE
+
+The wb driver is not
+present in FreeBSD 13.0 and later. See
+https://github.com/freebsd/fcp/blob/master/fcp-0101.md for
+more information.
+
+DESCRIPTION
+
+The wb driver provides
+support for PCI Ethernet adapters and embedded controllers
+based on the Winbond W89C840F Fast Ethernet controller chip.
+The 840F should not be confused with the 940F, which is an
+NE2000 clone and only supports 10Mbps speeds.
+
+The Winbond
+controller uses bus master DMA and is designed to be a DEC
+’tulip’ workalike. It differs from the standard
+DEC design in several ways: the control and status registers
+are spaced 4 bytes apart instead of 8, and the receive
+filter is programmed through registers rather than by
+downloading a special setup frame via the transmit DMA
+engine. Using an external PHY, the Winbond chip supports
+both 10 and 100Mbps speeds in either full or half
+duplex.
+
+The wb
+driver supports the following media types:
+
+autoselect
+
+Enable
+autoselection of the media type and options. This is only
+supported if the PHY chip attached to the Winbond controller
+supports NWAY autonegotiation. The user can manually
+override the autoselected mode by adding media options to
+the /etc/rc.conf file.
+
+10baseT/UTP
+
+Set 10Mbps
+operation. The mediaopt option can also be used to
+select either full-duplex or half-duplex
+modes.
+
+100baseTX
+
+Set 100Mbps
+(Fast Ethernet) operation. The mediaopt option can
+also be used to select either full-duplex or
+half-duplex modes.
+
+The wb
+driver supports the following media options:
+
+full-duplex
+
+Force full
+duplex operation.
+
+half-duplex
+
+Force half
+duplex operation.
+
+Note that the
+100baseTX media type is only available if supported by the
+adapter. For more information on configuring this device,
+see ifconfig(8).
+
+HARDWARE
+
+The wb driver supports
+Winbond W89C840F based Fast Ethernet adapters and embedded
+controllers including:
+
+•
+
+Trendware TE100-PCIE
+
+DIAGNOSTICS
+
+wb%d: couldn’t map
+memory  A fatal initialization error has
+occurred.
+
+wb%d:
+couldn’t map interrupt  A fatal
+initialization error has occurred.
+
+wb%d:
+watchdog timeout  The device has stopped responding
+to the network, or there is a problem with the network
+connection (cable).
+
+wb%d: no
+memory for rx list  The driver failed to allocate
+an mbuf for the receiver ring.
+
+wb%d: no
+memory for tx list  The driver failed to allocate
+an mbuf for the transmitter ring when allocating a pad
+buffer or collapsing an mbuf chain into a cluster.
+
+wb%d: chip is
+in D3 power state -- setting to D0  This message
+applies only to adapters which support power management.
+Some operating systems place the controller in low power
+mode when shutting down, and some PCI BIOSes fail to bring
+the chip out of this state before configuring it. The
+controller loses all of its PCI configuration in the D3
+state, so if the BIOS does not set it back to full power
+mode in time, it will not be able to configure it correctly.
+The driver tries to detect this condition and bring the
+adapter back to the D0 (full power) state, but this may not
+be enough to return the driver to a fully operational
+condition. If you see this message at boot time and the
+driver fails to attach the device as a network interface,
+you will have to perform second warm boot to have the device
+properly configured.
+
+Note that this
+condition only occurs when warm booting from another
+operating system. If you power down your system prior to
+booting FreeBSD, the card should be configured
+correctly.
+
+SEE ALSO
+
+arp(4), miibus(4), netintro(4),
+ng_ether(4), ifconfig(8)
+
+HISTORY
+
+The wb device driver
+first appeared in FreeBSD 3.0.
+
+AUTHORS
+
+The wb driver was written
+by Bill Paul wpaul [AT] ctr.edu>.
+
+BUGS
+
+The Winbond chip seems to behave
+strangely in some cases when the link partner switches
+modes. If for example both sides are set to 10Mbps
+half-duplex, and the other end is changed to 100Mbps
+full-duplex, the Winbond’s receiver suddenly starts
+writing trash all over the RX descriptors. The wb
+driver handles this by forcing a reset of both the
+controller chip and attached PHY. This is drastic, but it
+appears to be the only way to recover properly from this
+condition.
+
+BSD
+October 24, 2018 BSD

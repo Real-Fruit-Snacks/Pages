@@ -1,0 +1,205 @@
+RC.SENDMAIL(8) BSD System Manager’s Manual
+RC.SENDMAIL(8)
+
+NAME
+
+rc.sendmail —
+sendmail(8) startup script
+
+DESCRIPTION
+
+The rc.sendmail script is
+used by /etc/rc at boot time to start sendmail(8). It
+is meant to be sendmail(8) specific and not a generic script
+for all MTAs. It is only called by /etc/rc if the
+rc.conf(5) mta_start_script variable is set to
+/etc/rc.sendmail.
+
+The
+rc.sendmail script can take an optional argument
+specifying the action to perform. The available actions
+are:
+
+start
+
+Starts both the
+MTA and the MSP queue runner.
+
+stop
+
+Stops both the
+MTA and the MSP queue runner.
+
+restart
+
+Restarts both
+the MTA and the MSP queue runner.
+
+start-mta
+
+Starts just the
+MTA.
+
+stop-mta
+
+Stops just the
+MTA.
+
+restart-mta
+
+Restarts just
+the MTA.
+
+start-mspq
+
+Starts just the
+MSP queue runner.
+
+stop-mspq
+
+Stops just the
+MSP queue runner.
+
+restart-mspq
+
+Restarts just
+the MSP queue runner.
+
+If no action is
+specified, start is assumed.
+
+The
+rc.sendmail script is also used by
+/etc/mail/Makefile to enable the
+Makefile’s start, stop, and
+restart targets.
+
+RC.CONF VARIABLES
+
+The following variables affect
+the behavior of rc.sendmail. They are defined in
+/etc/defaults/rc.conf and can be changed in
+/etc/rc.conf.
+
+sendmail_enable
+
+(str) If set to
+’’YES’’, run the sendmail(8) daemon
+at system boot time. If set to
+’’NO’’, do not run a sendmail(8)
+daemon to listen for incoming network mail. This does not
+preclude a sendmail(8) daemon listening on the SMTP port of
+the loopback interface. The ’’NONE’’
+option is deprecated and should not be used. It will be
+removed in a future release.
+
+sendmail_flags
+
+(str) If
+sendmail_enable is set to
+’’YES’’, these are the flags to pass
+to the sendmail(8) daemon.
+
+sendmail_submit_enable
+
+(bool) If set to
+’’YES’’ and sendmail_enable
+is set to ’’NO’’, run sendmail(8)
+using sendmail_submit_flags instead of
+sendmail_flags. This is intended to allow local mail
+submission via a localhost-only listening SMTP service
+required for running sendmail(8) as a non-set-user-ID
+binary. Note that this does not work inside jail(2) systems,
+as jails do not allow binding to just the localhost
+interface.
+
+sendmail_submit_flags
+
+(str) If
+sendmail_enable is set to
+’’NO’’ and
+sendmail_submit_enable is set to
+’’YES’’, these are the flags to pass
+to the sendmail(8) daemon.
+
+sendmail_outbound_enable
+
+(bool) If set to
+’’YES’’ and both
+sendmail_enable and sendmail_submit_enable are
+set to ’’NO’’, run sendmail(8) using
+sendmail_outbound_flags instead of
+sendmail_flags. This is intended to allow local mail
+queue management for systems that do not offer a listening
+SMTP service.
+
+sendmail_outbound_flags
+
+(str) If both
+sendmail_enable and sendmail_submit_enable are
+set to ’’NO’’ and
+sendmail_outbound_enable is set to
+’’YES’’, these are the flags to pass
+to the sendmail(8) daemon.
+
+sendmail_msp_queue_enable
+
+(bool) If set to
+’’YES’’, start a client (MSP) queue
+runner sendmail(8) daemon at system boot time. As of
+sendmail 8.12, a separate queue is used for command line
+submissions. The client queue runner ensures that nothing is
+left behind in the submission queue.
+
+sendmail_msp_queue_flags
+
+(str) If
+sendmail_msp_queue_enable is set to
+’’YES’’, these are the flags to pass
+to the sendmail(8) daemon.
+
+These variables
+are used to determine how the sendmail(8) daemons are
+started:
+
+# MTA 
+if (${sendmail_enable} == NONE) 
+# Do nothing 
+else if (${sendmail_enable} == YES) 
+start sendmail with ${sendmail_flags} 
+else if (${sendmail_submit_enable} == YES) 
+start sendmail with ${sendmail_submit_flags} 
+else if (${sendmail_outbound_enable} == YES) 
+start sendmail with ${sendmail_outbound_flags} 
+endif
+
+# MSP Queue
+Runner 
+if (${sendmail_enable} != NONE && 
+[ -r /etc/mail/submit.cf] && 
+${sendmail_msp_queue_enable} == YES) 
+start sendmail with ${sendmail_msp_queue_flags} 
+endif
+
+To completely
+prevent any sendmail(8) daemons from starting, you must set
+the following variables in /etc/rc.conf:
+
+sendmail_enable="NO"
+
+sendmail_submit_enable="NO" 
+sendmail_outbound_enable="NO" 
+sendmail_msp_queue_enable="NO"
+
+SEE ALSO
+
+rc.conf(5), rc(8),
+sendmail(8)
+
+HISTORY
+
+The rc.sendmail file
+appeared in FreeBSD 4.6.
+
+BSD
+March 30, 2002 BSD

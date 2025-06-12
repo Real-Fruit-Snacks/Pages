@@ -1,0 +1,810 @@
+NAME
+
+ocamlopt - The
+OCaml native-code compiler
+
+SYNOPSIS
+
+ocamlopt
+[ options ] filename ...
+
+ocamlopt.opt
+(same options)
+
+DESCRIPTION
+
+The OCaml
+high-performance native-code compiler ocamlopt(1)
+compiles OCaml source files to native code object files and
+link these object files to produce standalone
+executables.
+
+The
+ocamlopt(1) command has a command-line interface very
+close to that of ocamlc(1). It accepts the same types
+of arguments and processes them sequentially, after all
+options have been processed:
+
+Arguments
+ending in .mli are taken to be source files for compilation
+unit interfaces. Interfaces specify the names exported by
+compilation units: they declare value names with their
+types, define public data types, declare abstract data
+types, and so on. From the file x.mli, the
+ocamlopt(1) compiler produces a compiled interface in
+the file x.cmi. The interface produced is identical
+to that produced by the bytecode compiler
+ocamlc(1).
+
+Arguments
+ending in .ml are taken to be source files for compilation
+unit implementations. Implementations provide definitions
+for the names exported by the unit, and also contain
+expressions to be evaluated for their side-effects. From the
+file x.ml, the ocamlopt(1) compiler produces
+two files: x.o, containing native object code, and
+x.cmx, containing extra information for linking and
+optimization of the clients of the unit. The compiled
+implementation should always be referred to under the name
+x.cmx (when given a .o file, ocamlopt(1)
+assumes that it contains code compiled from C, not from
+OCaml).
+
+The
+implementation is checked against the interface file
+x.mli (if it exists) as described in the manual for
+ocamlc(1).
+
+Arguments
+ending in .cmx are taken to be compiled object code. These
+files are linked together, along with the object files
+obtained by compiling .ml arguments (if any), and the OCaml
+standard library, to produce a native-code executable
+program. The order in which .cmx and .ml arguments are
+presented on the command line is relevant: compilation units
+are initialized in that order at run-time, and it is a
+link-time error to use a component of a unit before having
+initialized it. Hence, a given x.cmx file must come
+before all .cmx files that refer to the unit x.
+
+Arguments
+ending in .cmxa are taken to be libraries of object code.
+Such a library packs in two files lib.cmxa and
+lib.a a set of object files (.cmx/.o files).
+Libraries are build with ocamlopt -a (see the
+description of the -a option below). The object files
+contained in the library are linked as regular .cmx files
+(see above), in the order specified when the library was
+built. The only difference is that if an object file
+contained in a library is not referenced anywhere in the
+program, then it is not linked in.
+
+Arguments
+ending in .c are passed to the C compiler, which generates a
+.o object file. This object file is linked with the
+program.
+
+Arguments
+ending in .o or .a are assumed to be C object files and
+libraries. They are linked with the program.
+
+The output of
+the linking phase is a regular Unix executable file. It does
+not need ocamlrun(1) to run.
+
+ocamlopt.opt
+is the same compiler as ocamlopt, but compiled with
+itself instead of with the bytecode compiler
+ocamlc(1). Thus, it behaves exactly like
+ocamlopt, but compiles faster. ocamlopt.opt is
+not available in all installations of OCaml.
+
+OPTIONS
+
+The following
+command-line options are recognized by
+ocamlopt(1).
+
+-a
+
+Build a library (.cmxa/.a file) with the object files
+(.cmx/.o files) given on the command line, instead of
+linking them into an executable file. The name of the
+library must be set with the -o option.
+
+If
+-cclib or -ccopt options are passed
+on the command line, these options are stored in the
+resulting .cmxa library. Then, linking with this library
+automatically adds back the
+-cclib and -ccopt options as if they
+had been provided on the command line, unless the
+-noautolink option is given. Additionally, a
+substring $CAMLORIGIN inside a  -ccopt
+options will be replaced by the full path to the .cma
+library, excluding the filename.
+
+-absname
+
+Show absolute filenames in
+error messages.
+
+-annot
+
+Deprecated since OCaml 4.11. Please use
+-bin-annot instead.
+
+-bin-annot
+
+Dump detailed information about
+the compilation (types, bindings, tail-calls, etc) in binary
+format. The information for file src.ml is put into
+file src.cmt. In case of a type error, dump all the
+information inferred by the type-checker before the error.
+The annotation files produced by -bin-annot contain
+more information and are much more compact than the files
+produced by -annot.
+
+-c
+
+Compile only. Suppress the linking phase of the
+compilation. Source code files are turned into compiled
+files, but no executable file is produced. This option is
+useful to compile modules separately.
+
+-cc ccomp
+
+Use ccomp as the C
+linker called to build the final executable and as the C
+compiler for compiling .c source files.
+
+-cclib -llibname
+
+Pass the
+-llibname option to the linker. This causes
+the given C library to be linked with the program.
+
+-ccopt option
+
+Pass the given option to the C
+compiler and linker. For instance,
+-ccopt -Ldir causes the C linker to
+search for C libraries in directory dir.
+
+-color mode
+
+Enable or disable colors in
+compiler messages (especially warnings and errors). The
+following modes are supported:
+
+auto use
+heuristics to enable colors only if the output supports them
+(an ANSI-compatible tty terminal);
+
+always
+enable colors unconditionally;
+
+never
+disable color output.
+
+The environment
+variable "OCAML_COLOR" is considered if -color is
+not provided. Its values are auto/always/never as above.
+
+If -color is
+not provided, "OCAML_COLOR" is not set and the
+environment variable "NO_COLOR" is set, then color
+output is disabled. Otherwise, the default setting is
+auto, and the current heuristic checks that the
+"TERM" environment variable exists and is not
+empty or "dumb", and that isatty(stderr)
+holds.
+
+-error-style mode
+
+Control the way error messages
+and warnings are printed. The following modes are
+supported:
+
+short
+only print the error and its location;
+
+contextual
+like "short", but also display the source code
+snippet corresponding to the location of the error.
+
+The default
+setting is contextual.
+
+The environment
+variable "OCAML_ERROR_STYLE" is considered if
+-error-style is not provided. Its values are
+short/contextual as above.
+
+-compact
+
+Optimize the produced code for
+space rather than for time. This results in smaller but
+slightly slower programs. The default is to optimize for
+speed.
+
+-config
+
+Print the version number of
+ocamlopt(1) and a detailed summary of its
+configuration, then exit.
+
+-config-var
+
+Print the value of a specific
+configuration variable from the -config output, then
+exit. If the variable does not exist, the exit code is
+non-zero.
+
+-depend ocamldep-args
+
+Compute dependencies, as
+ocamldep would do.
+
+-for-pack module-path
+
+Generate an object file (.cmx
+and .o files) that can later be included as a sub-module
+(with the given access path) of a compilation unit
+constructed with -pack. For instance,
+ocamlopt -for-pack P -c A.ml will
+generate a.cmx and a.o files that can later be used with
+ocamlopt -pack -o P.cmx a.cmx.
+
+-g
+
+Add debugging information while compiling and linking.
+This option is required in order to produce stack backtraces
+when the program terminates on an uncaught exception (see
+ocamlrun(1)). 
+
+-i
+
+Cause the compiler to print all defined names (with
+their inferred types or their definitions) when compiling an
+implementation (.ml file). No compiled files (.cmo and .cmi
+files) are produced. This can be useful to check the types
+inferred by the compiler. Also, since the output follows the
+syntax of interfaces, it can help in writing an explicit
+interface (.mli file) for a file: just redirect the standard
+output of the compiler to a .mli file, and edit that file to
+remove all declarations of unexported names.
+
+-I directory
+
+Add the given directory to the
+list of directories searched for compiled interface files
+(.cmi), compiled object code files (.cmx), and libraries
+(.cmxa). By default, the current directory is searched
+first, then the standard library directory. Directories
+added with -I are searched after the current directory, in
+the order in which they were given on the command line, but
+before the standard library directory. See also option
+-nostdlib.
+
+If the given
+directory starts with +, it is taken relative to the
+standard library directory. For instance,
+-I +compiler-libs adds the subdirectory
+compiler-libs of the standard library to the search
+path.
+
+-impl filename
+
+Compile the file
+filename as an implementation file, even if its
+extension is not .ml.
+
+-inline n
+
+Set aggressiveness of inlining
+to n, where n is a positive integer.
+Specifying -inline 0 prevents all functions from
+being inlined, except those whose body is smaller than the
+call site. Thus, inlining causes no expansion in code size.
+The default aggressiveness, -inline 1, allows
+slightly larger functions to be inlined, resulting in a
+slight expansion in code size. Higher values for the
+-inline option cause larger and larger functions to
+become candidate for inlining, but can result in a serious
+increase in code size.
+
+-insn-sched
+
+Enables the instruction
+scheduling pass in the compiler backend.
+
+-intf filename
+
+Compile the file
+filename as an interface file, even if its extension
+is not .mli.
+
+-intf-suffix string
+
+Recognize file names ending
+with string as interface files (instead of the
+default .mli).
+
+-keep-docs
+
+Keep documentation strings in
+generated .cmi files.
+
+-keep-locs
+
+Keep locations in generated
+.cmi files.
+
+-labels
+
+Labels are not ignored in
+types, labels may be used in applications, and labelled
+parameters can be given in any order. This is the
+default.
+
+-linkall
+
+Force all modules contained in
+libraries to be linked in. If this flag is not given,
+unreferenced modules are not linked in. When building a
+library (-a flag), setting the -linkall flag
+forces all subsequent links of programs involving that
+library to link all the modules contained in the library.
+When compiling a module (option -c), setting the
+-linkall option ensures that this module will always
+be linked if it is put in a library and this library is
+linked.
+
+-linscan
+
+Use linear scan register
+allocation. Compiling with this allocator is faster than
+with the usual graph coloring allocator, sometimes quite
+drastically so for long functions and modules. On the other
+hand, the generated code can be a bit slower.
+
+-match-context-rows
+
+Set number of rows of context
+used during pattern matching compilation. Lower values cause
+faster compilation, but less optimized code. The default
+value is 32.
+
+-no-alias-deps
+
+Do not record dependencies for
+module aliases.
+
+-no-app-funct
+
+Deactivates the applicative
+behaviour of functors. With this option, each functor
+application generates new types in its result and applying
+the same functor twice to the same argument yields two
+incompatible structures.
+
+-noassert
+
+Do not compile assertion
+checks. Note that the special form assert false
+is always compiled because it is typed specially. This flag
+has no effect when linking already-compiled files.
+
+-noautolink
+
+When linking .cmxa libraries,
+ignore -cclib and -ccopt options
+potentially contained in the libraries (if these options
+were given when building the libraries). This can be useful
+if a library contains incorrect specifications of C
+libraries or C options; in this case, during linking, set
+-noautolink and pass the correct C libraries and
+options on the command line.
+
+-nodynlink
+
+Allow the compiler to use some
+optimizations that are valid only for code that is never
+dynlinked.
+
+-no-insn-sched
+
+Disables the instruction
+scheduling pass in the compiler backend.
+
+-nostdlib
+
+Do not automatically add the
+standard library directory to the list of directories
+searched for compiled interface files (.cmi), compiled
+object code files (.cmx), and libraries (.cmxa). See also
+option -I.
+
+-nolabels
+
+Ignore non-optional labels in
+types. Labels cannot be used in applications, and parameter
+order becomes strict.
+
+-o exec-file
+
+Specify the name of the output
+file produced by the linker. The default output name is
+a.out, in keeping with the Unix tradition. If the -a
+option is given, specify the name of the library produced.
+If the -pack option is given, specify the name of the
+packed object file produced. If the -output-obj
+option is given, specify the name of the output file
+produced. If the -shared option is given, specify the
+name of plugin file produced. This can also be used when
+compiling an interface or implementation file, without
+linking, in which case it sets the name of the cmi or cmo
+file, and also sets the module name to the file name up to
+the first dot.
+
+-opaque
+
+When compiling a .mli interface
+file, this has the same effect as the -opaque option
+of the bytecode compiler. When compiling a .ml
+implementation file, this produces a .cmx file without
+cross-module optimization information, which reduces
+recompilation on module change.
+
+-open module
+
+Opens the given module before
+processing the interface or implementation files. If several
+-open options are given, they are processed in order,
+just as if the statements open! module1;; ... open!
+moduleN;; were added at the top of each file.
+
+-output-obj
+
+Cause the linker to produce a C
+object file instead of an executable file. This is useful to
+wrap OCaml code as a C library, callable from any C program.
+The name of the output object file must be set with the
+-o option. This option can also be used to produce a
+compiled shared/dynamic library (.so extension).
+-output-complete-obj Same as -output-obj
+except the object file produced includes the runtime and
+autolink libraries.
+
+-pack
+
+Build an object file (.cmx and
+.o files) and its associated compiled interface (.cmi) that
+combines the .cmx object files given on the command line,
+making them appear as sub-modules of the output .cmx file.
+The name of the output .cmx file must be given with the
+-o option. For instance,
+ocamlopt -pack -o P.cmx A.cmx B.cmx C.cmx
+generates compiled files P.cmx, P.o and P.cmi describing a
+compilation unit having three sub-modules A, B and C,
+corresponding to the contents of the object files A.cmx,
+B.cmx and C.cmx. These contents can be referenced as P.A,
+P.B and P.C in the remainder of the program.
+
+The .cmx object
+files being combined must have been compiled with the
+appropriate -for-pack option. In the example above,
+A.cmx, B.cmx and C.cmx must have been compiled with
+ocamlopt -for-pack P.
+
+Multiple levels
+of packing can be achieved by combining -pack with
+-for-pack. See The OCaml user’s manual,
+chapter "Native-code compilation" for more
+details.
+
+-pp command
+
+Cause the compiler to call the
+given command as a preprocessor for each source file.
+The output of command is redirected to an
+intermediate file, which is compiled. If there are no
+compilation errors, the intermediate file is deleted
+afterwards.
+
+-ppx command
+
+After parsing, pipe the
+abstract syntax tree through the preprocessor
+command. The module Ast_mapper(3) implements
+the external interface of a preprocessor.
+
+-principal
+
+Check information path during
+type-checking, to make sure that all types are derived in a
+principal way. All programs accepted in -principal
+mode are also accepted in default mode with equivalent
+types, but different binary signatures.
+
+-rectypes
+
+Allow arbitrary recursive types
+during type-checking. By default, only recursive types where
+the recursion goes through an object type are supported.
+Note that once you have created an interface using this
+flag, you must use it again for all dependencies.
+
+-runtime-variant suffix
+
+Add suffix to the name
+of the runtime library that will be used by the program. If
+OCaml was configured with option -with-debug-runtime,
+then the d suffix is supported and gives a debug
+version of the runtime.
+
+-S
+
+Keep the assembly code produced during the compilation.
+The assembly code for the source file x.ml is saved
+in the file x.s.
+
+-stop-after pass
+
+Stop compilation after the
+given compilation pass. The currently supported passes are:
+parsing, typing, scheduling,
+emit.
+
+-save-ir-after pass
+
+Save intermediate
+representation after the given compilation pass. The
+currently supported passes are: scheduling.
+
+-safe-string
+
+Enforce the separation between
+types string and bytes, thereby
+making strings read-only. This is the default.
+
+-shared
+
+Build a plugin (usually .cmxs)
+that can be dynamically loaded with the Dynlink
+module. The name of the plugin must be set with the
+-o option. A plugin can include a number of OCaml
+modules and libraries, and extra native objects (.o, .a
+files). Building native plugins is only supported for some
+operating system. Under some systems (currently, only Linux
+AMD 64), all the OCaml code linked in a plugin must have
+been compiled without the -nodynlink flag. Some
+constraints might also apply to the way the extra native
+objects have been compiled (under Linux AMD 64, they must
+contain only position-independent code).
+
+-short-paths
+
+When a type is visible under
+several module-paths, use the shortest one when printing the
+type’s name in inferred interfaces and error and
+warning messages.
+
+-strict-sequence
+
+The left-hand part of a
+sequence must have type unit.
+
+-unboxed-types
+
+When a type is unboxable (i.e.
+a record with a single argument or a concrete datatype with
+a single constructor of one argument) it will be unboxed
+unless annotated with [@@ocaml.boxed].
+
+-no-unboxed-types
+
+When a type is unboxable it
+will be boxed unless annotated with
+[@@ocaml.unboxed]. This is the default.
+
+-unsafe
+
+Turn bound checking off for
+array and string accesses (the v.(i)ands.[i]
+constructs). Programs compiled with -unsafe are
+therefore faster, but unsafe: anything can happen if the
+program accesses an array or string outside of its bounds.
+Additionally, turn off the check for zero divisor in integer
+division and modulus operations. With -unsafe, an
+integer division (or modulus) by zero can halt the program
+or continue with an unspecified result instead of raising a
+Division_by_zero exception.
+
+-unsafe-string
+
+Identify the types
+string and bytes, thereby making
+strings writable. This is intended for compatibility with
+old source code and should not be used with new
+software.
+
+-v
+
+Print the version number of the compiler and the
+location of the standard library directory, then exit.
+
+-verbose
+
+Print all external commands
+before they are executed, in particular invocations of the
+assembler, C compiler, and linker.
+
+-version or -vnum
+
+Print the version number of the
+compiler in short form (e.g. "3.11.0"), then
+exit.
+
+-w warning-list
+
+Enable, disable, or mark as
+fatal the warnings specified by the argument
+warning-list. See ocamlc(1) for the syntax of
+warning-list.
+
+-warn-error warning-list
+
+Mark as fatal the warnings
+specified in the argument warning-list. The compiler
+will stop with an error when one of these warnings is
+emitted. The warning-list has the same meaning as for
+the -w option: a + sign (or an uppercase
+letter) marks the corresponding warnings as fatal, a
+- sign (or a lowercase letter) turns them back into
+non-fatal warnings, and a @ sign both enables and
+marks as fatal the corresponding warnings.
+
+Note: it is not
+recommended to use the -warn-error option in
+production code, because it will almost certainly prevent
+compiling your program with later versions of OCaml when
+they add new warnings or modify existing warnings.
+
+The default
+setting is -warn-error -a+31 (only warning 31 is
+fatal).
+
+-warn-help
+
+Show the description of all
+available warning numbers.
+
+-where
+
+Print the location of the standard library, then
+exit. 
+
+-with-runtime
+
+Include the runtime system in
+the generated program. This is the default.
+
+-without-runtime
+
+The compiler does not include
+the runtime system (nor a reference to it) in the generated
+program; it must be supplied separately.
+
+- file
+
+Process file as a file name, even if it starts
+with a dash (-) character.
+
+-help or --help
+
+Display a short usage summary
+and exit.
+
+OPTIONS FOR THE IA32 ARCHITECTURE
+
+The IA32 code
+generator (Intel Pentium, AMD Athlon) supports the following
+additional option: 
+-ffast-math
+
+Use the IA32 instructions to
+compute trigonometric and exponential functions, instead of
+calling the corresponding library routines. The functions
+affected are: atan, atan2, cos,
+log, log10, sin, sqrt and
+tan. The resulting code runs faster, but the range of
+supported arguments and the precision of the result can be
+reduced. In particular, trigonometric operations cos,
+sin, tan have their range reduced to [-2^64,
+2^64].
+
+OPTIONS FOR THE AMD64 ARCHITECTURE
+
+The AMD64 code
+generator (64-bit versions of Intel Pentium and AMD Athlon)
+supports the following additional options:
+
+-fPIC
+
+Generate position-independent machine code. This is the
+default. 
+
+-fno-PIC
+
+Generate position-dependent
+machine code.
+
+OPTIONS FOR THE POWER ARCHITECTURE
+
+The PowerPC
+code generator supports the following additional options:
+
+-flarge-toc
+
+Enables the PowerPC large model
+allowing the TOC (table of contents) to be arbitrarily
+large. This is the default since 4.11.
+
+-fsmall-toc
+
+Enables the PowerPC small model
+allowing the TOC to be up to 64 kbytes per compilation unit.
+Prior to 4.11 this was the default behaviour.
+\nd{options}
+
+OPTIONS FOR THE ARM ARCHITECTURE
+
+The ARM code
+generator supports the following additional options: 
+-farch=armv4|armv5|armv5te|armv6|armv6t2|armv7
+
+Select the ARM target
+architecture
+
+-ffpu=soft|vfpv2|vfpv3-d16|vfpv3
+
+Select the floating-point
+hardware
+
+-fPIC
+
+Generate position-independent machine code.
+
+-fno-PIC
+
+Generate position-dependent
+machine code. This is the default.
+
+-fthumb
+
+Enable Thumb/Thumb-2 code
+generation
+
+-fno-thumb
+
+Disable Thumb/Thumb-2 code
+generation
+
+The default
+values for target architecture, floating-point hardware and
+thumb usage were selected at configure-time when building
+ocamlopt itself. This configuration can be inspected
+using ocamlopt -config. Target architecture
+depends on the "model" setting, while
+floating-point hardware and thumb support are determined
+from the ABI setting in "system" (
+linux_eabiorlinux_eabihf).
+
+SEE ALSO
+
+ocamlc(1).
+
+The OCaml user’s manual, chapter "Native-code
+compilation".

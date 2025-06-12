@@ -1,0 +1,620 @@
+NAME
+
+amd.conf
+− amd configuration file
+
+SYNOPSIS
+
+amd.conf
+
+DESCRIPTION
+
+The
+amd.conf file is the configuration file for amd, as
+part of the am-utils suite.
+
+amd.conf
+contains runtime configuration information for the
+amd automounter program.
+
+FILE FORMAT
+
+The file
+consists of sections and parameters. A section begins with
+the name of the section in square brackets and continues
+until the next section begins or the end the file is
+reached. Sections contain parameters of the form ’name
+= value’.
+
+The file is
+line-based - that is, each newline-terminated line
+represents either a comment, a section name or a parameter.
+No line-continuation syntax is available.
+
+Section,
+parameter names and their values are case sensitive.
+
+Only the first
+equals sign in a parameter is significant. Whitespace before
+or after the first equals sign is discarded. Leading,
+trailing and internal whitespace in section and parameter
+names is irrelevant. Leading and trailing whitespace in a
+parameter value is discarded. Internal whitespace within a
+parameter value is not allowed, unless the whole parameter
+value is quoted with double quotes as in ’name =
+"some value"’.
+
+Any line
+beginning with a pound sign (#) is ignored, as are lines
+containing only whitespace.
+
+The values
+following the equals sign in parameters are all either a
+string (no quotes needed if string does not include spaces)
+or a boolean, which may be given as yes/no. Case is
+significant in all values. Some items such as cache timeouts
+are numeric.
+
+SECTIONS
+
+The [global]
+section 
+Parameters in this section either apply to amd as a whole,
+or to all other regular map sections which follow. There
+should be only one global section defined in one
+configuration file.
+
+It is highly
+recommended that this section be specified first in the
+configuration file. If it is not, then regular map sections
+which precede it will not use global values defined
+later.
+
+Regular
+[/map] sections 
+Parameters in regular (non-global) sections apply to a
+single map entry. For example, if the map section
+[/homes] is defined, then all parameters following it
+will be applied to the /homes amd-managed mount
+point.
+
+PARAMETERS
+
+Parameters
+common to all sections 
+These parameters can be specified either in the global or a
+map specific section. Entries specified in a map-specific
+section override the default value or one defined in the
+global section. If such a common parameter is specified only
+in the global section, it is applicable to all regular map
+sections that follow. 
+browsable_dirs (string, default=no)
+
+If "yes", then
+amd’s top-level mount points will be browsable to
+readdir(3) calls. This means you could run for
+example ls(3) and see what keys are available to
+mount in that directory. Not all entries are made visible to
+readdir(3): the "/default" entry, wildcard
+entries, and those with a "/" in them are not
+included. If you specify "full" to this option,
+all but "/default" will be visible. Note that if
+you run a command which will attempt to stat(2) the
+entries, such as often done by "ls -l" or "ls
+-F", amd will attempt to mount every entry in
+that map. This is often called a ’’mount
+storm’’.
+
+map_options (string,
+default no options)
+
+This option is the same as
+specifying map options on the command line to amd, such as
+"cache:=all".
+
+map_type (string,
+default search all map types)
+
+If specified, amd will
+initialize the map only for the type given. This is useful
+to avoid the default map search type used by amd which takes
+longer and can have undesired side-effects such as
+initializing NIS even if not used. Possible values are
+
+file
+plain files 
+hesiod Hesiod name service from MIT 
+ldap Lightweight Directory Access Protocol 
+ndbm (New) dbm style hash files 
+nis Network Information Services (version 2) 
+nisplus Network Information Services Plus (version 3)
+
+passwd local password files 
+union union maps
+
+mount_type (string,
+default=nfs)
+
+All amd mount types must be
+NFS. That is, amd is an NFS server on the map mount points,
+for the local host it is running on. If "autofs"
+is specified, amd will log an error and convert it to
+NFS.
+
+search_path (string,
+default no search path)
+
+This provides a
+(colon-delimited) search path for file maps. Using a search
+path, sites can allow for local map customizations and
+overrides, and can distributed maps in several locations as
+needed.
+
+Parameters
+applicable to the global section only 
+arch (string, default to compiled in value)
+
+Allows you to override the
+value of the arch amd variable.
+
+auto_dir (string,
+default=/a)
+
+Same as the −a
+option to amd. This sets the private directory where amd
+will create sub-directories for its real mount points.
+
+cache_duration (numeric,
+default=300)
+
+Same as the −c
+option to amd. Sets the duration in seconds that looked up
+map entries remain in the cache.
+
+cluster (string, default
+no cluster)
+
+Same as the −C
+option to amd. Specifies the alternate HP-UX cluster to
+use.
+
+debug_options (string,
+default no debug options)
+
+Same as the −D
+option to amd. Specify any debugging options for amd. Works
+only if am-utils was configured for debugging using the
+--enable-debug option. The "mem" option, as well
+as all other options, can be turned on via
+--enable-debug=mem. Otherwise debugging options are ignored.
+Options are comma delimited, and can be preceded by the
+string "no" to negate their meaning. You can get
+the list of supported debugging options by running amd
+−H. Possible values are:
+
+all all
+options 
+amq register for amq 
+daemon enter daemon mode 
+fork fork server 
+full program trace 
+hrtime print high resolution time stamps (only if
+syslog(3) is not used) 
+info info service specific debugging (hesiod, nis, etc.)
+
+mem trace memory allocations 
+mtab use local "./mtab" file 
+readdir show browsable_dirs progress 
+str debug string munging 
+test full debug but no daemon 
+trace trace protocol and NFS mount arguments 
+xdrtrace trace XDR routines
+
+dismount_interval
+(numeric, default=120)
+
+Same as the −w
+option to amd. Specify in seconds, the time between attempts
+to dismount file systems that have exceeded their cached
+times.
+
+full_os (string, default
+to compiled in value)
+
+The full name of the operating
+system, along with its version. Allows you to override the
+compiled-in full name and version of the operating system.
+Useful when the compiled-in name is not desired. For
+example, the full operating system name on linux comes up as
+’’linux’’, but you can override it
+to ’’linux-2.2.5.’’
+
+fully_qualified_hosts
+(string, default=no)
+
+If "yes", Amd
+will perform RPC authentication using fully-qualified host
+names. This is necessary for some systems, and especially
+when performing cross-domain mounting. For this function to
+work, the Amd variable ${hostd} is used, requiring
+that ${domain} not be null.
+
+hesiod_base (string,
+default=automount)
+
+Specify the base name for
+hesiod maps.
+
+karch (string, default
+to karch of the system)
+
+Same as the −k
+option to amd. Allows you to override the
+kernel-architecture of your system. Useful for example on
+Sun (Sparc) machines, where you can build one amd binary,
+and run it on multiple machines, yet you want each one to
+get the correct karch variable set (for example,
+sun4c, sun4m, sun4u, etc.) Note that if not specified, amd
+will use uname(2) to figure out the kernel architecture of
+the machine.
+
+ldap_base (string,
+default not set)
+
+Specify the base name for LDAP.
+This often includes LDAP-specific values such as country and
+organization.
+
+ldap_cache_maxmem
+(numeric, default=131072)
+
+Specify the maximum memory amd
+should use to cache LDAP entries.
+
+ldap_cache_seconds
+(numeric, default=0)
+
+Specify the number of seconds
+to keep entries in the cache.
+
+ldap_hostports (string,
+default not set)
+
+Specify the LDAP host and port
+values.
+
+local_domain (string,
+default no sub-domain)
+
+Same as the −d
+option to amd. Specify the local domain name. If this option
+is not given the domain name is determined from the
+hostname, by removing the first component of the
+fully-qualified host name.
+
+log_file (string,
+default=/dev/stderr)
+
+Same as the −l
+option to amd. Specify a file name to log amd events to. If
+the string /dev/stderr is specified, amd will send
+its events to the standard error file descriptor. If the
+string syslog is given, amd will record its events
+with the system logger syslogd(8). The default syslog
+facility used is LOG_DAEMON. If you wish to change it,
+append its name to the log file name, delimited by a single
+colon. For example, if logfile is the string
+syslog:local7 then amd will log messages via
+syslog(3) using the LOG_LOCAL7 facility (if it exists
+on the system).
+
+log_options (string,
+default no logging options)
+
+Same as the −x
+option to amd. Specify any logging options for amd. Options
+are comma delimited, and can be preceded by the string
+"no" to negate their meaning. The
+"debug" logging option is only available if
+am-utils was configured with --enable-debug. You can get the
+list of supported debugging and logging options by running
+amd −H. Possible values are:
+
+all all
+messages 
+debug debug messages 
+error non-fatal system errors 
+fatal fatal errors 
+info information 
+map map errors 
+stats additional statistical information 
+user non-fatal user errors 
+warn warnings 
+warning warnings
+
+nfs_vers (numeric,
+default to trying version 3 then 2)
+
+By default, amd tries version 3
+and then version 2. This option forces the overall NFS
+protocol used to version 3 or 2. It overrides what is in the
+amd maps, and is useful when amd is compiled with NFSv3
+support that may not be stable. With this option you can
+turn off the complete usage of NFSv3 dynamically (without
+having to recompile amd) until such time as NFSv3 support is
+desired again.
+
+nfs_retransmit_counter
+(numeric, default=11)
+
+Same as the retransmit
+part of the −t timeout.retransmit option
+to amd. Specifies the number of NFS retransmissions that the
+kernel will use to communicate with amd.
+
+nfs_retry_interval
+(numeric, default=8)
+
+Same as the timeout part
+of the −t timeout.retransmit option to
+amd. Specifies the NFS timeout interval, in tenths of
+seconds, between NFS/RPC retries (for UDP only). This is the
+value that the kernel will use to communicate with amd.
+
+Amd relies on
+the kernel RPC retransmit mechanism to trigger mount
+retries. The values of the nfs_retransmit_counter and
+the nfs_retry_interval parameters change the overall
+retry interval. Too long an interval gives poor interactive
+response; too short an interval causes excessive
+retries.
+
+nfs_proto (string,
+default to trying version tcp then udp)
+
+By default, amd tries TCP and
+then UDP. This option forces the overall NFS protocol used
+to TCP or UDP. It overrides what is in the amd maps, and is
+useful when amd is compiled with NFSv3 support that may not
+be stable. With this option you can turn off the complete
+usage of NFSv3 dynamically (without having to recompile amd)
+until such time as NFSv3 support is desired again.
+
+nis_domain (string,
+default to local NIS domain name)
+
+Same as the −y
+option to amd. Specify an alternative NIS domain from which
+to fetch the NIS maps. The default is the system domain
+name. This option is ignored if NIS support is not
+available.
+
+normalize_hostnames
+(boolean, default=no)
+
+Same as the −n
+option to amd. If "yes", then the name refereed to
+by ${rhost} is normalized relative to the host database
+before being used. The effect is to translate aliases into
+’’official’’ names.
+
+os (string, default to
+compiled in value)
+
+Same as the −O
+option to amd. Allows you to override the compiled-in name
+of the operating system. Useful when the built-in name is
+not desired for backward compatibility reasons. For example,
+if the build in name is ’’sunos5’’,
+you can override it to ’’sos5’’, and
+use older maps which were written with the latter in
+mind.
+
+osver (string, default
+to compiled in value)
+
+Same as the −o
+option to amd. Overrides the compiled-in version number of
+the operating system. Useful when the built in version is
+not desired for backward compatibility reasons. For example,
+if the build in version is
+’’2.5.1’’, you can override it to
+’’5.5.1’’, and use older maps that
+were written with the latter in mind.
+
+pid_file (string,
+default=/dev/stdout)
+
+Specify a file to store the
+process ID of the running daemon into. If not specified, amd
+will print its process id onto the standard output. Useful
+for killing amd after it had run. Note that the PID of a
+running amd can also be retrieved via amq −p.
+This file is used only if the print_pid option is on.
+
+plock (boolean,
+default=yes)
+
+Same as the −S
+option to amd. If "yes", lock the running
+executable pages of amd into memory. To improve amd’s
+performance, systems that support the plock(3) call
+can lock the amd process into memory. This way there is less
+chance it the operating system will schedule, page out, and
+swap the amd process as needed. This improves amd’s
+performance, at the cost of reserving the memory used by the
+amd process (making it unavailable for other processes).
+
+portmap_program
+(numeric, default=300019)
+
+Specify an alternate
+Port-mapper RPC program number, other than the official
+number. This is useful when running multiple amd processes.
+For example, you can run another amd in "test"
+mode, without affecting the primary amd process in any way.
+For safety reasons, the alternate program numbers that can
+be specified must be in the range 300019-300029, inclusive.
+amq has an option -P which can be used to
+specify an alternate program number of an amd to contact. In
+this way, amq can fully control any number of amd processes
+running on the same host.
+
+print_pid (boolean,
+default=no)
+
+Same as the −p
+option to amd. If "yes", amd will print its
+process ID upon starting.
+
+print_version (boolean,
+default=no)
+
+Same as the −v
+option to amd, but the version prints and amd continues to
+run. If "yes", amd will print its version
+information string, which includes some configuration and
+compilation values.
+
+restart_mounts (boolean,
+default=no)
+
+Same as the −r
+option to amd. If "yes" amd will scan the
+mount table to determine which file systems are currently
+mounted. Whenever one of these would have been auto-mounted,
+amd inherits it.
+
+selectors_in_defaults
+(boolean, default=no)
+
+If "yes", then the
+/defaults entry of maps will search for and process any
+selectors before setting defaults for all other keys in that
+map. Useful when you want to set different options for a
+complete map based on some parameters. For example, you may
+want to better the NFS performance over slow slip-based
+networks as follows:
+
+/defaults \
+
+wire==slip-net;opts:=intr,rsize=1024,wsize=1024 \ 
+wire!=slip-net;opts:=intr,rsize=8192,wsize=8192
+
+Deprecated
+form: selectors_on_default
+
+show_statfs_entries
+(boolean), default=no)
+
+If "yes", then all
+maps which are browsable will also show the number of
+entries (keys) they have when "df" runs. (This is
+accomplished by returning non-zero values to the statfs(2)
+system call).
+
+unmount_on_exit
+(boolean), default=no)
+
+If "yes", then amd
+will attempt to unmount all file systems which it knows
+about. Normally amd leaves all (esp. NFS) mounted file
+systems intact. Note that amd does not know about file
+systems mounted before it starts up, unless the
+restart_mounts option or −r flag are used.
+
+vendor (string, default
+to compiled in value)
+
+The name of the vendor of the
+operating system. Overrides the compiled-in vendor name.
+Useful when the compiled-in name is not desired. For
+example, most Intel based systems set the vendor name to
+’’unknown’’, but you can set it to
+’’redhat.’’
+
+Parameters
+applicable to regular map sections 
+map_name (string, must be specified)
+
+Name of the map where the keys
+are located.
+
+tag (string, default no
+tag)
+
+Each map entry in the
+configuration file can be tagged. If no tag is specified,
+that map section will always be processed by amd. If it is
+specified, then amd will process the map if the -T
+option was given to amd, and the value given to that
+command-line option matches that in the map section.
+
+EXAMPLES
+
+Here is a real
+amd configuration file I use daily.
+
+# GLOBAL
+OPTIONS SECTION 
+[ global ] 
+normalize_hostnames = no 
+print_pid = no 
+restart_mounts = yes 
+auto_dir = /n 
+log_file = /var/log/amd 
+log_options = all 
+#debug_options = all 
+plock = no 
+selectors_in_defaults = yes 
+# config.guess picks up "sunos5" and I don’t
+want to edit my maps yet 
+os = sos5 
+# if you print_version after setting up "os", it
+will show it. 
+print_version = no 
+map_type = file 
+search_path = /etc/amdmaps:/usr/lib/amd:/usr/local/AMD/lib
+
+browsable_dirs = yes
+
+# DEFINE AN AMD
+MOUNT POINT 
+[ /u ] 
+map_name = amd.u
+
+[ /proj ]
+
+map_name = amd.proj
+
+[ /src ]
+
+map_name = amd.src
+
+[ /misc ]
+
+map_name = amd.misc
+
+[ /import ]
+
+map_name = amd.import
+
+[ /tftpboot/.amd ]
+
+tag = tftpboot 
+map_name = amd.tftpboot
+
+SEE ALSO
+
+amd(8),
+amq(8), ctl-amd(8).
+
+AUTHORS
+
+Erez Zadok
+ezk [AT] cs.edu>, Department of Computer Science,
+Columbia University, New York, USA.
+
+Other authors
+and contributors to am-utils are listed in the
+AUTHORS file distributed with am-utils.

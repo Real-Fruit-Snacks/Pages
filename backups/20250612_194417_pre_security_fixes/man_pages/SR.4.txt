@@ -1,0 +1,148 @@
+SR(4) BSD/i386 Kernel Interfaces Manual SR(4)
+
+NAME
+
+sr — synchronous
+RISCom/N2 / WANic 400/405 device driver
+
+SYNOPSIS
+
+device sr
+
+For ISA cards,
+in /boot/device.hints:
+
+hint.sr.0.at="isa"
+
+hint.sr.0.port="0x300" 
+hint.sr.0.irq="10" 
+hint.sr.0.maddr="0xd0000" 
+hint.sr.0.flags="0x0"
+
+device
+sppp
+
+DESCRIPTION
+
+The sr driver supports
+the RISCom/N2 ISA cards, N2pci and the WANic 400/405 PCI
+cards that are based on the HD64570 chip.
+
+If you have ISA
+cards, you need to specify the resources for them in
+/boot/device.hints. If you have the second ISA card,
+add
+
+hint.sr.1.at="isa"
+
+hint.sr.1.port="0x310" 
+hint.sr.1.irq="11" 
+hint.sr.1.maddr="0xd0000" 
+hint.sr.1.flags="0x0"
+
+The standard
+FreeBSD sppp code is used for the link level layer. The
+default protocol used is PPP. The Cisco HDLC protocol can be
+used by adding link2 to ifconfig(8).
+
+Alternately, the
+driver can be compiled to support netgraph(4) (see
+below).
+
+The flags
+specification in /boot/device.hints is optional. If
+it is not specified, the driver will assume the
+following:
+
+The card has 2 ports.
+
+The clock for the serial ports
+is external and the transmitter uses
+
+the same clock as the
+receiver.
+
+The flags
+are a bit field and can be used to force a different
+behaviour than the default.
+
+0x01
+
+The card has only one port.
+
+0x10
+
+Use separate external clocks
+for transmit and receive on port 0.
+
+0x40
+
+Use separate external clocks
+for transmit and receive on port 1.
+
+The card only
+supports IRQ 3, 4, 5, 7, 10, 11, 12 and 15.
+
+The iomem area
+is a 16Kb block and must start at a 16Kb boundary.
+
+HARDWARE
+
+The sr driver supports
+the following hardware:
+
+•
+
+SDL Communications RISCom/N2
+ISA
+
+•
+
+SDL Communications N2pci
+
+•
+
+SDL Communications WANic
+400/405 PCI
+
+NETGRAPH SUPPORT
+
+If the kernel is compiled with
+options NETGRAPH then the sppp and Cisco HDLC modes are
+disabled (and the sppp driver is unneeded), and this driver
+functions as a netgraph(4) node with a single hook named
+rawdata. Connecting to this hook enables the transmission of
+raw HDLC frames. The node will have the same name as the
+device with ’’sync_’’ prepended,
+e.g., sync_sr0.
+
+DIAGNOSTICS
+
+sr%d: Warning illegal
+interrupt %d.  The card cannot use the specified
+interrupt. Choose a different one.
+
+SEE ALSO
+
+ar(4), cx(4), netgraph(4),
+netintro(4), ifconfig(8)
+
+AUTHORS
+
+The sr device driver was
+written by John Hay jhay [AT] FreeBSD.org>.
+
+Netgraph support
+was added by Julian Elischer julian [AT] FreeBSD.org>.
+
+BUGS
+
+At the moment only the X.21
+interface is tested. The others may need tweaks to the clock
+selection code.
+
+The code can
+probably stand some optimizing.
+
+BSD
+March 18, 2005 BSD

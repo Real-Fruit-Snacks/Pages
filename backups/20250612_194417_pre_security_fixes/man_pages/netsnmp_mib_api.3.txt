@@ -1,0 +1,275 @@
+NAME
+
+add_mibdir,
+netsnmp_init_mib, shutdown_mib, netsnmp_read_module,
+read_mib, read_all_mibs, add_module_replacement,
+snmp_set_mib_errors, snmp_set_mib_warnings,
+snmp_set_save_descriptions, read_objid, snmp_parse_oid,
+get_module_node, print_mib, print_objid, fprint_objid,
+snprint_objid, print_description, fprint_description,
+snprint_description - netsnmp_mib_api functions
+
+SYNOPSIS
+
+#include
+
+Initialisation
+and Shutdown 
+int add_mibdir(const char *dirname);
+
+void
+netsnmp_init_mib(void); 
+void shutdown_mib(void);
+
+Reading and
+Parsing MIBs 
+struct tree *netsnmp_read_module(const char
+*name); 
+struct tree *read_mib(const char *filename);
+
+struct tree *read_all_mibs(void);
+
+int
+add_module_replacement(const char *old_module,
+
+const char *new_module, 
+const char *tag, int
+len);
+
+void
+snmp_set_mib_warnings(int level); 
+void snmp_set_mib_errors(int level); 
+void snmp_set_save_descriptions(int
+save);
+
+Searching
+the MIB Tree 
+int read_objid(const char *input, 
+oid *objid, size_t *objidlen);
+
+oid *snmp_parse_oid(const char *input, 
+oid *objid, size_t *objidlen);
+
+int get_module_node(const char *name, const
+char *module, 
+oid *objid, size_t
+*objidlen);
+
+Output 
+void print_mib(FILE *fp);
+
+void
+print_objid(const oid *objid, size_t
+objidlen); 
+void fprint_objid(FILE *fp, 
+const oid *objid, size_t
+objidlen); 
+int snprint_objid(char *buf, size_t
+len, 
+const oid *objid, size_t
+objidlen);
+
+void
+print_description(const oid *objid, size_t
+objidlen, int width); 
+void fprint_description(FILE *fp, 
+const oid *objid, size_t
+objidlen, int width); 
+int snprint_description(char *buf, size_t
+len, 
+const oid *objid, size_t
+objidlen, int width);
+
+DESCRIPTION
+
+The functions
+dealing with MIB modules fall into four groups - those
+dealing with initialisation and shutdown, with reading in
+and parsing MIB files, with searching the MIB tree, and
+output routines.
+
+Initialisation
+and Shutdown 
+add_mibdir is used to add the specified directory to the
+path of locations which are searched for files containing
+MIB modules. Note that this does not actually load the MIB
+modules located in that directory, but is simply an
+initialisation step to make them available to
+netsnmp_read_module. This function returns a count of
+files found in the directory, or a -1 if there is an error.
+It should be called before invoking
+netsnmp_init_mib.
+
+netsnmp_init_mib
+configures the MIB directory search path (using
+add_mibdir ), sets up the internal MIB framework, and
+then loads the appropriate MIB modules (using
+netsnmp_read_module and read_mib). See the
+ENVIRONMENTAL VARIABLES section for details. 
+It should be called before any other routine that
+manipulates or accesses the MIB tree (but after any
+additional add_mibdir calls).
+
+shutdown_mib
+will clear the information that was gathered by
+netsnmp_read_module, add_mibdir and
+add_module_replacement. It is strongly recommended
+that one does not invoke shutdown_mib while there are
+SNMP sessions being actively managed.
+
+Reading and
+Parsing MIBs 
+netsnmp_read_module takes the name of a MIB module
+(which need not be the same as the name of the file that
+contains the module), locates this within the configured
+list of MIB directories, and loads the definitions from the
+module into the active MIB tree. It also loads any MIB
+modules listed in the IMPORTS clause of this module.
+
+read_mib
+is similar, but takes the name of the file containing the
+MIB module. Note that this file need not be located within
+the MIB directory search list (although any modules listed
+in the IMPORTS clause do).
+
+read_all_mibs
+will read in all the MIB modules found on the MIB directory
+search list.
+
+In general the
+parser is silent about what strangenesses it sees in the MIB
+files. To get warnings reported, call
+snmp_set_mib_warnings with a level of 1 (or 2
+for even more warnings).
+
+add_module_replacement
+can be used to allow new MIB modules to obsolete older ones,
+without needing to amend the IMPORTS clauses of other
+modules. It takes the names of the old and new modules,
+together with an indication of which portions of the old
+module are affected.
+
+It can also be used to handle
+errors in the module identifiers used in MIB IMPORTS clauses
+(such as referring to RFC1213 instead of
+RFC1213-MIB).
+
+Searching
+the MIB Tree 
+read_objid takes a string containing a textual version
+of an object identifier (in either numeric or descriptor
+form), and transforms this into the corresponding list of
+sub-identifiers. This is returned in the output
+parameter, with the number of sub-identifiers returned via
+out_len. When called, out_len must hold the
+maximum length of the output array. If multiple
+object identifiers are being processed, then this length
+should be reset before each call. This function returns a
+value of 1 if it succeeds in parsing the string and 0
+otherwise.
+
+snmp_parse_oid
+is similar, but returns a pointer to the parsed OID buffer
+(or NULL).
+
+get_module_node
+takes a descriptor and the name of a module, and returns the
+corresponding oid list, in the same way as read_objid
+above. 
+If the module name is specified as "ANY", then
+this routine will assume that the descriptor given is unique
+within the tree, and will return the matching entry. If this
+assumption is invalid, then the behaviour as to which
+variable is returned is implementation dependent.
+
+Output 
+print_mib will print out a representation of the
+currently active MIB tree to the specified FILE pointer.
+
+print_objid
+will take an object identifier (as returned by
+read_objid, snmp_parse_oid or
+get_module_node), and prints the textual form of this
+OID to the standard output.
+
+fprint_objid
+does the same, but prints to the FILE pointer specified by
+the initial parameter.
+
+snprint_objid
+prints the same information into the buffer pointed to by
+buf which is of length len. It returns the
+number of characters printed, or -1 if the buffer was not
+large enough. In the latter case, buf will typically
+contain a truncated version of the information (but this
+behaviour is not guaranteed).
+
+print_description,
+fprint_description, and snprint_description
+take a similar object identifier and print out a version of
+the MIB definition for that object, together with the full
+OID. The width argument controls how the OID is layed
+out.
+
+By default the
+parser does not save descriptions since they may be huge. In
+order to be able to print them, it is necessary to invoke
+snmp_set_save_descriptions(1)before calling
+init_mib (or similar).
+
+ENVIRONMENT VARIABLES
+
+The main use of
+environmental variables with respect to these API calls is
+to configure which MIB modules should be loaded, and where
+they are located.
+
+MIBDIRS
+
+A colon separated list of directories to search for MIB
+modules. 
+
+Default: /usr/share/snmp/mibs
+
+Used by init_mib, netsnmp_read_module,
+read_all_mibs and (implicitly) by
+read_mib.
+
+MIBS
+
+A colon separated list of MIB
+modules to load.
+
+The default list of modules
+will depend on how the Net-SNMP software was originally
+compiled, but is typically: 
+IP-MIB:IF-MIB:TCP-MIB:UDP-MIB:SNMPv2-MIB:RFC1213-MIB:
+UCD-SNMP-MIB:HOST-RESOURCES-MIB
+
+If the value of
+the MIBS environmental variable starts with a
+’+’ character, then these MIB modules will be
+added to the default list. Otherwise these modules (plus any
+that they IMPORT from) will be loaded instead of the
+default list.
+
+If the
+MIBS environmental variable has the value ALL
+then read_all_mibs will be called to load the full
+collection of all available MIB modules.
+
+Used by
+init_mib only.
+
+MIBFILES
+
+A colon separated list of files
+to load.
+
+Default: (none) 
+Used by init_mib only.
+
+SEE ALSO
+
+netsnmp_session_api(3),
+netsnmp_pdu_api(3), netsnmp_varbind_api(3)

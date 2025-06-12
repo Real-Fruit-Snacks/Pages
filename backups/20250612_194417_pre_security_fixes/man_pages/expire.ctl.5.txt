@@ -1,0 +1,253 @@
+NAME
+
+expire.ctl -
+Configuration file for article expiration
+
+DESCRIPTION
+
+The file
+pathetc/expire.ctl is the default configuration file
+for expire and expireover, which read it at
+start-up. It serves two purposes: it defines how long
+history entries for expired or rejected articles are
+remembered, and it determines how long articles stored on
+the server are retained.
+
+Normally, if
+all of the storage methods used by the server are
+self-expiring (such as CNFS), all lines except the
+"/remember/" setting (described below) are
+ignored. This can be changed with the -N option to
+expire or expireover.
+
+Blank lines and
+lines beginning with a number sign ("#") are
+ignored. All other lines should be in one of two formats.
+The order of the file is significant, and the last matching
+entry will be used.
+
+The first
+format specifies how long to keep history entries for
+articles that aren’t present in the news spool. These
+are articles that have either already expired, or articles
+which the server rejected (when remembertrash is set
+to true in inn.conf). There should be one and only
+one line in this format, which looks like:
+
+/remember/:
+
+where
+ is a decimal number that specifies the minimum
+number of days a history record for a given Message-ID is
+retained (from its original posting time), regardless of
+whether the article is present in the spool. (History
+entries for articles still present in the spool are always
+retained.) Setting it to "never" means history
+records will be retained forever, "0" means
+history records for articles not present in the spool will
+be purged when expiry programs run. (This is notably useful
+in the case you need re-injecting articles no longer present
+in your news spool but considered as duplicate, because
+still present in history: you’ll have to set
+"/remember/" to "0", run the
+expire process for instance via news.daily
+called with the same parameters as in crontab plus
+"notdaily", and undo the change in
+expire.ctl. All previously rejected or removed
+articles will then not be considered as duplicate if their
+Message-ID is proposed.)
+
+The primary
+reason to retain a record of old articles is in case a peer
+offers old articles that were previously accepted but have
+already expired. Without a history record for such articles,
+the server would accept the article again and readers would
+see duplicate articles. Articles older than a certain number
+of days won’t be accepted by the server at all (see
+artcutoff in inn.conf(5) and the -c flag in
+innd(8)), and this setting should probably match that time
+period to ensure that the server never accepts duplicates.
+As the default value for artcutoff is "10"
+days, it means that "/remember/" should be set to
+"11" days in order to take into account articles
+whose posting date is one day into the future.
+
+Most of the
+lines in this file will be in the second format, which
+consists of either four or five colon-separated fields:
+
+::::
+
+if
+groupbaseexpiry is true in inn.conf (the
+default), and otherwise:
+
+:::
+
+All lines must
+be in the correct format given the current setting of
+groupbaseexpiry, and therefore the two formats cannot
+co-exist in the same file.
+
+Normally, a
+rule matches a newsgroup through the combination of the
+ and  fields.  is
+a uwildmat-style pattern, specifying the newsgroups
+to which the line is applied. Note that the last matching
+entry will be used, so general patterns (such as defaults
+for all groups where  is "*")
+should appear at the beginning of the file before more
+specific settings.
+
+The
+ field can be used to further limit newsgroups
+to which the line applies, and should be chosen from the
+following set:
+
+M Only
+moderated groups 
+U Only unmoderated groups 
+A All groups 
+X Remove the article from all groups it appears in
+
+One of
+"M", "U", or "A" must be
+specified. "X" should be used in combination with
+one of the other letters, not by itself.
+
+An expiration
+policy is applied to every article in a newsgroup it
+matches. There is no way to set an expiration policy for
+articles crossposted to groups you don’t carry
+that’s different than other articles in the same
+group. Normally, articles are not completely deleted until
+they expire out of every group to which they were posted,
+but if an article is expired following a rule where
+ contains "X", it is deleted out of
+all newsgroups to which it was posted immediately. (If that
+behaviour is wanted for all rules, you may want to give the
+-e flag to expireoverview.)
+
+If
+groupbaseexpiry is instead set to false, there is no
+ and  field and the above does
+not apply. Instead, there is a single 
+field, which is either a number matching the storage class
+number specified in storage.conf or "*" to
+specify a default for all storage classes. All articles
+stored in a storage class will be expired following the
+instructions in the line with a matching ,
+and when articles are expired, they’re always removed
+from all groups to which they were posted.
+
+The remaining
+three fields are the same in either format, and are used to
+determine how long an article should be kept from its
+original arrival time (unless the -p flag is passed
+to expire(8) or expireover(8), in which case its original
+posting time is used). Each field should be either a decimal
+number of days (fractions like "8.5" are allowed,
+but remember that articles are only removed when
+expire or expireover is run, normally once a
+day by news.daily) or the word "never".
+
+The middle
+field, , will be used as the expiration
+period for most articles. The other two fields, 
+and , only come into play if the article requests
+a particular expiration date with an Expires header field.
+Articles with an Expires header field will be expired at the
+date given in that header field, subject to the constraints
+that they will be retained at least  days and no
+longer than  days.
+
+If 
+is set to "never", no article matching that line
+will ever be expired. If  is set to
+"never", no article matching that line without an
+explicit Expires header field will ever be expired. If
+ is set to "never", Expires header
+fields will be honored no matter how far into the future
+they are.
+
+One should
+think of the fields as a lower bound, the default, and an
+upper bound. Since most articles do not have an Expires
+header field, the second field is the most important and
+most commonly applied.
+
+Articles that
+do not match any expiration rule will not be expired, but
+this is considered an error and will result in a warning.
+There should always be a default line (a line with a
+ of "*" and  of
+"A", or a line with a  of
+"*"), which can explicitly state that articles
+should never expire by default if that’s the desired
+configuration. The default line should generally be the
+first line of the file (except for "/remember/")
+so that other expiration rules can override it.
+
+It is often
+useful to honor the Expires header field in articles,
+especially those in moderated groups. To do this, set
+ to zero,  to whatever normal
+expiration you wish, and  to "never" or
+some large number, like "365" days for a maximum
+article life of a year.
+
+To ignore any
+Expires header field, set all three fields to the same
+value.
+
+EXAMPLES
+
+When
+groupbaseexpiry is true (the default):
+
+# Keep expired
+article history for 11 days, matching artcutoff 
+# plus one. 
+/remember/:11 
+# Most articles stay for two weeks, ignoring Expires header
+fields. 
+*:A:14:14:14 
+# Accept Expires header fields in moderated newsgroups for
+up to 
+# a year, and retain moderated newsgroups for a bit longer.
+
+*:M:1:30:365 
+# Keep local newsgroups for a long time and local project
+
+# newsgroups forever. 
+example.*:A:1:90:90 
+example.project.*:A:never:never:never
+
+When
+groupbaseexpiry is false, for class-based
+expiration:
+
+# Keep expired
+article history for 11 days, matching artcutoff 
+# plus one. 
+/remember/:11 
+# Set a default expiration of seven days and honour Expires
+header 
+# fields within reasonable limits. 
+*:1:7:35 
+# Class 0 is retained for two weeks and honor Expires header
+fields 
+# within reasonable limits. 
+0:1:14:65
+
+HISTORY
+
+Written by Rich
+$alz rsalz [AT] uunet.net> for InterNetNews. Converted
+to POD by Russ Allbery eagle [AT] eyrie.org>.
+
+SEE ALSO
+
+expire(8),
+expireover(8), inn.conf(5), innd(8), libinn_uwildmat(3),
+news.daily(8), storage.conf(5).

@@ -1,0 +1,197 @@
+NAME
+
+pmdabcc
+- BCC PMDA
+
+DESCRIPTION
+
+pmdabcc
+is a Performance Co-Pilot (PCP) Performance Metrics Domain
+Agent (PMDA) which extracts live performance data from
+extended BPF (Berkeley Packet Filter) in-kernel programs by
+using BCC (BPF Compiler Collection) Python frontend.
+
+pmdabcc
+loads and acts as a bridge for any number of configured,
+separate PCP BCC PMDA Python modules running BPF programs.
+Existing BCC Python tools and programs should be possible to
+be utilized with PCP BCC PMDA modules with reasonable
+effort.
+
+See the BPF and
+BCC documentation for detailed description of both.
+
+CONFIGURATION
+
+pmdabcc
+reads a mandatory ini-style configuration file:
+
+$PCP_PMDAS_DIR/bcc/bcc.conf
+
+This file must
+contain a [pmda] section. The following PMDA options
+are available (their default values are shown in
+parenthesis), options marked with asterisk (*) can be
+overridden in module-specific configuration sections:
+
+modules (unset)
+
+The pmdabcc PMDA reads
+module-specific configuration for each module listed in the
+comma-separated list of modules (mandatory).
+
+prefix (bcc.)
+*
+
+By default, all metrics from
+the modules will appear under the bcc Performance
+Metrics Name Space (PMNS) tree, prefix (optional) can
+be used to change this generic prefix.
+
+process_refresh
+(0)
+
+See below.
+
+module_failure_fatal
+(True)
+
+A boolean value for
+module_failure_fatal (optional) controls whether a
+module failing to compile should cause the whole PMDA to
+abort (this is the default) or to start up with possibly
+remaining functional modules. Module configuration errors
+and internal errors (such as failing to register the
+provided PMNS metrics, see PMNS(5)) will always cause
+the PMDA to fail.
+
+Of particular
+note, the process option accepted by some modules
+evalutes the given PIDs and process names at PMDA/module
+initialization time and apply filtering for only those
+processes found at that stage. This is due to fact that the
+in-kernel BPF program is compiled at module initialization
+time and, even more importantly, they are often running at
+performance critical areas where it is not acceptable to do
+process name lookups each time a request is processed by the
+BPF program. To allow modules to monitor named processes
+(say, process = java) even if they restart the
+process_refresh should be set to a non-negative
+integer N to dynamically refresh monitored processes
+every N seconds. In case new processes matching the
+process filter have appeared, the currently running BPF is
+detached and a new BPF program with updated PID information
+is installed (and if no PIDs matching the filter are anymore
+present, the BPF program will be detach to avoid any
+needless overhead).
+
+For each
+module listed in modules a corresponding
+[module] section must be defined containing at least
+the following options:
+
+module
+
+Defines the actual Python module file name to be loaded
+during PMDA startup under the modules subdirectory of
+the PCP BCC PMDA installation.
+
+cluster
+
+Specifies the unique cluster ID (see PMNS(5)) for
+the metrics provided by the module under the PMNS path.
+
+All modules
+accept but not necessarily use the boolean debug
+option.
+
+Modules may
+also support additional module-specific configuration
+options, refer to the default configuration file for their
+supported options.
+
+INSTALLATION
+
+To install, the
+following must be done as root:
+
+# cd
+$PCP_PMDAS_DIR/bcc 
+# ./Install
+
+To uninstall,
+the following must be done as root:
+
+# cd
+$PCP_PMDAS_DIR/bcc 
+# ./Remove
+
+pmdabcc
+is launched by pmcd(1) and should never be executed
+directly. The Install and Remove scripts
+notify pmcd(1) when the agent is installed or
+removed.
+
+In case
+module_failure_fatal is set to False, the PMDA
+installation will be considered successful even if some or
+even all configured modules fail to load, in such cases
+metric values provided by the failing modules will not be
+available. The pmdabcc agent log file (see below)
+will contain detailed information about activation of each
+module.
+
+Some modules
+will start providing values only after having collected data
+from related system activity. For instance, the
+tcpperpid module will not provide any values unless
+there are processes generating TCP traffic on the
+system.
+
+FILES
+
+$PCP_PMDAS_DIR/bcc/bcc.conf
+
+configuration file for the
+pmdabcc agent
+
+$PCP_PMDAS_DIR/bcc/modules/*.{py,python}
+
+PCP BCC PMDA Python modules
+available for the pmdabcc agent
+
+$PCP_PMDAS_DIR/bcc/Install
+
+installation script for the
+pmdabcc agent
+
+$PCP_PMDAS_DIR/bcc/Remove
+
+undo installation script for
+the pmdabcc agent
+
+$PCP_LOG_DIR/pmcd/bcc.log
+
+default log file for messages
+from the pmdabcc agent
+
+Note that the
+usual/default value for $PCP_PMDAS_DIR is
+/var/lib/pcp/pmdas and the default for
+$PCP_LOG_DIR is /var/log/pcp but these
+settings are platform dependent.
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+SEE ALSO
+
+PCPIntro(1),
+bcc(1), bpf(1) and pmcd(1).

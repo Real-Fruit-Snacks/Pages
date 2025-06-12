@@ -1,0 +1,339 @@
+NAME
+
+gbp-import-orig
+- Import an upstream source into a git repository
+
+SYNOPSIS
+
+gbp import-orig
+[--version] [--help] [--verbose]
+[--color=[auto|on|off]] [--color-scheme=
+COLOR_SCHEME] [--upstream-version=
+version] [--[no-]merge] [--merge-mode=
+[auto|merge|replace]] [--upstream-branch=
+branch_name] [--debian-branch=
+branch_name] [--upstream-vcs-tag=
+tag-format] [--[no-]sign-tags]
+[--keyid= gpg-keyid] [--upstream-tag=
+tag-format] [--filter= pattern]...
+[--component= component]...
+[--[no-]pristine-tar]
+[--[no-]filter-pristine-tar]
+[--[no-]symlink-orig] [--postimport=cmd]
+[--postunpack=cmd] [--[no-]interactive]
+[--[no-]rollback]
+[--upstream-signatures=[auto|on|off]] filename
+| url | --uscan
+
+DESCRIPTION
+
+gbp import-orig
+imports upstream sources into a Git repository. It can
+import from three sources:
+
+1.
+
+filename: A file in the local file system. Gzip,
+bzip2, lzma and xz compressed tar archives, zip archives and
+already unpacked source trees are supported.
+
+2.
+
+url: The tarball is downloaded from a http
+or https url. This needs the python3-request package
+installed. 
+
+3.
+
+--uscan: The latest upstream or specified version
+is fetched via uscan relying on
+debian/watch. 
+
+If the tarballs
+name is already of the form
+package-name_version.orig.tar.gz, the version
+information is determined from the tarball’s filename,
+otherwise it can be given on the command line via
+--upstream-version. If the source package name or
+version can’t be determined,
+gbp import-orig will prompt for it unless
+--no-interactive is given.
+
+The sources are
+placed on the upstream branch (default: upstream),
+tagged and merged onto the debian branch (default:
+master). This is either done using plain git
+merge or by creating a new tree that consists of the new
+upstream version plus the debian/ directory. The
+later is used for source format 3.0 (quilt) packages since
+direct modifications of the upstream sources are not allowed
+in that format and so a 1:1 replacement of the upstream
+sources is almost always desired. It can be tweaked via the
+--merge-mode.
+
+In case of an
+error gbp import-orig will rollback (undo) all
+changes it has done to the repository (see the
+--rollback option).
+
+OPTIONS
+
+--version
+
+Print version of the program,
+i.e. version of the git-buildpackage suite
+
+-v, --verbose
+
+Verbose execution
+
+-h, --help
+
+Print help and exit
+
+--color=[auto|on|off]
+
+Whether to use colored
+output.
+
+--color-scheme=COLOR_SCHEME
+
+Colors to use in output (when
+color is enabled). The format for COLOR_SCHEME is
+’:::’.
+Numerical values and color names are accepted, empty fields
+imply the default color. For example,
+--git-color-scheme=’cyan:34::’ would show
+debug messages in cyan, info messages in blue and other
+messages in default (i.e. warning and error messages in
+red).
+
+--upstream-version=version,
+-uversion
+
+The upstream version number.
+With --uscan, passed to uscan as
+--download-debversion
+
+--[no-]merge
+
+Merge the upstream branch to
+the Debian branch after import
+
+--merge-mode=[auto|merge|replace]
+
+How to fold the newly imported
+upstream source to the Debian packaging branch after
+import.
+
+merge
+does a Git merge leaving you on your own in case of
+merge conflict resolution.
+
+replace
+mode on the other hand makes the head of the Debian
+packaging branch identical to the newly imported tree but
+preserves the content of the debian/ directory while
+keeping the current head as well as the newly imported tree
+as parents of the generated commit. This is similar to a
+theirs merge strategy while preserving
+debian/.
+
+The default is
+auto which uses replace for 3.0 (quilt)
+packages and merge otherwise.
+
+--upstream-branch=branch_name
+
+The branch in the Git
+repository the upstream sources are put onto. Default is
+upstream.
+
+--debian-branch=branch_name
+
+The branch in the Git
+repository the Debian package is being developed on, default
+is master. After importing the new sources on the
+upstream branch, gbp import-orig will try to
+merge the new version onto this branch.
+
+--upstream-vcs-tag=tag-format
+
+Add tag-format as
+additional parent to the commit of the upstream tarball.
+Useful when upstream uses git and you want to link to its
+revision history. The tag-format can be a pattern
+similar to what --upstream-tag supports.
+
+--[no-]sign-tags
+
+GPG sign all created tags.
+
+--keyid=gpg-keyid
+
+Use this keyid for gpg
+signing tags.
+
+--upstream-tag=tag-format
+
+Use this tag format when
+tagging upstream versions, default is
+upstream/%(version)s.
+
+--import-msg=msg-format
+
+Use this format string for the
+commit message when importing upstream versions, default is
+New upstream version %(version)s.
+
+--filter=pattern
+
+Filter out files glob-matching
+pattern. This option can be given multiple times.
+
+--component=COMPONENT
+
+When importing the upstream
+tarball also look for an additional tarball with component
+name COMPONENT. E.g. in
+hello-debhelper_1.0.orig-foo.tar.gz the component
+would be foo. The additional tarball is expected to
+be in the same directory than the upstream tarball and to
+use the same compression type.
+
+Using
+additional original tarballs is a feature of the 3.0 (quilt)
+source format. See the dpkg-source manpage for
+details. This is currently considered an experimental
+feature and might change incompatibly.
+
+--[no-]pristine-tar
+
+Generate pristine-tar
+delta file.
+
+--[no-]filter-pristine-tar
+
+If using a filter, also filter
+the files out of the tarball passed to
+pristine-tar.
+
+--[no-]symlink-orig
+
+Whether to create and keep a
+symlink from the upstream tarball to a Debian policy
+conformant upstream tarball name located in ../.
+
+This is a good
+idea if not using pristine-tar since it avoids
+creating a new tarball with a different md5sum.
+
+--postimport=cmd
+
+Run cmd after the
+import. The hook gets the following environment variables
+passed: 
+GBP_BRANCH
+
+The name of the Debian
+packaging branch
+
+GBP_TAG
+
+The name of the just created
+upstream tag
+
+GBP_UPSTREAM_VERSION
+
+The just imported upstream
+version
+
+GBP_DEBIAN_VERSION
+
+The Debian version of the
+package with a Debian revision of ’-1’
+
+--postunpack=cmd
+
+Run cmd after the
+import. This can be useful to e.g. convert or remove certain
+files prior to the import. The hook gets passed the
+following environment variables: 
+GBP_TMP_DIR
+
+The temporary directory the
+tarballs are unapcked into.
+
+GBP_GIT_DIR
+
+The directory of the git
+repository where the tarball will be imported into.
+
+--uscan
+
+Use uscan to fetch new
+upstream version. The version can be specified with
+--upstream-version
+
+--[no-]interactive
+
+Run command interactively, i.e.
+ask package name and version if needed.
+
+--[no-]rollback
+
+Rollback changes in case of an
+error.
+
+--upstream-signatures=[auto|on|off]
+
+Whether upstream signatures
+should be imported as well (when using pristine-tar).
+no turns this off completely while yes always
+tries to import a signature (which can be useful if you want
+to fail if e.g. uscan did not fetch a signature). The
+default auto means to import a signature file if
+present but do nothing otherwise.
+
+EXAMPLES
+
+Download and
+import a new upstream version using the information from
+debian/watch
+
+gbp import-orig
+--uscan
+
+Fetch tarball
+from an URL
+
+gbp import-orig
+https://debian.example.com/sid/upstream-tarball-0.1.tar.gz
+
+Import a local
+tarball
+
+gbp import-orig
+../upstream-tarball-0.1.tar.gz
+
+CONFIGURATION FILES
+
+Several
+gbp.conf files are parsed to set defaults for the
+above command-line arguments. See the gbp.conf(5)
+manpage for details.
+
+SEE ALSO
+
+gbp-buildpackage(1),
+gbp-import-dsc(1), gbp-import-dscs(1),
+gbp-dch(1), gbp.conf(5), uscan(1),
+debuild(1), git(1), pristine-tar(1),
+
+The Git-Buildpackage Manual ⟨
+file:///usr/share/doc/git-buildpackage/manual-html/index.html⟩
+
+AUTHOR
+
+Guido
+Günther agx [AT] sigxcpu.org>

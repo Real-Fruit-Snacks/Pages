@@ -1,0 +1,228 @@
+NAME
+
+vde_plug -
+Virtual Distributed Ethernet plug (two plugs creates a vde
+cable)
+
+SYNOPSIS
+
+vde_plug
+[ OPTIONS ] [ vde_plug_url ] 
+vde_plug [ OPTIONS ] vde_plug_url
+vde_plug_url 
+vde_plug [ OPTIONS ] = command [
+args ] 
+vde_plug [ OPTIONS ] vde_plug_url =
+command [ args ]
+
+DESCRIPTION
+
+A
+vde_plug is a plug to be connected into a VDE
+network.
+
+VDE network
+sockets are named using the vde_plug_url syntax, i.e.
+module://specific_address. e.g.
+vde:///home/user/myswitch or
+vxvde://239.0.0.1. The default module is
+libvdeplug_vde(1) (connection to a
+vde_switch(1)) and can be omitted. e.g.
+/home/user/myswitch means
+vde:///home/user/myswitch
+
+vde_plug
+can have zero, one or two vde_plug_url arguments. In case of
+zero or one argument the network communication is converted
+in a byte stream. Packets from the VDE network are sent to
+stdout and bytes from stdin are converted into packets and
+injected in the VDE network. When a vde_plug_url is omitted
+or it is an empty argument (’’)
+vde_plug tries to connect to a default network
+(defined by the user in $HOME/.vde2/default.switch
+otherwise vde:///run/vde.ctl or
+vde:///tmp/vde.ctl).
+
+This tool has
+been designed to be used together with dpipe (1) to
+interconnect a second vde_plug to another switch, working as
+a virtual ethernet crossed cable between the two
+switches.
+
+The command
+
+dpipe vde_plug = vde_plug
+vde:///tmp/vde2.ctl
+
+connects two local switches:
+the former is using the standard control socket /tmp/vde.ctl
+(or /var/run/vde.ctl) while the latter is using
+/tmp/vde2.ctl.
+
+vde_plug
+creates a virtual cable between to VDE networks when two
+vde_plug_url arguments are present in the command line. The
+previous command is equivalent to:
+
+vde_plug /tmp/vde.ctl
+/tmp/vde2.ctl
+
+The following
+example connects a vxvde network to a tap interfave
+
+vde_plug vxvde://239.1.2.3
+tap://mytap
+
+The command
+
+dpipe vde_plug = ssh
+remote.machine.org vde_plug
+
+connects two remote switches.
+If for example the two vde_switches run as daemon and they
+are connected to tap interfaces a level 2 encrypted tunnel
+is established.
+
+While
+dpipe supports more complex vitrual network
+structures (e.g. including wirefilter(1) to emulate
+network conditions) vde_plug has been designed to
+provide simple syntax options to implement the most common
+virtual network scenarios. It is possible to use an equal
+sign (=) followed by a command and its optional
+arguments in place of the second vde_plug_url. In this case
+the packets from/to the network are converted into a
+bidirectional byte stream provided as stdin and stdout to
+the command. The previous command have the same effect
+of:
+
+vde_plug = ssh
+remote.machine.org vde_plug
+
+(the first vde_plug_url is
+omitted).
+
+This
+example:
+
+vde_plug vxvde://239.1.2.3 =
+ssh vde_plug tap://remotetap
+
+connects a vxvde network to a
+tap interface of a remote host.
+
+vde_plug can
+also be established as a login shell for users. The
+following command works as in the previous example
+
+vde_plug = ssh
+vdeuser [AT] remote.org vde_plug
+
+where vdeuser is the user with
+vde_plug as standard shell. All the remote accesses are
+logged by syslog at the beginning and at the end of each
+session and the IP address used are logged if vdeuser
+belongs to the vdeplug_iplog group. Attempts to login
+without the command vde_plug at the end or to run on the
+remote host other commands but vde_plug are blocked and the
+violation is logged by syslog.
+
+OPTIONS
+
+-d
+
+--daemon
+
+run as a daemon.
+
+-p PIDFILE
+
+--pidfile PIDFILE
+
+write the process id to the
+file PIDFILE
+
+-l
+
+--log
+
+log START/STOP of vde_plug on syslog
+
+-L
+
+--iplog
+
+log START/STOP of vde_plug and
+the IP addresses of hosts seen on the stream (or on the
+second vde_plug_url) on syslog.
+
+--port
+"portnum"
+
+Obsolete option, use the syntax
+of the libvdeplug_vde module instead, add the port number in
+square brackets suffix (e.g. vde://tmp/myswitch[10]).
+It is possible to decide which port of the switch to use.
+When this option is not specified the switch assigns the
+first available unused port (if any). It is possible to
+connect several cables in the same switch port: in this way
+all this cables work concurrently. It means that packet can
+result as duplicate but no ARP table loops are generated. Is
+useful when vde is used for mobility. Several physical
+interfaces can be used at a time during handoffs to prevent
+hichups in connectivity. log START/STOP of vde_plug on
+syslog
+
+-g group 
+--group group
+
+group ownership of the
+communication socket. For security when more want to share a
+switch it is better to use a unix group to own the comm
+sockets so that the network traffic cannot be sniffed.
+
+-m octal-mode
+
+--mod octal-mode
+
+octal chmod like permissions
+for the comm sockets
+
+-G -M
+
+--port2 --group2
+--mod2
+
+These options, valid in the
+syntax with two vde_plug_urls, have the the same meaning of
+-p -g -m. The uppercase options or the long options with a
+trailing 2 refer to the second vde_plug_url.
+
+-D DESCR 
+--descr DESCR
+
+set the description of this
+connection to DESCR (e.g. port/print command on a
+vde_switch shows this description).
+
+NOTICE
+
+Virtual
+Distributed Ethernet is not related in any way with
+www.vde.com ("Verband der Elektrotechnik, Elektronik
+und Informationstechnik" i.e. the German
+"Association for Electrical, Electronic &
+Information Technologies").
+
+SEE ALSO
+
+vde_switch(1),
+vdeq(1), dpipe(1), libvdeplug_p2p.1,
+libvdeplug_udp.1, libvdeplug_vxlan.1,
+libvdeplug_tap.1, libvdeplug_vde.1,
+libvdeplug_vxvde.1.
+
+AUTHOR
+
+VDE is a
+project by Renzo Davoli renzo [AT] cs.it>

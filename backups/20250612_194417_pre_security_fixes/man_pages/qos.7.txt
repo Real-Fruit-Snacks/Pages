@@ -1,0 +1,156 @@
+NAME
+
+qos - Quality
+of Service specification
+
+DESCRIPTION
+
+The
+text2qos and qos2text functions use the format
+described in this man page. Because all standard ATM tools
+on Linux use those functions to convert to or from the
+textual representation of QOS specifications, they expect
+them in the same format too.
+
+The most
+fundamental parameters are the traffic class and the
+AAL (ATM Adaption Layer) type. If the connection is
+bi-directional, both directions have the same traffic class
+and the same AAL type. The traffic class and the AAL type
+are the first elements (in any order) in a QOS
+specification. The traffic class is the only required
+element. If the AAL type is omitted, the application will
+provide a default value. The following traffic classes are
+recognized:
+
+ubr
+
+Unassigned Bit Rate
+
+cbr
+
+Constant Bit Rate
+
+abr
+
+Available Bit Rate
+
+The following
+AAL types are recognized:
+
+aal0
+
+("raw ATM")
+
+aal5
+
+If both, the traffic class and
+the AAL type are specified, they are separated by a
+comma.
+
+If more
+parameters are supplied, the traffic class and AAL type must
+be followed by a colon. Traffic parameters can be specified
+independently for the transmit and the receive direction.
+Their parameter lists are prefixed with tx: and
+rx:, respectively. If both parameter lists are
+present, the tx: list must precede the rx:
+list. If a parameter is equal for both directions, it can be
+placed in a common parameter list (without prefix). The
+general format is as follows:
+
+class_and_aal:common_list,tx:list,rx:list
+
+Each list
+consists of elements specifying a parameter. Elements can
+appear in any order and they are separated with commas. The
+following elements are recognized: 
+pcr=rate
+
+is a synonym for
+max_pcr=rate
+
+max_pcr=rate
+
+The upper limit for the peak
+cell rate to assign. If omitted, any rate up to link speed
+may be chosen.
+
+min_pcr=rate
+
+The lower limit for the peak
+cell rate to assign. If omitted, any rate above zero can be
+chosen.
+
+sdu=size
+
+is a synonym for
+max_sdu=size
+
+max_sdu=size
+
+The size of the largest packet
+that may be sent or received. If omitted, a
+context-dependent default value is used.
+
+Values are
+specified as follows:
+
+rate
+
+The (decimal) rate, optionally followed by a unit. The
+unit may be prefixed with one of the multipliers k,
+M, or G, meaning 1’000,
+1’000’000, or 1’000’000’000,
+respectively. The units cps (cells per second) and
+bps (bits per second) are recognized. If multiplier
+and unit are omitted, cells per second are assumed. Note
+that the rate is always converted to cells per second, so
+rounding errors may occur when specifying the rate in bits
+per second. Rates measured in bits per second are considered
+to be user data rates, i.e. one cell corresponds to 384
+bits. The rate can be a fractional value, e.g.
+1.3Mbps. It is an error to specify only a multiplier
+without a unit. Link speed can be indicated by using the
+keyword max as the rate.
+
+size
+
+The (decimal) number of bytes.
+
+The tx:
+or rx: lists may also just contain the single element
+none, which indicates that the corresponding
+direction is not used. It is an error to specify none
+for both direction.
+
+Note that
+commas must never follow colons or other commas. Also,
+whitespace is not allowed inside a QOS specification. QOS
+specifications are case-insensitive.
+
+EXAMPLES
+
+Each of the
+following lines contains a valid QOS specification:
+
+ubr 
+ubr:pcr=100kbps 
+cbr,aal0:pcr=64kbps 
+CBR:max_pcr=11Mbps,min_pcr=10mbps,sdu=8192 
+aal5,ubr:tx:none 
+cbr:tx:pcr=30000,rx:none
+
+The following
+specificiations are equivalent:
+
+CBR,AAL5:PCR=48Mbps
+
+cbr,aal5:max_pcr=125000 
+cbr,aal5:tx:pcr=125kcps,rx:pcr=125kcps
+
+AUTHOR
+
+Werner
+Almesberger, EPFL LRC/ICA
+werner.almesberger [AT] epfl.ch>

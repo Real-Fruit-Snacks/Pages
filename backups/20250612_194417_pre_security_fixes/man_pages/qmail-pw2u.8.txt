@@ -1,0 +1,152 @@
+NAME
+
+qmail-pw2u -
+build address assignments from a passwd file
+
+SYNOPSIS
+
+qmail-pw2u
+[ -/ohHuUC ] [ -cchar ]
+
+DESCRIPTION
+
+qmail-pw2u
+reads a V7-format passwd file from standard input and prints
+a qmail-users-format assignment file.
+
+A V7-format
+passwd file is a series of lines. Each line has the
+format
+
+   user:password:uid:gid:gecos:home:shell
+
+where
+user is an account name, uid and gid
+are the user id and group id of that account, and
+home is the account’s home directory.
+password, gecos, and shell are ignored
+by qmail-pw2u.
+
+If you put the
+output of qmail-pw2u into
+/var/lib/qmail/users/assign, and then run
+qmail-newu, qmail-lspawn will obey the
+assignments printed by qmail-pw2u. WARNING:
+After changing any users, uids, gids, or home directories in
+your passwd file, you must run qmail-pw2u and
+qmail-newu again if you want qmail-lspawn to
+see the changes.
+
+RULES
+
+By default,
+qmail-pw2u follows the same rules as
+qmail-getpw. It skips user if (1) uid
+is zero, (2) home does not exist, (3) user
+does not own home, or (4) user contains
+uppercase letters. It then gives each remaining user
+control over the basic user address and all addresses
+of the form user-anything. A catch-all
+user, alias, controls all other addresses.
+
+You may change
+these rules by setting up files in
+/var/lib/qmail/users: 
+include
+
+Allowed users, one per line. If
+include exists, and user is not listed in
+include, user is ignored.
+
+exclude
+
+Ignored users, one per line. If
+exclude exists, and user is listed in
+exclude, user is ignored.
+
+mailnames
+
+Replacement names for users.
+Each line has the form
+
+   user:mailname1:mailname2:...
+
+The addresses
+mailname1 and mailname1-ext and
+mailname2 and so on will be delivered to
+user.
+
+WARNING:
+The addresses user and user-ext
+will not be delivered to user unless user is
+listed as one of the mailnames.
+
+A line in
+mailnames is silently ignored if the user does not
+exist.
+
+subusers
+
+Extra addresses. Each line has
+the form
+
+   sub:user:pre:
+
+sub will
+be handled by home/.qmail-pre, where
+home is user’s home directory;
+sub-ext will be handled by
+home/.qmail-pre-ext.
+
+append
+
+Extra assignments, printed at the end of
+qmail-pw2u’s output.
+
+OPTIONS
+
+-o
+
+(Default.) Skip user if
+home does not exist (or is not visible to
+qmail-pw2u). Skip user if home is not
+owned by user.
+
+-h
+
+Stop if home does not exist. This is appropriate
+if every user is supposed to have a home directory. Skip
+user if home is not owned by user.
+
+-H
+
+Do not check the existence or ownership of
+home. 
+
+-U
+
+(Default.) Skip user if there are any uppercase
+letters in user.
+
+-u
+
+Allow uppercase letters in user.
+
+-cchar
+
+Use char as the user-extension delimiter in place
+of -.
+
+-C
+
+Disable the user-extension mechanism.
+
+-/
+
+Use home/.qmail-/... instead of
+home/.qmail-... 
+
+SEE ALSO
+
+qmail-users(5),
+qmail-lspawn(8), qmail-newu(8), qmail-getpw(8)

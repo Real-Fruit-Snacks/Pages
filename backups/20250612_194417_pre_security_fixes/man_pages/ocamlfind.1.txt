@@ -1,0 +1,1215 @@
+NAME
+
+ocamlfind -
+[Command-line interface of the Package manager]
+
+SYNOPSIS
+
+ocamlfind query [-help | other options] package_name ...
+
+or: ocamlfind ocamlc [-help | other options] file ...
+
+or: ocamlfind ocamlcp [-help | other options] file ...
+
+or: ocamlfind ocamlmktop [-help | other options] file ...
+
+or: ocamlfind ocamlopt [-help | other options] file ...
+
+or: ocamlfind ocamldoc [-help | other options] file ...
+
+or: ocamlfind ocamldep [-help | other options] file ...
+
+or: ocamlfind ocamlmklib [-help | other options] file ...
+
+or: ocamlfind ocamlbrowser [-help | other options]
+
+or: ocamlfind install [-help | other options] package_name file ...
+
+or: ocamlfind remove [-help | other options] package_name
+
+or: ocamlfind lint META
+
+or: ocamlfind list [-describe]
+
+or: ocamlfind printppx [-help | other options] package_name ...
+
+or: ocamlfind printconf [ variable ]
+
+or: ocamlfind package/command arg ...
+
+Optional toolchain selection by:   
+
+ocamlfind -toolchain name ...
+
+THE ’query’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind query [ -predicates p  | 
+
+-format f |
+
+-long-format | -l |
+
+-i-format |
+
+-l-format | 
+
+-a-format |
+
+-o-format | 
+
+-p-format |
+
+-prefix p |
+
+-separator s | 
+
+-suffix s |
+
+-pp |
+
+-descendants | -d |
+
+-recursive  | -r
+
+-qe | -qo] package ...
+
+Description
+
+This command looks packages up, sorts them optionally, and
+prints attributes of them. If the option -recursive (short:
+-r) is not specified, exactly the packages given on the
+command line are looked up; if -recursive is present, the
+packages and all their ancestors, or if -descendants (short:
+-d) is present, too, all their descendants are printed.
+
+Package lookup
+and the selection of the attributes of the packages can be
+modified by specifying predicates; without a -predicates
+option the empty set of predicates is used. Note that even
+the lookup is influenced by the set of actual predicates as
+the "requires" variables may be conditional.
+
+What is printed
+about a package depends on the specified format; there are a
+number of options that modify the format. Some formats
+denote sets of values (such as -format %a), in which case
+multiple output records are printed for every package. (It
+is even possible to specify formats denoting the Cartesian
+product of sets, such as -format %a%o, but this does not
+make sense.) Before the first output record the prefix is
+printed, and the suffix after the last record. Between two
+records the separator is printed.
+
+Options
+
+-predicates p
+
+Sets the set of
+actual predicates. The argument p is a list of
+predicate names separated by commas and/or whitespace. If
+multiple -predicates options are given, the union of all
+specified sets is effectively used.
+
+-format
+f
+
+Sets the format
+to the string f. Characters preceded by a percent
+sign are interpreted as placeholders; all other characters
+mean themselves. The defined placeholders are listed below.
+The default format is "%d".
+
+-long-format or
+-l
+
+Sets the format
+such that all relevant variables are printed.
+
+-i-format
+
+Same as -format
+"-I %d", i.e. directory options for ocamlc are
+printed.
+
+-l-format
+
+Same as -format
+"-ccopt -L%d", i.e. directory options for the
+linker backend are printed.
+
+-a-format
+
+Same as -format
+"%+a", i.e. archive file names are printed.
+
+-o-format
+
+Same as -format
+"%o", i.e. linker options are printed.
+
+-p-format
+
+Same as -format
+"%p", i.e. package names are printed.
+
+-prefix
+p
+
+Sets the prefix
+that is printed before the first output record to the given
+string. The default prefix is the empty string.
+
+-suffix
+s
+
+Sets the suffix
+that is printed after the last output record to the given
+string. The default suffix is the empty string.
+
+-separator
+s
+
+Sets the
+separator that is printed between output records to the
+given string. The default separator is a linefeed
+character.
+
+-recursive or
+-r
+
+Not only the
+packages given on the command line are queried but also all
+ancestors or descendants. If the option -descendants is
+specified, too, the descendants are printed, otherwise the
+ancestors. The packages are topologically sorted.
+
+-descendants
+-d
+
+Instead of the
+ancestors the descendants of the given packages are queried.
+This option implies -recursive.
+
+-pp
+
+Query
+preprocessor packages (camlp4 syntax extensions). Normally
+it is not needed to set -predicates, except you need the
+archives (then add -predicates byte). This option implies
+-recursive.
+
+-qe
+
+Do not print
+most errors to stderr, just set the exit code
+
+-qo
+
+Do not print
+the regular output.
+
+Placeholders
+meaningful in the -format option
+
+%%
+
+Replaced by a
+single percent sign
+
+%p
+
+Replaced by the
+package name
+
+%d
+
+Replaced by the
+package directory
+
+%m
+
+Replaced by the
+path to the META file (new since findlib-1.6)
+
+%D
+
+Replaced by the
+package description
+
+%v
+
+Replaced by the
+version string
+
+%a
+
+Replaced by the
+archive filename. If there is more than one archive, a
+separate output record is printed for every archive.
+
+%+a
+
+Like %a, but
+the filenames are converted to absolute paths ("+"
+and "@" notations are resolved)
+
+%A
+
+Replaced by the
+list of archive filenames.
+
+%+A
+
+Like %A, but
+the filenames are converted to absolute paths ("+"
+and "@" notations are resolved)
+
+%o
+
+Replaced by one
+linker option. If there is more than one option, a separate
+output record is printed for every option.
+
+%O
+
+Replaced by the
+list of linker options.
+
+%(property)
+
+Replaced by the
+value of the property named in parentheses, or the empty
+string if not defined.
+
+THE SUBCOMMANDS ’ocamlc’, ’ocamlcp’, ’ocamlopt’, and ’ocamlmktop’
+
+Synopsis
+
+ocamlfind ( ocamlc | ocamlcp | ocamlopt | ocamlmktop )
+
+[ -package package-name-list |
+
+-linkpkg |
+
+-predicates pred-name-list |
+
+-dontlink package-name-list |
+
+-syntax pred-name-list |
+
+-ppopt camlp4-arg |
+
+-ppxopt package,arg |
+
+-dllpath-pkg package-name-list |
+
+-dllpath-all |
+
+-passopt arg |
+
+-passrest arg... |
+
+-only-show |
+
+standard-option ]
+
+file ...
+
+Description
+
+These subcommands are drivers for the compilers with the
+same names, i.e. "ocamlfind ocamlc" is a driver
+for "ocamlc", and so on. The subcommands
+understand all documented options of the compilers (here
+called standard-options), but also a few more
+options. If these subcommands are invoked only with standard
+options, they behave as if the underlying compiler had been
+called directly. The extra options modify this.
+
+Internally,
+these subcommands transform the given list of options and
+file arguments into an invocation of the driven compiler.
+This transformation only adds options and files, and the
+relative order of the options and files passed directly is
+unchanged.
+
+If there are
+-package options, additional directory search specifiers
+will be included ("-I", and "-ccopt
+-I"), such that files of all named packages and all
+ancestors can be found.
+
+The -linkpkg
+option causes that the packages listed in the -package
+options and all necessary ancestors are linked in. This
+means that the archive files implementing the packages are
+inserted into the list of file arguments.
+
+As the package
+database is queried a set of predicates is needed. Most
+predicates are set automatically, see below, but additional
+predicates can be given by a -predicates option.
+
+If there is a
+-syntax option, the drivers assume that a preprocessor is to
+be used. In this case, the preprocessor command is built
+first in a preprocessor stage, and this command is passed to
+the compiler using the -pp option. The set of predicates in
+the preprocessor stage is different from the set in the
+compiler/linker stage.
+
+Options for
+compiling and linking 
+Here, only the additional options not interpreted by the
+compiler but by the driver itself, and options with
+additional effects are explained. Some options are only
+meaningful for the preprocessor call, and are explained
+below.
+
+-package
+package-name-list
+
+Adds the listed
+package names to the set of included packages. The package
+names may be separated by commas and/or whitespace. In the
+transformed command, for every package of the set of
+included packages and for any ancestor a directory search
+option is inserted after the already given options. This
+means that "-I" and "-ccopt -I" options
+are added for every package directory.
+
+-linkpkg
+
+Causes that in
+the transformed command all archives of the packages
+specified by -packages and all their ancestors are added to
+the file arguments. More precisely, these archives are
+inserted before the first given file argument. Furthermore,
+"-ccopt -L" options for all package directories,
+and the linker options of the selected packages are added,
+too. Note that the archives are inserted in topological
+order while the linker options are added in reverse
+toplogical order.
+
+-predicates
+pred-name-list
+
+Adds the given
+predicates to the set of actual predicates. The predicates
+must be separated by commas and/or whitespace.
+
+-dontlink
+package-name-list
+
+This option
+modifies the behaviour of -linkpkg. Packages specified here
+and all ancestors are not linked in. Again the packages are
+separated by commas and/or whitespace.
+
+-dllpath-pkg
+package-name-list
+
+For these
+packages -dllpath options are added to the compiler command.
+This may be useful when the ld.conf file is not properly
+configured.
+
+-dllpath-all
+
+For all linked
+packages -dllpath options are added to the compiler command.
+This may be useful when the ld.conf file is not properly
+configured.
+
+-passopt
+arg
+
+The argument
+arg is passed directly to the underlying compiler.
+This is needed to specify undocumented compiler options.
+
+-passrest
+arg...
+
+All following
+arguments arg... are passed directly to the
+underlying compiler. This is needed to specify undocumented
+compiler options.
+
+-only-show
+
+Only prints the
+constructed command (ocamlc/ocamlopt) to stdout, but does
+not execute the command. (This is for the unlikely event
+that you need a wrapper around ocamlfind.)
+
+-verbose
+
+This standard
+option is interpreted by the driver, too.
+
+-thread
+
+This standard
+option causes that the predicate "mt" is added to
+the set of actual predicates. If POSIX threads are
+available, the predicate "mt_posix" is selected,
+too. If only VM threads are available, the predicate
+"mt_vm" is included into the set, and the compiler
+switch is changed into -vmthread.
+
+Note that the
+presence of the "mt" predicate triggers special
+fixup of the dependency graph (see below).
+
+-vmthread
+
+This standard
+option causes that the predicates "mt" and
+"mt_vm" are added to the set of actual
+predicates.
+
+Note that the
+presence of the "mt" predicate triggers special
+fixup of the dependency graph (see below).
+
+-p
+
+This standard
+option of "ocamlopt" causes that the predicate
+"gprof" is added to the set of actual
+predicates.
+
+Options for
+preprocessing 
+The options relevant for the preprocessor are the
+following:
+
+-package
+package-name-list
+
+These packages
+are considered while looking up the preprocessor arguments.
+(It does not cause problems that the same -package option is
+used for this purpose, because the set of predicates is
+different.) It is recommended to mention at least camlp4
+here if the preprocessor is going to be used.
+
+-syntax
+pred-name-list
+
+These
+predicates are assumed to be true in addition to the
+standard preprocessor predicates. See below for a list.
+
+-ppopt
+camlp4-arg
+
+This argument
+is passed to the camlp4 call.
+
+-ppxopt
+package,arg
+
+Add arg
+to the ppx preprocessor invocation specified via the
+"ppx" property in the META file of
+package.
+
+Predicates
+for compiling and linking
+
+byte
+
+The
+"byte" predicate means that one of the bytecode
+compilers is used. It is automatically included into the
+predicate set if the "ocamlc",
+"ocamlcp", or "ocamlmktop" compiler is
+used.
+
+native
+
+The
+"native" predicate means that the native compiler
+is used. It is automatically included into the predicate set
+if the "ocamlopt" compiler is used.
+
+toploop
+
+The
+"toploop" predicate means that the toploop is
+available in the linked program. This predicate is only set
+when the toploop is actually being executed, not when the
+toploop is created (this changed in version 1.0.4 of
+findlib).
+
+create_toploop
+
+This predicate
+means that a toploop is being created (using
+ocamlmktop).
+
+mt
+
+The
+"mt" predicate means that the program is
+multi-threaded. It is automatically included into the
+predicate set if the -thread option is given.
+
+mt_posix
+
+The
+"mt_posix" predicate means that in the case
+"mt" is set, too, the POSIX libraries are used to
+implement threads. "mt_posix" is automatically
+included into the predicate set if the variable
+"type_of_threads" in the META description of the
+"threads" package has the value "posix".
+This is normally the case if "findlib" is
+configured for POSIX threads.
+
+mt_vm
+
+The
+"mt_vm" predicate means that in the case
+"mt" is set, too, the VM thread emulation is used
+to implement multi-threading.
+
+gprof
+
+The
+"gprof" predicate means that in the case
+"native" is set, too, the program is compiled for
+profiling. It is automatically included into the predicate
+set if "ocamlopt" is used and the -p option is in
+effect.
+
+autolink
+
+The
+"autolink" predicate means that ocamlc is able to
+perform automatic linking. It is automatically included into
+the predicate set if ocamlc knows automatic linking (from
+version 3.00), but it is not set if the -noautolink option
+is set.
+
+syntax
+
+This predicate
+is set if there is a -syntax option. It is set both for the
+preprocessor and the compiler/linker stage, and it can be
+used to find out whether the preprocessor is enabled or
+not.
+
+Predicates
+for preprocessing
+
+preprocessor
+
+This predicate
+is always set while looking up the preprocessor arguments.
+It can be used to distinguish between the preprocessor stage
+and the compiler/linker stage.
+
+syntax
+
+This predicate
+is set if there is a -syntax option. It is set both for the
+preprocessor and the compiler/linker stage, and it can be
+used to find out whether the preprocessor is enabled or
+not.
+
+camlp4o
+
+This is the
+reserved predicate for the standard OCaml syntax. It can be
+used in the -syntax predicate list.
+
+camlp4r
+
+This is the
+reserved predicate for the revised OCaml syntax. It can be
+used in the -syntax predicate list.
+
+Special
+behaviour of ’ocamlmktop’ 
+As there is a special module Topfind that supports loading
+of packages in scripts, the "ocamlmktop"
+subcommand can add initialization code for this module. This
+extra code is linked into the executable if
+"findlib" is in the set of effectively linked
+packages.
+
+Fixup of the
+dependency graph for multi-threading 
+For a number of reasons the presence of the "mt"
+predicate triggers that (1) the package "threads"
+is added to the list of required packages and (2) the
+package "threads" becomes prerequisite of all
+other packages (except of itself and a few hardcoded
+exceptions). The effect is that the options -thread and
+-vmthread automatically select the "threads"
+package, and that "threads" is inserted at the
+right position in the package list.
+
+Extended
+file naming 
+At a number of places one can not only refer to files by
+absolute or relative path names, but also by extended names.
+These have two major forms: "+name" refers
+to the subdirectory name of the standard library
+directory, and "@name" refers to the
+package directory of the package name. Both forms can
+be continued by a path, e.g.
+"@netstring/netstring_top.cma".
+
+You can use
+extended names: (1) With -I options, (2) as normal file
+arguments of the compiler, (3) in the "archive"
+property of packages.
+
+How to set
+the names of the compiler executables 
+Normally, the OCaml bytecode compiler can be called under
+the name ocamlc. However, this is not always true; sometimes
+a different name is chosen.
+
+You can
+instruct ocamlfind to call executables with other names than
+ocamlc, ocamlopt, ocamlmktop, and ocamlcp. If present, the
+environment variable OCAMLFIND_COMMANDS is interpreted as a
+mapping from the standard names to the actual names of the
+executables. It must have the following format:
+
+standardname1=actualname1 standardname2=actualname2 ...
+
+Example: You
+may set OCAMLFIND_COMMANDS as follows:
+
+OCAMLFIND_COMMANDS=’ocamlc=ocamlc-3.00 ocamlopt=ocamlopt-3.00’
+
+export OCAMLFIND_COMMANDS
+
+Alternatively,
+you can change the configuration file findlib.conf.
+
+THE SUBCOMMAND ’ocamlmklib’
+
+Synopsis
+
+ocamlfind ocamlmklib
+
+[ -package package-name-list |
+
+-predicates pred-name-list |
+
+-dllpath-pkg package-name-list |
+
+-dllpath-all |
+
+-passopt arg |
+
+-passrest arg... |
+
+standard-option ]
+
+file ...
+
+Description
+
+This is a wrapper around ocamlmklib, and creates library
+archives and DLLs. In addition to the standard options, one
+can use -package to add the search path of packages. Note
+that no predicates are set by default - the wrapper does not
+know whether this is about byte or native code linking.
+
+This wrapper is
+mostly provided for completeness.
+
+THE ’ocamldep’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind ocamldep [-package package-name-list |
+
+-syntax pred-name-list |
+
+-ppopt camlp4-arg |
+
+-passopt arg |
+
+-passrest arg... |
+
+-verbose |
+
+standard-option] file ...
+
+Description
+
+This command is a driver for the tool ocamldep of the OCaml
+distribution. This driver is only useful in conjunction with
+the preprocessor camlp4; otherwise it does not provide more
+functions than ocamldep itself.
+
+Options
+
+Here, only the additional options not interpreted by
+ocamldep but by the driver itself, and options with
+additional effects are explained.
+
+-package
+package-name-list
+
+The packages
+named here are only used to look up the preprocessor
+options. The package camlp4 should be specified anyway, but
+further packages that add capabilities to the preprocessor
+can also be passed.
+
+-syntax
+pred-name-list
+
+The predicates
+that are in effect during the look-up of the preprocessor
+options. At least, either camlp4o (selecting the normal
+syntax), or camlp4r (selecting the revised syntax) should be
+specified.
+
+-ppopt
+camlp4-arg
+
+An option that
+is passed through to the camlp4 call.
+
+-passopt
+arg
+
+An option that
+is passed through to the ocamldep call.
+
+-passrest
+arg...
+
+All further
+arguments are passed down to ocamldep unprocessed
+
+-verbose
+
+Displays the
+resulting ocamldep command (for debugging)
+
+Example
+
+A typical way of using this driver:
+
+ocamlfind ocamldep -package camlp4,xstrp4 -syntax camlp4r file1.ml file2.ml
+
+This command outputs the dependencies of file1.ml and
+file2.ml, although these modules make use of the syntax
+extensions provided by xstrp4 and are written in revised
+syntax.
+
+THE ’ocamlbrowser’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind ocamlbrowser [-package package-name-list |
+
+-all |
+
+-passopt arg 
+
+-passrest ]
+
+Description
+
+This driver calls the ocamlbrowser with package options.
+With -package, the specified packages are included into the
+search path of the browser, and the modules of these
+packages become visible (in addition to the standard
+library). The option -all causes that all packages are
+selected that are managed by findlib.
+
+As for other
+drivers, the options -passopt and -passrest can be used to
+pass arguments directly to the ocamlbrowser program.
+
+THE SUBCOMMAND ’ocamldoc’
+
+Synopsis
+
+ocamlfind ocamldoc
+
+[ -package package-name-list |
+
+-predicates pred-name-list |
+
+-syntax pred-name-list |
+
+-ppopt camlp4-arg |
+
+standard-option ]
+
+file ...
+
+Description
+
+This subcommand is a driver for ocamldoc. It undestands all
+options ocamldoc supports plus the mentioned findlib
+options. Basically, the -package options are translated into
+-I options, and the selected syntax options are translated
+into camlp4 options.
+
+Options
+
+Here, only the additional options not interpreted by
+ocamldep but by the driver itself, and options with
+additional effects are explained.
+
+-package
+package-name-list
+
+Adds the listed
+package names to the set of included packages. The package
+names may be separated by commas and/or whitespace. In the
+transformed command, for every package of the set of
+included packages and for any ancestor a directory search
+option is inserted after the already given options. This
+means that "-I" options are added for every
+package directory.
+
+-predicates
+pred-name-list
+
+Adds the given
+predicates to the set of actual predicates. The predicates
+must be separated by commas and/or whitespace.
+
+-syntax
+pred-name-list
+
+The predicates
+that are in effect during the look-up of the preprocessor
+options. At least, either camlp4o (selecting the normal
+syntax), or camlp4r (selecting the revised syntax) should be
+specified.
+
+-ppopt
+camlp4-arg
+
+An option that
+is passed through to the camlp4 call.
+
+THE ’install’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind install [ -destdir directory ]
+
+[ -metadir directory ]
+
+[ -ldconf path ]
+
+[ -dont-add-directory-directive ]
+
+[ -patch-version string ]
+
+[ -patch-rmpkg name ]
+
+[ -patch-archives ]
+
+[ -dll ] [ -nodll ] [ -optional ] [ -add ]
+
+package_name file ...
+
+Description
+
+This subcommand installs a new package either at the default
+location (see the variable destdir of findlib.conf), or in
+the directory specified by the -destdir option. This means
+that a new package directory is created and that the files
+on the command line are copied to this directory. It is
+required that a META file is one of the files copied to the
+target directory.
+
+Note that
+package directories should be flat (no subdirectories).
+Existing packages are never overwritten.
+
+It is possible
+to have a separate directory for all the META files. If you
+want that, you have either to set the variable metadir of
+findlib.conf, or to specify the -metadir option. In this
+case, the file called META is copied to the specified
+directory and renamed to META.p (where p is the package
+name), while all the other files are copied to the package
+directory as usual. Furthermore, the META file is modified
+such that the directory variable contains the path of the
+package directory.
+
+The option
+-dont-add-directory-directive prevents the installer from
+adding a directory variable.
+
+If there are
+files ending in the suffixes .so or .dll, the package
+directory will be added to the DLL configuration file
+ld.conf, such that the dynamic loader can find the DLL. The
+location of this file can be overriden by the -ldconf
+option. To turn this feature off, use "-ldconf
+ignore"; this causes that the ld.conf file is not
+modified.
+
+However, if
+there is a stublibs directory in site-lib, the DLLs are not
+installed in the package directory, but in this directory
+that is shared by all packages that are installed at the
+same location. In this case, the configuration file ld.conf
+is not modified, so you do not need to say "-ldconf
+ignore" if you prefer this style of installation.
+
+The options
+-dll and -nodll can be used to control exactly which files
+are considered as DLLs and which not. By default, the
+mentioned suffix rule is in effect: files ending in
+".so" (Unix) or ".dll" (Windows) are
+DLLs. The switch -dll changes this, and all following files
+are considered as DLLs, regardless of their suffix. The
+switch -nodll expresses that the following files are not
+DLLs, even if they have a DLL-like suffix. For example, in
+the following call the files f1 and f2 are handled by the
+suffix rule; f3 and f4 are DLLs anyway; and f5 and f6 are
+not DLLs:
+
+ocamlfind install p f1 f2 -dll f3 f4 -nodll f5 f6
+
+The switch
+-optional declares that all following files are optional,
+i.e. the command will not fail if files do not exist.
+
+The -patch
+options may be used to change the contents of the META files
+while it is being installed. The option -patch-version
+changes the contents of the top-level "version"
+variable. The option -patch-rmpkg removes the given
+subpackage. The option -patch-archives is experimental, in
+particular it removes all non-existing files from
+"archive" variables, and even whole subpackages if
+the archives are missing.
+
+The effect of
+-add is to add further files to an already installed
+packages.
+
+THE ’remove’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind remove [ -destdir directory ]
+
+[ -metadir directory ]
+
+[ -ldconf path ]
+
+package_name
+
+Description
+
+The package will removed if it is installed at the default
+location (see the variable destdir of findlib.conf). If the
+package resides at a different location, it will not be
+removed by default; however, you can pass an alternate
+directory for packages by the -destdir option. (This must be
+the same directory as specified at installation time.)
+
+Note that
+package directories should be flat (no subdirectories); this
+subcommand cannot remove deep package directories.
+
+If you have a
+separate directory for META files, you must either configure
+this directory by the metadir variable of findlib.conf, or
+by specifying the -metadir option.
+
+The command
+does not fail if the package and/or the META file cannot be
+located. You will get a warning only in this case.
+
+If the package
+directory is mentioned in the ld.conf configuration file for
+DLLs, it will be tried to remove this entry from the file.
+The location of this file can be overriden by the -ldconf
+option. To turn this feature off, use "-ldconf
+ignore"; this causes that the ld.conf file is not
+modified.
+
+If there is a
+stublibs directory, it is checked whether the package owns
+any of the files in this directory, and the owned files will
+be deleted.
+
+THE ’list’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind list [-describe]
+
+Description
+
+This command lists all packages in the search path. The
+option -describe outputs the package descriptions, too.
+
+THE ’printppx’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind printppx
+
+[ -predicates pred-name-list ]
+
+[ -ppxopt package,arg ]
+
+package ...
+
+Description
+
+This command prints the ppx preprocessor options as they
+would occur in an OCaml compiler invocation for the packages
+listed in the command. The output includes one
+"-ppx" option for each preprocessor. The possible
+options have the same meaning as for "ocamlfind
+ocamlc". The option "-predicates" adds
+assumed predicates and "-ppxopt
+package,arg" adds "arg"
+to the ppx invocation of package package.
+
+The output of
+"ocamlfind printppx" will contain quotes
+""" for ppx commands that contain
+space-separated arguments. In this case $(ocamlfind printppx
+...) won’t work as naively expected, because many
+shells (including bash and dash) perform field splitting on
+the result of command substitutions without honoring
+quotes.
+
+THE ’lint’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind lint file
+
+Description
+
+Checks the META file, and reports possible problems.
+
+THE ’printconf’ SUBCOMMAND
+
+Synopsis
+
+ocamlfind printconf [ conf | path | destdir | metadir | metapath | stdlib | ldconf ]
+
+Description
+
+This command prints the effective configuration after
+reading the configuration file, and after applying the
+various environment variables overriding settings. When
+called without arguments, the command prints all
+configuration options in a human-readable form. When called
+with an argument, only the value of the requested option is
+printed without explaining texts:
+
+conf
+
+Prints the
+location of the configuration file findlib.conf
+
+path
+
+Prints the
+search path for packages. The members of the path are
+separated by linefeeds.
+
+destdir
+
+Prints the
+location where package are installed and removed by
+default.
+
+metadir
+
+Prints the
+location where META files are installed and removed (if the
+alternative layout is used).
+
+metapath
+
+Prints the path
+where the META file is installed for a fictive package. The
+name of the package is marked with ’%s’ in the
+path. For instance, this command could output
+"/some/path/%s/META" or
+"/some/path/META.%s", depending on the layout.
+
+stdlib
+
+Prints the
+location of the standard library.
+
+ldconf
+
+Prints the
+location of the ld.conf file
+
+THE SUBCOMMAND CALLING PACKAGE PROGRAMS
+
+Synopsis
+
+ocamlfind pkg/cmd argument ...
+
+Description
+
+This subcommand is useful to call programs that are
+installed in package directories. It looks up the directory
+for pkg and calls the command named cmd in
+this directory. The remaining arguments are passed to this
+command.
+
+argv(0)
+contains the absolute path to the command, and argv(1) and
+the following argv entries contain the arguments. The
+working directory is not changed.
+
+Example: To
+call the program "x" that is installed in package
+"p", with arguments "y" and
+"z", run:
+
+ocamlfind p/x y z
+
+CONFIGURATION FILE, ENVIRONMENT VARIABLES
+
+The
+configuration file and environment variables are documented
+in the manual page for findlib.conf.
+
+HOW TO SET THE TOOLCHAIN
+
+Synopsis
+
+ocamlfind -toolchain name ...
+
+Description
+
+The -toolchain option can be given before any other command,
+e.g.
+
+ocamlfind -toolchain foo ocamlc -c file.ml
+
+compiles file.ml with toolchain "foo". By
+selecting toolchains one can switch to different command
+sets. For instance, the toolchain "foo" may
+consist of a patched ocamlc compiler. See findlib.conf how
+to configure toolchains.

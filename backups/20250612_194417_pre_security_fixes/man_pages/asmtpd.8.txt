@@ -1,0 +1,469 @@
+NAME
+
+asmtpd −
+Avenger SMTP Daemon
+
+SYNOPSIS
+
+asmtpd
+[−d] [−−verbose] [−f
+config-file]
+
+asmtpd
+[−−spf] [−f config-file]
+
+asmtpd
+[−−rbl] [−f config-file]
+
+asmtpd
+[−−avenge] [−f config-file]
+recipient [sender [IP-address]]
+
+asmtpd
+[−−synfp] [tcp-port [IP-address
+[interface ...]]]
+
+asmtpd
+[−−netpath] IP-address
+[network-hops]
+
+DESCRIPTION
+
+asmtpd
+is the central server daemon for Mail Avanger. Mail Avenger
+is a highly-configurable MTA-independent SMTP
+(Simple Mail Transport Protocol) server designed to let you
+filter and fight SPAM before accepting
+incoming mail from a client machine. Filtering spam before
+accepting a message from a remote machine offers a number of
+benefits. First, while mail is in the process of being sent
+over the network, more information is available about the
+client machine, allowing the possibility of more accurate
+decisions about spam. (For example, machines infected with
+viruses may be able to be detected by probing.)
+
+Second,
+filtering during mail transfer allows more options for what
+to do with potential spam. For instance, one can defer the
+mail--essentially asking the client to send it again
+later--which legitimate mail clients will do automatically,
+but "spam ’bots" typically won’t.
+Moreover, it is much safer to reject spam before accepting a
+message. With typical after-delivery spam checkers, the only
+options are to discard spam silently (risking false
+positives that completely disappear), or to notify the
+sender, but if the sender is forged, this causes more
+unwanted mail. By rejecting mail during an
+SMTP transaction, this ensures legitimate
+mail gets bounced to the sender, while most spam will simply
+disappear.
+
+Finally,
+filtering during an SMTP transaction saves
+resources, since spam messages need never to be spooled in
+the mail queue.
+
+There are many
+ways of fighting and detecting spam. Though Mail Avenger has
+a few basic mechanisms built-in, the philosophy of the
+system is to let system administrators and individual users
+plug in their own filtering criteria. The intent is for Mail
+Avenger to do the hard part--talk the SMTP
+network protocol, handle asynchronous DNS
+resolution, SPF rule checking, probing of
+remote SMTP servers for legitimacy,
+etc.−−while users can set policy through
+configuration files with simple shell commands.
+
+The basic
+approach is for users to create scripts in a directory
+called $HOME/.avenger that specify policies for what
+mail to accept and what to reject or defer. System-wide
+fallback policies can also be specified by files in
+/etc/avenger/. The program that executes these
+scripts is called avenger, and is described more
+fully in its own manual page.
+
+asmtpd can be
+configured to map different email addresses and domains to
+different local users, in addition to a large number of
+other configurable features. These are described more fully
+in the asmtpd.conf(5) manual page.
+
+asmtpd also
+adds a new header field to messages,
+"X−Avenger:", containing
+information that may be of use to spam filters.
+"X−Avenger:" contains a list of
+semi-colon-separated tokens, which if present mean the
+following: 
+version=number
+
+Specifies the version of Mail
+Avenger that received the message.
+
+receiver=hostname
+
+Specifies that asmtpd was
+running on hostname when it received the message.
+
+client−ip=IP-address
+
+client−port=port-number
+
+These specify that the client
+end of the TCP connection from which the mail
+came used IP address IP-address and
+port port-number.
+
+client−dnsfail=error
+
+Specifies that a reverse lookup
+on the client’s IP address (to
+determine the client’s hostname) resulted in
+error.
+
+bounce−res=code
+
+Specifies that attempts to send
+bounces to the bounce address of the sender result in
+SMTP error code. (This is the same
+value as the SENDER_BOUNCERES
+environment variable described in the avenger(1)
+manual page.)
+
+syn−fingerprint=fingerprint
+
+Contains a description of the
+initial TCP SYN packet used by the client to
+initiate the TCP connection over which the
+mail was sent. See the description of
+CLIENT_SYNFP in the avenger(1)
+manual page for an explanation of the format.
+
+colon-space
+
+If present, means the client
+included a space between the colon in the command "
+MAIL FROM:" or " RCPT
+TO:" and the subsequent "
+
+eager-pipelining
+
+If present, means that the
+client attempted to pipeline SMTP commands
+before receiving the "250 PIPELINING"
+response to the SMTP
+"HELO" or "EHLO"
+command. This field has the same meaning as the
+CLIENT_PIPELINING environment variable
+in avenger(1).
+
+post
+
+If present, means the client
+issued the invalid SMTP command
+POST . See
+CLIENT_POST in avenger(1).
+
+network−hops=nhops
+
+This is the number of network
+hops from the server to the client that sent this mail (if
+Mail Avenger can figure this out). See
+CLIENT_NETHOPS in
+avenger(1).
+
+network−path=IP-list
+
+Set to a space-separated list
+of as many intermediary network hops as Mail Avenger can
+efficiently discover on the way from the server to the
+client that send the mail. See
+CLIENT_NETHOPS in
+avenger(1).
+
+network−path−time=time
+
+To save network traffic, Mail
+Avenger briefly caches routes to a particular client.
+network-path-time specifies the precise time at which
+the information in network-path was discovered. The
+time is expressed as a standard Unix time (number of seconds
+since Jan 1, 1970).
+
+RBL=domain
+(IP-addrs)[, domain (IP-addrs),
+...]
+
+For the each real-time
+blackhole list ( RBL ) domain specified in
+asmtpd.conf (see the RBL
+directive in the asmtpd.conf(5) man page), if the
+client shows up in the RBL, IP-addrs
+specifies what the RBL returns.
+
+Usually, RBLs
+just return 127.0.0.1 to specify that a client is present in
+the blacklist. However, some services use different
+IP addresses to encode some information about
+why the client is listed. If an RBL returns
+multiple IP addresses, asmtpd includes them
+all, separated by spaces.
+
+RBL−errors=domain
+(error)[, domain
+(error), ...]
+
+Lists any RBL
+domains Mail Avenger was unable to query at the time of
+receipt of the message.
+
+GETTING
+STARTED 
+The following is a brief description of how to get started
+with asmtpd. More information is available in the
+installation guide /usr/local/share/avenger/INSTALL,
+as well as the asmtpd.conf(5) and avenger(1)
+manual pages.
+
+•
+
+If you haven’t already, create a user called
+avenger on your system. This is the user
+ID under which system-wide avenger scripts
+will run. (If you wish to use a name other than
+"avenger", you can put the directive
+"AvengerUser user" in the
+asmtpd.conf configuration file when you create that.)
+
+•
+
+Create the directory /etc/avenger.
+
+•
+
+Create a file /etc/avenger/asmtpd.conf. Copy the
+sample file in /usr/local/share/avenger/asmtpd.conf
+and edit to taste.
+
+•
+
+Create a file /etc/avenger/domains. List each
+domain for which you would like to receive mail, followed by
+a colon, one per line. For example:
+
+    my.first.domain:
+    my.second.domain:
+
+•
+
+Fire it up! Run the command
+"asmtpd" as root. You may also want to set things
+up to run this command automatically on system startup.
+
+•
+
+Play with scripts. Read the man page for
+avenger(1), create a .avenger/rcpt file in
+your home directory, and maybe create a site-wide default
+file /etc/avenger/default. You will also very likely
+want to create a script /etc/avenger/unknown to
+reject mail to unknown users. See the man page for
+aliascheck(1) and the sample
+/usr/local/share/avenger/unknown for an example of
+how to do this.
+
+•
+
+Finally, you may want to try the avenger.local delivery
+agent. See the avenger.local(8) man page for more
+information. 
+
+OPTIONS
+
+Normally, when started, asmtpd runs as a daemon, sends its
+output to the system log, and looks for its configuration
+file in /etc/avenger/asmtpd.conf. The following
+options change this behavior:
+
+−d
+
+Tells asmtpd to stay in the
+foreground and send its diagnostic messages to standard
+error, rather than to the system log.
+
+−−verbose
+
+Ordinarily, asmtpd will attempt
+to avoid sending overly many duplicate copies of a message
+to the system log file. The −−verbose
+option changes this behavior, so that certain error
+conditions (such as missing directories) get reported each
+time they affect a piece of mail.
+
+−f
+config-file
+
+Specifies an alternate location
+for the configuration file.
+
+In addition,
+several other options are available to run asmtpd in various
+test modes, for making use of or debugging features. 
+−−spf [−f
+config-file]
+
+Runs in a mode where asmtpd
+simply performs SPF tests on
+ pairs it reads from
+standard input. Can be used to validate asmtpd’s
+SPF implementation against a different
+implementation, or to debug SPF records
+(particularly in conjunction with the
+SPF_TRACE environment variable
+discussed below).
+
+−−rbl
+[−f config-file]
+
+Tests asmtpd’s
+RBL (realtime black hole) list
+implementation. The configuration file should contain one or
+more RBL directives (see the manual
+page for asmtpd.conf(5)). In this mode, asmtpd will
+simply read IP addresses from its input and
+output the result of RBL checks.
+
+−−avenge
+[−f config-file] recipient
+[sender [IP-address]]
+
+Tests the avenger script for
+recipient, which must be a fully-qualified email
+address with a domain. This simulates an SMTP
+transaction in which client IP-address tries to send
+mail from sender to recipient. If
+recipient is not specified, it defaults to
+postmaster@HostName (where Hostname is the
+local hostname, as specified in asmtpd.conf). If
+ is not specified, the local address
+is used.
+
+With this
+option, asmtpd will log a transcript of avenger’s
+requests to standard error, regardless of the actual
+DebugAvenger setting. At the end, outputs the
+SMTP response asmtpd would give to the
+"RCPT" command.
+
+−−synfp
+[tcp-port [IP-address [interface
+...]]]
+
+Tests asmtpd’s
+SYN fingerprinting implementation. Listens to
+the network and for each incoming TCP
+connection, prints the IP address and port of
+the client, along with a fingerprint describing the
+characteristics of the initial SYN packet
+from the TCP connection. (For a description
+of the SYN fingerprint format, see the
+description of CLIENT_SYNFP in the man
+page for avenger(1).)
+
+By default,
+asmtpd will print the fingerprints of any incoming
+TCP connection. If tcp-port is
+non-zero, however, asmtpd will only consider
+SYN packets sent to that TCP
+port number. If IP-address is supplied and is not
+0.0.0.0, asmtpd will only took at TCP packets
+for that particular IP address (useful if
+your local machine has multiple IP
+addresses). Finally, by default asmtpd will listen to
+whatever network interfaces correspond to IP-address
+(or all active non-loopback interfaces for 0.0.0.0 or
+unspecified). You can alternatively specify explicitly which
+network interfaces asmtpd should listen on (e.g., "eth0
+eth1").
+
+To use this
+option, you must be root (or at least have permission to
+open the /dev/bpf* packet filter devices on your
+machine).
+
+−−netpath
+IP-address [network-hops]
+
+asmtpd records the network path
+to mail clients using a technique similar to the
+traceroute utility found on many operating systems.
+The −−netpath option tests asmtpd’s
+implementation of this functionality. If network-hops
+is positive, asmtpd will record only the first
+network-hops hops on the way to IP-address. If
+network-hops is negative, asmtpd will output only the
+last network-hops hops on the way to
+IP-address. If network-hops is zero, or is not
+supplied, asmtpd will output the entire route (or as much as
+it can discover, firewall permitting).
+
+To use this
+option, you must run asmtpd as root for it to use raw
+sockets.
+
+ENVIRONMENT
+
+SPF_TRACE
+
+When set to a positive integer,
+causes asmtpd to send to standard error a trace of the
+checks it is performing while processing SPF
+records. If set to 1, simply records which
+SPF traces are happening. Setting it to 2
+provides more information, while setting it to 3 provides a
+complete trace. (Setting the value to 4 or higher
+additionally causes asmtpd to send the results of all
+SPF-related DNS queries to its standard
+output, a feature mostly useful to the implementor.)
+
+TMPDIR
+
+asmtpd creates temporary files
+to hold incoming mail messages before injecting them into
+the mail system. It usually creates a temporary subdirectory
+of /var/tmp to hold these files (and cleans up the
+directory on exit). If TMPDIR is set,
+its value will be used in place of /var/tmp.
+
+FILES
+
+/etc/avenger/asmtpd.conf,
+/etc/avenger/domains, /etc/avenger/aliases,
+/etc/avenger/unknown, /etc/avenger/default,
+$HOME/.avenger/rcpt* /usr/local/share/avenger/*
+
+SEE ALSO
+
+asmtpd.conf(5),
+avenger(1)
+
+The Mail
+Avenger home page: http://www.mailavenger.org/>.
+
+BUGS
+
+If the packet
+capture library (libpcap) header files were not available at
+compile time, asmtpd will not support TCP SYN
+fingerprints and the −−synfp option will
+not be available. You may be able to fix this by installing
+a package for your OS called pcap, libpcap,
+or libpcap-devel (depending on the distribution), then
+re-running ./configure and re-compiling Mail Avenger.
+
+AUTHOR
+
+David
+Mazieres

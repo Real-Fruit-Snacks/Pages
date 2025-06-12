@@ -1,0 +1,157 @@
+AE(4) BSD Kernel Interfaces Manual AE(4)
+
+NAME
+
+ae —
+Attansic/Atheros L2 FastEthernet controller driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, place the following lines in your kernel
+configuration file:
+
+device
+miibus 
+device ae
+
+Alternatively,
+to load the driver as a module at boot time, place the
+following line in loader.conf(5):
+
+if_ae_load="YES"
+
+DEPRECATION NOTICE
+
+The ae driver is not
+present in FreeBSD 13.0 and later. See
+https://github.com/freebsd/fcp/blob/master/fcp-0101.md for
+more information.
+
+DESCRIPTION
+
+The ae device driver
+provides support for Attansic/Atheros L2 PCIe FastEthernet
+controllers.
+
+The controller
+supports hardware Ethernet checksum processing, hardware
+VLAN tag stripping/insertion and an interrupt moderation
+mechanism. Attansic L2 also features a 64-bit multicast hash
+filter.
+
+The ae
+driver supports the following media types:
+
+autoselect
+
+Enable
+autoselection of the media type and options. The user can
+manually override the autoselected mode by adding media
+options to rc.conf(5).
+
+10baseT/UTP
+
+Select 10Mbps
+operation.
+
+100baseTX
+
+Set 100Mbps
+(FastEthernet) operation.
+
+The ae
+driver provides support for the following media options:
+
+full-duplex
+
+Force full
+duplex operation.
+
+half-duplex
+
+Force half
+duplex operation.
+
+For more
+information on configuring this device, see ifconfig(8).
+
+HARDWARE
+
+The ae driver supports
+Attansic/Atheros L2 PCIe FastEthernet controllers, and is
+known to support the following hardware:
+
+•
+
+ASUS EeePC 701
+
+•
+
+ASUS EeePC 900
+
+Other hardware
+may or may not work with this driver.
+
+LOADER TUNABLES
+
+Tunables can be set at the
+loader(8) prompt before booting the kernel or stored in
+loader.conf(5).
+
+hw.ae.msi_disable
+
+This tunable disables MSI
+support on the Ethernet hardware. The default value is
+0.
+
+SYSCTL VARIABLES
+
+The ae driver collects a
+number of useful MAC counter during the work. The statistics
+is available via the dev.ae.%d.stats sysctl(8) tree,
+where %d corresponds to the controller number.
+
+DIAGNOSTICS
+
+ae%d: watchdog
+timeout.  The device has stopped responding to the
+network, or there is a problem with the network connection
+(cable).
+
+ae%d: reset
+timeout.  The card reset operation has been timed
+out.
+
+ae%d:
+Generating random ethernet address.  No valid
+Ethernet address was found in the controller NVRAM and
+registers. Random locally administered address with ASUS OUI
+identifier will be used instead.
+
+SEE ALSO
+
+altq(4), arp(4), miibus(4),
+netintro(4), ng_ether(4), vlan(4), ifconfig(8)
+
+HISTORY
+
+The ae driver and this
+manual page was written by Stanislav Sedov
+stas [AT] FreeBSD.org>. It first appeared in
+FreeBSD 7.1.
+
+BUGS
+
+The Attansic L2 FastEthernet
+controller supports DMA but does not use a descriptor based
+transfer mechanism via scatter-gather DMA. Thus the data
+should be copied to/from the controller memory on each
+transmit/receive. Furthermore, a lot of data alignment
+restrictions apply. This may introduce a high CPU load on
+systems with heavy network activity. Luckily enough this
+should not be a problem on modern hardware as L2 does not
+support speeds faster than 100Mbps.
+
+BSD
+October 24, 2018 BSD

@@ -1,0 +1,154 @@
+NAME
+
+runc-exec
+- execute new process inside the container
+
+SYNOPSIS
+
+runc
+exec [option ...] container-id [--]
+command [arg ...]
+
+runc
+exec [option ...] -p process.json
+container-id
+
+OPTIONS
+
+--console-socket
+path
+
+Path to an AF_UNIX
+socket which will receive a file descriptor referencing the
+master end of the console’s pseudoterminal. See
+docs/terminals ⟨
+https://github.com/opencontainers/runc/blob/master/docs/terminals.md⟩
+.
+
+--cwd path
+
+Change to path in the
+container before executing the command.
+
+--env|-e
+name=value
+
+Set an environment variable
+name to value. Can be specified multiple
+times.
+
+--tty|-t
+
+Allocate a pseudo-TTY.
+
+--user|-u
+uid[:gid]
+
+Run the command as a
+user (and, optionally, group) specified by uid (and
+gid).
+
+--additional-gids|-g
+gid
+
+Add additional group IDs. Can
+be specified multiple times.
+
+--process|-p
+process.json
+
+Instead of specifying all the
+exec parameters directly on the command line, get them from
+a process.json, a JSON file containing the process
+specification as defined by the OCI runtime spec ⟨
+https://github.com/opencontainers/runtime-spec/blob/master/config.md#process⟩
+.
+
+--detach|-d
+
+Detach from the
+container’s process.
+
+--pid-file
+path
+
+Specify the file to write the
+container process’ PID to.
+
+--process-label
+label
+
+Set the asm process label for
+the process commonly used with selinux(7).
+
+--apparmor
+profile
+
+Set the apparmor(7)
+profile for the process.
+
+--no-new-privs
+
+Set the "no new
+privileges" value for the process.
+
+--cap cap
+
+Add a capability to the
+bounding set for the process. Can be specified multiple
+times.
+
+--preserve-fds
+N
+
+Pass N additional file
+descriptors to the container (stdio +
+$LISTEN_FDS + N in total). Default is
+0.
+
+--ignore-paused
+
+Allow exec in a paused
+container. By default, if a container is paused, runc
+exec errors out; this option can be used to override it.
+A paused container needs to be resumed for the exec to
+complete.
+
+--cgroup path |
+controller[,controller...]:path
+
+Execute a process in a
+sub-cgroup. If the specified cgroup does not exist, an error
+is returned. Default is empty path, which means to use
+container’s top level cgroup.
+
+For cgroup v1
+only, a particular controller (or multiple
+comma-separated controllers) can be specified, and the
+option can be used multiple times to set different paths for
+different controllers.
+
+Note for cgroup
+v2, in case the process can’t join the top level
+cgroup, runc exec fallback is to try joining the
+cgroup of container’s init. This fallback can be
+disabled by using --cgroup /.
+
+EXIT STATUS
+
+Exits with a
+status of command (unless -d is used), or
+255 if an error occurred.
+
+EXAMPLES
+
+If the
+container can run ps(1) command, the following will
+output a list of processes running in the container:
+
+# runc exec
+ ps
+
+SEE ALSO
+
+runc(8).

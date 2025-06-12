@@ -1,0 +1,883 @@
+NAME
+
+virt-v2v-input-vmware
+- Using virt-v2v to convert guests from VMware
+
+SYNOPSIS
+
+virt-v2v -i vmx
+GUEST.vmx [-o* options] 
+virt-v2v -i vmx 
+-it ssh 
+-ip passwordfile 
+
+'ssh://root [AT] esxi.com/vmfs/volumes/datastore1/guest/guest.vmx'
+
+[-o* options] 
+virt-v2v 
+-ic
+'vpx://root [AT] vcenter.com/Datacenter/esxi?no_verify=1'
+
+-it vddk 
+-io vddk-libdir=/path/to/vmware-vix-disklib-distrib 
+-io vddk-thumbprint=xx:xx:xx:... 
+"GUEST NAME" 
+[-o* options] 
+virt-v2v -i ova DISK.ova [-o* options] 
+virt-v2v 
+-ic
+'vpx://root [AT] vcenter.com/Datacenter/esxi?no_verify=1'
+
+-ip passwordfile 
+"GUEST NAME" [-o* options]
+
+DESCRIPTION
+
+This page
+documents how to use virt-v2v(1) to convert guests
+from VMware. There are currently five different methods to
+access VMware: 
+-i vmx GUEST.vmx
+
+Full documentation: "INPUT
+FROM VMWARE VMX"
+
+If you either
+have a GUEST.vmx file and one or more
+GUEST.vmdk disk image files, or if you are able to
+NFS-mount the VMware storage, then you can use the -i
+vmx method to read the source guest.
+
+-i vmx -it ssh
+ssh://...
+
+Full documentation: "INPUT
+FROM VMWARE VMX"
+
+This is similar
+to the method above, except it uses an SSH connection to
+ESXi to read the GUEST.vmx file and associated disks.
+This requires that you have enabled SSH access to the VMware
+ESXi hypervisor - in the default ESXi configuration this is
+turned off.
+
+This transport
+is incompatible with guests that have snapshots; refer to
+"NOTES".
+
+-ic vpx://... -it vddk 
+-ic esx://... -it vddk
+
+Full documentation: "INPUT
+FROM VDDK"
+
+This method
+uses the proprietary VDDK library (a.k.a. VixDiskLib) to
+access the VMware vCenter server or VMware ESXi
+hypervisor.
+
+If you have the
+proprietary library then this method is usually the fastest
+and most flexible. If you don’t have or don’t
+want to use non-free software then the VMX or SSH methods
+above will be best.
+
+-i ova
+DISK.ova
+
+Full documentation: "INPUT
+FROM VMWARE OVA"
+
+With this
+method you must first export the guest (eg. from vSphere) as
+an .ova file, which virt-v2v can then read directly.
+Note this method only works with files exported from VMware,
+not OVA files that come from other hypervisors or management
+systems, since OVA is only a pretend standard and is not
+compatible or interoperable between vendors.
+
+-ic vpx://...
+"GUEST NAME"
+
+Full documentation: "INPUT
+FROM VMWARE VCENTER SERVER"
+
+If none of the
+above methods is available, then use this method to import a
+guest from VMware vCenter. This is the slowest method.
+
+NOTES
+
+When accessing
+the guest.vmx file on ESXi over an SSH connection
+(that is, when using the -i vmx -it ssh options), the
+conversion will not work if the guest has snapshots (files
+called guest-000001.vmdk and similar). Either
+collapse the snapshots for the guest and retry the
+conversion with the same -i vmx -it ssh options, or
+leave the snapshots intact and use a transport different
+from SSH: just -i vmx, or -ic vpx://... -it
+vddk or -ic esx://... -it vddk. Refer to
+https://bugzilla.redhat.com/1774386.
+
+INPUT FROM VMWARE VMX
+
+Virt-v2v is
+able to import guests from VMware’s vmx files.
+
+This is useful
+in two cases:
+
+1.
+
+VMware virtual machines are stored on a separate NFS
+server and you are able to mount the NFS storage
+directly. 
+
+2.
+
+You have enabled SSH access to the VMware ESXi
+hypervisor and there is a "/vmfs/volumes" folder
+containing the virtual machines.
+
+If you find a
+folder of files called guest.vmx, guest.vmxf,
+guest.nvram and one or more .vmdk disk images,
+then you can use this method. The SSH transport is not
+usable if the guest has snapshots; refer to
+"NOTES".
+
+VMX: Guest
+must be shut down 
+The guest must be shut down before conversion starts. If
+you don’t shut it down, you will end up with a
+corrupted VM disk on the target. With other methods,
+virt-v2v tries to prevent concurrent access, but because the
+-i vmx method works directly against the storage,
+checking for concurrent access is not possible.
+
+VMX: Access
+to the storage containing the VMX and VMDK files 
+If the vmx and vmdk files aren’t available locally
+then you must either mount the NFS storage on the
+conversion server or enable passwordless SSH on the
+ESXi hypervisor.
+
+VMX: SSH
+authentication
+
+You can use SSH
+password authentication, by supplying the name of a file
+containing the password to the -ip option (note this
+option does not take the password directly). You may
+need to adjust /etc/ssh/sshd_config on the VMware
+server to set "PasswordAuthentication yes".
+
+If you are not
+using password authentication, an alternative is to use
+ssh-agent, and add your ssh public key to
+/etc/ssh/keys-root/authorized_keys (on the ESXi
+hypervisor). After doing this, you should check that
+passwordless access works from the virt-v2v server to the
+ESXi hypervisor. For example:
+
+$ ssh
+root [AT] esxi.com 
+[ logs straight into the shell, no password is requested
+]
+
+Note that
+support for non-interactive authentication via the
+-ip option is incomplete. Some operations remain that
+still require the user to enter the password manually.
+Therefore ssh-agent is recommended over the -ip
+option. See https://bugzilla.redhat.com/1854275.
+
+VMX:
+Construct the SSH URI
+
+When using the
+SSH input transport you must specify a remote
+"ssh://..." URI pointing to the VMX file. A
+typical URI looks like:
+
+ssh://root [AT] esxi.com/vmfs/volumes/datastore1/my%20guest/my%20guest.vmx
+
+The username is
+not required if it is the same as your local username.
+
+You may
+optionally supply a port number after the hostname if the
+SSH server is not listening on the default port (22).
+
+For determining
+the pathname component of the URI, log in to the ESXi server
+via SSH interactively, and identify the absolute pathname of
+the VMX file on the ESXi server, such as:
+
+/vmfs/volumes/datastore1/my
+guest/my guest.vmx
+
+Subsequently,
+on the virt-v2v command line, percent-encode any reserved
+characters that you find in the individual pathname
+components. For example, space characters must be specified
+as %20:
+
+/vmfs/volumes/datastore1/my%20guest/my%20guest.vmx
+
+Refer to
+https://bugzilla.redhat.com/1938954.
+
+VMX:
+Importing a guest 
+To import a vmx file from a local file or NFS, do:
+
+$ virt-v2v -i
+vmx guest.vmx -o local -os /var/tmp
+
+To import a vmx
+file over SSH, add -it ssh to select the SSH
+transport and supply a remote SSH URI:
+
+$ virt-v2v \
+
+-i vmx -it ssh \ 
+
+"ssh://root [AT] esxi.com/vmfs/volumes/datastore1/guest/guest.vmx"
+\ 
+-o local -os /var/tmp
+
+Virt-v2v
+processes the vmx file and uses it to find the location of
+any vmdk disks.
+
+INPUT FROM VDDK
+
+Virt-v2v is
+able to import guests using VMware’s proprietary VDDK
+library (a.k.a. VixDiskLib).
+
+VDDK:
+Prerequisites
+
+1.
+
+As the VDDK library is not open
+source, and the license of this library does not permit
+redistribution or commercial use, you must obtain VDDK
+yourself and satisfy yourself that your usage of the library
+is permitted by the license.
+
+2.
+
+nbdkit ≥ 1.6 is recommended, as it ships with the
+VDDK plugin enabled unconditionally.
+
+3.
+
+You must find the SSL "thumbprint" of your
+VMware server. How to do this is explained in
+nbdkit-vddk-plugin(1), also available at the link
+above. 
+
+4.
+
+VDDK imports require a feature added in libvirt ≥
+3.7. 
+
+VDDK: ESXi
+NFC service memory limits 
+In the verbose log you may see errors like:
+
+nbdkit:
+vddk[3]: error: [NFC ERROR] NfcFssrvrProcessErrorMsg: 
+received NFC error 5 from server: Failed to allocate the
+
+requested 2097176 bytes
+
+This seems
+especially common when there are multiple parallel
+connections open to the VMware server.
+
+These can be
+caused by resource limits set on the VMware server. You can
+increase the limit for the NFC service by editing
+/etc/vmware/hostd/config.xml and adjusting the
+"" setting:
+
+libnfcsvc.so 
+true 
+50331648 
+10485760 
+
+and restarting
+the "hostd" service:
+
+#
+/etc/init.d/hostd restart
+
+For more
+information see https://bugzilla.redhat.com/1614276.
+
+VDDK:
+"error: VixDiskLibVim: Failed to open disk using NFC.
+VixError 1" 
+If you see an error similar to:
+
+nbdkit:
+vddk[2]: error: VixDiskLibVim: Failed to open disk using
+NFC. VixError 1 at 1166.
+
+then it is
+caused by a bug in VDDK ≤ 6.7. The suggested solution it
+to upgrade to the latest VDDK. See also
+https://bugzilla.redhat.com/1684075
+
+VDDK:
+URI 
+Construct the correct "vpx://" (for vCenter) or
+"esx://" (for ESXi) URL. It will look something
+like these:
+
+vpx://root [AT] vcenter.com/Datacenter/esxi
+
+esx://root [AT] esxi.com
+
+To verify that
+you have the correct URL, use the virsh(1) command to
+list the guests on the server:
+
+$ virsh -c
+'vpx://root [AT] vcenter.com/Datacenter/esxi' list --all
+
+Enter root's password for vcenter.example.com: *** 
+Id Name State 
+---------------------------------------------------- 
+- Fedora 20 shut off 
+- Windows 2003 shut off
+
+If you get an
+error "Peer certificate cannot be authenticated with
+given CA certificates" or similar, then you can either
+import the vCenter host’s certificate, or bypass
+signature verification by adding the
+"?no_verify=1" flag:
+
+$ virsh -c
+'vpx://root [AT] vcenter.com/Datacenter/esxi?no_verify=1'
+list --all
+
+You should also
+try dumping the metadata from any guest on your server, like
+this:
+
+$ virsh -c
+'vpx://root [AT] vcenter.com/Datacenter/esxi' dumpxml
+"Windows 2003" 
+
+Windows 2003 
+[...] 
+vm-123 
+
+If
+"" does not appear in the
+metadata, then you need to upgrade libvirt.
+
+If the above
+commands do not work, then virt-v2v is not going to work
+either. Fix your URI and/or your VMware server before
+continuing.
+
+VDDK:
+Importing a guest 
+The -it vddk parameter selects VDDK as the input
+transport for disks.
+
+To import a
+particular guest from vCenter server or ESXi hypervisor, use
+a command like the following, substituting the URI, guest
+name and SSL thumbprint:
+
+$ virt-v2v \
+
+-ic
+'vpx://root [AT] vcenter.com/Datacenter/esxi?no_verify=1'
+\ 
+-it vddk \ 
+-io vddk-libdir=/path/to/vmware-vix-disklib-distrib \ 
+-io vddk-thumbprint=xx:xx:xx:... \ 
+"Windows 2003" \ 
+-o local -os /var/tmp
+
+Other options
+that you might need to add in rare circumstances include
+-io vddk-config, -io vddk-cookie, -io
+vddk-nfchostport, -io vddk-port, -io
+vddk-snapshot, and -io vddk-transports, which are
+all explained in the nbdkit-vddk-plugin(1)
+documentation. Do not use these options unless you know what
+you are doing.
+
+VDDK:
+Debugging VDDK failures 
+The VDDK library can be operated in a verbose mode where it
+gives (very) verbose messages. Use ’virt-v2v -v
+-x’ as usual to enable verbose messages.
+
+VDDK: Slow
+imports and repeated NBD_ClientOpen messages 
+If imports over VDDK are slow, and ’virt-v2v -v
+-x’ shows many "NBD_ClientOpen" messages,
+then you are hitting an apparent bug in VDDK 6.7
+(https://bugzilla.redhat.com/1901489). Upgrade to at least
+VDDK 7 to resolve the issue.
+
+INPUT FROM VMWARE OVA
+
+Virt-v2v is
+able to import guests from VMware’s OVA (Open
+Virtualization Appliance) files. Only OVAs exported from
+VMware vSphere will work.
+
+OVA: Create
+OVA 
+To create an OVA in vSphere, use the "Export OVF
+Template" option (from the VM context menu, or from the
+File menu). Either "Folder of files" (OVF) or
+"Single file" (OVA) will work, but OVA is probably
+easier to deal with. OVA files are really just uncompressed
+tar files, so you can use commands like "tar tf
+VM.ova" to view their contents.
+
+Create OVA
+with ovftool
+
+You can also
+use VMware’s proprietary "ovftool":
+
+ovftool
+--noSSLVerify \ 
+vi://USER:PASSWORD [AT] esxi.com/VM \ 
+VM.ova
+
+To connect to
+vCenter:
+
+ovftool
+--noSSLVerify \ 
+
+vi://USER:PASSWORD [AT] vcenter.com/DATACENTER-NAME/vm/VM
+\ 
+VM.ova
+
+For Active
+Directory-aware authentication using down-level logon names
+("DOMAIN\USER"), you have to express the
+"\" character in the form of its ascii hex-code
+(%5c):
+
+vi://DOMAIN%5cUSER:PASSWORD@...
+
+OVA:
+Importing a guest 
+To import an OVA file called VM.ova, do:
+
+$ virt-v2v -i
+ova VM.ova -o local -os /var/tmp
+
+If you exported
+the guest as a "Folder of files", or if you
+unpacked the OVA tarball yourself, then you can point
+virt-v2v at the directory containing the files:
+
+$ virt-v2v -i
+ova /path/to/files -o local -os /var/tmp
+
+OVA:
+Permissions issues with oVirt/RHV import 
+oVirt/RHV provides a graphical user interface for importing
+from OVA files which uses this method. It requires that RHV
+is able to access the OVA file which can be a problem if the
+file is owned by root (RHV runs as a non-root user).
+
+The suggested
+workaround is to copy the OVA to a public directory such as
+/var/tmp before doing the import and perhaps change
+the user and group ownership of the file.
+
+For more
+information see these links:
+
+•
+
+https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.4/html-single/virtual_machine_management_guide/index#Importing_a_virtual_machine_from_a_host 
+
+•
+
+https://bugzilla.redhat.com/show_bug.cgi?id=2039597
+
+INPUT FROM VMWARE VCENTER SERVER
+
+Virt-v2v is
+able to import guests from VMware vCenter Server.
+
+vCenter ≥
+5.0 is required. If you don’t have vCenter, using OVA
+or VMX is recommended instead (see "INPUT FROM VMWARE
+OVA" and/or "INPUT FROM VMWARE VMX").
+
+Virt-v2v uses
+libvirt for access to vCenter, and therefore the input mode
+should be -i libvirt. As this is the default, you
+don’t need to specify it on the command line.
+
+vCenter:
+URI 
+The libvirt URI of a vCenter server looks something like
+this:
+
+vpx://user@server/Datacenter/esxi
+
+where: 
+"user@"
+
+is the (optional, but
+recommended) user to connect as.
+
+If the username
+contains a backslash (eg. "DOMAIN\USER") then you
+will need to URI-escape that character using %5c:
+"DOMAIN%5cUSER" (5c is the hexadecimal ASCII code
+for backslash.) Other punctuation may also have to be
+escaped.
+
+The
+user’s password must be supplied in a local file using
+the separate -ip parameter.
+
+"server"
+
+is the vCenter Server
+(not hypervisor).
+
+"Datacenter"
+
+is the name of the
+datacenter.
+
+If the name
+contains a space, replace it with the URI-escape code
+%20.
+
+"esxi"
+
+is the name of the ESXi
+hypervisor running the guest.
+
+If the VMware
+deployment is using folders, then these may need to be added
+to the URI, eg:
+
+vpx://user@server/Folder/Datacenter/esxi
+
+For full
+details of libvirt URIs, see:
+http://libvirt.org/drvesx.html
+
+Typical errors
+from libvirt / virsh when the URI is wrong include:
+
+•
+
+Could not find datacenter specified in [...]
+
+•
+
+Could not find compute resource specified in [...]
+
+•
+
+Path [...] does not specify a compute resource
+
+•
+
+Path [...] does not specify a host system
+
+•
+
+Could not find host system specified in [...]
+
+vCenter:
+Test libvirt connection to vCenter 
+Use the virsh(1) command to list the guests on the
+vCenter Server like this:
+
+$ virsh -c
+'vpx://root [AT] vcenter.com/Datacenter/esxi' list --all
+
+Enter root's password for vcenter.example.com: *** 
+Id Name State 
+---------------------------------------------------- 
+- Fedora 20 shut off 
+- Windows 2003 shut off
+
+If you get an
+error "Peer certificate cannot be authenticated with
+given CA certificates" or similar, then you can either
+import the vCenter host’s certificate, or bypass
+signature verification by adding the
+"?no_verify=1" flag:
+
+$ virsh -c
+'vpx://root [AT] vcenter.com/Datacenter/esxi?no_verify=1'
+list --all
+
+You should also
+try dumping the metadata from any guest on your server, like
+this:
+
+$ virsh -c
+'vpx://root [AT] vcenter.com/Datacenter/esxi' dumpxml
+"Windows 2003" 
+
+Windows 2003 
+[...] 
+
+If the above
+commands do not work, then virt-v2v is not going to work
+either. Fix your libvirt configuration and/or your
+VMware vCenter Server before continuing.
+
+vCenter:
+Supplying the password 
+The vCenter password (usually for the root account, or the
+account specified by "user@" in the vpx URL) has
+to be written to a local file, and the name of that file
+specified on the virt-v2v command line using -ip
+passwordfile.
+
+vCenter:
+Importing a guest 
+To import a particular guest from vCenter Server, do:
+
+$ virt-v2v -ic
+'vpx://root [AT] vcenter.com/Datacenter/esxi?no_verify=1'
+\ 
+-ip passwordfile \ 
+"Windows 2003" \ 
+-o local -os /var/tmp
+
+where
+"Windows 2003" is the name of the guest (which
+must be shut down).
+
+In this case
+the output flags are set to write the converted guest to a
+temporary directory as this is just an example, but you can
+also write to libvirt or any other supported target.
+
+vCenter:
+Non-administrator role 
+Instead of using the vCenter Administrator role, you can
+create a custom non-administrator role to perform the
+conversion. You will however need enable the following
+permissions (or as many as are available, older versions of
+VMware were missing some of these settings):
+
+1.
+
+Create a custom role in
+vCenter. 
+
+2.
+
+Enable (check) the following objects:
+
+Datastore: 
+- Browse datastore 
+- Low level file operations 
+Sessions: 
+- Validate session 
+Virtual Machine: 
+Interaction: 
+- Guest operating system management by VIX API 
+Provisioning: 
+- Allow disk access 
+- Allow read-only disk access 
+- Allow virtual machine download 
+Cryptographic operations: 
+- Decrypt 
+- Direct Access
+
+vCenter:
+Firewall and proxy settings 
+vCenter: Ports
+
+If there is a
+firewall between the virt-v2v conversion server and the
+vCenter server, then you will need to open port 443 (https)
+and port 5480.
+
+Port 443 is
+used to copy the guest disk image(s). Port 5480 is used to
+query vCenter for guest metadata.
+
+These port
+numbers are only the defaults. It is possible to reconfigure
+vCenter to use other port numbers. In that case you would
+need to specify those ports in the "vpx://" URI.
+See "vCenter: URI" above.
+
+These ports
+only apply to virt-v2v conversions. You may have to open
+other ports for other vCenter functionality, for example the
+web user interface. VMware documents the required ports for
+vCenter in their online documentation.
+
+┌────────────┐
+port 443
+┌────────────┐
+┌────────────┐
+
+│ virt-v2v
+│────────────▶
+vCenter
+│────────▶
+ESXi │ 
+│ conversion
+│────────────▶
+server │ │ hypervisor │ 
+│ server │ port 5480 │ │ │
+┌─────┐ │
+
+└────────────┘
+└────────────┘
+│ │guest│ │ 
+
+└───┴─────┴──┘
+
+(In the diagram
+above the arrows show the direction in which the TCP
+connection is initiated, not necessarily the
+direction of data transfer.)
+
+Virt-v2v itself
+does not connect directly to the ESXi hypervisor containing
+the guest. However vCenter connects to the hypervisor and
+forwards the information, so if you have a firewall between
+vCenter and its hypervisors you may need to open additional
+ports (consult VMware documentation).
+
+The proxy
+environment variables ("https_proxy",
+"all_proxy", "no_proxy",
+"HTTPS_PROXY", "ALL_PROXY" and
+"NO_PROXY") are ignored when doing vCenter
+conversions.
+
+vCenter:
+SSL/TLS certificate problems 
+You may see this error:
+
+CURL: Error
+opening file: SSL: no alternative certificate subject 
+name matches target host name
+
+(You may need
+to enable debugging with ’virt-v2v -v -x’ to see
+this message).
+
+This can be
+caused by using an IP address instead of the fully-qualified
+DNS domain name of the vCenter server, ie. use
+"vpx://vcenter.example.com/..." instead of
+"vpx://11.22.33.44/..."
+
+Another
+certificate problem can be caused by the vCenter server
+having a mismatching FQDN and IP address, for example if the
+server acquired a new IP address from DHCP. To fix this you
+need to change your DHCP server or network configuration so
+that the vCenter server always gets a stable IP address.
+After that log in to the vCenter server’s admin
+console at "https://vcenter:5480/". Under the
+"Admin" tab, select "Certificate regeneration
+enabled" and then reboot it.
+
+vCenter:
+"Out of HTTP sessions: Limited to ..." 
+VMware vCenter appears to limit HTTP sessions and in some
+circumstances virt-v2v may exceed this number. You can
+adjust or remove the limit by editing
+/etc/vmware-vpx/vpxd.cfg on the vCenter server.
+Increase the "" field, or
+set it to 0 which makes it unlimited:
+
+0 
+
+SEE ALSO
+
+virt-v2v(1).
+
+AUTHOR
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright (C)
+2009-2020 Red Hat Inc.
+
+LICENSE
+
+This program is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have
+received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation,
+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
+USA.
+
+BUGS
+
+To get a list
+of bugs against libguestfs, use this link:
+https://bugzilla.redhat.com/buglist.cgi?component=libguestfs&product=Virtualization+Tools
+
+To report a new
+bug against libguestfs, use this link:
+https://bugzilla.redhat.com/enter_bug.cgi?component=libguestfs&product=Virtualization+Tools
+
+When reporting
+a bug, please supply:
+
+•
+
+The version of libguestfs.
+
+•
+
+Where you got libguestfs (eg. which Linux distro,
+compiled from source, etc)
+
+•
+
+Describe the bug accurately and give a way to reproduce
+it. 
+
+•
+
+Run libguestfs-test-tool(1) and paste the
+complete, unedited output into the bug report.

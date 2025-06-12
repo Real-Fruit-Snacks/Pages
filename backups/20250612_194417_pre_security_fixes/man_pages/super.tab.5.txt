@@ -1,0 +1,2033 @@
+NAME
+
+super.tab -
+database of restricted commands for super(1)
+
+DESCRIPTION
+
+The
+super.tab file contains the restrictions on who can
+execute commands with super(1). It may also contain
+options that modify the uid and/or gid under which a command
+is run; the list of environment variables that are discarded
+before executing a command, and so on. The reader is
+expected to be familiar with the super(1) man
+page.
+
+If you are
+trying to avoid reading this lengthy man page, you need to
+know a few simple rules. First, for a user to successfully
+execute a command by typing super commandName,
+the minimum entry in the super.tab is something like
+
+commandName  
+FullPathToCommand  userName 
+For example, the entry 
+cdmount  
+/usr/local/bin/cdmount  wally,dolly 
+says that users wally and dolly may execute
+the /usr/local/bin/cdmount program by typing
+super cdmount.
+
+Second, when
+you define options in the super.tab file, remember
+that all options are orthogonal to each other, and it
+doesn’t matter in what order they appear on a control
+line. Third, global options (defined on a
+:global or :global_options line) take effect
+immediately after the defining line, are valid until the end
+of the input or until there is a countermanding global
+option or pattern, and are overridden by local
+(per-command) options, which are defined on a regular
+control line.
+
+Although
+super has a great many options that you can set
+inside the super.tab file, none of them are required
+for security, so you don’t have to be intimately
+familiar with this entire document in order to use
+super securely. The most important options that you
+will probably want to use are (a) a logging option like
+logfile=xxx or syslog=y; and (b)
+patterns=shell, so that the default
+regular-expression interpretation of wildcards is changed to
+the more convenient shell-style glob patterns.
+
+Unless modified
+with options in the super.tab file, super executes
+commands using effective uid root; unchanged real uid and
+gid; no supplementary groups; no open file descriptors save
+0, 1, and 2; no environment variables except a few with safe
+values (see super(1)); and signal handling reset to
+the default.
+
+When
+super uses a command from a user-supplied super file
+(.supertab in the user’s home directory) these
+rules are modified: the real and effective uid and gid are
+set to the owner of the .supertab file, and the
+supplementary groups are set to the user’s login
+groups.
+
+If the special
+supplementary file named super.init exists, it is
+implictly include at the start of super.tab and every
+.supertab file. The file resides in the same
+directory as super.tab and must be owned by root, and
+should be world-readable. This provides a uniform
+configuration file applied to every super-executed command.
+Note that the configuration file should contain entries that
+are appropriate for use in both the super.tab file
+and any per-user supertab file. It is not a good idea
+to include commands in the super.init file. The
+variable IS_USERTAB is defined to be
+’’yes’’ if super is
+processing a per-user .supertab file, and
+’’no’’ otherwise. The
+following pair of entries could be used in a super.init file
+to allow different initialization for regular use and
+per-user use:
+
+:if
+$IS_USERTAB == yes    :include
+/etc/super.init.per-user 
+:if $IS_USERTAB != yes    :include
+/etc/super.init.as-root
+
+(The use of
+variables and conditional expressions is explained below, in
+the sections Variables and
+Conditionally-included Control Lines,
+respectively.)
+
+The
+super.tab file is formatted as a series of control
+lines of the form
+
+CmdPat  FullPath \
+
+Options PermittedUsers PermittedTimes 
+or 
+CmdPat1::FullPath1 CmdPat2::FullPath2 ... \
+
+Options PermittedUsers PermittedTimes 
+or 
+:BuiltinCmd arguments
+
+The
+Options, PermittedUsers, and
+PermittedTimes may be mixed together in any order. At
+least one PermittedUsers field is required, but
+neither Options nor PermittedTimes are
+required. For each control line, Super matches the
+following:
+
+• the user-entered command
+to a CmdPat;
+
+• the {user,group,host}
+triplet to a PermittedUsers
+
+entry; and
+
+• the current time to a
+PermittedTimes 
+
+entry (the default permits any
+time).
+
+If these
+conditions are not satisfied, super
+’’falls through’’ and tries the next
+control line.
+
+For example,
+the entry
+
+renice /etc/renice jack@hill
+jill@bucket time~8-17
+
+specifies that
+between hours 8:00 and 17:00, user Jack can renice any
+process on host hill, and user Jill can do so on host
+bucket, by simply typing super renice 
+.
+
+Control lines
+begin in column 1, and the fields are whitespace-separated.
+Note that you can either use a single CmdPat and
+FullPath, separated by whitespace, or you can use a
+series of them in one control line by putting
+’::’ between each CmdPat and
+FullPath pair.
+
+Whitespace may
+be included in a field by enclosing text in single- or
+double-quotes. The quoting is shell-like, in the sense that
+quotemarks don’t have to surround the entire field,
+and you can switch between quotemark types in a single
+entry. For instance,
+X"a b"Y’d e’ is
+equivalent to "Xa bYd e".
+Comments begin with a ’#’ and continue to the
+end of a line.
+
+There can also
+be blank or comment lines without any control data.
+
+A control line
+may be continued by preceding the newline with a backslash,
+and indenting the continuation line with whitespace. When
+the multiple-line entry is read, the text just before the
+backslash-newline is not modified (any whitespace before the
+backslash will be kept), and the
+backslash-newline-whitespace sequence is either eliminated
+entirely or treated as whitespace. The rule is simple:
+following a letter, digit, or underscore, it is treated as
+whitespace. Otherwise, it is eliminated. This means that
+
+Cmd  File  user1\
+
+user2\
+
+user3
+
+is equivalent
+to
+
+Cmd  File  user1
+user2 user3
+
+On the other
+hand,
+
+Cmd  File  {user1,\
+
+user2,\
+
+user3}
+
+is equivalent
+to
+
+Cmd  File  {user1,user2,user3}
+
+That is, the
+sensible interpretation is done in both cases.
+
+The indentation
+requirement for continuation lines helps super catch
+typos. Comments may be placed before each backslash-newline
+pair, not just at the end of a continued control line.
+
+The CmdPat Field
+
+In response to
+the user typing
+
+super
+cmd [ args ],
+
+the cmd
+is searched for in the super.tab file. The cmd
+is matched against each pattern CmdPat.
+
+Basic Use:
+Simple Command Patterns without Wildcards.
+
+Typically, a
+CmdPat just uses plain characters without any special
+pattern-matching characters, so a cmd must be the
+same as the CmdPat string. For example:
+
+skill
+/usr/local/bin/skill user1 user2 user3
+
+Here, any user
+in the list {user1, user2, user3} may type super
+skill to execute /usr/local/bin/skill.
+
+Advanced
+Use: Command Patterns with Wildcards.
+
+More generally,
+a CmdPat can be either an ed-style pattern
+(’’regex’’ — the BSD 4.x
+syntax used in the re_comp()/re_exec() routines), POSIX
+regular expressions, or a Bourne-shell-style pattern. You
+can set the pattern style using the global option
+patterns (see below). The default is
+’’regex’’ for historical reasons;
+however, shell-style patterns are easier to use without
+errors, and most sites should use shell-style patterns. In
+all cases the patterns are extended to support csh-style
+brace expansion. For instance, a{x,y,z}b stands for
+the set of patterns axb ayb azb. Don’t put any
+whitespace inside the braces!
+
+For
+convenience, there is always an implied set of braces around
+an entire pattern. This means that any comma-separated list
+a,b,c is interpreted as {a,b,c}, and is very
+helpful so that you don’t have to worry about getting
+braces just right when you build complex lists of out of
+(say) variables containing other lists of users.
+
+All pattern
+matching is ’’anchored’’: patterns
+are forced to match the entire cmd string.
+
+If the
+CmdPat is matched and the other conditions are met
+(such as the user being in the PermittedUser list to execute
+this command), FullPath gives the name of the actual
+command that will be executed with execve(). If
+FullPath contains an asterisk, the asterisk is first
+replaced by the user’s cmd.
+
+If you put
+special pattern-matching characters into the CmdPat,
+but don’t put an asterisk into FullPath, you
+have simply given more ways a user can execute the same
+FullPath. This isn’t useful, and in fact
+isn’t a good idea at all. The power of using patterns
+in the CmdPat comes when FullPath includes an
+asterisk. For instance, a SysV-based host might have an
+entry in the super.tab file that looks like:
+
+/usr/bin/{lp,lpstat,disable,enable,cancel}
+* \
+
+:operators uid=0
+
+This would
+allow anybody in the "operators" group to have
+root access to the line printer commands (the uid=0
+tells super to set the real uid to 0, not just the
+effective uid). For instance, if the user typed:
+
+super
+/usr/bin/disable some_printer
+
+then the
+FullPath (’’*’’) would
+be replaced by /usr/bin/disable, which would be the
+command to exec.
+
+More
+conveniently, the super.tab file could have a line
+like:
+
+{lp,lpstat,disable,enable,cancel}
+/usr/bin/* \
+
+:operators uid=0
+
+In this case,
+the user can type
+
+super
+disable some_printer
+
+The
+asterisk-replacement ability also lets a user execute any of
+an entire directory of commands, using a super.tab
+entry like the following:
+
+op/*
+/usr/local/super/scripts/* :operators uid=0
+
+In this
+case, the user can type
+
+super
+op/xyz
+
+and
+super will execute
+/usr/local/super/scripts/op/xyz.
+
+The
+asterisk-replacement capability is useful but potentially
+dangerous, because it may unintentionally open the door to
+programs you hadn’t intended to give away. It is a
+sensible precaution to restrict asterisk-replacement to
+entries where the valid-user list includes trusted users
+only.
+
+If you
+completely trust some users, but want logging of all
+actions executed as root, you could use:
+
+/*
+  *
+  ReallyReallyTrustedUsers
+
+or
+
+/.*   *
+  ReallyReallyTrustedUsers
+
+(depending on
+whether patterns=shell, patterns=regex, or
+patterns=posix).
+
+The trusted
+users can now execute any command. Note that the pattern
+begins with a slash, to ensure that the cmd must be
+an absolute path — this helps avoid accidental execs
+of the wrong program.
+
+If you were
+really going to give everything away as shown above,
+you’d probably want to exclude any public-area
+workstations, require the trusted users to periodically give
+their passwords, and set the real uid=root (instead of just
+the effective uid), so the entry might be modified to read
+something like:
+
+/*
+  *   TrustedUsers \
+
+!{PatternsOfPublicWorkstations} \
+
+password=y timeout=5 uid=0
+
+The FullPath Field
+
+The
+FullPath field gives the name of the actual command
+that will be executed, and if it contains an asterisk, the
+asterisk is first replaced by the user’s cmd
+string. The FullPath can optionally contain a list of
+initial arguments that precede any arguments passed by the
+user. For example,
+
+xyz
+
+"/usr/local/bin/blah -o1 -o2 -xrm ’a b
+c’" ...
+
+specifies that
+when a valid user types super xyz, the command to
+execute is /usr/local/bin/blah and its arguments will
+be
+
+argv[1]: -o1 
+argv[2]: -o2 
+argv[3]: -xrm 
+argv[4]: a b c
+
+followed by any arguments that
+the user put on the super command line. Note: asterisk
+replacement is only done on the filename part of the
+FullPath, not on the arguments. You can safely
+include asterisks in the argument list. For security, the
+user’s cmd may not contain any whitespace or
+backslashes.
+
+The
+FullPath string is parsed using rules similar to the
+Bourne shell rules for backslashes in quoted strings,
+namely:
+
+(a) backslash-newline is
+discarded; 
+(b) Otherwise, if outside a quoted substring,
+\x → plain x, which will not be
+treated as a delimiter, quotemark, or comment character;
+
+(c) Otherwise, inside a quoted substring of
+FullPath:
+
+\\ → \;
+
+\q → q, where q is the quote
+character that encloses the FullPath string; 
+other backslashes are preserved: \x →
+\x.
+
+After writing a
+command with such backslash escapes, you should certainly
+use
+’’super -d cmd’’ to
+check that your args are being parsed as expected before you
+offer this command to your users.
+
+The same
+cmd can be listed several times in the
+super.tab file, in which case the first entry that
+allows the user to execute the command is chosen. The
+EXAMPLES section shows how this can be useful.
+
+Permitted Users
+
+Permitted users
+are those who may execute the specified Cmd’s.
+Entries for any number of permitted users are given after
+the CmdPat and FullPath fields. Local options
+— options that apply to this command only — may
+also appear anywhere after the FullPath. Options are
+distinguished from permitted users because options all have
+the form key=value, whereas permitted-user
+entries may not contain unescaped equal signs. Each
+whitespace-separated word is a pattern in one of the
+formats
+
+•
+
+[user~]user[:][@host] 
+
+•
+
+[user~]:group[@host] 
+
+•
+
+[user~]user[:group][@host] 
+
+Note that the
+user~ part is optional. The user’s login name
+must match the user pattern; the user must belong to
+a group whose name matches the group pattern; and the
+hostname must match the host pattern. If the user,
+group, or host part is not given, there are no
+corresponding restrictions.
+
+If the user is
+root, super acts as if all permitted-user patterns
+are preceded by the pattern user~root — that
+is, root’s rule is default-allow, instead of the
+default-deny rule that applies to all ordinary users.
+
+By default, the
+’’group’’ field is first matched
+against named groups to which the user belongs, and then
+against the user’s decimal gid — this allows the
+user to be put in a group in the /etc/passwd file that
+isn’t given a name in the /etc/group file. (If you
+want to change the rules for using decimal gid, see the use
+of MATCH_DECIMAL_UID and MATCH_DECIMAL_GID in super.c
+for details.)
+
+Since you can
+restrict users to particular hosts, a single
+super.tab file can be shared among many different
+machines. If the host part is of the form
++xyz, then xyz is interpreted as
+a netgroup name and any host in netgroup xyz is
+matched. In that case, xyz is taken literally, and
+not interpreted as a pattern to be matched. Note:
+netgroup lookup is only implemented if the function
+innetgr() is available.
+
+If the
+host part doesn’t match the hostname, it might
+be because the pattern and actual hostnames contain two
+different (but both valid) incomplete versions of the
+fully-qualified domain name (FQDN). By default, if the
+host part fails to match the hostname, the FQDN is
+looked up and all of the ways of naming the host are matched
+against the pattern. For example, if the FQDN is
+spacely.sprockets.com, super will first try
+spacely.sprockets.com, then spacely.sprockets,
+and finally spacely. This can be turned off; see
+option gethostbyname. (You might want to turn it off
+because using nameserver lookup can reduce security a bit
+— your host may query a nameserver on another host to
+obtain the FQDN, and (a) that nameserver or an intermediate
+host along the way could have been subverted, or (b) another
+host could impersonate the nameserver. In either case your
+computer could receive incorrect hostnames.)
+
+The patterns
+for valid users, groups, and hosts follow the same rules for
+the CmdPats, described above: they can be entered
+with either ed-style or Bourne-shell-style patterns
+(depending on the setting of the patterns global
+option); csh-style brace expansion is allowed; and all
+pattern matching is ’’anchored’’:
+patterns are forced to match the entire username, groupname,
+or hostname.
+
+To make it easy
+to exclude some users/groups/hosts, any of these patterns
+can be negated by prefixing the pattern with
+’!’. If a negated pattern is matched, the
+user may not execute the command, even if there was a
+previous non-negated pattern that the user matched. All
+patterns are read left-to-right, and the last matched
+pattern ’’wins’’. Thus if the
+user/group/host list is
+
+j.* !jo
+
+or 
+user~j.* !user~jo
+
+then the first
+entry allows any username beginning with
+’j’ to execute the command, but the
+second entry disallows user ’jo’. If
+entered in the reverse order,
+
+!jo
+j.*
+
+then the second
+entry, ’j.*’, allows all users beginning
+’j’, and therefore the first entry has no
+effect.
+
+Permitted Times
+
+The time
+condition restricts the days and times during which this
+command may be matched. If the execution time isn’t
+acceptable, then super ignores the control line, and
+’’falls through’’ to inspect the
+next entry, just as it does if the user/group/host
+aren’t acceptable. A time condition looks like:
+
+time~pattern
+
+with
+patterns that look like:
+
+Pattern
+
+Example
+
+hh[:mm]-hh[:mm][/dayname] 
+
+13:30-17/monday
+
+{,>,,>=}hh[:mm][/dayname] 
+
+dayname
+
+Friday
+
+The first form
+explicitly specifies an interval during which the command
+may be used. Times may not go past midnight; to specify the
+night between Monday and Tuesday, you must do something
+like:
+
+time~{17:30-24:00/mon,0-8/tues}
+
+The second form
+for time patterns allows you to use logical operators. The
+Monday-night example could equally have been rendered
+as:
+
+time~{>17:30/mon,
+
+(There is a tiny difference in
+the two examples above: in the first example, the time range
+includes 17:30 and 8:00; in the second example, the time
+range is 17:31-07:59. Use
+time~{>=17:30/mon, to make the
+interpretation identical to the first example.)
+
+If there are a
+series of time patterns, they are evaluated left-to-right,
+and the rightmost matching pattern is used. To permit
+execution between 17:30 Monday and 8:00 Tuesday, but exclude
+0:00 to 1:00 Tuesday, use:
+
+time~{>=17:30/mon,
+
+By default,
+valid daynames are English, but if your system
+supports the setlocale(3) function, the global
+option lang=zzz will set the valid names to
+those of locale zzz. Valid daynames are either
+(a) the full names of the chosen language; (b) an official
+abbreviated day name for that language; (c) a 3-or-more
+character abbreviation of the full weekday; or (d) *,
+meaning any day. (You can check on super’s valid
+daynames by executing super -d, which will show
+the default names of the weekdays at or near the top of its
+debugging output, and show the new weekday names that take
+effect when the lang=zzz option is
+encountered.)
+
+Time patterns
+have a special defaulting rule when the execution time is
+not in one of the intervals in the time list:
+
+• if all time
+patterns are negated, super permits execution at any
+time not in one of the listed intervals; 
+• otherwise, there is at least one non-negated pattern,
+and super defaults to deny execution at times outside
+the specified acceptable intervals.
+
+The reason is that the natural
+interpretation of a series of negated conditions, such
+as
+
+!time~{0-8,17-24}
+!time~{sat,sun}
+
+is to infer that all other
+times are acceptable for execution. On the other hand, if
+there are any ordinary, non-negated times, such as
+
+time~8-17/{mon,tues,wed,thu,fri}
+
+the natural interpretation is
+that any times not explicitly mentioned are not
+acceptable.
+
+Note that
+explicit braces are important in the above list. If they
+were missing, the implied braces around the entire pattern
+would render this equivalent to
+
+time~8-17/mon time~tues
+time~wed time~thu time~fri
+
+That is, the permitted times
+are 8-17h on Monday, and any time on Tuesday through
+Friday.
+
+Global Conditions
+
+Global options
+and conditions affect the overall super processing.
+To set them, you must use a line like
+
+:global
+
+Global Options And Patterns
+
+or
+
+:global_options
+
+Global Options And Patterns
+
+For backwards
+compatibility, you can alternatively use
+
+/
+
+/
+
+GlobalOptionsAndPatterns
+
+but this use is
+discouraged.
+
+These so-called
+’’global’’ options and conditions
+actually take effect immediately after the line on which
+they appear, and are valid until the end of the input or
+until there is a countermanding global option or pattern. To
+have a global option or pattern affect the entire file, you
+must place it as the first non-comment line of the
+super.tab file.
+
+If there are
+any PermittedUser or PermittedTime conditions on the global
+settings line, they are applied to each following command in
+the super.tab file. The conditions look like
+
+:global
+
+cond cond ... <> cond cond
+... 
+
+PermittedUser
+and PermittedTime conditions to the left of
+’’<>’’ are processed
+before the local (per-command) conditions; conditions
+to the right of ’’<>’’
+are processed after the per-command conditions. If
+’’<>’’ is missing, all
+conditions are processed after the local conditions. Example
+1:
+
+:global
+
+jan <> !@+badhosts
+
+says that user
+jan can usually execute any command, but under no
+circumstances will a user on any host in netgroup
+badhosts be allowed to execute any command. (User
+jan will not be allowed to execute a command if the
+per-command conditions disallow it, or if jan is on
+one of the badhosts computers).
+
+Example 2:
+
+:global
+
+!root <>
+
+changes
+root’s default setting from default-allow to
+default-deny, just like ordinary users. Root will only be
+given execute permission for entries that explicitly allow
+root on the per-entry line.
+
+Global
+PermittedUser (PermittedTime) conditions take effect on the
+line on which they are defined, and are good until another
+set of global PermittedUser (PermittedTime) conditions is
+entered on another :global_option line. That is, a
+new global condition line replaces any previous global
+conditions.
+
+One sensible
+approach to using global conditions is to put conditions
+that allow users to execute commands before the
+per-command conditions are processed, and to put negating
+patterns (for users/groups/hosts that are never to be
+allowed to execute anything) after the per-command
+conditions.
+
+(Global options
+are discussed below, together with local options).
+
+Conditionally-included Control Lines
+
+Control lines
+can be conditionally included by using the :if
+control line. This can be helpful when using a single
+super.tab file for hosts with different
+architectures, or hosts in different NIS domains, etc. The
+syntax is:
+
+:if
+left   op   right
+    moreText
+
+The
+expression left op right is evaluated, and if true,
+moreText is evaluated as an ordinary control line.
+The valid comparison operators are:
+
+•
+
+==
+
+string equality
+
+•
+
+!=
+
+string inequality
+
+•
+
+~
+
+glob match string left against pattern
+right 
+
+•
+
+!~
+
+negated glob-match.
+
+For example, you could include
+a file of commands only valid on Sun4-type machines as
+follows:
+
+:if
+$UNAME_MACHINE ~ sun* \
+
+:include  /Path/To/Sun4/File
+
+(UNAME_MACHINE is a variable
+automatically defined by super; see the following
+section on variables.)
+
+If you wanted
+to exclude Sun4c-type machines from using the file, you
+could modify this to be:
+
+:if
+$UNAME_MACHINE ~ sun* \      
+:if $UNAME_MACHINE != sun4c \
+
+:include  /Path/To/Sun4/File
+
+There are no
+boolean operators provided, but note that there is an
+implicit boolean and available by concatenating
+:if commands, as shown in the second example
+above.
+
+Variables
+
+Super
+offers variables to make it easier to handle entries that
+are duplicated or are constructed out of other entries.
+Variables are defined by typing
+
+:define
+VariableName VariableDefinition
+
+or they may be
+imported from the environment by using
+
+:getenv
+[EnvVarName...]
+
+If you use the
+:getenv command, then the values of any imported
+environment variables may only contain the following
+’’safe’’ characters:
+-/:+._a-zA-Z0-9. If ’’bad’’
+characters are found in a value, the entire value is
+replaced with an empty string. Note that these imported
+variables do not enter the environment of any
+executed command; they simply become part of the super.tab
+variable set.
+
+The
+VariableName should be made up only of letters,
+digits, and/or underscore. (You can actually use any
+characters you wish, but super doesn’t promise to work
+correctly if you use characters outside the standard
+set.)
+
+The
+VariableDefinition begins at the first non-whitespace
+character after the VariableName and continues up to
+but not including the final newline. Comments embedded on
+the variable definition line(s) are deleted before the
+variable definition is stored. A variable definition may be
+continued across multiple lines by preceding each newline
+with a backslash, and indenting the continuation line with
+whitespace. Just as for regular control lines, the
+backslash-newline-whitespace sequence is treated as
+whitespace if it follows a letter, digit, or underscore;
+otherwise, it is eliminated. For example,
+
+:define
+Users user1,\
+
+user2,\
+
+user3
+
+and
+
+:define Users
+user1,user2,user3
+
+are equivalent
+definitions.
+
+Unlike
+Makefiles, the variable definitions are not scanned first
+and then the file re-scanned. Instead, variables take effect
+at the point they are defined, and remain in effect until
+they are re-defined or end of file — thus variables
+definitions must precede their first use in the file.
+
+Variables may
+contain other variables (which must have already been
+defined). Variable substitution is done when a line is first
+read. A line is never re-scanned after variable
+substitution.
+
+Variables are
+used in a file by typing
+
+$VariableName
+
+or
+
+$(VariableName)
+
+The special
+variable $$ is replaced by a single
+’’$’’. Any other name
+$X (where X is not a letter, digit, or
+underscore) is an error.
+
+Because a line
+is never re-scanned after variable substitution, the
+following sequence:
+
+:define A $$
+
+:define B A 
+:define C $B $$B 
+$C
+
+defines
+C to be simply
+’’A $B’’.
+
+Variables can
+be helpful in grouping users or hosts together. For example,
+you might restrict access to a command so that it
+can’t be run from a public-access workstation:
+
+:define Room103_WS
+hosta,hostb,hostc,hostd 
+:define Room105_WS hoste,hostf,hostg,hosth 
+:define Room106_WS +nonprivate 
+:define PublicWorkstations
+$Room103_WS,$Room105_WS,$Room106_WS 
+SomeCmd FullPathHere !@$(PublicWorkstations)
+
+In the above
+example, we have taken advantage of the implied braces that
+are always placed around any pattern, so that the
+comma-separated list of workstations is brace-expanded into
+!@hosta !@hostb ... !@hoste
+!@hostf ... !@+nonprivate.
+
+Some variables
+are automatically defined by super.
+
+After super
+determines whether it is processing a per-user .supertab
+(see super(1)), it defines IS_USERTAB to be
+’’yes’’ if super is
+processing a per-user .supertab file, and
+’’no’’ otherwise. The allows
+the super.init to act differently depending on how it is
+being invoked.
+
+When the
+top-level super.tab file is opened,
+SUPER_OWNER is set to the login name of the owner,
+and SUPER_HOME is set to the home directory of the
+owner. This can be useful in per-user .supertab
+files, especially when they include files shared among
+several accounts. For example, each person’s
+.supertab file could be simply
+
+:include
+/opt/proj/common.supertab owner=cristy
+
+Then, the
+/opt/proj/common.supertab file can use entries like
+the following:
+
+:global
+logfile=$SUPER_HOME/.superlog 
+* /project/tools/$SUPER_OWNER/* :toolgroup
+
+Because the
+SUPER_HOME and SUPER_OWNER variables apply to
+the top-level per-user files, they always refer to per-user
+locations.
+
+Super defines
+the built-in variable CALLER to be the the login name
+of the of account invoking super, and CALLER_HOME is the
+home directory of $CALLER. Sample use:
+
+sam /usr/sbin/sam
+group~operator uid=0 \
+
+env=DISPLAY \
+
+setenv=XAUTHORITY=$CALLER_HOME/.Xauthority
+
+Here, the operator group
+can execute sam as root, and the GUI will display at
+the caller’s display (due to the use of
+env=DISPLAY). Since the XAUTHORITY environment
+variable is set to the caller’s .Xauthority
+file, this will give the caller access to the same
+display(s) to which s/he already has access.
+
+The following
+variables are defined when super starts up. They can be
+useful in conditionally-included lines (:if lines).
+If your host doesn’t supply these functions, or
+doesn’t support some of the values that super
+tries to fetch, the corresponding variable will be
+initialized to an empty string. (Use super -b to
+print the names and values of all builtin variables. This
+makes it simple to see what variable values to check in
+:if lines.)
+
+From the
+gethostname() or sysinfo() function:
+
+• HOSTNAME
+
+Hostname, possibly canonicalized.
+
+• HOST
+
+Hostname, short (unqualified).
+
+From the
+getdomainname() function:
+
+• NIS_DOMAIN
+
+domain set for NIS purposes.
+
+From the
+sysinfo() function:
+
+• SI_SYSNAME
+
+Name of operating system.
+
+• SI_HOSTNAME
+
+Name of node.
+
+• SI_RELEASE
+
+Release of operating system.
+
+• SI_VERSION
+
+Version field of utsname.
+
+• SI_MACHINE
+
+Kind of machine.
+
+• SI_ARCHITECTURE
+
+Instruction set arch.
+
+• SI_HW_SERIAL
+
+Hardware serial number.
+
+• SI_HW_PROVIDER
+
+Hardware manufacturer.
+
+• SI_SRPC_DOMAIN
+
+Secure RPC domain.
+
+•
+
+From the
+uname() function:
+
+• UNAME_SYSNAME
+
+Operating system name.
+
+• UNAME_NODENAME
+
+The nodename.
+
+• UNAME_RELEASE
+
+Operating system release.
+
+• UNAME_VERSION
+
+Operating system version.
+
+• UNAME_MACHINE
+
+Machine hardware name (class).
+
+Options
+
+The
+configuration file can specify a wide variety of options,
+such as requiring the user’s password before executing
+some commands, or restricting the command-line arguments to
+match certain patterns.
+
+Options
+are handled very differently from conditions
+(conditions include user, group, host, and time). If a
+control line’s conditions aren’t met, super
+falls through and tries the next control line in the file.
+After finding an acceptable control line, super will execute
+the command if the options are satisfied; otherwise, it
+stops and doesn’t search the super.tab file any
+further.
+
+Options can be
+divided into (a) local options, which are defined on
+a regular control line, and apply only to that control line;
+and (b) global options, which are defined on a
+:global or :global_options line, take effect
+immediately after the line, and are valid until the end of
+the input or until there is a countermanding global option
+or pattern.
+
+All options are
+orthogonal to each other. It doesn’t matter in what
+order they appear on a control line.
+
+Some options
+can be given as either local or global options. If both are
+used, the local setting overrides the global one.
+
+Two special
+names can be used with any of the options that take user or
+group ids as arguments: owner=xxx,
+uid=xxx, euid=xxx,
+gid=xxx, egid=xxx,
+u+g=xxx, groups=xxx,
+addgroups=xxx. These names are
+, meaning the owner of the file to be
+executed (or the owner’s group, whichever is
+appropriate in the context); and ,
+meaning the owner or group of the user calling super. The
+angle brackets are literally part of the name. These have
+the same values as the built-in variables CALLER and
+OWNER (see the Variables section, above). For
+example, the options
+
+gid=Foo uid=
+
+would change the group to
+Foo, but leave the uid unchanged.
+
+The recognized
+options are:
+
+Group 1.
+Options Affecting How Superfiles Are Read and
+Processed.
+
+patterns=xxx
+
+(Global)
+
+Specifies the pattern-matching type for conditions and
+options. The string xxx must be one of:
+
+posix
+
+— patterns are POSIX
+regular expressions. You can use
+’’posix/extended’’ for
+extended regular expressions;
+’’posix/icase’’ for
+case-insensitive regular expressions; or
+’’posix/extended/icase’’ for
+both. See your regular-expression man pages for details.
+
+regex
+
+— patterns are ed-style
+regular expressions, using the rules embodied in the
+BSD 4.x routines re_comp()/re_exec(), with the
+addition of csh-style brace expansion. This is the default
+for historical reasons, but most people prefer to use
+shell-style patterns here, and it is recommended that you
+put patterns=shell (see below) in your global options
+list. 
+
+shell
+
+— patterns are
+approximately Bourne-shell style, with the addition of
+csh-style brace expansion and the special
+[[chars]] pattern. The patterns are
+formed from:
+
+\x
+
+force x to be a plain character;
+
+?
+
+matches any single character;
+
+*
+
+matches any sequence of 0 or more chars;
+
+[
+
+chars] matches any
+single character in the set;
+
+[^chars]
+matches any single char NOT in the set;
+
+[[chars]]
+When the pattern begins with [[, and ends with
+]], then each and every character in the string must
+match the ordinary square-bracket pattern
+[chars] (or
+[^chars]).
+
+^pat
+
+inverts the sense of the match
+— the string must NOT match the pattern.
+
+lang=zzz
+
+(Global)
+
+This option sets the language used for weekdays (in time
+conditions). Here, zzz may be any locale available on
+your host. For example, lang=de would typically cause
+super to use German names. The default is the
+C locale, hence English names.
+
+relative_path=y|n
+
+(Global)
+
+If y, FullPathNames can be relative instead of
+absolute. By default this is disallowed, because it is
+almost always a very foolish (unsafe) thing to do.
+
+group_slash=y|n
+
+(Global)
+
+If y, group names can contain a slash. By default
+this is disallowed, so that super can catch certain
+typos in the super.tab file. (Namely, super
+can catch errors in which an entry is of the form
+Cmd:File instead of the required
+Cmd::File. The trouble is that
+Cmd:File looks syntactically like
+user:group, and can therefore be
+mistaken for a valid part of a control line. But the
+filename will contain a slash — unless you have
+unwisely enabled the relative_path option — so
+disallowing slashes allows super to flag the line as
+syntactically invalid.)
+
+gethostbyname=y|n
+
+(Global)
+
+Enables or disables the use of gethostbyname() to
+find the fully-qualified domain name (see the discussion in
+the Permitted Users section, which describes the
+security issues associated with enabling this option.)
+Default: enabled (if your host supports
+gethostbyname()). 
+
+Group 2.
+Logging Options.
+
+logfile=fname
+
+(Global)
+
+Enables logging to a local file. Each invocation of
+super (aside from ones for help) generates an entry
+in file fname.
+
+loguid=
+
+xxx
+
+(Global)
+
+If logging is enabled with logfile=fname, the
+logfile will be opened for writing using uid=xxx (can
+be either a username or numeric uid). This option allows you
+to have the file created/opened under another uid that does
+have cross-host access, such as the uid of a system manager.
+(See timestampuid=xxx for additional comments).
+Default: loguid=0.
+
+mail="
+
+mail-command"
+
+(Local|Global)
+
+Notices of super failures are piped to the shell command
+mail-command. This is independent of the setting of
+the logfile and syslog options. For instance,
+mail="mail -s Super joeblow" will cause
+error messages to be mailed to user joeblow (on some
+systems you may need to substitute mailx for
+mail). Note: the mail-command is executed by
+passing it as an argument to popen(3). This is safe
+to execute because of the clean environment assured by
+super. 
+
+mailany="mail-command"
+
+(Local|Global)
+
+This is identical to the mail option, except that
+mailany sends notification of successful invocations
+as well as errors.
+
+rlog_host=hostname
+
+(Global)
+
+Tells super which host’s syslog daemon is to
+receive log messages when option syslog=y is enabled.
+The option has no effect if used after the first message is
+logged: once the logger has been opened, it is not re-opened
+if the rlog_host is changed. Default: the local host.
+Note: One could instead configure the syslog.conf
+file to forward the messages to a central machine.
+
+syslog=
+
+y|n
+
+(Global)
+
+Logging information is passed to the logs maintained by
+the syslogd daemon. This is independent of the
+setting of the logfile option (above). Error messages
+are by default logged at priority LOG_ERR and successful
+attempts to run programs are logged at priority LOG_INFO.
+(See options syslog_error and syslog_success
+to change these levels.)
+
+syslog_error=xxx
+
+(Global)
+
+If syslog is enabled (see the syslog option),
+then by default super logs error messages using
+syslog(3) code LOG_ERR. This option changes
+the code to xxx, where xxx is any of the usual
+syslog(3) priority and/or facility codes, such as
+LOG_WARNING or LOG_LOCAL7|LOG_ERR. The
+LOG_xxx words can be separated by whitespace,
+dot, and/or ’’|’’, but of course you
+must use quotes if whitespace is included. The leading
+"LOG_" is optional, and the value is
+case-insensitive. For example, LOG_LOCAL7|LOG_ERR can
+alternatively be written as local7.err. Super
+doesn’t know what are sensible codes —
+it’s up to the super.tab writer to choose
+meaningful values. For instance, if you put
+
+syslog_error="LOG_INFO | LOG_ERR" (bad!)
+
+then you will get both those values or’d together and
+passed to syslog().
+
+syslog_success=xxx 
+
+(Global)
+
+This option is just like syslog_error, except
+that it applies to successful-execution messages instead of
+error messages. Default: LOG_INFO .
+
+Group 3.
+Extra Help Information for Users.
+
+info=xxx
+
+(Local)
+
+The string xxx is printed when giving help to
+users. It should be set to a helpful one-line description of
+the command.
+
+Group 4.
+Password and Other Restrictions Before Approval.
+
+maxlen=[mmm,]nnn 
+
+(Local|Global)
+
+Each argument must be no more than mmm characters
+long (including the terminating null), and the sum length of
+all arguments must not exceed nnn characters. A
+negative value means that no limit is applied. The defaults
+for mmm and nnn are set by the compile-time
+manifest constants MAXLEN1ARG and MAXLENARGS, which are
+usually 1000 and 10,000 characters, respectively.
+
+nargs=[
+
+mmm-]nnn
+
+(Local|Global)
+
+The user is required to enter mmm - nnn arguments
+to the command. If just nnn is given, the user must
+enter exactly nnn arguments. These arguments are in
+addition to any arguments entered in the command part of the
+super.tab file. The default is to allow the user to
+enter any number of arguments.
+
+arg[mmm
+
+-]nnn=sss
+
+(Local|Global)
+
+This means that the nnn’th or
+mmm-nnn’th arguments must match pattern
+sss. (Arguments are numbered from 1.) The
+pattern must be enclosed in quotes if it contains
+whitespace. Note that this option does not require
+that there be mmm-nnn arguments; it only says
+what those arguments must look like, if entered. You can use
+this option several times on one line, with different
+mmm-nnn values each time, to apply different
+patterns to different arguments. If more than one pattern
+applies to a given argument, all of those patterns must be
+matched. An empty pattern ("") is special: it has
+the effect of unsetting (removing) any previous
+patterns for the matching [mmm-]nnn. This can
+be useful if you want to change :global settings,
+instead of adding to them. If there are local
+arg[mmm-]nnn option(s), they
+completely replace all global
+arg[mmm-]nnn values, even if the
+local mmm-nnn values do not overlap with the
+global values.
+
+owner=
+
+xxx
+
+(Local|Global)
+
+This option specifies that the FullPath (after
+asterisk-substitution) must be owned by user (or uid)
+xxx, or else it won’t be executed.
+
+auth=y|
+
+n
+
+(Local|Global)
+
+If y, user authentication is required before the
+command is executed. The default authentication method is
+Unix password authentication. See also the options
+authprompt, authtype, authuser,
+timeout, and renewtime, and be sure to read
+the warning under timestampbyhost.
+
+authprompt=message
+
+(Local|Global)
+
+Specifies the prompt used when authenticating the user
+(usually the default prompt is fine). Variable substitution
+is done on the prompt before printing.
+
+authtype=type
+
+(Local|Global)
+
+Specifies the type of authentication used when
+auth=y. The type can be password or
+pam (if PAM is supported on your system). The default
+is password. If PAM authentication is used,
+super uses the service name
+’’super’’ when looking for
+authentication in your system PAM configuration files.
+
+authuser=username
+
+(Local|Global)
+
+Specifies the user whose authentication is required when
+auth=y. The default is the password (or other
+authentication) for the user who invoked super.
+
+password=y|n
+
+(Local|Global)
+
+This is a deprecated option; it has been replaced by the
+auth and authtype options. Password=y
+is equivalent to auth=y authtype=password ; and
+Password=n is equivalent to auth=n.
+
+renewtime=y|n
+
+(Global)
+
+If y, the user’s timestamp file is updated
+to the current time whenever an authentication-requiring
+command is executed. The result is that a user who
+frequently executes authentication-requiring commands
+won’t need to re-authenticate until more than
+timeout minutes elapse since the last such command.
+Otherwise, the user will need to re-authenticate
+timeout minutes after last entering the password. The
+default is n.
+
+timeout=m
+
+(Local|Global)
+
+User authentication is good for m minutes; that
+is, the command may be executed without re-authenticating
+for m minutes after the previous authentication (for
+any command). After m minutes, user authentication
+will be required again before the command can be executed.
+If timeout is zero or negative, authentication is
+required every time the command is used. The timestamp for
+user usr is recorded in the file TIMESTAMP_DIR
+directory (see timestampbyhost and the FILES section,
+below). 
+
+timestampbyhost=y|n
+
+(Global)
+
+If y (default), the timestamp files are given
+names that are unique on each host. For instance,
+jouser@somehost will be given a timestamp file named
+TIMESTAMP_DIR/somehost/jouser, where
+TIMESTAMP_DIR is defined in the FILES section. If
+timestmapbyhost=n, the timestamp files are given
+names that are unique to each user, but not unique per host.
+For instance, jouser on any host will be given a
+timestamp file named TIMESTAMP_DIR/jouser.
+
+WARNING: The hostname
+used is that from gethostname(). Note that this is
+not necessarily unique across internet domains, since it is
+frequently not a fully-qualified domain name. Therefore you
+should not share timestamp directories with hosts outside
+the local domain. (Generally such connections don’t
+exist, but one could crossmount the timestamp
+directory disk...)
+
+timestampuid=xxx 
+
+If a password is required, the
+time at which it was entered is recorded as the mtime of a
+timestamp file. The timestamp file is normally created with
+owner=root; however, this option causes it to be
+created/modified using uid=xxx (xxx can be
+either a username or numeric uid). This option is useful
+when a network of hosts are sharing a cross-mounted
+timestamp directory. Note that networks are typically
+configured to not allow root on one host to have root access
+to files on another host, which will forbid root on other
+hosts from creating the timestamp file unless it’s
+world-writable. This option allows you to have the file
+created/opened under another uid that does have cross-host
+access, such as the uid of a system manager. Default:
+timestampuid=0.
+
+checkvar=name[,...] 
+
+(Local)
+
+Each name in the comma-separated list is a
+super.tab variable which the user must enter at a
+prompt from super. For example, you might have a
+super shutdown command which halts the computer. If
+you execute this on the wrong host there may be some very
+annoyed users! So, you can include checkvar=HOST, and
+the user will have to type the correct hostname in response
+to a prompt from super.
+
+Group 5.
+Modifications to Environment Before Executing
+Command.
+
+uid=xxx
+
+(Local)
+
+Sets the real uid to xxx just before executing
+the command. If option euid isn’t used, also
+sets the effective uid to xxx. The uid xxx is
+first tried as a login name and then as a number. If the
+options uid=xxx and u+g=yyy (see
+below) are used together, then the u+g option only
+sets the group id, and not the user id.
+
+euid=
+
+xxx
+
+(Local)
+
+Sets the effective uid to xxx just before
+executing the command. The uid xxx is first tried as
+a login name and then as a number.
+
+gid=yyy
+
+(Local)
+
+Sets the real gid to yyy just before executing
+the command. If option egid isn’t used, also
+sets the effective gid to yyy. The gid yyy is
+first tried as a group name and then as a number.
+
+egid=
+
+yyy
+
+(Local)
+
+Sets the effective gid to yyy just before
+executing the command. The gid yyy is first tried as
+a group name and then as a number.
+
+u+g=zzz
+
+(Local)
+
+Sets the real uid to zzz, the real gid to
+zzz’s login gid, and the supplementary groups
+list to zzz’s supplementary groups just before
+executing the command. If the euid and/or egid
+option aren’t given, the effective uid and/or gid are
+also set. The options u+g and gid=yyy conflict
+with each other, and may not be used together.
+
+groups=
+
+name[,...]
+
+(Local|Global)
+
+By default, the user’s supplementary groups list
+is deleted before executing a command (unless the option
+u+g is used). This option instead sets the group list
+to name[,...]
+
+addgroups=name[,...]
+
+(Local|Global)
+
+This option adds the listed groups to the supplementary
+groups list. Since the default is to provide an empty
+supplementary groups list, this option usually has the same
+effect as the plain groups option. However, if the
+options u+g=foo addgroups=a,b,c
+are used, then the supplementary groups list is composed of
+user foo’s supplementary groups plus a,
+b, and c.
+
+argv0=
+
+name
+
+(Local)
+
+Execute the command will execute with its first argument
+(that is, the argument conventionally denoted as
+argv[0]), set to name. As a convenient
+shorthand, the value  (the angle brackets
+are literally part of the name) means to use the
+FullPath specified in the super.tab file. By
+default, argv[0] is set to Cmd, the name of
+the super command invoked by the user, regardless of
+the actual path being invoked. However, some programs will
+not run properly unless argv[0] has a particular
+value. For example, suppose you want to permit users to
+safely mount zip disks, and you use something like:
+
+zipmount
+"/etc/mount -o nosuid /dev/xz10 /zip" 
+This command will fail if /etc/mount requires that it
+be invoked with argv[0] set to
+[.../]mount, because super will use the
+name zipmount. However, you can put
+argv0= into your super.tab file, and then
+the mount command will work properly.
+
+env=name[,...] 
+
+(Global|Local)
+
+Each name in the comma-separated list is an
+environment variable which should not be deleted
+before executing the Cmd; these variables are in
+addition to the normal variables created or passed by
+super (TERM, IFS, PATH, USER, LOGNAME, HOME,
+ORIG_USER, ORIG_LOGNAME, ORIG_HOME, LINES, COLUMNS,
+SUPERCMD). Be careful here; environment variables can
+sometimes be abused to create security holes. If you use the
+option more than once, the later instance overrides the
+earlier one, instead of adding to it. Similarly, using it as
+a local option completely overrides any global setting.
+
+maxenvlen=nnn
+
+(Global|Local)
+
+Specifies the maximum length of an environment variable
+definition (including name, equal sign, value, and trailing
+null character). The default is given by the compile-time
+manifest constant MAXENVLEN, usually 1000 characters. A
+negative value means no limit.
+
+cd=dir
+
+(Local|Global)
+
+Just before executing the command, super changes
+the working directory to dir.
+
+setenv=
+
+var=xxx
+
+(Local|Global)
+
+The environment variable var is defined to have
+the value xxx, and is passed on when executing the
+Cmd. You can add several environment variable
+definitions by using the option more than once.
+
+fd=n
+
+[,...]
+
+(Local)
+
+Each file descriptor n in the comma-separated
+list should not be closed before executing the
+Cmd. These descriptors are added to the usual set of
+descriptors kept open, namely 0, 1, 2.
+
+nice=n
+
+(Local|Global)
+
+changes the ’’nice’’ value of
+the executed command by an amount n from the default
+level. (Positive increments reduce the command’s
+priority; negative increments increase it.)
+
+umask=
+
+nnn
+
+(Local|Global)
+
+sets the umask of any executed command to n. A
+leading 0x or 0X in nnn means a
+hexadecimal value; otherwise, a leading 0 means
+octal; otherwise it’s decimal.
+
+Group 6.
+Other Options
+
+print=message
+
+(Local)
+
+If the rest of the line is matched, then super
+prints the specified message just before executing
+the command.
+
+die=
+
+message
+
+(Local)
+
+If the rest of the line is matched, then super
+does variable-substitution on the specified message
+message, prints it, and exits. This lets you
+conveniently set up some ’’stop’’
+conditions, and use the die option to prevent super from
+looking at any line past the stop conditions. Otherwise,
+you’d have to individually attach the stop conditions
+to every control line.
+
+Include Files
+
+A
+super.tab file can include other files by means of an
+entry like
+
+:include filename [ owner=xxx ] [ group=yyy  ]
+
+or
+
+:optinclude file [ owner=xxx ] [ group=yyy  ]
+
+If the file isn’t
+an absolute path, it is taken to be relative to the
+directory containing the super.tab file. Include
+files may be nested up to the system limit on the number of
+simultaneously-open file descriptors.
+
+The
+owner=xxx option specifies that the
+file must be owned by user xxx; the
+group=yyy options specifies that the
+file must belong to group yyy. If
+group=yyy is specified, then the file can be
+group-writable; by default, the file must be writable only
+by owner. This can be useful for a collection of accounts
+that are operated together as part of a single project
+— the several of accounts can share .supertab
+files by :include-ing files belonging to the
+trusted user xxx and/or group yyy. Notes:
+
+1. The regular
+root-owned super.tab file can also use the
+owner= or group= constructs, but it’s
+not a good idea. Don’t do it.
+
+2. Beware of
+the transitive nature of this trust: the file owned by
+xxx can in turn include a file owned by yet another
+user. You might wind up trusting a user you didn’t
+intend to trust!
+
+The difference
+between :include and :optinclude is that the
+former generates an error if the named file doesn’t
+exist, whereas the latter (optional-include) silently
+ignores files that don’t exist.
+
+WARNING:
+You should use :optinclude with great caution, and be
+sure not to depend on that file being present. It is easy to
+imagine a scenario in which an administrator carelessly
+changes an entry so that the wrong permission is granted if
+an :optinclude’d file was missing.
+
+FILES
+
+/etc/super.tab
+
+The location of the
+super.tab file on your system.
+
+/etc/super.init
+
+The location of the
+super.init file on your system.
+
+/run/superstamps/username
+
+Default location of the file
+whose mtime is used as the timestamp for the last
+time the user entered his or her password for
+password-requiring commands. Check your installation for the
+directory used on your system.
+
+EXAMPLES
+
+Example 1. The control line
+
+doit /usr/local/bin/doit
+
+\
+
+me
+
+\
+
+you@{h1,h32}
+
+\
+
+ja.*:ok_j
+
+\
+
+:goodguys
+
+allows
+/usr/local/bin/doit to be run setuid-root by
+
+• user me
+
+on any host,
+
+• user you on hosts
+h1 and h32; 
+• any users named ja.* in group ok_j;
+
+• and anybody in group goodguys.
+
+Example 2. The pair of control
+lines 
+
+doit /usr/local/bin/doit
+
+\
+
+u+g=smith env=TZ,TAPE
+
+\
+
+password=y timeout=0
+
+\
+
+jo@PublicWorkstation
+
+doit /usr/local/bin/doit
+
+\
+
+u+g=smith env=TZ,TAPE
+
+\
+
+jo
+
+allows user jo
+
+to run /usr/local/bin/doit with
+uid = smith,
+gid = smith’s login gid, and keeping
+the environment variables TZ and TAPE in addition to the
+standard set. If user jo is at
+PublicWorkstation, the first entry will match,
+requiring jo’s password every time the command is
+used; otherwise, super will match at the second
+entry, and no password is needed to run the command.
+
+Example
+
+3. Here is an entry restricting
+CD-ROM mounting on different hosts: tas is the only
+user who may mount CD’s on elgar; anybody in
+group xyz may mount CD’s on alpha or
+delta; and anybody on a host in the netgroup
+india may mount a CD on the india hosts.
+However, user jo may never run cdmount,
+regardless of his or her group or host (assuming that there
+is no overriding global pattern that permits jo to
+use the command). Note that shell-style patterns are used,
+not regex-style patterns.
+
+cdmount /usr/local/bin/cdmount
+
+\
+
+tas@elgar
+
+\
+
+:xyz@{alpha,delta}
+
+\
+
+*@+india
+
+\
+
+!jo
+
+SEE ALSO
+
+super(1).

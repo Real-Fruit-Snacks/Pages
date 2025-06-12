@@ -1,0 +1,245 @@
+NAME
+
+/etc/pcmcia/config
+− PCMCIA card configuration database
+
+DESCRIPTION
+
+The PCMCIA card
+configuration file is read by cardmgr(8) at startup
+time. It defines what resources are available for use by
+Card Services, describes how to load and initialize device
+drivers, and describes specific PCMCIA cards.
+
+Resource descriptions
+
+There are three
+kinds of resource entries: include, exclude,
+and reserve. Including a resource enables Card
+Services to allocate that resource for client drivers. Part
+of a resource that is under Card Services control can be
+excluded if a specific device in the system uses that
+resource. And, a resource can be reserved, so that it will
+only be assigned to a client if that client specifically
+asks for that resource, or no other suitable resources are
+available.
+
+There are three
+resource types: port, memory, and irq.
+By default, Card Services assumes that it can use any
+interrupt that is not bound by another device driver.
+However, it makes no assumptions about IO port and address
+ranges, because some Linux drivers do not register their
+resource usage. So, port and memory ranges must be
+explicitly made available for use by PCMCIA devices.
+
+So, here is a
+portion of a config file:
+
+include port
+0x300-0x3ff, memory 0xd0000-0xdffff 
+reserve irq 3 
+exclude irq 4, port 0x3f8-0x3ff
+
+This says that
+Card Services can allocate ports in the range 0x300 to
+0x3ff, and memory in the range 0xd0000 to 0xdffff. It should
+not use irq 4 or ports 0x3f8-0x3ff (even if they seem to be
+available). And irq 3 should only be allocated if a client
+specifically asks for it.
+
+Card Services
+will never allocate resources already allocated by another
+kernel device driver. The
+include/exclude/reserve mechanism just
+provides a way of controlling what resources it will try to
+use, to accomodate devices that are not registered with the
+Linux resource manager.
+
+Device driver descriptions
+
+All Card
+Services client drivers are identified by a 32-character
+tag. Device entries in the config file describe
+client drivers. The only required field is the device tag.
+Additional fields can specify kernel modules that need to be
+loaded to make the device available, and a script to be
+executed to enable and disable instances of a device. When
+an instance of a driver is assigned to a socket, it gives
+cardmgr a device name by which this device will be known by
+the system (for example, eth0 for a net device, or
+cua1 for a modem). This name will be passed to the
+configuration script. For example:
+
+device
+"pcnet_cs" 
+class "network" 
+module "net/8390" opts "ei_debug=4",
+"pcnet_cs"
+
+This says that
+the pcnet_cs device requires two loadable modules.
+The first one is located in the net module
+subdirectory and will be loaded with a specific parameter
+setting. The second module should be in the pcmcia
+module subdirectory. The device is in the network class, so
+the network script in the configuration directory
+will be used to start or stop the device.
+
+It is also
+possible to specify default options for a particular kernel
+module, outside of a device driver declaration. This is
+convenient for keeping local configuration options in a file
+separate from the main card configuration file. For
+example:
+
+module
+"pcnet_cs" opts "mem_speed=600"
+
+Card descriptions
+
+Card
+declarations map PCMCIA cards to their client drivers. A
+card declaration consists of a descriptive name, a method
+for identifying the card when it is inserted, and driver
+bindings. There are six identification methods: the
+version method matches a card using its VERSION_1 id
+strings, the manfid method matches a card using its
+MANFID tuple codes, the pci method matches a CardBus
+card using its PCI device ID’s, the tuple
+method matches a card using any string embedded in any
+arbitrary CIS tuple, the function method matches a
+card using its function ID, and the anonymous method
+matches any card that does not have a CIS. This last method
+is only intended to be used for old-style Type I memory
+cards. The manfid and version methods can be
+combined to provide more discrimination; the other methods
+cannot be combined. For example:
+
+card
+"Linksys Ethernet Card" 
+tuple 0x40, 0x0009, "E-CARD PC Ethernet Card" 
+bind "pcnet_cs"
+
+This card is
+identified by a string at offset 0x0009 in tuple 0x40, and
+will be bound to the pcnet_cs driver (which must be
+already declared in a driver declaration).
+
+card
+"Connectware LANdingGear Adapter" 
+manfid 0x0057, 0x1004 
+bind "pcnet_cs"
+
+This card is
+identified by its MANFID tuple contents. The pci
+method has the same form, with pci replacing
+manfid.
+
+card
+"D-Link DE-650 Ethernet Card" 
+version "D-Link", "DE-650" 
+bind "pcnet_cs"
+
+This card will
+be identified using its VERSION_1 tuple, and will also be
+bound to the pcnet_cs driver.
+
+card
+"Serial port device" 
+function serial_port 
+bind "serial_cs"
+
+This binds the
+serial_cs driver to any card with a CIS function ID
+of 0x02, which corresponds to a serial port card. The
+function ID can either be a number, or one of the following
+predefined functions: memory_card,
+serial_port, parallel_port, fixed_disk,
+video_adapter, network_adapter, and
+aims_card.
+
+For situations
+where several cards share the same driver but need to be
+configured differently, card bindings can also override the
+default device class associated with a driver, as in:
+
+card
+"Bluetooth Serial Card" 
+manfid 0x1234, 0x5678 
+bind "serial_cs" class "bluetooth"
+
+Finally, the
+configuration file can specify that Card Services should use
+a replacement for the configuration information found on a
+card. This can be useful if a card’s configuration
+information is particularly incomplete or inaccurate. The
+new information is read from a binary data file as in this
+example:
+
+card "Evil
+broken card" 
+manfid 0x1234, 0x5678 
+cis "fixup.cis" 
+bind "serial_cs"
+
+Memory region definitions
+
+Memory region
+definitions are used to associate a particular type of
+memory device with a Memory Technology Driver, or
+"MTD". An MTD is used to service memory accesses
+in a device-independent fashion. When a card is identified,
+Card Services will attempt to load MTD’s for all its
+memory regions.
+
+A memory region
+definition begins with the region keyword and a
+descriptive string. This is followed by an identification
+method: either default to identify an MTD to be used
+for any otherwise unclassified region, or jedec to
+identify a region based on its JEDEC identification codes.
+Thus, for example,
+
+region
+"Intel Series 2 Flash" 
+jedec 0x89 0xa2 
+mtd "iflash2_mtd"
+
+specifies that
+the iflash2_mtd driver will be loaded based on a
+JEDEC match.
+
+Including definitions from other files
+
+The
+source command can be used to include configuration
+information from other files. The default config file
+specifies:
+
+source ./*.conf
+
+source ./config.opts
+
+The arguments
+for the source command are evaluated using normal
+filename wildcard expansion rules. Where available, the
+source command is implemented using the
+wordexp library function, which also implements
+environment variable expansion, arithmatic expansion, and
+command substitution.
+
+BUGS
+
+The
+reserve keyword has not actually been implemented in
+a useful way for this version of Card Services.
+
+AUTHOR
+
+David Hinds
+− dahinds [AT] users.net
+
+SEE ALSO
+
+cardmgr(8).

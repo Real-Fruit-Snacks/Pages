@@ -1,0 +1,122 @@
+NAME
+
+rcvstore -
+asynchronously incorporate mail into an nmh folder
+
+SYNOPSIS
+
+/usr/lib/mh/rcvstore
+
+[-help] [-version]
+[+folder] [-create | -nocreate]
+
+[-unseen |
+-nounseen] [-zero | -nozero]
+[-sequence name ...] [-public |
+-nopublic]
+
+DESCRIPTION
+
+rcvstore
+incorporates a message from the standard input into an
+nmh folder. This command is typically used in
+conjunction with mail filtering programs such as
+slocal and procmail, to filter your mail into
+different folders.
+
+You may specify
+which folder to use with +folder. If no folder is
+specified, rcvstore will use the folder given by a
+non-empty “Inbox:” entry in the user’s
+profile, else it will use the folder named
+“inbox”.
+
+If the switch
+-create is given (it is the default) and if the
+specified (or default) folder does not exist, then it will
+be created. You may disable this with the -nocreate
+option. In this case rcvstore will exit if the
+specified folder does not exist.
+
+When the new
+message is incorporated into the folder, it is assigned the
+next highest number for that folder.
+
+rcvstore
+will incorporate anything except zero length messages into
+the user’s nmh folder. It will not change the
+message in any way.
+
+If the
+user’s profile contains a “Msg-Protect:
+nnn” entry, it will be used as the mode to use, in
+octal, on the newly created message, otherwise the
+nmh default mode of 0600, see chmod(1), will
+be used (on filesystems that support it). For all subsequent
+operations on this message, this initially assigned mode
+will be preserved.
+
+If the switch
+-unseen is given (it is on by default), and if the
+profile entry “Unseen-Sequence” is present and
+non-empty, then rcvstore will add the newly
+incorporated message to each sequence named by this profile
+entry. You may use the switch -nounseen to disable
+this. These sequences will not be zeroed by rcvstore
+prior to adding the new message.
+
+Furthermore,
+the incoming messages may be added to additional sequences
+as they arrive by the use of the -sequence switch. As
+with the commands pick and mark, you may also
+use the switches -zero and -nozero to specify
+whether to zero old sequences or not. Similarly, use of the
+-public and -nopublic switches may be used to
+force these sequences to be public or private sequences.
+
+Locking and
+sequences 
+If you use the “Unseen-Sequence” profile entry,
+or if you use the -sequence argument, rcvstore
+might try to update its sequence state while another
+nmh process is also trying to do so. This can cause
+one of those updates to be lost. To avoid this (just between
+asynchronous invocations of rcvstore), always use it
+with an external locking mechanism. A procmailrc(5)
+local lockfile would work, or if not using procmail, then
+consider using dotlockfile(1) or flock(1).
+
+FILES
+
+$HOME/.mh_profile
+The user profile
+
+PROFILE COMPONENTS
+
+Path: To
+determine the user’s nmh directory 
+Folder-Protect: To set mode when creating a new folder 
+Inbox: To find the default inbox 
+Msg-Protect: To set mode when creating a new message 
+Unseen-Sequence: To name sequences denoting unseen
+messages
+
+SEE ALSO
+
+mh-sequence(5),
+procmailex(5), procmailrc(5),
+rcvdist(1), rcvpack(1), rcvtty(1)
+
+DEFAULTS
+
+’+folder’
+defaults to “Inbox” profile entry 
+’-create’ 
+’-unseen’ 
+’-nozero’
+
+CONTEXT
+
+No context
+changes will be attempted, with the exception of sequence
+manipulation.

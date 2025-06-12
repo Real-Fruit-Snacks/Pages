@@ -1,0 +1,371 @@
+https://polyfill.io/v3/polyfill.min.js?features=es6">;
+https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">;
+
+NAME
+
+pamhomography -
+stretch/shrink a quadrilateral region of an image to 
+another quadrilateral shape
+
+SYNOPSIS
+
+pamhomography
+
+[-from=coords] 
+[-to=coords] 
+[-mapfile=map_file] 
+[-view=coords] 
+[-fill=color] 
+[-verbose 
+[pam_file]
+
+You can
+abbreviate any option to its shortest unique prefix. You can
+use two hyphens instead of one to delimit an option. You can
+separate an option from its value with whitespace instead of
+=.
+
+DESCRIPTION
+
+This program is
+part of http://netpbm.sourceforge.net/">Netpbm
+.
+
+pamhomography
+stretches and shrinks an arbitrary quadrilateral portion of
+an input image you specify (not necessarily rectangular),
+into a new quadrilateral shape you specify, producing a new
+image.
+
+You can do any
+https://en.wikipedia.org/wiki/Affine_transformation#Image_transformation">affine
+image transformation : translation, reflection, scaling,
+rotation, and shearing/skewing. However,
+pamhomography additionally can do bilinear
+transforms, which means it can warp any quadrilateral to any
+other quadrilateral, even when this mapping cannot be
+described using a single set of linear equations. This can
+be useful, for example, for creating perspective views of
+rectangular images or for reverse-mapping a perspective view
+back to a rectangular projection.
+
+OPTIONS
+
+In addition to
+the options common to all programs based on libnetpbm (most
+notably -quiet, see
+Common Options ),
+pamhomography recognizes the following command line
+options: 
+-from=coords
+
+This defines
+the source quadrilateral. coords is a list of four
+
+integer-valued (x, y) coordinates. If you do
+not specify the 
+source with either -from or -mapfile, the
+source quadrilateral 
+is the entire input image.
+
+-to=coords
+
+This defines
+the target quadrilateral. coords is a list of four
+integer-valued (x, y) coordinates. If you do
+not specify the target with either -to or
+-mapfile, the target quadrilateral is the same as the
+entire input image.
+
+-mapfile=map_file
+
+This names a
+text file that describes the mapping from the source to the
+target quadrilateral. The file map_file must contain
+either eight integer-valued (x, y)
+coordinates, being the four source coordinates followed by
+the corresponding four target coordinates, or only four
+(x, y) coordinates, being only the four target
+coordinates. In the latter case, the source quadrilateral is
+taken to be the four corners of the input image in clockwise
+order, starting from the upper left.
+
+Anything you
+specify with -to or -from overrides what is in
+
+this file.
+
+-view=coords
+
+This defines
+the target view. coords is a list of two
+integer-valued (x, y) coordinates: the upper
+left and lower right boundaries, respectively, of the pixels
+that will be visible in the output image. If -view is
+not specified, the target view will fit precisely the target
+quadrilateral.
+
+-fill=color
+
+This is the
+color with which the program fills all pixels that lie
+outside of the target quadrilateral. Specify the color as
+described for the 
+argument of the pnm_parsecolor() library routine .
+
+The default is
+black, and for images with a transparency plane,
+transparent.
+
+-verbose
+
+This makes the program issue
+some informational messages about what it is doing.
+
+Cooordinates
+should normally be specified in clockwise order. The syntax
+is fairly flexible: all characters other than the plus sign,
+minus sign, and digits are treated as separators. Although
+coordinates need to be integers, they may lie outside the
+image’s boundary.
+
+PARAMETERS
+
+pamhomography’s
+only parameter, pam_file, is the name of the 
+file containing the input image. If you don’t specify
+pam_file, the 
+image comes from Standard Input.
+
+NOTES
+
+The output
+image uses the same Netpbm format as the input image.
+
+Simple
+transformations are best handled by other Netpbm programs,
+such as those listed in the ’SEE
+ALSO’ section below. Use pamhomography for
+more sophisticated transformations such as perspective
+adjustments, rotations around an arbitrary point in the
+image, extraction of non-rectangular quadrilaterals,
+shearings by coordinates rather than by angle, and, in
+general, all transformations that are most easily expressed
+as mapping four points in one image to four points in
+another image.
+
+EXAMPLES
+
+The following
+examples use the park_row.ppm
+test image, which is a
+https://commons.wikimedia.org/wiki/File:15_Park_Row_3.JPG">
+photograph of New York City’s Park Row Building ,
+scaled to 441×640, converted to a PPM file, and
+redistributed under the terms of the
+https://en.wikipedia.org/wiki/GNU_Free_Documentation_License">
+GFDL .
+
+The first
+example showcases the real power of bilinear
+transformations. Assuming park_row_rect.map has the
+following contents:
+
+(0, 0) (440, 0)
+(440, 639) (0, 639)
+
+then
+
+projects the
+building’s facade from a perspective view to a
+rectilinear front-on view. Remember that
+pamhomography ignores the parentheses and commas used
+in park_row_rect.map; they merely make the file more
+human-readable. We equivalently could have written
+
+or any of
+myriad other variations.
+
+pamhomography
+can warp the image to a trapezoid to make it look like
+it’s leaning backwards in 3-D:
+
+As a very
+simple example,
+
+flips the image
+left-to-right. Note that in this case the target
+quadrilateral’s coordinates are listed in
+counterclockwise order because that represents the
+correspondence between points (0, 0) ↔ (440, 0) and
+(0, 639) ↔ (639, 0).
+
+Scaling is also
+straightforward. The following command scales down the image
+from 441×640 to 341×540:
+
+Let’s add
+100 pixels of tan border to the above. We use -view
+and -fill to accomplish that task:
+
+We can add a
+border without having to scale the image:
+
+The
+-view option can also be used to extract a rectangle
+out of an image, discarding the rest of the image:
+
+Specifying the
+same set of coordinates to -from and -to has
+the same effect but also allows you to extract
+non-rectangular quadrilaterals from an image:
+
+Rotation is
+doable but takes some effort. The challenge is that you need
+to compute the rotated coordinates yourself. The matrix
+expression to rotate points \((x_1, y_1)\) \((x_2, y_2)\),
+\((x_3, y_3)\), and \((x_4, y_4)\) clockwise by \(\theta\)
+degrees around point \((c_x, c_y)\) is
+
+\[
+\begin{bmatrix} 1 & 0 & c_x \\ 0 & 1 & c_y
+\\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} \cos
+\theta & -\sin \theta & 0 \\ \sin \theta & \cos
+\theta & 0 \\ 0 & 0 & 1 \end{bmatrix}
+\begin{bmatrix} 1 & 0 & -c_x \\ 0 & 1 & -c_y
+\\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x_1 &
+x_2 & x_3 & x_4 \\ y_1 & y_2 & y_3 & y_4
+\\ 1 & 1 & 1 & 1 \end{bmatrix} \quad. \]
+
+For example, to
+rotate park_row.ppm 30° clockwise around
+(220, 320) you would compute
+
+\[
+\begin{bmatrix} 1 & 0 & 220 \\ 0 & 1 & 320
+\\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} \cos
+30^{\circ} & -\sin 30^{\circ} & 0 \\ \sin 30^{\circ}
+& \cos 30^{\circ} & 0 \\ 0 & 0 & 1
+\end{bmatrix} \begin{bmatrix} 1 & 0 & -220 \\ 0
+& 1 & -320 \\ 0 & 0 & 1 \end{bmatrix}
+\begin{bmatrix} 0 & 440 & 440 & 0 \\ 0 & 0
+& 639 & 639 \\ 1 & 1 & 1 & 1
+\end{bmatrix} = \begin{bmatrix} 189.4744 & 570.5256
+& 251.0256 & -130.0256 \\ -67.1281 & 152.8719
+& 706.2621 & 486.2621 \\ 1.0000 & 1.0000 &
+1.0000 & 1.0000 \end{bmatrix} \quad, \]
+
+round these
+coordinates to integers, transpose the matrix, and produce
+the following map file, park_row_rot30.map:
+
+571 153 
+251 706 
+-130 486
+
+(These are the
+’to’ coordinates; we use the default, full-image
+’from’ coordinates.) The mapping then works as
+in all of the preceding examples:
+
+SEE ALSO
+
+•
+
+pamcut(1)
+
+•
+
+pamenlarge(1)
+
+•
+
+pamflip(1)
+
+•
+
+pamperspective(1)
+
+•
+
+pamscale(1)
+
+•
+
+pamstretch(1)
+
+•
+
+pam(1)
+
+•
+
+pnmmargin(1)
+
+•
+
+pnmpad(1)
+
+•
+
+pnmrotate(1)
+
+•
+
+pnmshear(1)
+
+HISTORY
+
+pamhomography
+was new in Netpbm 10.94 (March 2021).
+
+AUTHOR
+
+Copyright
+© 2020 Scott Pakin, scott+pbm [AT] pakin.org
+
+Table of Contents
+
+•
+
+SYNOPSIS 
+
+•
+
+DESCRIPTION
+
+•
+
+OPTIONS
+
+•
+
+PARAMETERS
+
+•
+
+NOTES
+
+•
+
+EXAMPLES
+
+•
+
+SEE ALSO
+
+•
+
+HISTORY
+
+•
+
+AUTHOR
+
+DOCUMENT SOURCE
+
+This manual
+page was generated by the Netpbm tool ’makeman’
+from HTML source. The master documentation is at
+
+http://netpbm.sourceforge.net/doc/pamhomography.html

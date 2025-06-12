@@ -1,0 +1,75 @@
+NAME
+
+escape −
+escape shell special characters in a string
+
+SYNOPSIS
+
+escape
+string
+
+DESCRIPTION
+
+escape prepends
+a "\" character to all shell special
+characters in string, making it safe to compose a
+shell command with the result.
+
+EXAMPLES
+
+The following
+is a contrived example showing how one can unintentionally
+end up executing the contents of a string:
+
+    $ var='; echo gotcha!'
+    $ eval echo hi $var
+    hi
+    gotcha!
+    $
+
+Using escape,
+one can avoid executing the contents of $var:
+
+    $ eval echo hi `escape "$var"`
+    hi ; echo gotcha!
+    $
+
+A less
+contrived example is passing arguments to Mail Avenger
+bodytest commands containing possibly unsafe environment
+variables. For example, you might write a hypothetical
+reject_bcc script to reject mail not explicitly
+addressed to the recipient:
+
+    #!/bin/sh
+    formail −x to −x cc −x resent−to −x resent−cc \
+        | fgrep "$1" > /dev/null \
+            && exit 0
+    echo ".. address does not accept blind carbon copies"
+    exit 100
+
+To invoke this
+script, passing it the recipient address as an argument, you
+would need to put the following in your Mail Avenger
+rcpt script:
+
+    bodytest reject_bcc `escape "$RECIPIENT"`
+
+SEE ALSO
+
+avenger(1),
+
+The Mail
+Avenger home page: http://www.mailavenger.org/>.
+
+BUGS
+
+escape is
+designed for the Bourne shell, which is what Mail Avenger
+scripts use. escape might or might not work with other
+shells.
+
+AUTHOR
+
+David
+Mazieres

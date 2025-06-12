@@ -1,0 +1,81 @@
+IPC::Run3::ProfReporteUsermContributed Perl DocumeIPC::Run3::ProfReporter(3pm)
+
+NAME
+       IPC::Run3::ProfReporter - base class for handling profiling data
+
+SYNOPSIS
+DESCRIPTION
+       See IPC::Run3::ProfPP and for an example subclass.
+
+       This class just notes and accumulates times; subclasses use methods
+       like "handle_app_call", "handle_run_exit" and "handle_app_exit" to emit
+       reports on it.  The default methods for these handlers are noops.
+
+       If run from the command line, a reporter will be created and run on
+       each logfile given as a command line parameter or on run3.out if none
+       are given.
+
+       This allows reports to be run like:
+
+           perl -MIPC::Run3::ProfPP -e1
+           perl -MIPC::Run3::ProfPP -e1 foo.out bar.out
+
+       Use "-" to read from STDIN (the log file format is meant to be
+       moderately greppable):
+
+           grep "^cvs " run3.out perl -MIPC::Run3::ProfPP -e1 -
+
+       Use --app to show only application level statistics (ie don't emit a
+       report section for each command run).
+
+METHODS
+       "IPC::Run3::ProfReporter->new"
+           Returns a new profile reporting object.
+
+       "$reporter->handle_app_call( ... )"
+       "$reporter->handle_app_exit( ... )"
+       "$reporter->handle_run_exit( ... )"
+           These methods are called by the handled events (see below).
+
+       "$reporter->app_call(\@cmd, $time)"
+       "$reporter->app_exit($time)"
+       "$reporter->run_exit(@times)"
+              $self->app_call( $time );
+              my $time = $self->get_app_call_time;
+
+           Sets the time (in floating point seconds) when the application,
+           run3(), or system() was called or exited.  If no time parameter is
+           passed, uses IPC::Run3's time routine.
+
+           Use get_...() to retrieve these values (and _accum values, too).
+           This is a separate method to speed the execution time of the
+           setters just a bit.
+
+       "$reporter->get_run_count()"
+       "$reporter->get_app_call_time()"
+       "$reporter->get_app_exit_time()"
+       "$reporter->get_app_cmd()"
+       "$reporter->get_app_time()"
+       "$reporter->get_app_cumulative_time()"
+       "$reporter->get_run_call_time()"
+       "$reporter->get_run_exit_time()"
+       "$reporter->get_run_time()"
+       "$reporter->get_run_cumulative_time()"
+       "$reporter->get_sys_call_time()"
+       "$reporter->get_sys_exit_time()"
+       "$reporter->get_sys_time()"
+       "$reporter->get_sys_cumulative_time()"
+       "$reporter->get_run_cmd()"
+
+LIMITATIONS
+COPYRIGHT
+           Copyright 2003, R. Barrie Slaymaker, Jr., All Rights Reserved
+
+LICENSE
+       You may use this module under the terms of the BSD, Artistic, or GPL
+       licenses, any version.
+
+AUTHOR
+       Barrie Slaymaker <barries@slaysys.com>
+
+perl v5.36.0                      2022-12-06      IPC::Run3::ProfReporter(3pm)

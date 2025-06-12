@@ -1,0 +1,170 @@
+GCONCAT(8) BSD System Manager’s Manual
+GCONCAT(8)
+
+NAME
+
+gconcat — disk
+concatenation control utility
+
+SYNOPSIS
+
+gconcat create
+[−v] name prov prov
+[prov [...]] 
+gconcat destroy [−fv] name
+[name [...]] 
+gconcat label [−hv] name prov prov
+[prov [...]] 
+gconcat stop [−fv] name
+[name [...]] 
+gconcat clear [−v] prov
+[prov [...]] 
+gconcat dump prov [prov [...]]
+
+gconcat list [name [...]] 
+gconcat load [−v] 
+gconcat unload [−v]
+
+DESCRIPTION
+
+The gconcat utility is
+used for device concatenation configuration. The
+concatenation can be configured using two different methods:
+’’manual’’ or
+’’automatic’’. When using the
+’’manual’’ method, no metadata are
+stored on the devices, so the concatenated device has to be
+configured by hand every time it is needed. The
+’’automatic’’ method uses on-disk
+metadata to detect devices. Once devices are labeled, they
+will be automatically detected and configured.
+
+The first
+argument to gconcat indicates an action to be
+performed:
+
+create
+
+Concatenate the
+given devices with specified name. This is the
+’’manual’’ method. The kernel module
+geom_concat.ko will be loaded if it is not loaded
+already.
+
+label
+
+Concatenate the
+given devices with the specified name. This is the
+’’automatic’’ method, where metadata
+are stored in every device’s last sector. The kernel
+module geom_concat.ko will be loaded if it is not
+loaded already.
+
+stop
+
+Turn off
+existing concatenate device by its name. This command
+does not touch on-disk metadata!
+
+destroy
+
+Same as
+stop.
+
+clear
+
+Clear metadata
+on the given devices.
+
+dump
+
+Dump metadata
+stored on the given devices.
+
+list
+
+List all or the
+given currently configured devices.
+
+load
+
+Load
+geom_concat.ko kernel module.
+
+unload
+
+Unload
+geom_concat.ko kernel module.
+
+Additional
+options:
+
+−f
+
+Force the
+removal of the specified concatenated device.
+
+−h
+
+Hardcode
+providers’ names in metadata.
+
+−v
+
+Be more
+verbose.
+
+SYSCTL VARIABLES
+
+The following sysctl(8)
+variables can be used to control the behavior of the
+CONCAT GEOM class. The default value is shown next to
+each variable.
+
+kern.geom.concat.debug:
+0
+
+Debug level of the
+CONCAT GEOM class. This can be set to a number
+between 0 and 3, both included. If set to 0 minimal debug
+information is printed, and if set to 3 the maximum amount
+of debug information in printed.
+
+EXAMPLES
+
+The following example shows how
+to configure four disks for automatic concatenation, create
+a file system on it, and mount it:
+
+gconcat label
+-v data /dev/da0 /dev/da1 /dev/da2 /dev/da3 
+newfs /dev/concat/data 
+mount /dev/concat/data /mnt 
+[...] 
+umount /mnt 
+gconcat stop data 
+gconcat unload
+
+DIAGNOSTICS
+
+Exit status is 0 on success, and
+1 if the command fails.
+
+SEE ALSO
+
+geom(4), loader.conf(5),
+geom(8), mount(8), newfs(8), sysctl(8), umount(8),
+vinum(8)
+
+HISTORY
+
+The gconcat utility
+appeared in FreeBSD 5.3.
+
+AUTHORS
+
+Pawel Jakub Dawidek
+pjd [AT] FreeBSD.org>
+
+BSD May 21,
+2004 BSD

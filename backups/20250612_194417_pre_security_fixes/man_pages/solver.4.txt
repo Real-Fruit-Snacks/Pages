@@ -1,0 +1,208 @@
+NAME
+
+solver - direct
+and iterative solver (rheolef-7.2)
+
+DESCRIPTION
+
+The class
+implements the numerical resolution of a linear system. Let
+a be a square and invertible matrix in the
+csr(4) sparse format. The construction of a solver
+writes:
+
+solver sa
+(a);
+
+and the
+resolution of a*x = b expresses simply:
+
+vec
+x = sa.solve(b);
+
+When the matrix
+is modified in a computation loop, the solver could be
+re-initialized by:
+
+sa.update_values
+(new_a); 
+vec x = sa.solve(b);
+
+DIRECT VERSUS ITERATIVE
+
+The choice
+between a direct or an iterative method for solving the
+linear system is by default performed automatically: it
+depends upon the sparsity pattern of the matrix, in order to
+achieve the best performances. The solver_option(4)
+class allows one to change this default behavior.
+
+solver_option
+sopt; 
+sopt.iterative = true; 
+solver sa (a, sopt); 
+vec x = sa.solve(b);
+
+The direct
+approach bases on the Choleski factorization for a symmetric
+definite positive matrix, and on the LU one otherwise.
+Conversely, the iterative approach bases on the cg(5)
+conjugate gradient algorithm for a symmetric definite
+positive matrix, and on the gmres(5) algorithm
+otherwise.
+
+COMPUTING THE DETERMINANT
+
+This feature is
+useful e.g. when tracking a change of sign in the
+determinant of a matrix, e.g. during the
+continuation(3) algorithm. When using a direct
+method, the determinant of the matrix can be computed
+as:
+
+solver_option
+sopt; 
+sopt.iterative = false; 
+solver sa (a, sopt); 
+cout 
+
+The
+sa.det() method returns an object of type
+solver::determinant_type that contains a mantissa
+and an exponent in a given base (generally 2 or 10). For
+some rare direct solvers, the computation of the determinant
+is not yet fully supported: it is the case for the Cholesky
+factorization from the eigen library. In you find
+such a problem, please switch to another solver library, see
+the solver_option(4) class.
+
+AUTOMATIC CHOICE AND CUSTOMIZATION
+
+When the matrix
+is obtained from the finite element discretization of 3D
+partial differential problems, the iterative solver is the
+default choice. Otherwise, the direct solver is
+selected.
+
+More precisely,
+the choice between direct or iterative solver depends upon
+the a.pattern_dimension() property of the
+csr(4) sparse matrix. When this pattern dimension is
+3, an iterative method is faster and less memory consuming
+than a direct one. See usersguide for a discussion on
+this subject.
+
+The
+symmetry-positive-definiteness of the matrix is tested via
+the a.is_symmetric() and
+a.is_definite_positive() properties of the
+csr(4) sparse matrix. These properties determine the
+choices between Cholesky/LU methods for the direct case, and
+between cg/gmres algorithms for the iterative one.
+Most of the time, these properties are automatically well
+initialized by the finite element assembly procedure, via
+the integrate(3) function.
+
+Nevertheless,
+in some special cases, e.g. a linear combination of matrix,
+or when the matrix has been read from a file, it could be
+necessary to force either the symmetry or the
+positive-definiteness property by the appropriate
+csr(4) member function before to send the matrix to
+the solver.
+
+PRECONDITIONNERS FOR ITERATIVE SOLVERS
+
+When using an
+iterative method, the default is to perform no
+preconditionning. Several preconditionners are available:
+the mic(5) modified incomplete Cholesky for symmetric
+matrix and the ilut(5) incomplete LU one for
+unsymmetric matrix and the do-nothing eye(5) identity
+preconditionner. A preconditionner can be supplied via:
+
+solver_option
+sopt; 
+sopt.iterative = true; 
+solver sa (a, sopt); 
+sa.set_preconditionner (ilut(a)); 
+vec x = sa.solve(b);
+
+Note also the
+eye(5) that returns the solver for the identity
+matrix: it could be be used for specifying that we do not
+use a preconditionner. This is the default behavior. The
+set_preconditionner member function should be
+called before the first call to the solve method:
+if no preconditioner has been defined at the first call to
+solve, the default eye(5) preconditionner is
+selected.
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+linalg/lib/solver.h
+
+The
+solver class is simply an alias to the
+solver_basic class
+
+typedef
+solver_basic solver;
+
+The
+solver_basic class provides an interface to a data
+container:
+
+template
+
+class solver_basic: public
+smart_pointer_clone > {
+
+public: 
+// typedefs:
+
+typedef
+solver_abstract_rep rep; 
+typedef smart_pointer_clone base; 
+typedef typename rep::size_type size_type; 
+typedef typename rep::determinant_type determinant_type;
+
+//
+allocators:
+
+solver_basic
+(); 
+explicit solver_basic (const csr& a, const
+solver_option& opt = solver_option()); 
+void update_values (const csr& a);
+
+//
+accessors:
+
+vec
+trans_solve (const vec& b) const; 
+vec solve (const vec& b) const;
+
+determinant_type det() const; 
+const solver_option& option() const; 
+void set_preconditioner (const
+solver_basic&); 
+bool initialized() const; 
+std::string name() const; 
+};
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html>. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

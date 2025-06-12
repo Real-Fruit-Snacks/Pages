@@ -1,0 +1,184 @@
+NAME
+
+expireover -
+Expire entries from the news overview database
+
+SYNOPSIS
+
+expireover
+[-ekNpqs] [-f file] [-w
+offset] [-z rmfile] [-Z
+lowmarkfile]
+
+DESCRIPTION
+
+expireover
+expires old entries from the news overview database. It
+reads in a list of newsgroups (by default from
+pathdb/active, but a different file can be specified
+with the -f option) and then removes from the
+overview database mentions of any articles that no longer
+exist in the news spool.
+
+If
+groupbaseexpiry in inn.conf is true,
+expireover also removes old articles from the news
+spool according to the expiration rules in
+expire.ctl. Otherwise it only removes overview
+entries for articles that have already been removed by some
+other process, and -e, -k, -N,
+-p, -q, -w, and -z are all
+ignored.
+
+When
+groupbaseexpiry is set, the default behavior of
+expireover is to remove the article from the spool
+once it expires out of all of the newsgroups to which it was
+crossposted. The article is, however, removed from the
+overview database of each newsgroup as soon as it expires
+out of that individual newsgroup. The effect is that an
+article crossposted to several groups will be removed from
+the overview database from each group one-by-one as its age
+passes the expiration threshold for that group as set in
+expire.ctl, and then when it expires out of the last
+newsgroup, it will be deleted from the news spool.
+
+Articles that
+are stored in self-expiring storage backends such as CNFS
+are normally treated differently and not expired until they
+expire out of the backend regardless of expire.ctl.
+See -N, however.
+
+By default,
+expireover purges all overview information for
+newsgroups that have been removed from the server; this
+behavior is suppressed if -f is given.
+
+OPTIONS
+
+-e
+
+Remove articles from the news
+spool and all overview databases as soon as they expire out
+of any newsgroup to which they are posted, rather than
+retain them until they expire out of all newsgroups.
+-e and -k cannot be used at the same time.
+This flag is ignored if groupbaseexpiry is false.
+
+-f file
+
+Use file as the
+newsgroup list instead of pathdb/active. file
+can be "-" to indicate standard input. Using this
+flag suppresses the normal purge of all overview information
+from newsgroups that have been removed from the server.
+
+-k
+
+Retain all overview information for an article, as well
+as the article itself, until it expires out of all
+newsgroups to which it was posted. This can cause articles
+to stick around in a newsgroup for longer than the
+expire.ctl rules indicate, when they’re
+crossposted. -e and -k cannot be used at the
+same time. This flag is ignored if groupbaseexpiry is
+false. 
+
+-N
+
+Apply expire.ctl rules to expire articles even
+from storage methods that have self-expire functionality.
+This may remove articles from self-expiring storage methods
+before the articles "naturally" expire. This flag
+is ignored if groupbaseexpiry is false.
+
+-p
+
+By default, expireover bases decisions on whether
+to remove an article on the arrival time on the server. This
+means that articles may be kept a little longer than if the
+decision were based on the article’s posting date. If
+this option is given, expiration decisions are based on the
+article posting date instead. This flag is ignored if
+groupbaseexpiry is false.
+
+-q
+
+expireover normally prints statistics at the end
+of the expiration process. -q suppresses this report.
+This flag is ignored if groupbaseexpiry is false.
+
+-s
+
+expireover normally only checks the existence of
+articles in the news spool if querying the storage method
+for that article to see if it still exists is considered
+"inexpensive". To always check the existence of
+all articles regardless of how resource-intensive this may
+be, use the -s flag. See storage.conf(5) for more
+information about this metric.
+
+-w offset
+
+"Warps" time so that
+expireover thinks that it’s running at some
+time other than the current time. This is occasionally
+useful to force groups to be expired or not expired without
+changing expire.ctl for the expire run. offset
+should be a signed floating point number specifying the
+number of days difference from the current time to use as
+"now". This flag is ignored if
+groupbaseexpiry is false.
+
+-z rmfile
+
+Don’t remove articles
+immediately but instead write the path to the article or the
+token of the article to rmfile, which is suitable
+input for fastrm(1). This can substantially speed up
+deletion of expired articles for those storage methods where
+each article is a single file (such as tradspool and
+timehash). See the description of the delayrm keyword
+in news.daily(8) for more details. This flag is ignored if
+groupbaseexpiry is false.
+
+-Z
+lowmarkfile
+
+Write the lowest article
+numbers for each newsgroup as it’s expired to the
+specified file. This file is then suitable for "ctlinnd
+lowmark". See ctlinnd(8) for more information.
+
+EXAMPLES
+
+Normally
+expireover is invoked from news.daily(8), which
+handles such things as processing the rmfile and
+lowmarkfile if necessary. Sometimes it’s
+convenient to manually expire a particular newsgroup,
+however. This can be done with a command like:
+
+echo
+example.test | expireover -f - -Z /lowmark 
+ctlinnd lowmark /lowmark
+
+This can be
+particularly useful if a lot of articles in a particular
+group have expired but the overview information is still
+present, causing some clients to see a lot of "this
+article may have been cancelled" messages when they
+first enter the newsgroup.
+
+HISTORY
+
+Written by Rob
+Robertson rob [AT] violet.edu> and Rich $alz
+rsalz [AT] uunet.net> (with help from Dave Lawrence
+tale [AT] uunet.net>) for InterNetNews.
+
+SEE ALSO
+
+active(5),
+ctlinnd(8), expire(8), expire.ctl(5), inn.conf(5),
+news.daily(8).

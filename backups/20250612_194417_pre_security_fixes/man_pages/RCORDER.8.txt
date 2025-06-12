@@ -1,0 +1,136 @@
+RCORDER(8) BSD System Manager’s Manual
+RCORDER(8)
+
+NAME
+
+rcorder — print a
+dependency ordering of interdependent files
+
+SYNOPSIS
+
+rcorder
+[−k keep]
+[−s skip] file ...
+
+DESCRIPTION
+
+The rcorder utility is
+designed to print out a dependency ordering of a set of
+interdependent files. Typically it is used to find an
+execution sequence for a set of shell scripts in which
+certain files must be executed before others.
+
+Each file passed
+to rcorder must be annotated with special lines
+(which look like comments to the shell) which indicate the
+dependencies the files have upon certain points in the
+sequence, known as ’’conditions’’,
+and which indicate, for each file, which
+’’conditions’’ may be expected to be
+filled by that file.
+
+Within each
+file, a block containing a series of
+’’REQUIRE’’,
+’’PROVIDE’’,
+’’BEFORE’’ and
+’’KEYWORD’’ lines must appear. The
+format of the lines is rigid. Each line must begin with a
+single ’#’, followed by a single space, followed
+by ’’PROVIDE:’’,
+’’REQUIRE:’’,
+’’BEFORE:’’, or
+’’KEYWORD:’’. No deviation is
+permitted. Each dependency line is then followed by a series
+of conditions, separated by whitespace. Multiple
+’’PROVIDE’’,
+’’REQUIRE’’,
+’’BEFORE’’ and
+’’KEYWORD’’ lines may appear, but
+all such lines must appear in a sequence without any
+intervening lines, as once a line that does not follow the
+format is reached, parsing stops.
+
+The options are
+as follows:
+
+−k
+
+Add the
+specified keyword to the ’’keep
+list’’. If any −k option is given,
+only those files containing the matching keyword are
+listed.
+
+−s
+
+Add the
+specified keyword to the ’’skip
+list’’. If any −s option is given,
+files containing the matching keyword are not listed.
+
+An example block
+follows:
+
+# REQUIRE:
+networking syslog 
+# REQUIRE: usr 
+# PROVIDE: dns nscd
+
+This block
+states that the file in which it appears depends upon the
+’’networking’’,
+’’syslog’’, and
+’’usr’’ conditions, and provides the
+’’dns’’ and
+’’nscd’’ conditions.
+
+A file may
+contain zero ’’PROVIDE’’ lines, in
+which case it provides no conditions, and may contain zero
+’’REQUIRE’’ lines, in which case it
+has no dependencies. There must be at least one file with no
+dependencies in the set of arguments passed to
+rcorder in order for it to find a starting place in
+the dependency ordering.
+
+DIAGNOSTICS
+
+The rcorder utility may
+print one of the following error messages and exit with a
+non-zero status if it encounters an error while processing
+the file list.
+
+Requirement
+%s has no providers, aborting.  No file has a
+’’PROVIDE’’ line corresponding to a
+condition present in a ’’REQUIRE’’
+line in another file.
+
+Circular
+dependency on provision %s, aborting.  A set of
+files has a circular dependency which was detected while
+processing the stated condition.
+
+Circular
+dependency on file %s, aborting.  A set of files
+has a circular dependency which was detected while
+processing the stated file.
+
+SEE ALSO
+
+rc(8)
+
+HISTORY
+
+The rcorder utility first
+appeared in NetBSD 1.5.
+
+AUTHORS
+
+Written by Perry E. Metzger
+perry [AT] piermont.com> and Matthew R. Green
+mrg [AT] eterna.au>.
+
+BSD
+July 17, 2000 BSD

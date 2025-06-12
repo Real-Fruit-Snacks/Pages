@@ -1,0 +1,303 @@
+SPLASH(4) BSD Kernel Interfaces Manual SPLASH(4)
+
+NAME
+
+splash — splash
+screen / screen saver interface
+
+SYNOPSIS
+
+device splash
+
+DESCRIPTION
+
+The splash pseudo device
+driver adds support for the splash screen and screen savers
+to the kernel. This driver is required if the splash bitmap
+image is to be loaded or any screen saver is to be used.
+
+Splash
+screen 
+You can load and display an arbitrary bitmap image file as a
+welcome banner on the screen when the system is about to
+start. This image will remain on the screen during kernel
+initialization process until the login prompt appears on the
+screen or until a screen saver is loaded and initialized.
+The image will also disappear if you hit any key, although
+this may not work immediately if the kernel is still probing
+devices.
+
+If you specify
+the −c or −v boot option when
+loading the kernel, the splash image will not appear.
+However, it is still loaded and can be used as a screen
+saver later: see below.
+
+In order to
+display the bitmap, the bitmap file itself and the matching
+splash image decoder module must be loaded by the boot
+loader. Currently the following decoder modules are
+available:
+
+splash_bmp.ko
+
+Windows BMP
+file decoder. While the BMP file format allows images of
+various color depths, this decoder currently only handles
+256 color bitmaps. Bitmaps of other color depths will not be
+displayed.
+
+splash_pcx.ko
+
+ZSoft PCX
+decoder. This decoder currently only supports version 5
+8-bpp single-plane images.
+
+splash_txt.ko
+
+TheDraw binary
+ASCII drawing file decoder. Displays a text-mode 80x25 ASCII
+drawing, such as that produced by the Binary save format in
+TheDraw. This format consists of a sequence of two byte
+pairs representing the 80x25 display, where the first byte
+is the ASCII character to draw and the second byte indicates
+the colors/attributes to use when drawing the character.
+
+The
+EXAMPLES section illustrates how to set up the splash
+screen.
+
+If the standard
+VGA video mode is used, the size of the bitmap must be
+320x200 or less. If you enable the VESA mode support in the
+kernel, either by statically linking the VESA module or by
+loading the VESA module (see vga(4)), you can load bitmaps
+up to a resolution of 1024x768, depending on the VESA BIOS
+and the amount of video memory on the video card.
+
+Screen
+saver 
+The screen saver will activate when the system is considered
+idle: i.e. when the user has not typed a key or moved the
+mouse for a specified period of time. As the screen saver is
+an optional module, it must be explicitly loaded into
+memory. Currently the following screen saver modules are
+available:
+
+blank_saver.ko
+
+This screen
+saver simply blanks the screen.
+
+beastie_saver.ko
+
+Animated
+graphical BSD Daemon.
+
+daemon_saver.ko
+
+Animated BSD
+Daemon screen saver.
+
+dragon_saver.ko
+
+Draws a random
+dragon curve.
+
+fade_saver.ko
+
+The screen will
+gradually fade away.
+
+fire_saver.ko
+
+A fire which
+becomes higher as load increases.
+
+green_saver.ko
+
+The screen will
+be blanked, similar to blank_saver.ko. If the monitor
+and the video card’s BIOS support it the screen will
+also be powered off.
+
+logo_saver.ko
+
+Animated
+graphical FreeBSD logo.
+
+plasma_saver.ko
+
+Draws an
+animated interference pattern.
+
+rain_saver.ko
+
+Draws a shower
+on the screen.
+
+snake_saver.ko
+
+Draws a snake
+of string.
+
+star_saver.ko
+
+Twinkling
+stars.
+
+warp_saver.ko
+
+Streaking
+stars.
+
+Screen saver
+modules can be loaded using kldload(8):
+
+kldload
+logo_saver
+
+The timeout
+value in seconds can be specified as follows:
+
+vidcontrol -t
+N
+
+Alternatively,
+you can set the saver variable in the
+/etc/rc.conf to the screen saver of your choice and
+the timeout value to the blanktime variable so that
+the screen saver is automatically loaded and the timeout
+value is set when the system starts.
+
+The screen saver
+may be instantly activated by hitting the saver key:
+the defaults are Shift-Pause on the AT enhanced
+keyboard and Shift-Ctrl-NumLock/Pause on the AT 84
+keyboard. You can change the saver key by modifying
+the keymap (see kbdcontrol(1), keymap(5)), and assign the
+saver function to a key of your preference.
+
+The screen saver
+will not run if the screen is not in text mode.
+
+Splash screen
+as a screen saver 
+If you load a splash image but do not load a screen saver,
+you can continue using the splash module as a screen saver.
+The screen blanking interval can be specified as described
+in the Screen saver section above.
+
+FILES 
+/boot/defaults/loader.conf
+
+boot loader
+configuration defaults
+
+/etc/rc.conf
+
+system
+configuration information
+
+/boot/kernel/splash_*.ko
+
+splash image
+decoder modules
+
+/boot/kernel/*_saver.ko
+
+screen saver
+modules
+
+/boot/kernel/vesa.ko
+
+the VESA
+support module
+
+EXAMPLES
+
+In order to load the splash
+screen or the screen saver, you must have the following line
+in the kernel configuration file.
+
+device
+splash
+
+Next, edit
+/boot/loader.conf (see loader.conf(5)) and include
+the following lines:
+
+splash_bmp_load="YES"
+
+bitmap_load="YES" 
+bitmap_name="/boot/chuck.bmp"
+
+In the above
+example, the file /boot/chuck.bmp is loaded. In the
+following example, the VESA module is loaded so that a
+bitmap file which cannot be displayed in standard VGA modes
+may be shown using one of the VESA video modes.
+
+splash_pcx_load="YES"
+
+vesa_load="YES" 
+bitmap_load="YES" 
+bitmap_name="/boot/chuck.pcx"
+
+If the VESA
+support is statically linked to the kernel, it is not
+necessary to load the VESA module. Just load the bitmap file
+and the splash decoder module as in the first example
+above.
+
+To load a binary
+ASCII drawing and display this while booting, include the
+following into your /boot/loader.conf:
+
+splash_txt_load="YES"
+
+bitmap_load="YES" 
+bitmap_name="/boot/splash.bin"
+
+SEE ALSO
+
+vidcontrol(1), syscons(4),
+vga(4), loader.conf(5), rc.conf(5), kldload(8),
+kldunload(8)
+
+HISTORY
+
+The splash driver first
+appeared in FreeBSD 3.1.
+
+AUTHORS
+
+The splash driver and
+this manual page were written by Kazutaka Yokota
+yokota [AT] FreeBSD.org>. The splash_bmp
+module was written by Michael Smith
+msmith [AT] FreeBSD.org> and Kazutaka Yokota. The
+splash_pcx module was written by Dag-Erling
+Smørgrav des [AT] FreeBSD.org> based on the
+splash_bmp code. The splash_txt module was
+written by Antony Mawer antony [AT] mawer.org>
+based on the splash_bmp code, with some additional
+inspiration from the daemon_saver code. The
+logo_saver, plasma_saver, rain_saver
+and warp_saver modules were written by Dag-Erling
+Smørgrav des [AT] FreeBSD.org>.
+
+CAVEATS
+
+Both the splash screen and the
+screen saver work with syscons(4) only.
+
+BUGS
+
+If you load a screen saver while
+another screen saver has already been loaded, the first
+screen saver will not be automatically unloaded and will
+remain in memory, wasting kernel memory space.
+
+BSD
+December 31, 2015 BSD

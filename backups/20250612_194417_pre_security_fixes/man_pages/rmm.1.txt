@@ -1,0 +1,109 @@
+NAME
+
+rmm - remove
+nmh messages
+
+SYNOPSIS
+
+rmm
+
+[-help] [-version]
+[+folder] [msgs] [-unlink |
+-nounlink] [-rmmproc program]
+[-normmproc] 
+
+DESCRIPTION
+
+By default,
+rmm will remove the specified messages by renaming
+each of the message files with a site-dependent prefix
+(usually a comma). Such files will then need to be removed
+in some manner after a period of time. Many sites arrange
+for cron to remove these files once a day, so check
+with your system administrator.
+
+Alternately, if
+you wish for rmm to really remove the files
+representing these messages, you can use the -unlink
+switch. But messages removed by this method cannot be later
+recovered.
+
+If you prefer a
+more sophisticated method of ’removing’
+messages, you can define the rmmproc profile
+component. For example, you can add a profile component such
+as
+
+rmmproc:
+/home/foouser/bin/rmm_msgs
+
+Then instead of
+simply renaming the message file, rmm will call the
+named program or script to handle the files that represent
+the messages to be deleted. The -rmmproc switch may
+be used to override this profile component. The
+-normmproc switch disables the use of any
+rmmproc profile component and negates all prior
+-rmmproc switches.
+
+An example of a
+rmmproc script that saves a message based in its
+Message-ID is provided in
+/usr/share/doc/nmh/examples/rmmproc.messageid. To enable it,
+simply add an rmmproc component that names it, to
+your profile.
+
+Some users of
+csh prefer the following:
+
+alias rmm
+’refile +d’
+
+where folder
+’+d’ is a folder for deleted messages, and
+
+alias mexp
+’rm `mhpath +d all`’
+
+is used to
+“expunge” deleted messages.
+
+The current
+message is not changed by rmm, so a next will
+advance to the next message in the folder as expected.
+
+FILES
+
+$HOME/.mh_profile
+The user profile
+
+PROFILE COMPONENTS
+
+Path: To
+determine the user’s nmh directory 
+Current-Folder: To find the default current folder 
+rmmproc: Program to delete the message
+
+SEE ALSO
+
+rmf(1)
+
+DEFAULTS
+
+’+folder’
+defaults to the current folder 
+’msgs’ defaults to cur 
+’-nounlink’
+
+CONTEXT
+
+If a folder is
+given, it will become the current folder.
+
+BUGS
+
+Since
+rmm and refile use your rmmproc to
+delete the message, the rmmproc must not call
+rmm or refile without specifying
+-normmproc, or you will create an infinite loop.

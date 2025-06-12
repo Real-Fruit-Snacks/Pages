@@ -1,0 +1,179 @@
+NAME
+
+sq toolbox
+keyring - Manage collections of keys or certs
+
+SYNOPSIS
+
+sq toolbox
+keyring list [OPTIONS] FILE 
+sq toolbox keyring split [OPTIONS] FILE
+
+sq toolbox keyring merge [OPTIONS] FILE
+
+sq toolbox keyring filter [OPTIONS]
+FILE
+
+DESCRIPTION
+
+Manage
+collections of keys or certs.
+
+Collections of
+keys or certificates (also known as "keyrings"
+when they contain secret key material, and
+"certrings" when they don’t) are any number
+of concatenated certificates. This subcommand provides tools
+to list, split, merge, and filter keyrings.
+
+Note: In the
+documentation of this subcommand, we sometimes use the terms
+keys and certs interchangeably.
+
+SUBCOMMANDS
+
+sq toolbox
+keyring list 
+List keys in a keyring.
+
+Prints the
+fingerprint as well as the primary userid for every
+certificate encountered in the keyring.
+
+sq toolbox
+keyring split 
+Split a keyring into individual keys.
+
+Splitting up a
+keyring into individual keys helps with curating a
+keyring.
+
+The converse
+operation is ’sq toolbox keyring merge’.
+
+sq toolbox
+keyring merge 
+Merge keys or keyrings into a single keyring.
+
+Multiple
+versions of the same certificate are merged together. Where
+data is replaced (e.g., secret key material), data from the
+later certificate is preferred.
+
+sq toolbox
+keyring filter 
+Join keys into a keyring applying a filter.
+
+This can be
+used to filter keys based on given predicates, e.g. whether
+they have a user id containing an email address with a
+certain domain. Additionally, the keys can be pruned to only
+include components matching the predicates.
+
+If no filters
+are supplied, everything matches.
+
+If multiple
+predicates are given, they are or’ed, i.e. a key
+matches if any of the predicates match. To require all
+predicates to match, chain multiple invocations of this
+command. See EXAMPLES for inspiration.
+
+EXAMPLES
+
+sq toolbox
+keyring list 
+List all certs
+
+sq toolbox
+keyring list certs.pgp
+
+List all certs
+with a userid on example.org
+
+sq toolbox
+keyring filter --domain example.org certs.pgp \
+
+| sq toolbox keyring list
+
+sq toolbox
+keyring split 
+Split all certs
+
+sq toolbox
+keyring split certs.pgp
+
+Split all
+certs, merging them first to avoid duplicates
+
+sq toolbox
+keyring merge certs.pgp | sq toolbox keyring split
+
+sq toolbox
+keyring merge 
+Merge certificate updates
+
+sq toolbox
+keyring merge certs.pgp romeo-updates.pgp
+
+sq toolbox
+keyring filter 
+Converts a key to a cert (i.e., remove any secret key
+material)
+
+sq toolbox
+keyring filter --to-cert cat juliet.pgp
+
+Gets the keys
+with a user id on example.org
+
+sq toolbox
+keyring filter --domain example.org keys.pgp
+
+Gets the keys
+with a user id on example.org or example.net
+
+sq toolbox
+keyring filter --domain example.org \
+
+--domain example.net \ 
+keys.pgp
+
+Gets the keys
+with a user id with the name Juliet
+
+sq toolbox
+keyring filter --name Juliet keys.pgp
+
+Gets the keys
+with a user id with the name Juliet on example.org
+
+sq toolbox
+keyring filter --domain example.org keys.pgp | \
+
+sq toolbox keyring filter
+--name Juliet
+
+Gets the keys
+with a user id on example.org, pruning other userids
+
+sq toolbox
+keyring filter --domain example.org --prune-certs \
+
+certs.pgp
+
+SEE ALSO
+
+sq(1),
+sq-toolbox(1), sq-toolbox-keyring-list(1),
+sq-toolbox-keyring-split(1),
+sq-toolbox-keyring-merge(1),
+sq-toolbox-keyring-filter(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org>.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

@@ -1,0 +1,233 @@
+NAME
+
+git-annex-addurl
+- add urls to annex
+
+SYNOPSIS
+
+git annex
+addurl [url ...]
+
+DESCRIPTION
+
+Downloads each
+url to its own file, which is added to the annex.
+
+When
+yt-dlp is installed, it can be used to check for a
+video embedded in a web page at the url, and that is added
+to the annex instead. (However, this is disabled by default
+as it can be a security risk. See the documentation of
+annex.security.allowed-ip-addresses in git-annex(1) for
+details.)
+
+Special remotes
+can add other special handling of particular urls. For
+example, the bittorrent special remotes makes urls to
+torrent files (including magnet links) download the content
+of the torrent, using aria2c.
+
+Normally the
+filename is based on the full url, so will look like
+"www.example.com_dir_subdir_bigfile". In some
+cases, addurl is able to come up with a better filename
+based on other information. Options can also be used to get
+better filenames.
+
+OPTIONS
+
+--fast
+
+Avoid immediately downloading
+the url. The url is still checked (via HEAD) to verify that
+it exists, and to get its size if possible.
+
+--relaxed
+
+Don’t immediately
+download the url, and avoid storing the size of the
+url’s content. This makes git-annex accept whatever
+content is there at a future point.
+
+This is the
+fastest option, but it still has to access the network to
+check if the url contains embedded media. When adding large
+numbers of urls, using --relaxed --raw is much
+faster.
+
+--verifiable -V
+
+This can be used with the
+--fast or --relaxed option. It improves the
+safety of the resulting annexed file, by letting its content
+be verified with a checksum when it is transferred between
+git-annex repositories, as well as by things like
+git-annex fsck.
+
+When used with
+--relaxed, content from the web will always be accepted,
+even if it has changed, and the checksum recorded for later
+verification.
+
+When used with
+--fast, the checksum is recorded the first time the content
+is downloaded from the web. Once a checksum has been
+recorded, subsequent downloads from the web must have the
+same checksum.
+
+When addurl was
+used without this option before, the file it added can be
+converted to be verifiable by migrating it to the VURL
+backend. For example: git-annex migrate foo
+--backend=VURL
+
+--raw
+
+Prevent special handling of urls by yt-dlp, and by
+bittorrent and other special remotes. This will for example,
+make addurl download the .torrent file and not the contents
+it points to.
+
+--no-raw
+
+Require content pointed to by
+the url to be downloaded using yt-dlp or a special remote,
+rather than the raw content of the url. if that cannot be
+done, the add will fail.
+
+--raw-except=remote
+
+Prevent special handling of
+urls by all special remotes except for the specified one. To
+allow special handling only by yt-dlp, use
+--raw-except=web.
+
+--file=name
+
+Use with a filename that does
+not yet exist to add a new file with the specified name and
+the content downloaded from the url.
+
+If the file
+already exists, addurl will record that it can be downloaded
+from the specified url(s).
+
+--preserve-filename
+
+When the web server (or
+torrent, etc) provides a filename, use it as-is, avoiding
+sanitizing unusual characters, or truncating it to length,
+or any other modifications.
+
+git-annex will
+still check the filename for safety, and if the filename has
+a security problem such as path traversal or a control
+character, it will refuse to add it.
+
+--pathdepth=N
+
+Rather than basing the filename
+on the whole url, this causes a path to be constructed,
+starting at the specified depth within the path of the
+url.
+
+For example,
+adding the url http://www.example.com/dir/subdir/bigfile
+with --pathdepth=1 will use
+"dir/subdir/bigfile", while --pathdepth=3
+will use "bigfile".
+
+It can also be
+negative; --pathdepth=-2 will use the last two parts
+of the url.
+
+--prefix=foo
+--suffix=bar
+
+Use to adjust the filenames
+that are created by addurl. For example,
+--suffix=.mp3 can be used to add an extension to the
+file.
+
+--no-check-gitignore
+
+By default, gitignores are
+honored and it will refuse to download an url to a file that
+would be ignored. This makes such files be added despite any
+ignores.
+
+--jobs=N -JN
+
+Enables parallel downloads when
+multiple urls are being added. For example: -J4
+
+Setting this to
+"cpus" will run one job per CPU core.
+
+--batch
+
+Enables batch mode, in which
+lines containing urls to add are read from stdin.
+
+-z
+
+Makes the --batch input be delimited by nulls
+instead of the usual newlines.
+
+--with-files
+
+When batch mode is enabled,
+makes it parse lines of the form: "$url $file"
+
+That adds the
+specified url to the specified file, downloading its content
+if the file does not yet exist; the same as git annex
+addurl $url --file $file
+
+--json
+
+Enable JSON output. This is intended to be parsed by
+programs that use git-annex. Each line of output is a JSON
+object. 
+
+--json-progress
+
+Include progress objects in
+JSON output.
+
+--json-error-messages
+
+Messages that would normally be
+output to standard error are included in the JSON
+instead.
+
+--backend
+
+Specifies which key-value
+backend to use.
+
+Also the
+git-annex-common-options(1) can be used.
+
+CAVEATS
+
+If
+annex.largefiles is configured, and does not match a file,
+git annex addurl will add the non-large file directly to the
+git repository, instead of to the annex. However, this is
+not done when --fast or --relaxed is used.
+
+SEE ALSO
+
+git-annex(1)
+
+git-annex-rmurl(1)
+
+git-annex-registerurl(1)
+
+git-annex-importfeed(1)
+
+AUTHOR
+
+Joey Hess
+id [AT] joeyh.name>
