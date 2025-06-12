@@ -18,7 +18,7 @@ A fully self-contained, offline-capable web application for searching and viewin
 ## Features
 
 - 🔍 **Fast Search**: Real-time search with suggestions as you type
-- 📚 **Comprehensive Coverage**: 8,121 Linux man pages from official sources
+- 📚 **Comprehensive Coverage**: 9,371 Linux man pages from official sources and man.cx
 - 📋 **TLDR Integration**: Quick practical examples included locally
 - 🎨 **16 Beautiful Themes**: Including Dark, Ocean Depth, Dracula, Monokai, and more
 - 🚀 **Instant Loading**: All data stored locally for blazing-fast performance
@@ -41,7 +41,7 @@ A fully self-contained, offline-capable web application for searching and viewin
 ```
 ├── index.html             # Complete web application
 ├── data/                  # Application data
-│   ├── index.js          # Search index (8,121 commands)
+│   ├── index.js          # Search index (9,371 commands)
 │   ├── tldr_index.js     # TLDR pages index
 │   └── options.js        # Command options database
 ├── themes/                # 16 modular theme CSS files
@@ -52,13 +52,16 @@ A fully self-contained, offline-capable web application for searching and viewin
 │   ├── monokai.css       
 │   ├── high-contrast.css 
 │   └── ...               # And 10 more themes
-├── man_pages/             # 8,121 man page files
+├── man_pages/             # 9,915 man page files
 │   └── [command].[section].txt
 ├── tldr_pages/            # TLDR summaries
 │   ├── common/           # Cross-platform commands
 │   └── linux/            # Linux-specific commands
 ├── docs/                  # Documentation
-├── extract-options.js     # Options extractor script
+├── scripts/               # Utility scripts
+│   ├── scrape_man_cx_optimized.py  # Man page scraper
+│   ├── update_index.py             # Search index updater
+│   └── extract-options.js          # Options extractor
 ├── .github/               # GitHub Actions
 ├── .gitlab-ci.yml         # GitLab CI/CD
 ├── .nojekyll             # GitHub Pages config
@@ -102,9 +105,9 @@ Download the latest release from [GitHub Releases](https://github.com/Real-Fruit
 
 ```bash
 # Download and extract the latest version
-wget https://github.com/Real-Fruit-Snacks/Pages/releases/latest/download/linux-man-pages.tar.gz
-tar -xzf linux-man-pages.tar.gz
-cd linux-man-pages
+wget https://github.com/Real-Fruit-Snacks/Pages/releases/latest/download/linux-man-pages-v6.0.0.tar.gz
+tar -xzf linux-man-pages-v6.0.0.tar.gz
+cd linux-man-pages-v6.0.0
 
 # Deploy to your server or Git repository
 ```
@@ -188,9 +191,9 @@ The application includes comprehensive coverage of Linux commands:
 - **TLDR Data**: Stored locally, no caching needed
 - **Syntax Highlighting**: Man page content is enhanced with HTML formatting
 - **Storage**: Uses localStorage for bookmarks, history, and preferences
-- **Command Coverage**: 7,897 Linux man pages from official sources
+- **Command Coverage**: 9,371 searchable Linux man pages from official sources and man.cx
 - **TLDR Coverage**: Comprehensive TLDR pages for common and Linux-specific commands
-- **Theme System**: Modular CSS architecture with 5 built-in themes
+- **Theme System**: Modular CSS architecture with 16 built-in themes
 - **Data Format**: Pre-processed text files for instant loading
 - **Search Performance**: No limit on search results displayed
 
