@@ -1,0 +1,148 @@
+NG_LMI(4) BSD Kernel Interfaces Manual NG_LMI(4)
+
+NAME
+
+ng_lmi &mdash; frame
+relay LMI protocol netgraph node type
+
+SYNOPSIS
+
+#include 
+
+#include 
+
+DESCRIPTION
+
+The lmi node type
+performs the frame relay LMI protocol. It supports the ITU
+Annex A, ANSI Annex D, and Group-of-four LMI types. It also
+supports auto-detection of the LMI type.
+
+To enable a
+specific LMI type, connect the corresponding hook (annexA,
+annexD, or group4) to DLCI 0 or 1023 of a ng_frame_relay(4)
+node. Typically, Annex A and Annex D live on DLCI 0 while
+Group-of-four lives on DLCI 1023.
+
+To enable LMI
+type auto-detection, connect the auto0 hook to DLCI 0 and
+the auto1023 hook to DLCI 1023. The node will attempt to
+automatically determine which LMI type is running at the
+switch, and go into that mode.
+
+Only one fixed
+LMI type, or auto-detection, can be active at any given
+time.
+
+The
+NGM_LMI_GET_STATUS control message can be used at any time
+to query the current status of the LMI protocol and each
+DLCI channel. This node also supports the NGM_TEXT_STATUS
+control message.
+
+HOOKS
+
+This node type supports the
+following hooks:
+
+annexA
+
+ITU Annex A LMI
+hook.
+
+annexD
+
+ANSI Annex D
+LMI hook.
+
+group4
+
+Group-of-four
+LMI hook.
+
+auto0
+
+Auto-detection
+hook for DLCI 0.
+
+auto1023
+
+Auto-detection
+hook for DLCI 1023.
+
+CONTROL MESSAGES
+
+This node type supports the
+generic control messages, plus the following:
+
+NGM_LMI_GET_STATUS
+
+This command returns status
+information in a struct nglmistat:
+
+#define
+NGM_LMI_STAT_ARYSIZE (1024/8)
+
+struct
+nglmistat {
+
+u_char proto[12];
+
+/* Active proto (same as hook name) */ 
+u_char hook[12];
+
+/* Active hook */ 
+u_char fixed;
+
+/* If set to fixed LMI mode */ 
+u_char autod;
+
+/* If currently auto-detecting */ 
+u_char seen[NGM_LMI_STAT_ARYSIZE];
+
+/* DLCIs ever seen */ 
+u_char up[NGM_LMI_STAT_ARYSIZE];
+
+/* DLCIs currently up */
+
+};
+
+NGM_TEXT_STATUS
+
+This generic message returns is
+a human-readable version of the node status.
+
+SHUTDOWN
+
+This node shuts down upon
+receipt of a NGM_SHUTDOWN control message, or when all hooks
+have been disconnected.
+
+SEE ALSO
+
+netgraph(4), ng_frame_relay(4),
+ngctl(8)
+
+ANSI T1.617-1991 Annex
+D
+
+.
+
+ITU-T Q.933 Digital
+Subscriber Signaling System No. 1 - Signaling Specification
+for Frame Mode Basic Call Control, Annex A
+
+.
+
+HISTORY
+
+The ng_lmi node type was
+implemented in FreeBSD 4.0.
+
+AUTHORS
+
+Julian Elischer
+julian [AT] FreeBSD.org>
+
+BSD
+November 13, 2012 BSD

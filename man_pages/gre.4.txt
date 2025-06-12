@@ -1,0 +1,188 @@
+GRE(4) BSD Kernel Interfaces Manual GRE(4)
+
+NAME
+
+gre &mdash; encapsulating
+network device
+
+SYNOPSIS
+
+To compile the driver into the
+kernel, place the following line in the kernel configuration
+file:
+
+device
+gre
+
+Alternatively,
+to load the driver as a module at boot time, place the
+following line in loader.conf(5):
+
+if_gre_load="YES"
+
+DESCRIPTION
+
+The gre network interface
+pseudo device encapsulates datagrams into IP. These
+encapsulated datagrams are routed to a destination host,
+where they are decapsulated and further routed to their
+final destination. The &rsquo;&rsquo;tunnel&rsquo;&rsquo;
+appears to the inner datagrams as one hop.
+
+gre
+interfaces are dynamically created and destroyed with the
+ifconfig(8) create and destroy
+subcommands.
+
+This driver
+corresponds to RFC 2784. Encapsulated datagrams are
+prepended an outer datagram and a GRE header. The GRE header
+specifies the type of the encapsulated datagram and thus
+allows for tunneling other protocols than IP. GRE mode is
+also the default tunnel mode on Cisco routers. gre
+also supports Cisco WCCP protocol, both version 1 and
+version 2.
+
+The gre
+interfaces support a number of additional parameters to the
+ifconfig(8):
+
+grekey
+
+Set the GRE key
+used for outgoing packets. A value of 0 disables the key
+option.
+
+enable_csum
+
+Enables
+checksum calculation for outgoing packets.
+
+enable_seq
+
+Enables use of
+sequence number field in the GRE header for outgoing
+packets.
+
+EXAMPLES
+
+192.168.1.* --- Router A
+-------tunnel-------- Router B --- 192.168.2.* 
+\ / 
+\ / 
++------ the Internet ------+
+
+Assuming router
+A has the (external) IP address A and the internal address
+192.168.1.1, while router B has external address B and
+internal address 192.168.2.1, the following commands will
+configure the tunnel:
+
+On router A:
+
+ifconfig greN
+create 
+ifconfig greN inet 192.168.1.1 192.168.2.1 
+ifconfig greN inet tunnel A B 
+route add -net 192.168.2 -netmask 255.255.255.0
+192.168.2.1
+
+On router B:
+
+ifconfig greN
+create 
+ifconfig greN inet 192.168.2.1 192.168.1.1 
+ifconfig greN inet tunnel B A 
+route add -net 192.168.1 -netmask 255.255.255.0
+192.168.1.1
+
+In case when
+internal and external IP addresses are the same, different
+routing tables (FIB) should be used. The default FIB will be
+applied to IP packets before GRE encapsulation. After
+encapsulation GRE interface should set different FIB number
+to outgoing packet. Then different FIB will be applied to
+such encapsulated packets. According to this FIB packet
+should be routed to tunnel endpoint.
+
+Host X -- Host A
+(198.51.100.1) ---tunnel--- Cisco D (203.0.113.1) -- Host E
+
+\ / 
+\ /
+
++----- Host B ----- Host C -----+
+
+(198.51.100.254)
+
+On Host A
+(FreeBSD):
+
+First of
+multiple FIBs should be configured via loader.conf:
+
+net.fibs=2 
+net.add_addr_allfibs=0
+
+Then routes to
+the gateway and remote tunnel endpoint via this gateway
+should be added to the second FIB:
+
+route add -net
+198.51.100.0 -netmask 255.255.255.0 -fib 1 -iface em0 
+route add -host 203.0.113.1 -fib 1 198.51.100.254
+
+And GRE tunnel
+should be configured to change FIB for encapsulated
+packets:
+
+ifconfig greN
+create 
+ifconfig greN inet 198.51.100.1 203.0.113.1 
+ifconfig greN inet tunnel 198.51.100.1 203.0.113.1 tunnelfib
+1
+
+NOTES
+
+The MTU of gre interfaces
+is set to 1476 by default, to match the value used by Cisco
+routers. This may not be an optimal value, depending on the
+link between the two tunnel endpoints. It can be adjusted
+via ifconfig(8).
+
+For correct
+operation, the gre device needs a route to the
+decapsulating host that does not run over the tunnel, as
+this would be a loop.
+
+The kernel must
+be set to forward datagrams by setting the
+net.inet.ip.forwarding sysctl(8) variable to
+non-zero.
+
+SEE ALSO
+
+gif(4), inet(4), ip(4), me(4),
+netintro(4), protocols(5), ifconfig(8), sysctl(8)
+
+A description of
+GRE encapsulation can be found in RFC 2784 and RFC 2890.
+
+AUTHORS
+
+Andrey V. Elsukov
+ae [AT] FreeBSD.org> 
+Heiko W.Rupp hwr [AT] pilhuhn.de>
+
+BUGS
+
+The current implementation uses
+the key only for outgoing packets. Incoming packets with a
+different key or without a key will be treated as if they
+would belong to this interface.
+
+The sequence
+number field also used only for outgoing packets.
+
+BSD June 2,
+2015 BSD

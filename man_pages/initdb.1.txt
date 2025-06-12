@@ -1,0 +1,179 @@
+NAME
+
+initdb &minus;
+create a new PostgreSQL database cluster
+
+SYNOPSIS
+
+initdb [
+option... ] --pgdata | -D
+directory
+
+DESCRIPTION
+
+initdb
+creates a new PostgreSQL database cluster. A database
+cluster is a collection of databases that are managed by a
+single server instance.
+
+Creating a
+database cluster consists of creating the directories in
+which the database data will live, generating the shared
+catalog tables (tables that belong to the whole cluster
+rather than to any particular database), and creating the
+template1 database. When you later create a new database,
+everything in the template1 database is copied. It contains
+catalog tables filled in for things like the built-in
+types.
+
+initdb
+initializes the database cluster&rsquo;s default locale and
+character set encoding. Some locale categories are fixed for
+the lifetime of the cluster, so it is important to make the
+right choice when running initdb. Other locale
+categories can be changed later when the server is started.
+initdb will write those locale settings into the
+postgresql.conf configuration file so they are the
+default, but they can be changed by editing that file. To
+set the locale that initdb uses, see the description
+of the --locale option. The character set encoding
+can be set separately for each database as it is created.
+initdb determines the encoding for the template1
+database, which will serve as the default for all other
+databases. To alter the default encoding use the
+--encoding option.
+
+initdb
+must be run as the user that will own the server process,
+because the server needs to have access to the files and
+directories that initdb creates. Since the server may
+not be run as root, you must not run initdb as root
+either. (It will in fact refuse to do so.)
+
+Although
+initdb will attempt to create the specified data
+directory, often it won&rsquo;t have permission to do so,
+since the parent of the desired data directory is often a
+root-owned directory. To set up an arrangement like this,
+create an empty data directory as root, then use
+chown to hand over ownership of that directory to the
+database user account, then su to become the database
+user, and finally run initdb as the database
+user.
+
+OPTIONS
+
+-D
+directory 
+--pgdata=directory
+
+This option specifies the
+directory where the database cluster should be stored. This
+is the only information required by initdb, but you
+can avoid writing it by setting the PGDATA
+environment variable, which can be convenient since the
+database server (postmaster) can find the database
+directory later by the same variable.
+
+-E encoding
+
+--encoding=encoding
+
+Selects the encoding of the
+template database. This will also be the default encoding of
+any database you create later, unless you override it there.
+The default is SQL_ASCII.
+
+--locale=locale
+
+Sets the default locale for the
+database cluster. If this option is not specified, the
+locale is inherited from the environment that initdb
+runs in.
+
+--lc-collate=locale
+
+--lc-ctype=locale 
+--lc-messages=locale 
+--lc-monetary=locale 
+--lc-numeric=locale 
+--lc-time=locale
+
+Like --locale, but only
+sets the locale in the specified category.
+
+-U username
+
+--username=username
+
+Selects the user name of the
+database superuser. This defaults to the name of the
+effective user running initdb. It is really not
+important what the superuser&rsquo;s name is, but one might
+choose to keep the customary name postgres, even if
+the operating system user&rsquo;s name is different.
+
+-W
+
+--pwprompt
+
+Makes initdb prompt for
+a password to give the database superuser. If you
+don&rsquo;t plan on using password authentication, this is
+not important. Otherwise you won&rsquo;t be able to use
+password authentication until you have a password set
+up.
+
+--debian-conffile
+
+On Debian systems, this option
+is used by the package&rsquo;s post-initialisation script
+when it runs initdb to create a database. It symlinks
+the configuration files into the /etc/postgresql
+directory, whereas the standard behaviour is to put these
+files into the database directory.
+
+Other, less
+commonly used, parameters are also available:
+
+-d
+
+--debug
+
+Print debugging output from the
+bootstrap backend and a few other messages of lesser
+interest for the general public. The bootstrap backend is
+the program initdb uses to create the catalog tables.
+This option generates a tremendous amount of extremely
+boring output.
+
+-L directory
+
+Specifies where initdb
+should find its input files to initialize the database
+cluster. This is normally not necessary. You will be told if
+you need to specify their location explicitly.
+
+-n
+
+--noclean
+
+By default, when initdb
+determines that an error prevented it from completely
+creating the database cluster, it removes any files it may
+have created before discovering that it can&rsquo;t finish
+the job. This option inhibits tidying-up and is thus useful
+for debugging.
+
+ENVIRONMENT
+
+PGDATA
+
+Specifies the directory where
+the database cluster is to be stored; may be overridden
+using the -D option.
+
+SEE ALSO
+
+postgres(1),
+postmaster(1)

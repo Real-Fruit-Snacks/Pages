@@ -1,0 +1,266 @@
+CHPASS(1) BSD General Commands Manual CHPASS(1)
+
+NAME
+
+chpass, chfn,
+chsh, &mdash; add or change user database
+information
+
+SYNOPSIS
+
+chpass
+[&minus;a list]
+[&minus;p encpass]
+[&minus;e expiretime]
+[&minus;s newshell] [user]
+
+DESCRIPTION
+
+The chpass utility allows
+editing of the user database information associated with
+user or, by default, the current user.
+
+The chfn,
+and chsh utilities behave identically to
+chpass. (There is only one program.)
+
+The information
+is formatted and supplied to an editor for changes.
+
+Only the
+information that the user is allowed to change is
+displayed.
+
+The options are
+as follows:
+
+&minus;a
+
+The super-user
+is allowed to directly supply a user database entry, in the
+format specified by passwd(5), as an argument. This argument
+must be a colon (&rsquo;&rsquo;:&rsquo;&rsquo;) separated
+list of all the user database fields, although they may be
+empty. [Note that this only changes the user database,
+master.passwd.]
+
+&minus;p
+
+The super-user
+is allowed to directly supply an encrypted password field,
+in the format used by crypt(3), as an argument. [See the
+discussion in getpwent(3) about types of passwords; this
+option may not be appropriate.]
+
+&minus;e
+expiretime
+
+Change the account expire time.
+This option is used to set the expire time from a script as
+if it was done in the interactive editor.
+
+&minus;s
+newshell
+
+Attempt to change the
+user&rsquo;s shell to newshell.
+
+Possible display
+items are as follows:
+
+Login:
+
+user&rsquo;s
+login name
+
+Password:
+
+user&rsquo;s
+encrypted password [do not use this to change a
+password; use passwd(1) instead]
+
+Uid:
+
+user&rsquo;s
+login
+
+Gid:
+
+user&rsquo;s
+login group
+
+Class:
+
+user&rsquo;s
+general classification
+
+Change:
+
+password change
+time
+
+Expire:
+
+account
+expiration time
+
+Full Name:
+
+user&rsquo;s
+real name (*)
+
+Home Directory:
+
+user&rsquo;s
+home directory
+
+Shell:
+
+user&rsquo;s
+login shell
+
+NOTE(*) -
+
+Historically,
+the so-call "GECOS" field in the user database
+entry contain the full name plus other information. Only the
+full name is currently supported.
+
+The login
+field is the user name used to access the computer
+account.
+
+The
+password field contains the encrypted form of the
+user&rsquo;s password. Do not use this to change a
+password; use passwd(1) instead.
+
+The uid
+field is the number associated with the login field.
+Both of these fields should be unique across the system (and
+often across a group of systems) as they control file
+access.
+
+While it is
+possible to have multiple entries with identical login names
+and/or identical user id&rsquo;s, it is usually a mistake to
+do so. Routines that manipulate these files will often
+return only one of the multiple entries, and that one by
+random selection.
+
+The group
+field is the group that the user will be placed in at login.
+Since BSD supports multiple groups (see groups(1)) this
+field currently has little special meaning. This field may
+be filled in with either a number or a group name (see
+group(5)).
+
+The class
+field references class descriptions in
+/etc/login.conf and is typically used to initialize
+the user&rsquo;s system resource limits when they login.
+
+The
+change field is the date by which the password must
+be changed.
+
+The
+expire field is the date on which the account
+expires.
+
+Both the
+change and expire fields should be entered in
+the form &rsquo;&rsquo;month day year&rsquo;&rsquo; where
+month is the month name (the first three characters
+are sufficient), day is the day of the month, and
+year is the year.
+
+The full
+name field contains the full name of the user.
+
+The user&rsquo;s
+home directory is the full UNIX path name where the
+user will be placed at login.
+
+The shell
+field is the command interpreter the user prefers. If the
+shell field is empty, the Bourne shell,
+/bin/sh, is assumed. When altering a login shell, and
+not the super-user, the user may not change from a
+non-standard shell or to a non-standard shell. Non-standard
+is defined as a shell not found in /etc/shells.
+
+Once the
+information has been verified, chpass uses
+pwd_mkdb(8) to update the user database.
+
+LOOKUPD AND DIRECTORY SERVICE
+AWARENESS
+
+User database entries (among
+other things) are under the control of lookupd(8) and may be
+physically located in many different places, including local
+and remote netinfo(5) databases, directory service agents
+such as LDAP servers and flat file databases such as
+master.passwd. This version of chpass is currently
+limited to changing user database entries in the flat file
+and local netinfo databases.
+
+ENVIRONMENT
+
+The vi(1) editor will be used
+unless the environment variable EDITOR is set to an
+alternate editor. When the editor terminates, the
+information is re-read and used to update the user database
+itself. Only the user, or the super-user, may edit the
+information associated with the user.
+
+See pwd_mkdb(8)
+for an explanation of the impact of setting the
+PW_SCAN_BIG_IDS environment variable.
+
+FILES 
+/etc/master.passwd
+
+the user
+database
+
+/etc/passwd
+
+a Version 7
+format password file
+
+/etc/chpass.XXXXXX
+
+temporary copy
+of the password file
+
+/etc/shells
+
+the list of
+approved shells
+
+SEE ALSO
+
+finger(1), login(1), passwd(1),
+getusershell(3), login.conf(5), passwd(5), pwd_mkdb(8),
+vipw(8)
+
+and
+
+Robert Morris and 
+Ken Thompson , 
+UNIX Password security .
+
+BUGS
+
+User information should (and
+eventually will) be stored elsewhere.
+
+HISTORY
+
+The chpass utility
+appeared in 4.3BSD&minus;Reno.
+
+BSD
+December 30, 1993 BSD

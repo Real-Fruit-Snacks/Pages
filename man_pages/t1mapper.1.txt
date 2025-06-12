@@ -1,0 +1,148 @@
+NAME
+
+t1mapper
+&minus; A tool to help xdvi use all your t1 fonts
+
+SYNOPSIS
+
+t1mapper
+[OPTIONS] TeX-fontdir Type1-font-file-spec
+
+t1mapper
+[OPTIONS] -gs GS-fontmap GS-fontdir
+TeX-fontdir
+
+DESCRIPTION
+
+The
+t1mapper comes with xdvik. It was made to make
+it simple to make all sorts of Postscript Type1
+(T1) fonts available to xdvi. The first invocation is
+to make any T1 font you may have floating around on your
+system available to xdvi. The second invocation is
+for hi-jacking fonts from your Ghostscript installation,
+which will supply xdvi with all the standard T1 fonts
+it needs.
+
+t1mapper
+relies on a installed and working texk system to be
+present. In particular it uses kpsewhich to locate
+the fontname package .map files which maps between
+Postscript font names and TeX font names.
+teTeX is one such texk system.
+
+When invoked
+without the -gs option, t1mapper will examine each of
+the fonts specified. It will attempt to determine the
+Postscript name of the font by looking inside the font file,
+and if that name has a TeX equivalent it will copy, link or
+symlink your the file into the TeX font directory you named
+first on the command line. The name in the TeX font
+directory will be according to the TeX/KB-fontname scheme,
+so that the font names used in .dvi files matches the
+names found in the TeX font directories.
+
+When invoked
+with the -gs option t1mapper will read the
+named GS Fontmap file to determine which GS font files
+correspond to which standard Postscript fonts (GS&rsquo;
+version of Times-Roman is not called Times-Roman,
+it&rsquo;s actually called NimbusRomNo9L-Regu), and
+then proceed to copy or link the files in the named GS font
+directory into the named TeX font directory.
+
+The
+program&rsquo;s diagnostic output is also written to a
+logfile t1map.log, which is created either in the
+current working directory or in /tmp.
+
+OPTIONS
+
+All options
+except -gs have to do with how the font files are
+copied or linked into the TeX font directories:
+
+-cp
+
+Copy the files from the GS-fontdir or matching
+the Type1-font-file-spec into the TeX-fontdir.
+This is the default and will always work.
+
+-ln
+
+Hard link the files. This requires the fonts to reside
+on the same disk, but it will save space, and the files will
+not disappear from the TeX-fontdir if they are
+removed from the source directory.
+
+-lns
+
+Symlink the files. This saves space, but if the original
+files are removed the symlinks will be broken.
+
+-lnlns
+
+Attempt hard-link first, if it fails make symlink.
+
+-lncp
+
+Attempt hard-link first, if that fails, copy the
+font. 
+
+EXAMPLES
+
+If your
+Ghostscript is installed in
+/usr/local/share/ghostscript and your TeX lives in
+/usr/local/teTeX then this command will make your GS
+fonts available to xdvi:
+
+t1mapper -lns
+-gs \ /usr/local/share/ghostscript/5.50/Fontmap \
+/usr/local/share/ghostscript/fonts \
+/usr/local/teTeX/share/texmf/fonts/type1/gs
+
+The first
+argument here is the full path to the GS Fontmap. The second
+is the GS font directory, note the lack of wildcards here
+(as opposed to the next example). The third argument is the
+TeX font directory. If it does not exist it will be created.
+Texk and teTeX uses quite finely structured font
+directories, and the above reflects this.
+
+If you have a
+Solaris machine with Display Postscript fonts then this
+command will make them available to xdvi:
+
+t1mapper -lns \
+/usr/local/teTeX/share/texmf/fonts/type1/gs \
+/usr/openwin/lib/X11/fonts/Type1/*.pfa
+
+Here the first
+argument is the TeX font directory and thereafter comes a
+wildcard that specifies which fonts to examine for
+copying/linking into the TeX font directory.
+
+FILES
+
+fontname
+Postscript to TeX name mapping files from
+http://tug.org/fontname/, these are included in
+teTeX.
+
+Ghostscript
+fonts from
+http://sourceforge.net/projects/ghostscript/ or
+http://www.gnu.org/software/ghostscript/ghostscript.html
+
+SEE ALSO
+
+kpsewhich(1),
+xdvi(1), ln(1), README.t1fonts in the
+source distribution
+
+AUTHOR
+
+Nicolai
+Langfeldt for the xdvik project at sourceforge, please see
+http://sourceforge.net/projects/xdvi/

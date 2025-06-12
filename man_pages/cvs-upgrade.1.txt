@@ -1,0 +1,269 @@
+NAME
+
+cvs&minus;upgrade
+&minus; upgrade a debian source package kept in a CVS
+repository
+
+SYNOPSIS
+
+cvs&minus;upgrade
+[options]   []
+
+DESCRIPTION
+
+This manual
+page explains the Debian cvs&minus;upgrade utility,
+which is used to upgrade Debian source packages in a
+CVS repository. It expect a properly conditioned new
+upstream sources in the cvs-buildpackage work
+directory
+
+The upstream
+sources are imported to the vendor branch and tagged
+upstream_version_ with all
+dots translated to underscores. At this point the
+cvs&minus;upgrade utility pauses automatic actions,
+since manual intervention is required to resolve any
+conflicts that may have occurred. It reminds the user about
+checking out the sources, resolving conflicts, and tagging
+the debianized sources, using debian_version_- with all dots
+translated to underscores.
+
+Please note
+that this command does not actually change the working
+directory, or any checked out copies. If you do not have a
+working directory, you may simply do the following
+manually:
+
+cvs co
+-jupstream_version_
+-jupstream_version_ 
+
+If you already
+have a checked out working directory, please do:
+
+cvs update -d
+-jupstream_version_
+-jupstream_version__
+
+cvs-upgrade
+expects the package name, upstream version, and, if
+relevant, the Debian revision on the command line. It also
+expects to find a properly conditioned new upstream source
+archive, in .orig.tar.gz format, in the cvs-buildpackage
+working directory. Please note that the cvs-buildpackage
+work directory referred to here is the scratch directory
+where this program works, not the directory that the human
+uses to work in.
+
+cvs&minus;upgrade
+reads the same config file /etc/cvsdeb.conf as the
+the other cvs-* utilities do. People may use of the dry-run
+option to inspect the steps this utility takes.
+
+Combined with
+the companion utilities cvs&minus;buildpackage and
+cvs&minus;inject, this provides an infrastructure to
+facilitate the use of CVS by Debian maintainers. This
+allows one to keep separate CVS branches of a package for
+stable, unstable, and possibly experimental
+distributions, along with the other benefits of a version
+control system.
+
+CAVEATS
+
+Please note
+that the current behaviour of cvs&minus;upgrade is to
+ignore files that match the default list of file name
+patterns to be ignored (this is built into cvs); and that
+any .cvsignore files in the upstream sources shall be
+honoured. This should be fine as long as upstream sources do
+not include files that match CVS ignore patterns and yet
+should be in the sources. The current list of ignored file
+name patterns is:
+
+RCS SCCS CVS CVS.adm RCSLOG
+cvslog.* tags TAGS .make.state .nse_depinfo *~ #* .#* ,* _$*
+*$ *.old *.bak *.BAK *.orig *.rej .del-* *.a *.olb *.o *.obj
+*.so *.exe *.Z *.elc *.ln core
+
+If you wish to
+modify this behaviour, there are ways to do this (you should
+see CVS documentation).
+
+o)
+
+The per-repository list in
+&rsquo;$CVSROOT/CVSROOT/cvsignore&rsquo; is appended
+to the list, if that file exists.
+
+o)
+
+The per-user list in &rsquo;.cvsignore&rsquo; in
+your home directory is appended to the list, if it
+exists. 
+
+o)
+
+Any entries in the environment variable
+$CVSIGNORE is appended to the list.
+
+In any of the
+places listed above, a single exclamation mark
+(&rsquo;!&rsquo;) clears the ignore list. This can be
+used if you want to store any file which normally is ignored
+by CVS. Also, any .cvsignore file found in the source
+directory is also honoured.
+
+OPTIONS
+
+&minus;h
+
+Print out a usage message.
+
+&minus;m
+
+If present, this option directs this program to include
+the latest debian changelog, if any, into the commit
+message. This overrides the environment variable
+CVSDEB_USE_CHANGELOG 
+
+&minus;M
+
+The name of the CVS module. This argument overrides the
+settings in the environment variable CVSDEB_MODULE.
+There is no corresponding config file variable.
+
+&minus;F
+
+There are two things CVS may choke on symbolic
+links and CVS directories in the source tree.
+Also, there are times when one may not want to honour the
+upstream .cvsignore files. Without this option, the
+cvs-upgrade program shall exit with an error message.
+This option causes cvs-upgrade to ask whether you
+want to delete the offending files. If you answer y, it
+removes them and continues; else it shall exit with an error
+message. This argument overrides the settings in the
+environment variable CVSDEB_FORCECLEAN, which in turn
+overrides the setting in the configuration file,
+conf_forceclean. 
+
+&minus;T
+
+The CVS tag to use for exporting sources, rather than
+constructing one from the version. This assumes you know
+what you are doing.
+
+&minus;U
+
+The CVS tag to use for the upstream tag, rather than
+constructing one from the upstream version. This assumes you
+know what you are doing.
+
+&minus;x
+
+The name of the default CVS prefix. This argument
+overrides the settings in the environment variable
+CVSDEB_PREFIX, which in turn overrides the setting in
+the configuration file, conf_prefix.
+
+&minus;R
+
+Root of the original sources archive. We expect to find
+the
+_.orig.tar.gz
+file under
+/package name>/
+unless the cvs-buildpackage work directory has been set, or
+we want to export the original sources from the vendor
+branch of the CVS tree. If the cvs-buildpackage work
+directory is set anywhere, (command line, configuration
+file, environment variable), the root directory value is
+ignored, since we only need the root directory to set
+defaults for the work directory. This argument overrides the
+settings in the environment variable CVSDEB_ROOTDIR,
+and the configuration file variable conf_rootdir.
+Please note that the cvs-buildpackage work directory
+referred to here is the scratch directory where this program
+works, not the directory that the human uses to work in.
+This should probably not be a sub dir of CVSROOT,
+since cvs shall refuse to export packages there, and the
+script shall fail.
+
+&minus;W
+
+The working directory, into which the sources will be
+exported out of CVS and which should contain the original
+_.orig.tar.gz
+Please note that it is not essential to have the original
+sources, as this script will check out the vendor branch
+version tagged as upstream_version_
+(without the Debian revision). Setting this variable
+overrides the settings for the root directory. This argument
+also overrides the settings in the environment variable
+CVSDEB_WORKDIR, and in the configuration file
+variable conf_workdir. This should probably not be a
+sub dir of CVSROOT, since cvs shall refuse to export
+packages there, and the script shall fail.
+
+&minus;d
+
+Turn on debugging output. This lists the version
+numbers, the work and root directories, as well as the CVS
+tag used to export the sources. This overrides the
+DEBUG variable in the configuration file.
+
+&minus;ctp
+
+Include package_ at the start of the CVS
+tag. This overrides the CVSDEB_PACKAGEINTAG
+environment variable and the conf_forcetag
+configuration file option. The default is not to include the
+prefix. 
+
+&minus;n
+
+The no exec (or dry-run) option, causing
+cvs&minus;upgrade to print out all actions that would
+be taken without actually executing them.
+
+&minus;v
+
+Make the utility more verbose.
+
+CVSDEB_IMPORTSUBSTMODE
+
+You are also allowed to specify
+an environment variable, CVSDEB_IMPORTSUBSTMODE, that
+overrides the default substitution option of -ko -d. This is
+useful when you want to import a package that has a bunch of
+binary files in the source tree (like emacs or rscheme).
+
+FILES
+
+Apart from the
+runtime options, cvs&minus;upgrade also looks for
+site&minus;wide defaults in the file
+/etc/cvsdeb.conf. After that, it looks for and reads
+~/.cvsdeb.conf The default configuration allows there
+to be a site-wide override for the root or the
+cvs-buildpackage working directories on the site, but the
+cvsdeb.conf files are actually Bourne shell snippets,
+and any legal shell directives may be included in there.
+Note: Caution is urged with this file, since you can
+totally change the way that the script behaves by suitable
+editing this file.
+
+SEE ALSO
+
+cvs-buildpackage(1),
+cvs-inject(1), cvsdeb.conf(5),
+cvs(1).
+
+AUTHOR
+
+This manual
+page was written Manoj Srivastava
+srivasta [AT] debian.org>, for the Debian GNU/Linux
+system.

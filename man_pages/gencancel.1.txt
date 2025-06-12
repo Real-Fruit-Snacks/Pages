@@ -1,0 +1,222 @@
+NAME
+
+gencancel -
+Generate cancel control messages
+
+SYNOPSIS
+
+gencancel
+[-adkLm] [-b body] [-c
+charset] [-f from] [-n
+newsgroups] [-s subject]
+message-id
+
+DESCRIPTION
+
+gencancel
+provides the news administrator with a helpful tool to
+generate cancel control messages, writing them to standard
+output. The generated cancel article can then be injected by
+inews (see examples below).
+
+gencancel
+expects the Message-ID of the article to cancel; this
+message-id argument should properly be quoted for the
+shell and surrounded by angle brackets. gencancel
+will then try to read the original article in the news spool
+to determine the original newsgroups it was posted to, and
+re-use that information for the cancel control message. If
+you want to modify that, or if the information was not
+found, you&rsquo;ll have to set it with the -n
+flag.
+
+If INN was
+built with Cancel-Lock support, gencancel will
+generate the right admin Cancel-Key header field to use in
+order to authenticate cancels. If, for whatever reason, you
+need cancelling an article posted from your news server with
+a Cancel-Lock header field, the corresponding admin
+Cancel-Key hashes are needed to authenticate the withdrawal
+request. That information is computed with the
+canlockadmin parameter set in
+inn-secrets.conf.
+
+In case you
+only need the admin Cancel-Key hashes, you can use the
+-k flag. Only the body of the Cancel-Key header field
+will then be written to standard output. You can then re-use
+it for instance in a supersede request or from another
+script.
+
+OPTIONS
+
+-a
+
+gencancel outputs by
+default an Approved header field, using the same value as
+the From header field body. If -a is used, no
+Approved header field is output.
+
+This header
+field is useful for cancelling articles originally posted to
+moderated newsgroups. If a cancel control article lists a
+moderated newsgroup in its Newsgroups header field, and no
+Approved header field is present, the cancel will be sent to
+the moderator first for approval. Cancel control messages
+are not required to contain an Approved header field outside
+of moderated newsgroups, but can, so you shouldn&rsquo;t
+generally use -a unless you really want your cancels
+to be approved by a moderator, or are sure the Newsgroups
+header field does not list any moderated newsgroups.
+
+-b body
+
+gencancel writes by
+default "Admin cancel." in the body of cancel
+control messages. Using this argument permits writing a
+different value, which may be empty or multi-line.
+
+-c charset
+
+By default,
+"ISO-8859-1" is specified as the used charset in
+the Content-Type header field. In case you change the
+default body with -b, you may want to also change
+charset accordingly.
+
+-d
+
+gencancel generates a Date header field in the
+local time of your news server. Using -d will make
+use of a UTC date.
+
+-f from
+
+gencancel uses by
+default the value of complaints in inn.conf
+for the From header field. Using this argument permits
+setting the value you want. The same value will be used for
+the Approved header field (if generated, when -a is
+not given).
+
+-k
+
+Instead of outputting a whole cancel control message,
+gencancel will just output the body of the Cancel-Key
+header field with admin hashes.
+
+This flag is
+only available if INN was built with Cancel-Lock
+support.
+
+-L
+
+gencancel outputs by
+default a Cancel-Key header field to authenticate the cancel
+control message. If -L is used, no Cancel-Key header
+field is output.
+
+This flag is
+only available if INN was built with Cancel-Lock
+support.
+
+-m
+
+gencancel generates by
+default a random Message-ID and uses it as unique identifier
+of the cancel control message. If -m is used, no
+Message-ID header field is output.
+
+-n newsgroups
+
+gencancel generates by
+default the same Newsgroups header field as the one present
+in the original article to cancel. This is done to best
+ensure that the cancel control message will be relayed to
+the same news servers as the original message.
+
+In case your
+news server does not (or no longer) locally carry the
+original article, you will have to give an explicit
+newsgroup or list of comma-separated newsgroups with this
+flag, that will be used as the Newsgroups header field of
+the cancel.
+
+-s subject
+
+gencancel uses by
+default "cmsg cancel " as the
+subject of cancel control messages. Using this argument
+permits setting a different value for the Subject header
+field. Make sure it is properly MIME-encoded.
+
+EXAMPLES
+
+To only
+retrieve the admin Cancel-Key hashes associated to the given
+Message-ID:
+
+gencancel -k
+''
+
+If you&rsquo;re
+using non-ASCII characters in headers, make sure you
+properly MIME-encode them. For instance, use the
+"Encode" Perl module:
+
+FROM=$(perl -e
+'use Encode; 
+print encode("MIME-Q", 
+decode("UTF-8", "Julien
+&Eacute;LIE"));') 
+gencancel -f "$FROM admin [AT] news.com>"
+''
+
+You&rsquo;ll
+then see in the output a properly MIME-encoded header
+field:
+
+From:
+=?UTF-8?Q?Julien_=C3=89LIE?=
+admin [AT] news.com>
+
+An example of
+call with a custom multi-line body:
+
+gencancel -b
+"$(echo -e "Multi\nLine\nBody.")"
+''
+
+(Use -c
+to change the default Content-Type charset for the
+body.)
+
+You can then
+pipe the result into "inews -h -P -D" (meaning
+inews expects an article with headers, does not add a
+Sender header field, and writes the result to standard
+output instead of actually injecting it):
+
+gencancel
+'' | inews -h -P -D
+
+If it all looks
+good, then inject it into the news system (without giving
+"-D" to inews):
+
+gencancel
+'' | inews -h -P
+
+Note that
+inews sends the message to the server specified in
+the server parameter in inn.conf.
+
+HISTORY
+
+Written by
+Julien &Eacute;lie for InterNetNews.
+
+SEE ALSO
+
+inews(1),
+inn-secrets.conf(5).

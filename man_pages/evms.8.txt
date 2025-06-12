@@ -1,0 +1,2247 @@
+NAME
+
+evms &minus;
+The evms command starts the Enterprise Volume Management
+System Command Line Interpreter (EVMS CLI). The parameter
+options listed below are allowed on the EVMS CLI command
+line. These parameter options control where the EVMS CLI
+gets commands from and how it interprets those commands.
+This document begins by explaining the parameter option
+descriptions and then goes on to explain the commands that
+can be entered at the Command Line Interpreter&rsquo;s
+prompt.
+
+SYNOPSIS
+
+evms [
+-b] [ -c] [ -d Debug Level] [
+-f:Filename] [ -s] [ -p] [ -v
+| -v0 | -v1 | -v2] [ -h]
+
+DESCRIPTION
+
+The Command
+Line Interpreter does not accept EVMS commands as part of
+the command line used to invoke it. The parameter options on
+the command line determine where the interpreter gets the
+commands from and how it interprets those commands. By
+default, the Command Line Interpreter prompts the user for
+EVMS commands. To exit the EVMS Command Line Interpreter,
+press the ENTER key without having entered a command at the
+prompt.
+
+PARAMETER OPTIONS
+
+The following
+parameters are available for use during the initial call to
+invoke EVMS CLI.
+
+-b
+
+Indicates that you are running in batch mode and any
+time there is a prompt for input from the user, the default
+value should be accepted automatically. This is the default
+behavior with the "-f" option.
+
+-c
+
+Indicates that changes are not committed to disk until
+the user exits the Command Line Interpreter. Normally,
+changes are committed to disk after each individual command
+is completed, even if there are multiple commands specified
+on the same command line.
+
+-d
+
+Debug Level sets the debug level that controls
+how much information is logged in the evmsEngine.log
+file located in the /var/log directory. Debug
+Level is specified as one of the following: default,
+critical, serious, error, warning, details, extra,
+entry_exit, everything, or debug.
+
+-f
+
+Filename tells the Command Line Interpreter to
+accept input from the file specified by Filename.
+When all of the commands in Filename have been
+processed, the Command Line Interpreter will exit.
+
+-s
+
+Tells the Command Line Interpreter to prompt for a
+single command line and then exit. Normally, the Command
+Line Interpreter will prompt for command lines until it
+finds an empty command line at which point it will exit.
+
+-p
+
+Tells the Command Line Interpreter to parse commands
+only. Errors found during parsing will be reported, but the
+commands will not be executed.
+
+-v
+
+Enables verbose mode. Verbose mode allows EVMS Engine
+status messages to be displayed whenever you commit changes
+to disk. The messages are displayed using a single line on
+the screen; this means that the current message is erased,
+and the next message is displayed in its place.
+
+-v0
+
+Disables verbose mode. Verbose mode 0 allows EVMS Engine
+status messages to be discarded whenever changes are
+committed to disk.
+
+-v1
+
+Enables verbose mode 1. Verbose mode 1 allows EVMS
+Engine status messages to be displayed whenever you commit
+changes to disk. The messages are displayed one per line on
+the screen.
+
+-v2
+
+Enables verbose mode 2. Verbose mode 2 allows EVMS
+Engine status messages to be displayed whenever you commit
+changes to disk. The messages are displayed using a single
+line on the screen; this means that the current message is
+erased, and the next message is displayed in its place.
+
+-h
+
+Provides help on invoking the EVMS Command Line
+Interpreter. To get help on commands accepted by the Command
+Line Interpreter, invoke the interpeter, enter the word
+help at the prompt, and press Enter.
+
+COMMANDS FOR THE EVMS PROMPT
+
+The following
+commands can be typed at the EVMS CLI prompt. This prompt
+appears when the EVMS CLI is ready to accept a command.
+
+ADD
+FEATURE 
+The Add Feature command adds an EVMS feature to an
+existing EVMS native volume. The feature is added to the
+volume by shrinking the filesystem on the volume to make
+room for the metadata of the new feature. The metadata is
+then written on the volume. In order to successfully write
+the metadata for the feature on the volume, EVMS must have a
+filesystem interface module (FSIM) for the filesystem on the
+volume, and the FSIM must support filesystem shrinking.
+
+If the volume
+cannot be unmounted (perhaps because it is root), the FSIM
+must support on-line shrinking of the filesystem. The
+filesystem must be able to be shrunk by an amount that is
+equal to or larger than the metadata of the feature.
+
+CAUTION:
+The Add Feature command should not be used on volumes
+that do not have a filesystem (such as databases) as data
+loss may occur.
+
+The add feature
+command has the following syntax:
+
+Add Feature
+: Feature Name = 
+{ name=value,
+name=value. . . } Volume
+Name
+
+where 
+Feature Name
+
+is the name of the EVMS feature
+to add to the volume
+
+name
+
+is the name of an option accepted by the feature
+
+value
+
+is an acceptable value for the option name
+
+Volume Name
+
+is the name of an EVMS volume
+that feature described in Feature Name is added
+to
+
+NOTE:
+The Add Feature command can be abbreviated as
+AF on the command line.
+
+The following
+example adds the feature "My_Drive_Link" to the
+volume, "My_EVMS_Volume."
+
+AF:DriveLink={Name=My_Drive_Link},/dev/evms/My_EVMS_Volume
+
+ALLOCATE
+
+The Allocate command is used to allocate regions or
+segments from blocks of freespace. The Allocate
+command can be abbreviated as a on the command
+line.
+
+The
+Allocate command has the following syntax:
+
+Allocate
+: freespace,
+name=value
+
+where 
+freespace
+
+is the name of a region or
+segment which represents freespace, such as
+sdb_freespace1.
+
+name
+
+is the name of an option accepted by the region manager
+or segment manager which created freespace.
+
+value
+
+is an acceptable value for the option name.
+
+Example:
+Given a disk with no partitions that is under the control of
+the Default Segment Manager, create a 50 MB segment in an
+extended partition. The new segment does not have to be
+bootable.
+
+The following
+command illustrates how to complete the above example:
+
+a:sdb_freespace1,size=50MB,offset=0,primary=false,bootable=false
+
+ASSIGN
+
+The Assign command is used to assign a segment
+manager to any disk or segment in the system that does not
+already have a Segment Manager assigned to it. The
+Assign command can be abbreviated to as on the
+command line.
+
+The
+Assign command has the following syntax:
+
+Assign :
+Segment Mgr Name = { name =
+value , name = value .
+. . } , Disk Name
+
+where 
+Segment Mgr Name
+
+is the name of the segment
+manager that is to be assigned to a disk.
+
+name
+
+is the name of an option accepted by the segment
+manager. 
+
+value
+
+is an acceptable value for the option name.
+
+Disk Name
+
+is the name of the disk that
+the Segment Manager will be assigned to.
+
+Example
+1: You have installed a brand new disk into your
+computer. You wish to partition this disk into multiple
+partitions using the Default Segment Manager and the
+standard Linux partitioning scheme. What must you do before
+you can partition the disk?
+
+You must assign
+the Default Segment Manager to the disk. If EVMS identifies
+the disk as sdb, the command to do this is:
+
+as:DefaultSegMgr={TypeByName=Linux},sdb
+
+Example
+2: You have installed a brand new disk into your
+computer. You wish to partition this disk into multiple
+partitions using the Default Segment Manager and the OS/2
+partitioning scheme. What must you do before you can
+partition the disk?
+
+You must assign
+the Default Segment Manager to the disk. If EVMS identifies
+the disk as sdb, the command to do is:
+
+as:DefaultSegMgr={TypeByName=OS2,DiskName=My_Disk},sdb
+
+The previous
+commands will cause the Default Segment Manager to assume
+control of the disk sdb and prepare the disk for
+partitioning. In Example 2, the disk name is also stored
+because the name is supported by the OS/2 partitioning
+scheme. Two new storage objects will result from the
+Assign command; a metadata segment object and a
+freespace segment object. The freespace segment,
+sdb_freespace1, is created to represent the space available
+on sdb. This space can be divided into data segments
+(partitions) using Allocate or Create.
+
+CHECK
+
+The Check command performs a consistency check on the
+filesystem contained within the specified volume. This
+command is the equivalent of the Linux fsck command.
+Check can be abbreviated as Ch on the command
+line.
+
+The
+Check command has the following syntax:
+
+Check :
+Volume , 
+Name= Value , ... , Name
+=Value
+
+where
+
+Volume
+
+is the name of the volume with the filesystem to be
+checked. 
+
+Name
+
+is the name of an option supported by the File System
+Interface Module (FSIM) for the filesystem found on the
+specified volume.
+
+Value
+
+is an acceptable value for option Name.
+
+COMMIT
+
+The Commit command can be used when the EVMS Command
+Line Interpreter (CLI) is running in alternate mode to force
+the CLI to save all changes since the last save.
+
+The EVMS CLI
+can run in either of two modes: default or alternate. The
+default mode writes to disk any changes made by a command
+immediately after that command is executed. The alternate
+mode, which is invoked by using the -c option on the
+command line that invoked the CLI, holds all changes in
+memory until the CLI exits. Once the CLI exits, all of the
+changes being held in memory are written to disk. This
+alternate mode can significantly improve performance in
+situations where large command files are executed or complex
+configurations are used. However, it is not always
+desireable to hold all changes in memory until the EVMS CLI
+exits.
+
+When the EVMS
+CLI is operating in default mode, the Commit command
+does nothing. When the EVMS CLI is operating in alternate
+mode, the Commit command forces the EVMS CLI to save
+all changes it has accumulated. This option effectively
+gives the user control over when changes are saved and when
+they are held in memory.
+
+The
+Commit command has the following syntax:
+
+Commit
+Optional Parameter
+
+where 
+Optional Parameter
+
+is a colon followed by either
+the "Hold" or "Release" keywords (if the
+parameter exists). The "Hold" keyword tells the
+EVMS Command Line Interpreter to hold all changes in memory
+and to commit those changes to disk when the Interpreter
+exits. The "Release" keyword tells the EVMS
+Command Line Interpreter to write all pending changes to
+disk immediately and write changes to disk after each
+command has been completed.
+
+NOTE:
+There is no abbreviation for the Commit command.
+
+COMMIT WITH
+THE HOLD KEYWORD 
+The EVMS Command Line Interpreter is operating it its defalt
+mode, with changes being committed to disk after each
+command. Change the Interpreter&rsquo;s mode of operation so
+that changes are held in memory until the Interpreter
+exits.
+
+commit:hold
+
+COMMIT WITH
+THE RELEASE KEYWORD 
+The EVMS Command Line Interpreter is operating in its
+alternate mode, with all changes being held in memory until
+the EVMS Command Line Interpreter exits. Change the EVMS
+Command Line Interpreter&rsquo;s mode of operation so that
+changes are committed to disk after each command, and write
+to disk all changes that are currently being held in
+memory.
+
+commit:release
+
+COMMIT IN
+ALTERNATE MODE 
+The EVMS Command Line Interpreter is operating in its
+alternate mode, with all changes being held in memory until
+the EVMS Command Line Interpreter exits. Without changing
+the mode the Interpreter operates in, force the Interpreter
+to commit to disk all the changes it is currently holding in
+memory.
+
+commit
+
+CONVERT
+
+The Convert command has two forms. The first form
+converts an existing compatibility volume into an EVMS
+native volume. The second form converts an EVMS native
+volume into a compatibility volume.
+
+CONVERTING
+FROM COMPATABILITY VOLUMES TO NATIVE VOLUMES 
+The Convert command converts an existing
+compatibility volume into an EVMS native volume by adding
+EVMS metadata to the compatability volume. If the
+compatibility volume does not contain a filesystem, EVMS can
+add its metadata to the volume and convert it. If the
+compatibility volume contains a filesystem, EVMS shrinks the
+filesystem to make room for the EVMS metadata. EVMS must
+have a filesystem interface module (FSIM) that corresponds
+to the compatability volume&rsquo;s filesystem, and the FSIM
+must support filesystem shrinking.
+
+If the
+compatibility volume cannot be unmounted (for example, it is
+mounted as root), the FSIM must support on-line shrinking of
+the filesystem. If the filesystem cannot be shrunk, the
+volume cannot be converted to a compatability volume.
+
+CAUTION:
+The Convert command should not be used on
+compatibility volumes that are being used without a
+filesystem (for example, databases) as data loss may
+occur.
+
+The
+Convert command has the following syntax when
+converting a compatibility volume to an EVMS native
+volume:
+
+Convert
+: Volume Name , Name = New Volume
+Name
+
+where 
+Volume Name
+
+is the name of the
+compatibility volume to be converted into an EVMS volume
+
+New Volume Name
+
+is the new name for the volume.
+Please note that the new volume names must be in single
+quotation marks if they contain spaces or any
+non-alphanumeric characters.
+
+NOTE:
+The Convert command may be abbreviated as Co
+and the "Name" keyword may be abbreviated as the
+single letter "n."
+
+Example:
+The following example changes hda3 into an EVMS native
+volume named, "New EVMS Volume."
+
+Co :
+/dev/evms/hda3 , N = "New EVMS Volume"
+
+CONVERTING
+FROM NATIVE VOLUMES TO COMPATABILITY VOLUMES 
+The Convert command converts an existing EVMS native
+volume into a compatibility volume by removing any EVMS
+metadata on the volume. Currently, this conversion can only
+occur for EVMS volumes that have no features applied to
+them.
+
+The
+Convert command has the following syntax when
+attempting to convert an EVMS volume into a compatibility
+volume:
+
+Convert
+: Volume Name, Compatibility
+
+where 
+Volume Name
+
+is the name of the EVMS volume
+to be converted into a compatibility volume
+
+Compatibility
+
+is the EVMS keyword used to
+indicate that a compatibility volume is the type of the
+resulting volume.
+
+NOTE:
+The Convert command may be abbreviated as Co
+and the "Compatibility" keyword may be abbreviated
+as the single letter "c".
+
+CREATE
+
+The Create command is used to create containers,
+storage objects, regions, segments, and volumes. The command
+can be abbreviated as c on the command line. The
+different items the Create command generates can also
+be abbreviated as a single letter on the command line.
+
+The syntaxes
+for each of the Create command options are listed
+below:
+
+CREATING
+CONTAINERS 
+Create : Container, Region Mgr Name = {
+name = value , name
+= value . . . } , Segment or Disk
+Name , Segment or Disk Name , . .
+.
+
+where 
+Region Mgr Name
+
+is the name of the region
+manager to use when creating the container.
+
+name
+
+is the name of an option accepted by the region
+manager. 
+
+value
+
+is an acceptable value for the option name.
+
+Segment or Disk Name
+
+is the name of a segment or
+disk used in the creation of the container.
+
+Example:
+Given a system with three available hard drives (sdc, sdd,
+hdc), use the EVMS LVM Region Manager to combine these disks
+into a container called "Sample Container" with a
+PE (physical extent) size of 16KB.
+
+The following
+command illustrates how to complete the example:
+
+c:c,LvmRegMgr={name="Sample
+Container",pe_size=16KB},sdc,sdd,hdc
+
+CREATING
+STORAGE OBJECTS 
+Create : Object, Feature Name={
+name= value, name=
+value . . . } ,Backing
+Store,Backing Store . . .
+
+where 
+Feature Name
+
+is the name of the EVMS Feature
+to use when creating the storage object.
+
+name
+
+is the name of an option accepted by the region
+manager. 
+
+value
+
+is an acceptable value for the option name.
+
+Backing Store
+
+is the name of a region,
+segment, disk, or storage object to be used in the creation
+of the new storage object.
+
+Example:
+Given a system with a volume /dev/evms/Source, and an
+available segment sdb5, create a snapshot object called
+"My Snapshot Object" using the EVMS SnapShot
+feature. /dev/evms/Source is the source of the snapshot, and
+sdb5 is the backing store for the snapshot.
+
+The following
+command illustrates how to complete the example:
+
+c:o,Snapshot={original=/dev/evms/Source,snapshot="My
+Snapshot Object",writeable=false},sdb5
+
+CREATING
+REGIONS 
+Create : Region,Region Mgr Name ={
+name =value ,name
+= value...} ,Backing
+Store, Backing Store ... 
+Region Mgr Name
+
+is the name of the EVMS Region
+Manager you want to use.
+
+name
+
+is the name of an option accepted by the region
+manager. 
+
+value
+
+is an acceptable value for the option name.
+
+Backing Store
+
+is the name of a region,
+segment, or disk to be used in the creation of the new
+region.
+
+CREATING
+SEGMENTS 
+Create : Segment, Freespace Segment,
+name =value,name=
+value...
+
+where 
+Freespace Segment
+
+is the name of a segment
+representing freespace.
+
+name
+
+is the name of an option accepted by the segment manager
+that created the Freespace Segment.
+
+value
+
+is an acceptable value for the option name.
+
+Example:
+Given a disk that is under the control of the Default
+Segment Manager, has no primary partitions, and has a 200 MB
+freespace segment called sdb_freespace1, create a 50 MB
+logical segment. The new segment does not have to be
+bootable.
+
+The following
+command illustrates how to complete the above example:
+
+c:s,sdb_freespace1,size=50MB,offset=0,primary=false,bootable=false
+
+CREATING
+COMPATIBILITY VOLUMES 
+Create : Volume , Segment or Region ,
+Compatibility
+
+where 
+Segment or Region
+
+is the name of the segment or
+region that will become a volume.
+
+Example:
+Given a system with an unused segment sda3, turn this
+segment into a compatibility volume.
+
+The following
+command completes this example:
+
+c:v,sda3,c
+
+CREATING
+EVMS VOLUMES 
+Create : Volume, Backing Store , Name =
+User Defined Name
+
+where 
+Backing Store
+
+is any segment, disk, region,
+or storage object that is not already a volume or a part of
+a volume or storage object.
+
+User Defined Name
+
+is the name that you would like
+the volume to have. This name must be unique throughout the
+system, and the volume, once created, will be known as
+/dev/evms/User Defined Name.
+
+Example:
+Given a system with an unused segment sda3, make sda3 an
+EVMS volume known as "Widow Maker."
+
+The following
+command illustrates how to complete the example:
+
+c:v,sda3,n="Widow
+Maker"
+
+DELETE
+
+The Delete command deletes a volume, storage object,
+region, or segment from the system. The Delete
+command can be abbreviated as d on the command
+line.
+
+The
+Delete command has the following form:
+
+Delete :
+Item Name
+
+where 
+Item Name
+
+is the name of the volume,
+object, region, or segment that is to be deleted.
+
+ECHO
+
+The Echo command mirrors to the standard output a
+string. Echo allows the user to output user defined
+text from an EVMS command file.
+
+The Echo
+command has the following syntax:
+
+Echo :
+String
+
+where
+
+String
+
+is any sequence of ASCII characters except quotation
+marks. A string should be enclosed in quotation marks if it
+contains any non-alphabetic or non-numeric characters or
+spaces. If a quotation mark is embedded in the string as
+part of the string, then quotation marks should also
+surround the embedded string, as in the example below:
+
+Example:
+
+Echo :
+"This is a ""sample"" string with
+embedded quotation marks."
+
+EXPAND
+
+The Expand command is used to increase the size of a
+storage container, volume, or storage object. The
+Expand command can be abbreviated as e on the
+command line.
+
+Listed below
+are the two syntaxes of the expand command. The first
+syntax is for increasing the size of storage containers. The
+second syntax of Expand is for increasing the size of
+volumes and storage objects. 
+Increasing the Size of a Storage Container
+
+Storage Containers are expanded
+by adding segments or regions to them. When expanding
+containers, the Expand command has the following
+syntax:
+
+Expand :
+Container Name, Storage To Use ...
+, Storage To Use
+
+where 
+Container Name
+
+is the name of the container to
+expand.
+
+Storage To Use
+
+is the name of a segment or
+region to add to the container specified by Container
+Name.
+
+Increasing the Size of a
+Volume or Storage Object
+
+An EVMS volume or storage
+object can be comprised of one or more storage objects,
+regions, segments, or disks. Whether a volume or storage
+object can be expanded or not depends on how it is
+constructed. For example, if a volume consists of a single
+segment with no EVMS features applied to it, then it can
+only be expanded if the Segment Manager that created the
+segment can increase the size of that segment. EVMS allows
+complete control over how a volume is expanded.
+
+A more
+complicated volume may have several ways to expand. For
+example, a volume created from several segments using EVMS
+Drive Linking can be expanded by increasing the size of one
+of the segments linked to the volume. You can also expand
+the volume by using EVMS Drive Linking to add another
+segment to the volume. When a volume can be expanded in
+multiple ways, we say that the volume has multiple expansion
+points.
+
+To expand a
+volume, you must specify which expansion point to use. The
+same is true for storage objects. In the example from the
+paragraph above, there are two expansion points. One
+expansion point is the storage object created by EVMS Drive
+Linking. This storage object could be expanded by adding
+another segment to it. The second expansion point is the
+last segment used in the storage object formed by EVMS Drive
+Linking. While the other segments used to create this
+storage object may be capable of being expanded, EVMS Drive
+Linking allows only the last segment to be expanded.
+
+To find the
+expansion points for a storage object or volume, use the
+Query Expand Points command. Once you know the
+expansion points for a volume or storage object, these
+points can be used to expand the volume or storage
+object.
+
+When increasing
+the size of a volume or storage object the Expand
+command has the following syntax:
+
+Expand :
+Expansion Point , Name =
+Value , ... , Name =
+Value , Storage To Use , ... ,
+Storage To Use
+
+where 
+Expansion Point
+
+is the name of an expansion
+point as provided by the Query Expand Points
+command.
+
+Name
+
+is the name of an option supported by the plug-in module
+that controls Expansion Point.
+
+Value
+
+is an acceptable value for the option Name.
+
+Storage To Use
+
+is the name of an acceptable
+storage object, region, segment, freespace, or disk to use
+for expanding the volume.
+
+Example:
+
+This example
+assumes that there is a volume created from three segments
+using EVMS Drive Linking. The three segments are sda1, sdb1,
+and sdc1. The storage object created by EVMS Drive Linking
+is called DL1, and the volume is called
+/dev/evms/Sample_Volume. The segment sdc1 is controlled by
+the Default Segment Manager (DefaultSegMgr), and has a 50 MB
+block of freespace (sdc_freespace1) adjacent to it on the
+disk. Also, there is an unused 200 MB segment known as hda7
+available in the system. The Query Expand Points
+command indicates that this volume has two expansion points:
+DL1 and sdc1. Expand this volume by 250 MB.
+
+First, we must
+consider the order in which we will use the expand points to
+expand the volume. Currently, sdc1 is an expand point. Since
+EVMS Drive Linking allows only the last segment it is
+linking to be expanded, sdc1 must be the last segment that
+EVMS Drive Linking uses to create DL1. If we add hda7 to
+DL1, then hda7 will become the last segment used in DL1, and
+sdc1 will not be an expansion point anymore. Without being
+able to expand sdc1, we will not be able to reach our goal
+of expanding the volume by 250 MB. However, expanding sdc1
+has no effect on our ability to add hda7 to DL1, so if we
+expand sdc1 before we add hda7 to DL1, we will be able to
+achieve our goal of expanding the volume by 250 MB.
+Completing our expansion will require two commands. First,
+to expand sdc1, we use:
+
+e:sdc1,size=50MB,sdc_freespace1
+
+Now, to add hda7 to DL1, use the command:
+
+e:DL1,hda7 
+The resulting change is that the volume is 250 MB larger
+than before.
+
+FORMAT
+
+The Format command creates a filesystem on a volume.
+This is the equivalent of the Linux mkfs command.
+Format can be abbreviated as F on the command
+line.
+
+The
+Format command has the following syntax:
+
+Format :
+FSIM={ Name= Value ,
+... , Name = 
+Value } , Volume
+
+where
+
+FSIM
+
+is the name of a File System Interface Module recognized
+by EVMS. The specified FSIM is used to create the filesystem
+on the volume specified by Volume. Normally there is
+one FSIM for each filesystem, so specifying the FSIM is the
+same as specifying the filesystem. In cases where one FSIM
+supports more than one filesystem, you can use an option to
+specify which filesystem should be created.
+
+Name
+
+is the name of an option supported by the FSIM for the
+filesystem found on the specified volume.
+
+Value
+
+is an acceptable value for the option Name.
+
+Volume
+
+is the name of the volume where the filesystem is to be
+created. 
+
+HELP
+
+The Command Line Interpreter offers help on the essential
+commands. To obtain detailed help on an EVMS command, type
+the following:
+
+Help :
+command 
+The Command Line Interpreter supports the following
+commands: 
+Add Feature
+
+adds the specified feature to
+an existing EVMS volume.
+
+Allocate
+
+allocates regions and segments
+from freespace.
+
+Assign
+
+assigns a segment manager to a disk/segment.
+
+Check
+
+performs an fsck on a volume.
+
+Commit
+
+causes any changes that have not been written to disk to
+be written to disk.
+
+Convert
+
+converts a compatability volume
+into an EVMS native volume or an EVMS native volume into a
+compatability volume.
+
+Create
+
+creates volumes, storage objects, regions, segments, and
+containers. 
+
+Delete
+
+deletes volumes, containers, regions, segments, and
+storage objects.
+
+Echo
+
+mirrors a string to standard output.
+
+Expand
+
+expands the size of volumes, containers, regions,
+segments, and storage objects.
+
+Format
+
+performs a mkfs operation on a volume.
+
+Help
+
+provides help on a specific EVMS command.
+
+Probe
+
+causes EVMS to check the system for hardware
+changes. 
+
+Query
+
+gathers information about the volumes, containers,
+storage objects, regions, and segments in the system.
+
+Remove
+
+removes the segment manager assigned to a
+disk/segment. 
+
+Rename
+
+changes the names of volumes.
+
+Revert
+
+deconstructs a volume or storage object a layer at a
+time. 
+
+Set
+
+modifies some of the options associated with a storage
+object, region, container disk, or segment.
+
+Shrink
+
+reduces the size of volumes, containers, regions,
+segments, and storage objects.
+
+Unformat
+
+removes a filesystem from a
+volume. The contents of the volume are lost.
+
+Example:
+Get detailed help on the Create command.
+
+Help:
+Create
+
+PROBE
+
+The Probe command is used to probe the system for
+hardware changes. This command is useful when the media in a
+removable media device has been changed. The Probe
+command will commit any pending changes (from prior
+commands) to disk before probing the system for hardware
+changes, even if the "-c" option was used when
+invoking the Command Line Interpreter. Probe can be
+abbreviated as a single letter P on the command
+line.
+
+QUERY
+
+The Query command is used to obtain information about
+the states of the volumes, storage objects, regions,
+containers, segments, and disks in the system. Query
+can be abbreviated as q on the command line.
+
+The
+Query command has several different syntaxes. One
+syntax is used for gathering information about the volumes,
+storage objects, regions, containers, segments, disks, and
+plug-in modules in the system. The other syntax for the
+Query command is used for gathering information
+related to various tasks that you can perform on items in
+the system.
+
+To gather
+information about volumes, storage objects, regions,
+containers, segments, disks, or plug-in modules, use this
+syntax of the Query command:
+
+Query:
+Type of data to return , filter ,
+... , filter
+
+where 
+Type of data to return
+
+is either:
+
+&bull;
+
+plug-ins (abbreviated as "p")
+
+&bull;
+
+volumes (abbreviated as "v")
+
+&bull;
+
+regions (abbreviated as "r")
+
+&bull;
+
+objects (abbreviated as "o")
+
+&bull;
+
+containers (abbreviated as "c")
+
+&bull;
+
+disks (abbreviated as "d")
+
+&bull;
+
+segments (abbreviated as "s")
+
+filter
+
+is one of the
+available filters for the type of data being returned. A
+filter retstricts what is returned based upon some
+characteristic of the items being returned. The available
+filters for a query depend upon Type of data to
+return.
+
+When processing
+a query like the one above, the Command Line Interpreter
+gathers items in the system of Type of data to
+return. The interpreter puts these items into a list
+called the Return Values List. Each of the filters you
+specified examines the Return Values List and removes any
+items that do not fit the filter criteria. Once all of the
+filters have processed the Return Values List, the Command
+Line Interpreter displays the items that remain in the
+Return Values List.
+
+NOTE:
+Not all filters will work with every query. Furthermore,
+some filters may be mutually exclusive. See the EVMS Command
+Line Grammar to determine which combinations of filters are
+allowed for a particular query.
+
+SUPPORTED
+FILTERS 
+The EVMS Command Line Interpeter supports the following
+filters: 
+Plug-in Type Filter
+
+The Plug-in Type Filter is only
+available when Type of data to return is equal to
+plug-ins. This filter removes from the Return Values List
+any entries for plug-in modules that are not of the type
+specified. The Plug-in Type Filter can be abbreviated as the
+single letter "T."
+
+The syntax for
+this filter is:
+
+Type =
+Plug-in Type
+
+where 
+Plug-in Type
+
+is one of the following:
+
+&bull;
+
+device manager (abbreviated as "d")
+
+&bull;
+
+feature (abbreviated as "f")
+
+&bull;
+
+region manager (abbreviated as "r")
+
+&bull;
+
+segment manager (abbreviated as "s")
+
+&bull;
+
+filesystem interface module (abbreviated as
+"FSIM") 
+
+&bull;
+
+distributed lock management (abbreviated as
+"DLM") 
+
+&bull;
+
+cluster management (abbreviated as "CM")
+
+Plug-in Filter
+
+The Plug-in Filter is available
+when Type of data to return is either volumes,
+storage objects, regions, containers, segments, disks, or
+plug-ins. The Plug-in Filter can be abbreviated as the
+single letter "P." This filter removes any entries
+that have no association with the specified plug-in module
+from the Return Values List.
+
+&bull;
+
+For volumes and storage objects, any volume that was
+created without the use of the specified plug-in module is
+removed from the Return Values List.
+
+&bull;
+
+For regions, if the region does not come from a
+container created by the specified plug-in module, the
+region is removed from the Return Values List.
+
+&bull;
+
+For containers, any container not created by the
+specified plug-in module is removed from the Return Values
+List. 
+
+&bull;
+
+For segments, any segment not created by the specified
+plug-in module is removed from the Return Values List.
+
+&bull;
+
+For disks, any disk not claimed by the specified plug-in
+module is removed from the Return Values List.
+
+&bull;
+
+For plug-in modules, all plug-in modules other than the
+one specified are removed from the Return Values List.
+
+The syntax of Plug-in Filter
+is:
+
+Plugin =
+Plug-in Module Identifier
+
+where
+
+Plug-in Module
+Identifier
+
+is the name or ID number of a
+plug-in module.
+
+Volume Filter
+
+The Volume Filter is available
+when Type of data to return is either plug-ins,
+regions, or objects. This filter removes any item that was
+not used in the construction of the specified volume from
+the Return Values List. The Volume Filter can be abbreviated
+as the single letter "V."
+
+The syntax for
+the Volume Filter is:
+
+Volume =
+Volume Name
+
+where 
+Volume Name
+
+is the fully qualified name of
+a volume.
+
+Object Filter
+
+The Object Filter is available
+when Type of data to return is either plug-ins,
+volumes, or regions. The Object Filter can be abbreviated as
+the single letter "O."
+
+This filter
+removes items that either did not create the specified
+object, or were created without using the specified storage
+object from the Return Values List. The Object Filter
+removes from the Return Values List each of the
+following:
+
+&bull;
+
+For plug-in modules, the filter removes all plug-in
+modules except for those that are needed to create the
+specified storage object.
+
+&bull;
+
+For volumes, the filter removes any volume that does not
+use the specified storage object.
+
+&bull;
+
+For regions, the filter removes any region that was not
+used in the creation of the specified storage object.
+
+The syntax of
+the Object Filter is:
+
+Object =
+Object Name
+
+where
+
+Object
+
+can be abbreviated as a single
+letter "O."
+
+Object Name
+
+is the name of an object that
+EVMS has discovered.
+
+Container Filter
+
+The Containter Filter is
+available when Type of data to return is either
+plugins, volumes, regions, objects or segments. The
+Container Filter can be abbreviated as the single letter
+"c."
+
+The list below
+explains what the Container Filter removes from the Return
+Values List when Type of data to return is one of the
+following:
+
+&bull;
+
+For plug-ins, the filter removes all plug-ins that were
+not used to create the container.
+
+&bull;
+
+For volumes, the filter removes any volume constructed
+without using a region from the specified container.
+
+&bull;
+
+For regions, the filter removes any regions that do not
+come from the specifed container.
+
+&bull;
+
+For objects, the filter removes any object contructed
+without using a region from the specified container.
+
+&bull;
+
+For segments, the filter removes any segment that was
+not used to create the container.
+
+The syntax of the Container
+Filter is:
+
+Container
+= Container Name
+
+where
+
+Container Name
+
+is the name of a container that
+EVMS has discovered.
+
+Region Filter
+
+The Region Filter is available
+when Type of data to return is either volumes,
+objects, or containers. This filter can be abbreviated as
+the single letter "R."
+
+The list below
+explains what the Region Filter removes from the Return
+Values List when Type of data to return is one of the
+following:
+
+&bull;
+
+For volumes, this filter removes any volume constructed
+without using the specified region.
+
+&bull;
+
+For objects, this filter removes any object contructed
+without using the specified region.
+
+&bull;
+
+For containers, this filter removes any container other
+than the one it came from.
+
+The syntax of
+the Region Filter is:
+
+Region =
+Region Name
+
+where
+
+Region Name
+
+is the name of a region that
+EVMS has discovered.
+
+Disk Filter
+
+The Disk Filter is available
+when Type of data to return is segments. This filter
+removes from the Return Values List any segment which does
+not lie on the specified disk. The Disk Filter can be
+abbreviated as the single letter "D."
+
+The syntax of
+the Disk Filter is:
+
+Disk =
+Disk Name
+
+where 
+Disk Name
+
+is the name of a disk that EVMS
+knows about.
+
+Size Filters
+
+There are three Size Filters:
+less than, greater than, and equal to. These filters are
+available when Type of data to return is either
+volumes, regions, containers, objects, disks, or segments.
+These filters remove items from the Return Values List based
+upon their size.
+
+The Less Than
+Filter has the following syntax:
+
+LT
+XXX Unit
+
+where
+
+XXX
+
+is a positive integer or 0.
+
+Unit
+
+is either KB, MB, GB, or TB.
+
+The Greater
+Than Filter has the following syntax:
+
+GT
+XXX Unit
+
+where
+
+XXX
+
+is a positive integer or 0.
+
+Unit
+
+is either KB, MB, GB, or TB.
+
+The Equal
+Filter has the following syntax:
+
+EQ
+XXX Unit , Precision
+
+where
+
+XXX
+
+is a positive integer or 0.
+
+Unit
+
+if specified, must be either KB, MB, GB, or TB.
+
+Precision
+
+is a positive integer.
+Precision indicates how "sloppy" a match to
+make. If no unit is specified, then Precision is interpreted
+to be a percentage. If Precision is seen as a
+percentage, the value is considered to be equal to
+XXX as long as the value is within XXX plus or
+minus Precision percent of XXX. If a unit (KB,
+MB, GB, TB) is specified for Precision, then a value
+is considered equal to XXX if the value is within the
+range of XXX - Precision to XXX +
+Precision.
+
+Freespace Filter
+
+The Freespace Filter removes
+any items that do not contain freespace from the Return
+Values List. This filter is only useable when Type of
+data to return is containers. The Freespace Filter can
+be abbreviated as the single letter "F."
+
+The syntax of
+the Freespace Filter is:
+
+Freespace
+, Size Filters
+
+where 
+Size Filters
+
+these filters are the same Size
+Filters used with other filters, only now, instead of using
+the size of the containers for comparisons, the Size
+Filters will use the freespace in the containers for
+comparisons.
+
+Expandable Filter
+
+The Expandable Filter is
+available when Type of data to return is either
+volumes, regions, objects, or segments. This filter removes
+any items that cannot be expanded from the Return Values
+List. This filter can be abbreviated as the single letter
+"E."
+
+The syntax of
+this filter is: Expandable
+
+Shrinkable Filter
+
+The Shrinkable Filter is
+available when Type of data to return is either
+volumes, regions, objects, or segments. This filter removes
+any items that cannot be shrunk from the Return Values List.
+The Shrinkable Filter can be abbreviated as the single
+letter "S."
+
+The syntax of
+this filter is: Shrinkable
+
+Unclaimed Filter
+
+The Unclaimed Filter is
+available when Type of data to return is disks. This
+filter removes all disks which have been claimed by a
+Segment Manager plug-in module (disks that have a recognized
+partitioning scheme in place) from the Return Values List.
+The disks left in the Return Values List will either have no
+partitioning scheme, or the partitioning scheme is
+unrecognized. The Unclaimed Filter can be abbreviated as the
+single letter "U."
+
+The syntax of
+this filter is: Unclaimed
+
+List Options Pseudo
+Filter
+
+List Options is treated like a
+filter, but it actually causes the Command Line Interpreter
+to list what can be done with each item in the Return Values
+List. This filter can be abbreviated with the letters
+"LO."
+
+The syntax of
+this filter is: List Options
+
+SAMPLE
+QUERIES USING FILTERS
+
+&bull;
+
+To query the plug-ins in the system and their
+options: 
+
+q:p,lo
+
+&bull;
+
+To query only the region manager
+plug-ins in the system and their options:
+
+q:p,t=r,lo
+
+&bull;
+
+To query the volumes in the
+system: 
+
+q:v
+
+&bull;
+
+To query the volumes in the
+system over 1GB in size:
+
+q:v,gt
+1GB
+
+&bull;
+
+To query the storage objects in
+the system:
+
+q:o
+
+&bull;
+
+To query the segments in the
+system that reside on disk sda:
+
+q:s,d=sda
+
+&bull;
+
+To query the segments in the
+system that belong to the container lvm/MyStuff, are over
+500 MB in size and less than 2 GB in size, and come from
+disk sda:
+
+q:s,c=lvm/MyStuff,GT
+500MB,lt 2GB,d=sda
+
+SPECIALTY
+QUERY COMMANDS 
+The following commands allow for specialty queries. 
+Query Children
+
+The Query Children
+command returns items that were used to create the specified
+item. For example, the children of a storage object are the
+storage objects, regions, disks, or segments that were used
+to create the specified storage object.
+
+The syntax of
+this command is:
+
+Query :
+Children , Item Name
+
+where 
+Children
+
+can be abbreviated as
+"CHI."
+
+Item Name
+
+is the name of a volume,
+storage object, region, segment, or container.
+
+Query Parent
+
+The Query Parent command
+returns the item (if there is one) that uses the specified
+item. For example, if a storage object is specified, then
+this command will return the volume or storage object which
+was created using the specified storage object, if such a
+volume or storage object exists. The syntax of this command
+is:
+
+Query :
+Parent , Item Name
+
+where
+
+Parent
+
+can be abbreviated as "Par."
+
+Item Name
+
+is the name of a storage
+object, region, segment, container, or disk.
+
+Query Expand Points
+
+The Query Expand Points
+returns the expansion points for a volume or storage object.
+The expansion points for a volume or storage object are
+those entities within the volume or storage object that can
+be expanded without causing a loss of data.
+
+The syntax of
+this command is:
+
+Query :
+Expand Points , Item Name
+
+where 
+Expand Points
+
+can be abbreviated as
+"EP."
+
+Item Name
+
+is the name of a storage object
+or volume.
+
+Query Shrink Points
+
+Query Shrink Points
+returns the shrink points for a volume or storage object.
+The shrink points for a volume or storage object are those
+entities within the volume or storage object that can be
+shrunk without causing a loss of data. The syntax of this
+command is:
+
+Query :
+Shrink Points , Item Name
+
+where 
+Shrink Points
+
+can be abbreviated as
+"SP."
+
+Item Name
+
+is the name of a Storage Object
+or Volume.
+
+Query Extended Info
+
+Query Exended Info
+command allows access to any additional information that may
+be available for a plug-in module, a storage object, a disk,
+a region, a segment, or a container. The syntax of this
+command is:
+
+Query :
+Extended Info , Item Name , Field
+Name
+
+where 
+Extended Info
+
+can be abbreviated as
+"EI."
+
+Item Name
+
+is the name of a storage
+object, disk, region, segment, container, or plug-in module.
+It can also be the numeric ID of a plug-in module.
+
+Field Name
+
+is the name of a specific piece
+of extended information. Extended Information is grouped
+into fields. Each field has a name and one or more values
+associated with it. Field Name is optional.
+
+Query Acceptable
+
+The Query Acceptable
+allows you to discover which storage objects, regions,
+segments, or disks are acceptable for creating or expanding
+a volume, storage object, region, or segment. The command
+works as follows:
+
+When you create
+containers, objects, or regions, specify the following: the
+plug-in module being used; the values for the options that
+the plug-in module is to use when creating the
+container/object/region; and the storage objects, regions,
+segments, or disks that you have decided to use. The query
+will return any storage objects, regions, segments, or disks
+that are still available and acceptable for use in creating
+the container/object/region.
+
+Example:
+
+An example of
+using this command would be to determine what segments
+should be used to create a software RAID 5 storage object.
+Initially, no segments have been selected, so all unused
+segments in the system might be available and might be
+returned by this query. Choose an initial segment, which
+causes all segments on the same drive to not be acceptable
+anymore.
+
+To find out
+what segments are still available, use this query again and
+specify the segments that have already been chosen. This
+query will return all of the segments that might still be
+chosen. To see which segments are still available, choose
+another segment, and use this query again, specifying all of
+the segments that have already been chosen in the order in
+which they were chosen. You can use this iterative process
+to build an ordered list of segments. From this list you can
+see what segments you can use in an actual create command to
+create the desired software RAID 5 storage object.
+
+When expanding
+volumes or storage objects, specify the volume or storage
+object to be expanded along with any storage objects,
+segments, regions, or disks that you have already chosen to
+use in the expansion. This query will return the storage
+objects, regions, segments, or disks that you can still
+select and use to expand the specified volume or storage
+object
+
+As described
+above, an iterative process can be used to build an ordered
+list of the storage objects, regions, segments, or disks
+that can be used to expand the specified volume or storage
+object with an actual expand command.
+
+The
+Query Acceptable command has two syntaxs: one for use
+with Create, the other for use with
+Expand.
+
+Create
+
+For determining what is acceptable for use with
+Create, use the following syntax:
+
+Query :
+Acceptable, Create , 
+Item To Create, Plug-in Module= {
+name = value... ,
+name= value } , item to
+use ... , item to use
+
+where 
+Acceptable
+
+can be abbreviated as the
+single letter "a."
+
+Create
+
+can be abbreviated as the single letter
+"c." 
+
+Item To Create
+
+is either object, region, or
+container. Object can be abbreviated as a single letter
+"O," region can be abbreviated as a single letter
+"r," and container can be abbreviated as a single
+letter "c."
+
+Plug-in Module
+
+is the name or ID number of the
+plug-in module to use when creating Item To
+Create.
+
+name
+
+is the name of an option supported by Plug-in
+Module. 
+
+value
+
+is a legitimate value for the option name.
+
+item to use
+
+is the EVMS name of a storage
+object, region, segment or disk which is to be used to
+create Item To Create.
+
+Expand
+
+For determining what is acceptable for use with
+Expand, use the following syntax:
+
+Query :
+Acceptable , Expand , 
+Item to Expand , 
+item to use ... item to use
+
+where 
+Acceptable
+
+can be abbreviated by the
+single letter "A."
+
+Expand
+
+can be abbreviated by the single letter
+"E." 
+
+Item to Expand
+
+is the name of a volume or
+storage object that is to be expanded.
+
+item to use
+
+is the EVMS name of a storage
+object, region, segment or disk which is to be used when
+expanding Item To Expand.
+
+REMOVE
+
+The Remove command is used to remove a segment
+manager from a disk. A segment manager can only be removed
+from a disk when all of the data segments on that disk have
+been deleted. The Remove command causes a Segment
+Manager to remove its metadata from the disk, thereby
+leaving an empty disk. The empty disk can be used directly,
+or another segment manager can be assigned to it.
+
+Example:
+
+This example
+will assume that you have a disk, sdb, and that this disk
+has several partitions on it that are managed by the Default
+Segment Manager. The data segments on disk sdb are not being
+consumed by any EVMS object and could be deleted. Assume
+that you have a drive link that is aggregating several disks
+and that you would like to expand the drive link with the
+addition of disk sdb. In order for disk sdb to become an
+acceptable object for expanding the drive link, you must
+remove the segment manager and all the partitions from the
+disk.
+
+After deleting
+all the data segments on disk sdb, use the following
+command:
+
+Rem:sdb
+
+RENAME
+
+The Rename command is used to change the name of an
+EVMS volume. This command can be abbreviated as the single
+letter "r."
+
+The
+Rename command has the following syntax:
+
+Rename :
+Volume Name , Name= New Volume Name 
+Volume Name
+
+is the name of the volume that
+needs to be changed.
+
+New Volume Name
+
+is the new name for the volume.
+Please note that the new volume name must be in quotation
+marks if it contains spaces or any non-alphanumeric
+characters.
+
+Example:
+Rename the volume /dev/evms/John to /dev/evms/Fred.
+
+The following
+command illustrates how to complete the above example:
+
+r:/dev/evms/John,n=Fred
+
+REVERT
+
+The Revert command strips away the topmost layer of
+an EVMS volume or storage object and restores it to its
+previous EVMS state. Thus, an EVMS Volume will revert to the
+EVMS Storage Object that it came from. The Revert can
+be abbreviated as "Rev" on the command line.
+
+The Revert
+Command has the following syntax:
+
+Revert :
+Volume or Storage Object 
+Volume or Storage Object
+
+is the name of the volume or
+storage object to revert.
+
+Example:
+In this example, assume that you have just created a storage
+object named "Fred" from a storage object named
+"Barney." Fred is a complicated storage object
+that would take time to recreate. However, after creating
+Fred, you find out that you applied the wrong feature to
+Barney to create Fred. To remove the feature that was
+applied to Barney to create Fred without having to delete
+Fred and start from scratch, type the following command:
+
+Rev:Fred
+
+The
+Revert command will strip away the top most feature
+on Fred undoing the creation of Fred and leaving Barney.
+
+SET 
+The Set command changes options on storage objects,
+regions, containers, segments, or disks. If a Query command
+which returns storage objects, regions, containers,
+segments, or disks is executed using the List Options Pseudo
+Filter, then the changeable options for each item returned
+will be listed with that item.
+
+The Set
+command has the following syntax:
+
+Set :
+Object , Name = Value
+, ... , Name 
+= Value
+
+where
+
+Object
+
+is the name of a storage object, region, container,
+segment or disk whose options are to be changed.
+
+Name
+
+is the name of an option that can be set for
+Object. 
+
+Value
+
+is an acceptable value for option Name.
+
+SHRINK
+
+The Shrink command reduces the size of a volume,
+storage object, or storage container. This command can be
+abbreviated as the letter "S" on the command line.
+
+Reducing the Size of a Storage Container
+
+You can reduce the size of a
+storage container by removing one or more of the segments or
+regions it contains.
+
+The
+Shrink command has the following syntax when used
+with storage containers:
+
+Shrink :
+Container Name , Storage To Remove
+... Storage To Remove
+
+where
+
+Shrink
+
+can be abbreviated by the single letter
+&rsquo;S&rsquo;. 
+
+Container Name
+
+is the name of the storage
+container to shrink.
+
+Storage To Remove
+
+is the name of a segment or
+region in the storage container that is to be removed from
+the storage container.
+
+Reducing the Size of a
+Volume or Storage Object
+
+An EVMS volume or storage
+object can be comprised of one or more storage objects,
+regions, segments, or disks. Whether or not a volume or
+storage object can be shrunk depends upon how it is
+constructed. For example, if a volume consists of a single
+segment with no EVMS features applied to it, then whether or
+not you can shrink the volume depends upon whether the
+segment manager that created that segment can decrease the
+size of that segment.
+
+You can shrink
+a more complicated volume in several ways. For example, you
+can shrink a volume created from several segments using EVMS
+Drive Linking by decreasing the size of one of the segments
+being linked. You could also use EVMS Drive Linking to
+remove a segment from the volume. If you could do both
+options to shrink the volume, we say that the volume has
+multiple shrink points, because there are multiple ways in
+which the volume can be shrunk.
+
+EVMS gives you
+control over how a volume is shrunk. To shrink a volume, you
+need to specify which shrink point to use. The same is true
+for storage objects. If there are two shrink points, the
+first would be the storage object created by EVMS Drive
+Linking. This storage object could be shrunk by removing a
+segment from it. The second shrink point would be the last
+segment used in the storage object formed by EVMS Drive
+Linking. While you might be able to shrink the other
+segments used to create this storage object, EVMS Drive
+Linking prohibits shrinking these segments.
+
+To find the
+shrink points for a storage object or volume, use the Query
+Shrink Points command. Once the shrink points for a volume
+or storage object are known, they can be used with this
+command to shrink the volume or storage object.
+
+The
+Shrink command has the following syntax:
+
+Shrink :
+Shrink Point , Name =
+Value , ... , Name =
+Value , Storage to remove , ...
+, Storage to remove
+
+where 
+Shrink Point
+
+is the name of a shrink point
+as provided by the Query Shrink Points command.
+
+Name
+
+is the name of an option supported by the plug-in module
+that controls Shrink Point.
+
+Value
+
+is an acceptable value for option Name
+
+Storage to remove
+
+is the name of an acceptable
+storage object, region, segment, or disk to be shrunk or
+removed from the volume.
+
+Example:
+This example assumes that you have a volume created from
+three segments using EVMS Drive Linking. The three segments
+used are sda1, sdb1, and sdc1. The storage object created by
+EVMS Drive Linking is called DL1, and the volume is called
+/dev/evms/Sample_Volume. The segment sdc1 is controlled by
+the Default Segment Manager (DefaultSegMgr), and it can be
+shrunk by 50 MB. The Query Shrink Points command
+returns DL1 and sdc1 as the available shrink points. Shrink
+the volume by 50 MB.
+
+s:sdc1,size=50MB,sdc1
+
+TASK
+
+The Task command accesses features specific to an
+EVMS plug-in module. The Task command can be used
+directly on an EVMS plug-in module, or it can be used on a
+volume storage object, region, segment, or container. When
+used on a storage object, region segment, or container, the
+command is directed to the plug-in module that owns the
+storage object, region, segment, or container. When used on
+a volume, the command is directed to the File System
+Interface Module asociated with the volume.
+
+The Task
+command has the following syntax:
+
+Task :
+Task Name, Specify Target,
+Name=Value, . . . ,
+Value, Specify Source, ...
+Specify Source
+
+Where 
+Task Name
+
+is the name of the task as
+defined by the EVMS plug-in that is expected to perform the
+task.
+
+Specify Target
+
+is the volume, object, region,
+segment, container, or plug-in that the task is to be
+performed on.
+
+Name
+
+is the name of an option accepted by the plug-in that
+controls the specified target.
+
+Value
+
+is an acceptable value for option Name.
+
+Specify Source
+
+is the name of a volume,
+object, region, segment to use when performing the specified
+task on the specified target.
+
+UNFORMAT
+
+The Unformat command destroys the filesystem within
+the specified volume. This process is typically completed by
+overwriting the metadata for the filesystem with zeros. All
+data on the volume is lost. Unformat can be
+abbreviated by the single letter "U" on the
+command line.
+
+The
+Unformat command has the following syntax:
+
+Unformat
+: Volume
+
+where
+
+Volume
+
+is the name of the volume whose filesystem is to be
+destroyed.

@@ -1,0 +1,107 @@
+NAME
+
+nbd_set_pread_initialize
+- control whether libnbd pre-initializes read buffers
+
+SYNOPSIS
+
+#include
+
+int nbd_set_pread_initialize ( 
+struct nbd_handle *h, bool request 
+);
+
+DESCRIPTION
+
+By default,
+libnbd will pre-initialize the contents of a buffer passed
+to calls such as nbd_pread(3) to all zeroes prior to
+checking for any other errors, so that even if a client
+application passed in an uninitialized buffer but fails to
+check for errors, it will not result in a potential security
+risk caused by an accidental leak of prior heap contents
+(see CVE-2022-0485 in libnbd-security(3) for an
+example of a security hole in an application built against
+an earlier version of libnbd that lacked consistent
+pre-initialization). However, for a client application that
+has audited that an uninitialized buffer is never
+dereferenced, or which performs its own pre-initialization,
+libnbd&rsquo;s sanitization efforts merely pessimize
+performance (although the time spent in pre-initialization
+may pale in comparison to time spent waiting on network
+packets).
+
+Calling this
+function with "request" set to false tells libnbd
+to skip the buffer initialization step in read commands.
+
+RETURN VALUE
+
+If the call is
+successful the function returns 0.
+
+ERRORS
+
+On error -1 is
+returned.
+
+Refer to
+"ERROR HANDLING" in libnbd(3) for how to
+get further details of the error.
+
+The following
+parameters must not be NULL: "h". For more
+information see "Non-NULL parameters" in
+libnbd(3).
+
+VERSION
+
+This function
+first appeared in libnbd 1.12.
+
+If you need to
+test if this function is available at compile time check if
+the following macro is defined:
+
+#define
+LIBNBD_HAVE_NBD_SET_PREAD_INITIALIZE 1
+
+SEE ALSO
+
+nbd_aio_pread(3),
+nbd_aio_pread_structured(3), nbd_create(3),
+nbd_get_pread_initialize(3), nbd_pread(3),
+nbd_pread_structured(3),
+nbd_set_strict_mode(3), libnbd(3).
+
+AUTHORS
+
+Eric Blake
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+This library is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This library is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have
+received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301 USA

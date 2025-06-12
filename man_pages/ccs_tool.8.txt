@@ -1,0 +1,177 @@
+NAME
+
+ccs_tool
+&minus; The tool used to make online updates of CCS config
+files.
+
+SYNOPSIS
+
+ccs_tool
+[OPTION].. command>
+
+DESCRIPTION
+
+ccs_tool
+is part of the Cluster Configuration System (CCS). It is
+used to make online updates to cluster.conf. It can also be
+used to upgrade old style (GFS 
+
+OPTIONS
+
+&minus;h
+
+Help. Print out the usage.
+
+&minus;V
+
+Print the version information.
+
+sub&minus;commands
+have their own options, see below for more detail
+
+COMMANDS
+
+addnode
+[options] 
+[]...
+
+Adds a new node to the cluster
+configuration file. Fencing device options are specified as
+key=value pairs (as many as required) and are entered into
+the configuration file as is. See the documentation for your
+fencing agent for more details (eg a powerswitch fence
+device may need to know which port the node is connected
+to). 
+Options: 
+&minus;v  Number of votes for this node
+(mandatory) 
+&minus;n  Node id for this node (optional)
+
+&minus;i  Network interface to use for this
+node. Mandatory if the cluster is using multicast as
+transport. Forbidden if not. 
+&minus;m  Multicast address for cluster.
+Only allowed on the first node to be added to the file.
+Subsequent nodes will use either multicast or broadcast
+depending on the properties of the first node. 
+&minus;f  Name of fence device to use for
+this node. The fence device section must already have been
+added to the file, probably using the addfence command. 
+&minus;c  Config file to use. Defaults to
+/etc/cluster/cluster.conf 
+&minus;o  Output file. Defaults to the same as
+-c 
+&minus;C Don&rsquo;t run "ccs_tool update" after
+changing file. This will happen by default if the input file
+is the same as the output file. 
+&minus;F Force a "ccs_tool update" even if the
+input and output files are different.
+
+delnode [options]
+
+Delete a node from the cluster
+configuration file. Note: there is no "edit"
+command so to change the properties of a node you must
+delete it and add it back in with the new properties.
+
+Options: 
+&minus;c  Config file to use. Defaults to
+/etc/cluster/cluster.conf 
+&minus;o  Output file. Defaults to the same as
+-c 
+&minus;C Don&rsquo;t run "ccs_tool update" after
+changing file. This will happen by default if the input file
+is the same as the output file. 
+&minus;F Force a "ccs_tool update" even if the
+input and output files are different.
+
+addfence [options]
+
+[=]...
+
+Adds a new fence device section
+to the cluster configuration file.  is the name
+of the fence agent that controls the device. the options
+following are entered as key-value pairs. See the fence
+agent documentation for details about these. eg: you may
+need to enter the IP address and username/password for a
+powerswitch fencing device. 
+Options: 
+&minus;c  Config file to use. Defaults to
+/etc/cluster/cluster.conf 
+&minus;o  Output file. Defaults to the same as
+-c 
+&minus;C Don&rsquo;t run "ccs_tool update" after
+changing file. This will happen by default if the input file
+is the same as the output file. 
+&minus;F Force a "ccs_tool update" even if the
+input and output files are different.
+
+delfence [options]
+
+Deletes a fencing device from
+the cluster configuration file. delfence will allow you to
+remove a fence device that is in use by nodes. This is to
+allow changes to be made, but be aware that it may produce
+an invalid configuration file if you don&rsquo;t add it back
+in again. 
+Options: 
+&minus;c  Config file to use. Defaults to
+/etc/cluster/cluster.conf 
+&minus;o  Output file. Defaults to the same as
+-c 
+&minus;C Don&rsquo;t run "ccs_tool update" after
+changing file. This will happen by default if the input file
+is the same as the output file. 
+&minus;F Force a "ccs_tool update" even if the
+input and output files are different.
+
+lsnode [options]
+
+List the nodes in the
+configuration file. This is (hopefully obviously) not
+necessarily the same as the nodes currently in the cluster,
+but it should be a superset. 
+Options: 
+&minus;v Verbose. Lists all the properties of the node, and
+the node-specific properties of the fence device too. 
+&minus;c  Config file to use. Defaults to
+/etc/cluster/cluster.conf
+
+lsfence [options]
+
+List all the fence devices in
+the cluster configuration file. 
+Options: 
+&minus;v Verbose. Lists all the properties of the fence
+device rather than just the names and agents. 
+&minus;c  Config file to use. Defaults to
+/etc/cluster/cluster.conf
+
+create [options]
+
+Create a new, skeleton,
+configuration file. Note that "create" on its own
+will not create a valid configuration file. Fence agents and
+nodes will need to be added to it before handing it over to
+ccsd. The new configuration file will have a version number
+of 1. Subsequent addnode/delnode/addfence/delfence
+operations will increment the version number by 1 each time.
+
+Options: 
+&minus;c  Config file to create. Defaults to
+/etc/cluster/cluster.conf
+
+addnodeids
+
+Adds node ID numbers to all the
+nodes in cluster.conf. In RHEL4, node IDs were optional and
+assigned by cman when a node joined the cluster. In RHEL5
+they must be pre-assigned in cluster.conf. This command will
+not change any node IDs that are already set in
+cluster.conf, it will simply add unique node ID numbers to
+nodes that do not already have them.
+
+SEE ALSO
+
+cluster.conf(5)

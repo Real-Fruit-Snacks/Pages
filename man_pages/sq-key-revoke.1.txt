@@ -1,0 +1,164 @@
+NAME
+
+sq key revoke -
+Revoke a certificate
+
+SYNOPSIS
+
+sq key
+revoke [OPTIONS] REASON MESSAGE
+
+DESCRIPTION
+
+Revoke a
+certificate.
+
+Creates a
+revocation certificate for the certificate.
+
+If
+&rsquo;--revocation-file&rsquo; is provided, then that key
+is used to create the signature. If that key is different
+from the certificate being revoked, this creates a
+third-party revocation. This is normally only useful if the
+owner of the certificate designated the key to be a
+designated revoker.
+
+If
+&rsquo;--revocation-file&rsquo; is not provided, then the
+certificate must include a certification-capable key.
+
+&rsquo;sq key
+revoke&rsquo; respects the reference time set by the
+top-level &rsquo;--time&rsquo; argument. When set, it uses
+the specified time instead of the current time, when
+determining what keys are valid, and it sets the revocation
+certificate&rsquo;s creation time to the reference time
+instead of the current time.
+
+OPTIONS
+
+Subcommand
+options 
+-B, --binary
+
+Emit binary data
+
+--certificate-file=FILE
+
+Read the certificate to revoke
+from FILE or stdin, if omitted. It is an error for the file
+to contain more than one certificate.
+
+--notation NAME
+VALUE
+
+Add a notation to the
+certification. A user-defined notation&rsquo;s name must be
+of the form &rsquo;name [AT] a.org&rsquo;. If
+the notation&rsquo;s name starts with a &rsquo;!&rsquo;,
+then the notation is marked as being critical. If a consumer
+of a signature doesn&rsquo;t understand a critical notation,
+then it will ignore the signature. The notation is marked as
+being human readable.
+
+-o,
+--output=FILE
+
+Write to FILE or stdout if
+omitted
+
+--private-key-store=KEY_STORE
+
+Provide parameters for private
+key store
+
+--revocation-file=KEY_FILE
+
+Sign the revocation certificate
+using the key in KEY_FILE. If the key is different from the
+certificate, this creates a third-party revocation. If this
+option is not provided, and the certificate includes secret
+key material, then that key is used to sign the revocation
+certificate.
+
+REASON
+
+The reason for the revocation.
+This must be either: &rsquo;compromised&rsquo;,
+&rsquo;superseded&rsquo;, &rsquo;retired&rsquo;, or
+&rsquo;unspecified&rsquo;:
+
+-
+&rsquo;compromised&rsquo; means that the secret key material
+may have been 
+compromised. Prefer this value if you suspect that the
+secret 
+key has been leaked.
+
+-
+&rsquo;superseded&rsquo; means that the owner of the
+certificate has replaced 
+it with a new certificate. Prefer &rsquo;compromised&rsquo;
+if the secret 
+key material has been compromised even if the certificate is
+also 
+being replaced! You should include the fingerprint of the
+new 
+certificate in the message.
+
+-
+&rsquo;retired&rsquo; means that this certificate should not
+be used anymore, 
+and there is no replacement. This is appropriate when
+someone 
+leaves an organisation. Prefer &rsquo;compromised&rsquo; if
+the secret key 
+material has been compromised even if the certificate is
+also 
+being retired! You should include how to contact the owner,
+or 
+who to contact instead in the message.
+
+-
+&rsquo;unspecified&rsquo; means that none of the three other
+three reasons 
+apply. OpenPGP implementations conservatively treat this
+type 
+of revocation similar to a compromised key.
+
+If the reason
+happened in the past, you should specify that using the
+&rsquo;--time&rsquo; argument. This allows OpenPGP
+implementations to more accurately reason about objects
+whose validity depends on the validity of the
+certificate.
+
+MESSAGE
+
+A short, explanatory text that
+is shown to a viewer of the revocation certificate. It
+explains why the certificate has been revoked. For instance,
+if Alice has created a new key, she would generate a
+&rsquo;superseded&rsquo; revocation certificate for her old
+key, and might include the message &rsquo;I&rsquo;ve created
+a new certificate, FINGERPRINT, please use that in the
+future.&rsquo;
+
+Global
+options 
+See sq(1) for a description of the global
+options.
+
+SEE ALSO
+
+sq(1),
+sq-key(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org&gt;.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

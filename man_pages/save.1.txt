@@ -1,0 +1,309 @@
+NAME
+
+save - save
+revision of a file
+
+SYNOPSIS
+
+save [
+version binding options ] [ options ] files ..
+
+Save [ version binding options ] [ options
+] files ..
+
+Options:
+
+[ -?fglq ] [ -help ]
+[ -a (or -alias) version alias ]
+[ -delta ] [ -force ]
+[ -fix generation | alias | date ]
+[ -newgen ] [ -lock ]
+[ -m (or -logmsg) message ]
+[ -n (or -setvnum) version number ]
+[ -nodelta ] [ -quiet ]
+[ -setattrs filename ]
+[ -stdin ]
+[ -version ] 
+
+DESCRIPTION
+
+save
+takes a snapshot of the current state of the specified
+files, stores them into corresponding archive files and
+assigns unique version numbers to the created
+versions. The original files will by default be removed and
+unlocked in order to support a cooperative style of
+teamwork. Versions of files can be restored as regular files
+with the retrv command. Versions in archives are
+inalterable.
+
+An archive will
+be created the first time a file is saved in a subdirectory
+named AtFS. The AtFS subdirectory must be present.
+When an archive is created, save asks for a short
+description of the saved documents purpose. If a subsequent
+version is saved, the user is prompted for a comment
+describing the modifications. The save command
+requires that the version history of a file that shall be
+saved is locked by the user issuing the command. This
+is to prevent different developers from applying concurrent
+updates to the same file and thereby invalidating the other
+developers&rsquo; modifications. The only exception from
+this rule is the first time a file is saved, which means
+that an archive has yet to be created. For more details on
+locking, see the ShapeTools Tutorial, retrv(1), and
+vadm(1).
+
+The save
+program assigns unique version ids to each evolving revision
+of a file. The version id is a pair of integers separated by
+a dot, identifying the major and minor revision
+(.) of a version.
+Subsequent invocations of save increase the minor
+revision number, starting with version 1.0. The generation
+number is increased by invocations of Save (see
+below). There is no support for explicit branching. The
+version control toolkit rather encourages a linear model of
+version evolution. Instead of branching, save allows
+to insert new versions into old generations (see
+description of -fix). This allows, for example, to
+fix bugs in major revision N (version numbers N.x)
+which may be the currently operational release while
+development proceeds in generation N+1 (or N+n if you
+like).
+
+Before a file
+is saved it will be checked whether it has actually changed
+with respect to the previously saved version. If the file
+hasn&rsquo;t changed, the user will be asked if it should be
+saved anyway. The command line option -f (or
+-force) overrides the prompting.
+
+The version
+control system supports a built-in basic status model for
+versions. The version status is intended to express
+different levels of quality, and aims at providing basic
+project management functionality. State attributes of
+software objects can help to describe an object&rsquo;s
+current meaning in the development process (e.g.
+tested, incompletely implemented, submitted
+for evaluation, or shipped to customer).
+
+A newly created
+version will by default be assigned the state saved.
+This status marks the lowest level of quality, suggesting
+that the version is just saved for possible later retrieval
+but may be inconsistent. Versions that meet higher quality
+standards (or are part of a release) should be marked by
+appropriate status (see vadm -promote, sbmt,
+or publ).
+
+If the program
+is invoked as Save (that is with capital-S) a new
+major revision (generation) of the document history
+is created - provided the programmer issuing the command has
+the permission to do this. This option is intended to
+support a development model where maintenance of an
+operational release can be performed parallel to the
+development of the next release (see -fix).
+
+OPTIONS
+
+For version
+selection, any version binding option, as described
+on the vbind(1) manual page, may be given. Version bind
+directives in brackets added to the filename are
+interpreted different to vbind(1). A version number
+following the name will be treated as if the -n
+(-setvnum) option was given with this version number as
+argument. Any other string in brackets will be taken as
+alias name (see -alias option). 
+-?, -help
+
+print short information about
+usage of this command.
+
+-a, -alias version
+alias
+
+assign a version alias (a
+symbolic name) to the new version. In more detail, an
+attribute __SymbolicName__ is set to the value
+specified in version alias. The specified alias name
+must not be assigned to any other version within the same
+version history. Alternatively to the -a option, the version
+alias may be given in brackets following the name of the
+file to be saved. Check the description of the -n option for
+an example of this notation.
+
+-delta
+
+Create delta for internal storage. This is the
+default. 
+
+-f, -force
+
+force a revision deposit (i.e.
+without asking), even if the busy version hasn&rsquo;t
+changed since the last time it was saved.
+
+-fix
+generation | alias | date
+
+append a new version after the
+most recent version within the referenced major revision
+level. The major revision level (called
+&rsquo;&rsquo;generation&rsquo;&rsquo;) is either referenced
+explicitly, by specifying a number, or
+implicitly, by specifying a version alias (e.g. a
+release name) or a date. The latter form is particularly
+useful for saving a fix that extends over more than one
+object.
+
+This option is
+intended to support maintenance of older releases while
+development proceeds at the logical end of the version
+chain. In order to insert a (fixed) version into an old
+generation, one must have a lock on the most recent version
+of that generation (generation lock). This lock must
+be set with the vadm command. The -fix option
+is incompatible with -setvnum, -newgen and the
+Save command option.
+
+-g, -newgen
+
+create a major revision of the
+document. Major revisions are indicated by the first number
+in the version-id (generation). Only the archive
+administrator is allowed to create major revisions. The
+archive administrator is the user who owns the AtFS
+subdirectory where the version archives reside. Use of this
+switch is identical to calling the program as
+Save.
+
+-l, -lock
+
+Keep the lock on the version
+history. The saved files will not be removed.
+
+-m, -logmsg
+message
+
+set message as
+descriptive note for all document versions that result from
+the invocation of save. When message starts
+with an at sign (@), it is interpreted as filename and the
+text contained in the file is set as descriptive note for
+all document versions that result from the invocation of
+save.
+
+-n, -setvnum version
+number
+
+set the version number of the
+newly created revision to version. The version
+must be given in the format
+. where
+generation and revision are integers. Example:
+
+save -setvnum 4.3 mkattr.c 
+The specified version must be greater than the
+highest previously assigned version number in a given object
+history. Only the archive administrator may set version
+numbers directly. The archive administrator is the user who
+owns the AtFS subdirectory where the version archives
+reside. -setvnum is useful for keeping consistent
+version numbering across related, physically different
+object repositories, or for converting archive formats of
+other revision control systems to this toolkit (see:
+rcs2atfs). Alternatively to the -n option, the
+version number may be given in brackets following the name
+of the file to be saved. The command 
+save mkattr.c[4.3] 
+is interpreted the same way as the example above.
+
+-nodelta
+
+Suppress delta generation
+
+-q, -quiet
+
+quiet operation. No messages
+are printed on standard output. If the busy version is
+unchanged, it will not be saved unless -f is set. The
+user will not be prompted for a descriptive note. If no
+message or note is supplied with the command line (see
+options -m and -t) the log will remain empty.
+This option is useful for batch operation.
+
+-setattrs
+filename
+
+read names and values of user
+defined attributes from the file filename. The
+entries in the attribute file must have either of the
+formats NAME=VALUE or NAME+=VALUE. NAME
+must be an alphanumeric string (no spaces) immediately
+followed by the assignment operator. The value may be an
+arbitrary ASCII string with the exception of control-A and
+newline characters. There is exactly one attribute
+definition per line. The file&rsquo;s last character must be
+a newline character.
+
+If the first
+format (single equal symbol) is used, previously assigned
+values of user defined attributes are reset with the
+values defined in the attribute file. The second format
+(&rsquo;&rsquo;plus equal&rsquo;&rsquo;) allows to append
+additional values to an already existing attribute. If no
+attribute of a given name exists, it will be created.
+
+This way to
+attach attributes was introduced to allow quick automatic
+attachment of a large number of attributes to version
+objects. This interface to the attribute setting facility is
+mainly intended for tools that invoke save.
+
+If the
+-setattrs option is omitted, save searches the
+environment for a variable SVATTRS. If this variable
+is absent, no user defined attributes will be assigned to
+the evolving versions.
+
+-stdin
+
+force save to read a descriptive note from stdin
+instead of forking an editor. A previously set
+intent-message is printed.
+
+-version
+
+print the version of the
+program itself.
+
+FILES
+
+All revisions
+of documents are stored in archive files in the subdirectory
+AtFS.
+
+BUGS
+
+With the -g
+(-newgen) option given and an unchanged busy version,
+save ignores the users answer to the question, if the busy
+version should be saved anyway. It always assumes a positive
+answer and goes on with its saving procedure. You can avoid
+saving by interrupting (Ctrl-C) save during the next
+question if the unmodified version should be commented
+anyway.
+
+SEE ALSO
+
+retrv(1),
+vbind(1)
+
+AUTHOR
+
+Axel.Mahler [AT] cs.de
+and Andreas.Lampen [AT] cs.de

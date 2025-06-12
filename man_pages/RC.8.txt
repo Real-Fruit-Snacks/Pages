@@ -1,0 +1,501 @@
+RC(8) BSD System Manager&rsquo;s Manual RC(8)
+
+NAME
+
+rc &mdash; command
+scripts for auto-reboot and daemon startup
+
+SYNOPSIS
+
+rc 
+rc.conf 
+rc.conf.local 
+rc.d/ 
+rc.firewall 
+rc.local 
+rc.shutdown 
+rc.subr
+
+DESCRIPTION
+
+The rc utility is the
+command script which controls the automatic boot process
+after being called by init(8). The rc.local script
+contains commands which are pertinent only to a specific
+site. Typically, the /usr/local/etc/rc.d/ mechanism
+is used instead of rc.local these days but if you
+want to use rc.local, it is still supported. In this
+case, it should source /etc/rc.conf and contain
+additional custom startup code for your system. The best way
+to handle rc.local, however, is to separate it out
+into rc.d/ style scripts and place them under
+/usr/local/etc/rc.d/. The rc.conf file
+contains the global system configuration information
+referenced by the startup scripts, while
+rc.conf.local contains the local system
+configuration. See rc.conf(5) for more information.
+
+The rc.d/
+directories contain scripts which will be automatically
+executed at boot time and shutdown time.
+
+Operation of
+rc
+
+1.
+
+Source /etc/rc.subr to
+load various rc.subr(8) shell functions to use.
+
+2.
+
+If autobooting, set
+autoboot=yes and enable a flag (rc_fast=yes),
+which prevents the rc.d/ scripts from performing the
+check for already running processes (thus speeding up the
+boot process). This rc_fast=yes speedup will not
+occur when rc is started up after exiting the
+single-user shell.
+
+3.
+
+Invoke rcorder(8) to order the
+files in /etc/rc.d/ that do not have a
+&rsquo;&rsquo;nostart&rsquo;&rsquo; keyword (refer to
+rcorder(8)&rsquo;s &minus;s flag), and assign the
+result to a variable.
+
+4.
+
+Call each script in turn using
+run_rc_script() (from rc.subr(8)), which sets
+$1 to &rsquo;&rsquo;start&rsquo;&rsquo;, and sources
+the script in a subshell. If the script has a .sh
+suffix then it is sourced directly into the current
+shell.
+
+Operation of
+rc.shutdown
+
+1.
+
+Source /etc/rc.subr to
+load various rc.subr(8) shell functions to use.
+
+2.
+
+Invoke rcorder(8) to order the
+files in /etc/rc.d/ that have a
+&rsquo;&rsquo;shutdown&rsquo;&rsquo; keyword (refer to
+rcorder(8)&rsquo;s &minus;k flag), reverse that
+order, and assign the result to a variable.
+
+3.
+
+Call each script in turn using
+run_rc_script() (from rc.subr(8)), which sets
+$1 to &rsquo;&rsquo;stop&rsquo;&rsquo;, and sources
+the script in a subshell. If the script has a .sh
+suffix then it is sourced directly into the current
+shell.
+
+Contents of
+rc.d/ 
+rc.d/ is located in /etc/rc.d/. The following
+file naming conventions are currently used in
+rc.d/:
+
+ALLUPPERCASE
+
+Scripts that
+are &rsquo;&rsquo;placeholders&rsquo;&rsquo; to ensure that
+certain operations are performed before others. In order of
+startup, these are:
+
+NETWORKING
+
+Ensure basic
+network services are running, including general network
+configuration (network1, network2,
+network3).
+
+SERVERS
+
+Ensure basic
+services (such as NETWORKING, ppp-user,
+syslogd, and isdnd) exist for services that
+start early (such as named), because they are
+required by DAEMON below.
+
+DAEMON
+
+Check-point
+before all general purpose daemons such as lpd and
+ntpd.
+
+LOGIN
+
+Check-point
+before user login services (inetd and sshd),
+as well as services which might run commands as users
+(cron and sendmail).
+
+foo.sh
+
+Scripts that
+are to be sourced into the current shell rather than a
+subshell have a .sh suffix. Extreme care must be
+taken in using this, as the startup sequence will terminate
+if the script does.
+
+bar
+
+Scripts that
+are sourced in a subshell. These can stop the boot if
+necessary with the following shell commands:
+
+if [
+"$autoboot" = yes ]; then
+
+kill -TERM $$
+
+fi 
+exit 1
+
+Note that this
+should be used extremely sparingly!
+
+Each script
+should contain rcorder(8) keywords, especially an
+appropriate &rsquo;&rsquo;PROVIDE&rsquo;&rsquo; entry, and
+if necessary &rsquo;&rsquo;REQUIRE&rsquo;&rsquo; and
+&rsquo;&rsquo;BEFORE&rsquo;&rsquo; keywords.
+
+Each script is
+expected to support at least the following arguments, which
+are automatically supported if it uses the
+run_rc_command() function:
+
+start
+
+Start the
+service. This should check that the service is to be started
+as specified by rc.conf(5). Also checks if the service is
+already running and refuses to start if it is. This latter
+check is not performed by standard FreeBSD scripts if the
+system is starting directly to multi-user mode, to speed up
+the boot process. If forcestart is given, ignore the
+rc.conf(5) check and start anyway.
+
+stop
+
+If the service
+is to be started as specified by rc.conf(5), stop the
+service. This should check that the service is running and
+complain if it is not. If forcestop is given, ignore
+the rc.conf(5) check and attempt to stop.
+
+restart
+
+Perform a
+stop then a start.
+
+status
+
+If the script
+starts a process (rather than performing a one-off
+operation), show the status of the process. Otherwise it is
+not necessary to support this argument. Defaults to
+displaying the process ID of the program (if running).
+
+poll
+
+If the script
+starts a process (rather than performing a one-off
+operation), wait for the command to exit. Otherwise it is
+not necessary to support this argument.
+
+rcvar
+
+Display which
+rc.conf(5) variables are used to control the startup of the
+service (if any).
+
+If a script must
+implement additional commands it can list them in the
+extra_commands variable, and define their actions in
+a variable constructed from the command name (see the
+EXAMPLES section).
+
+The following
+key points apply to old-style scripts in
+/usr/local/etc/rc.d/:
+
+&bull;
+
+Scripts are only executed if
+their basename(1) matches the shell globbing pattern
+*.sh, and they are executable. Any other files or
+directories present within the directory are silently
+ignored.
+
+&bull;
+
+When a script is executed at
+boot time, it is passed the string
+&rsquo;&rsquo;start&rsquo;&rsquo; as its first and only
+argument. At shutdown time, it is passed the string
+&rsquo;&rsquo;stop&rsquo;&rsquo; as its first and only
+argument. All rc.d/ scripts are expected to handle
+these arguments appropriately. If no action needs to be
+taken at a given time (either boot time or shutdown time),
+the script should exit successfully and without producing an
+error message.
+
+&bull;
+
+The scripts within each
+directory are executed in lexicographical order. If a
+specific order is required, numbers may be used as a prefix
+to the existing filenames, so for example 100.foo
+would be executed before 200.bar; without the numeric
+prefixes the opposite would be true.
+
+&bull;
+
+The output from each script is
+traditionally a space character, followed by the name of the
+software package being started or shut down, without
+a trailing newline character (see the EXAMPLES
+section).
+
+SCRIPTS OF INTEREST
+
+When an automatic reboot is in
+progress, rc is invoked with the argument
+autoboot. One of the scripts run from
+/etc/rc.d/ is /etc/rc.d/fsck. This script runs
+fsck(8) with option &minus;p and &minus;F to
+&rsquo;&rsquo;preen&rsquo;&rsquo; all the disks of minor
+inconsistencies resulting from the last system shutdown. If
+this fails, then checks/repairs of serious inconsistencies
+caused by hardware or software failure will be performed in
+the background at the end of the booting process. If
+autoboot is not set, when going from single-user to
+multi-user mode for example, the script does not do
+anything.
+
+The
+rc.early script is run very early in the startup
+process, immediately before the file system check. The
+rc.early script is deprecated. Any commands in this
+file should be separated out into rc.d/ style scripts
+and integrated into the rc system.
+
+The
+/etc/rc.d/local script can execute scripts from
+multiple rc.d/ directories. The default locations are
+/usr/local/etc/rc.d/ and /usr/X11R6/etc/rc.d/,
+but these may be overridden with the local_startup
+rc.conf(5) variable.
+
+The
+/etc/rc.d/serial script is used to set any special
+configurations for serial devices.
+
+The
+/etc/rc.d/network* scripts are used to start the
+network. The network is started in several passes. The first
+pass, /etc/rc.d/network1, sets the hostname and
+domainname and configures the network interfaces. The
+/etc/rc.d/network2 script starts routing and sets
+routing options. The /etc/rc.d/network3 script sets
+additional networking options. Finally, the
+/etc/rc.d/network_ipv6 script configures IPv6
+interfaces and options.
+
+The
+rc.firewall script is used to configure rules for the
+kernel based firewall service. It has several possible
+options:
+
+open
+
+will allow
+anyone in
+
+client
+
+will try to
+protect just this machine
+
+simple
+
+will try to
+protect a whole network
+
+closed
+
+totally
+disables IP services except via lo0 interface
+
+UNKNOWN
+
+disables the
+loading of firewall rules
+
+filename
+
+will load the
+rules in the given filename (full path required).
+
+The
+/etc/rc.d/atm* scripts are used to configure ATM
+network interfaces. The interfaces are configured in three
+passes. The first pass performs the initial interface
+configuration. The second pass completes the interface
+configuration and defines PVCs and permanent ATMARP entries.
+The third pass starts any ATM daemons.
+
+Most daemons,
+including network related daemons, have their own script in
+/etc/rc.d/, which can be used to start, stop, and
+check the status of the service.
+
+Any architecture
+specific scripts, such as /etc/rc.d/apm for example,
+specifically check that they are on that architecture before
+starting the daemon.
+
+Following
+tradition, all startup files reside in /etc.
+
+EXAMPLES
+
+The following is a minimal
+rc.d/ style script. Most scripts require little more
+than the following.
+
+#!/bin/sh 
+#
+
+# PROVIDE: foo
+
+# REQUIRE: bar_service_required_to_precede_foo 
+# BEFORE: baz_service_requiring_foo_to_precede_it
+
+.
+/etc/rc.subr
+
+name="foo"
+
+rcvar=&rsquo;set_rcvar&rsquo; 
+command="/usr/local/bin/foo"
+
+load_rc_config
+$name 
+run_rc_command "$1"
+
+Certain scripts
+may want to provide enhanced functionality. The user may
+access this functionality through additional commands. The
+script may list and define as many commands at it needs.
+
+#!/bin/sh 
+#
+
+# PROVIDE: foo
+
+# REQUIRE: bar_service_required_to_precede_foo 
+# BEFORE: baz_service_requiring_foo_to_precede_it
+
+.
+/etc/rc.subr
+
+name="foo"
+
+rcvar=&rsquo;set_rcvar&rsquo; 
+command="/usr/local/bin/foo" 
+extra_commands="nop hello" 
+hello_cmd="echo Hello World." 
+nop_cmd="do_nop"
+
+do_nop() 
+{
+
+echo "I do nothing."
+
+}
+
+load_rc_config
+$name 
+run_rc_command "$1"
+
+The following is
+a simple, hypothetical example of an old-style
+/usr/local/etc/rc.d/ script, which would start a
+daemon at boot time, and kill it at shutdown time.
+
+#!/bin/sh -
+
+# 
+# initialization/shutdown script for foobar package
+
+case
+"$1" in 
+start)
+
+/usr/local/sbin/foo -d && echo -n &rsquo;
+foo&rsquo; 
+
+;;
+
+stop)
+
+kill &rsquo;cat /var/run/foo.pid&rsquo; && echo
+-n &rsquo; foo&rsquo;
+
+;;
+
+*)
+
+echo "unknown option: $1 - should be
+&rsquo;start&rsquo; or &rsquo;stop&rsquo;"
+>&2 
+
+;;
+
+esac
+
+As all processes
+are killed by init(8) at shutdown, the explicit kill(1) is
+unnecessary, but is often included.
+
+FILES 
+/etc/rc 
+/etc/rc.conf 
+/etc/rc.conf.local 
+/etc/rc.d/ 
+/etc/rc.firewall 
+/etc/rc.local 
+/etc/rc.shutdown 
+/etc/rc.subr 
+/var/run/dmesg.boot
+
+dmesg(1)
+results soon after the rc process begins. Useful when
+dmesg buffer in the kernel no longer has this
+information.
+
+SEE ALSO
+
+kill(1), rc.conf(5), init(8),
+rcorder(8), rc.subr(8), reboot(8), savecore(8)
+
+HISTORY
+
+The rc utility appeared
+in 4.0BSD.
+
+BSD
+November 4, 2002 BSD

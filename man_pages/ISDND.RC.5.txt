@@ -1,0 +1,1229 @@
+ISDND.RC(5) BSD File Formats Manual ISDND.RC(5)
+
+NAME
+
+isdnd.rc &mdash; isdn4bsd
+ISDN connection management daemon config file format
+
+DESCRIPTION
+
+The file
+/etc/isdn/isdnd.rc contains (if not otherwise
+specified on the command line) the runtime configuration for
+the isdnd(8) ISDN connection management daemon which is part
+of the isdn4bsd package.
+
+The
+configuration file consists of keywords which start in
+column 1 followed by one or more spaces or tabs, an equal
+sign, one or more spaces or tabs and a keyword dependent
+parameter value.
+
+A line beginning
+with &rsquo;#&rsquo; is treated as a comment line.
+
+For keywords
+requiring the specification of a boolean value, the truth
+value can be either yes or on while the false
+value can be either no or off.
+
+The
+configuration file consists of one system section,
+one or more optional controller sections and one or
+more entry sections. In the system section
+parameters regarding the daemon operation or parameters not
+associated with a single remote connection can be set. In
+the controller section parameters regarding a
+particular controller can be set. In the entry
+section(s) parameters directly associated with a single
+remote connection can be set.
+
+The following
+keywords are recognized by isdnd:
+
+system
+
+This keyword
+starts the system configuration section. It must not have a
+parameter and may be used only once. The keyword is
+mandatory. The following keywords are valid in the system
+configuration section:
+
+acctall
+
+If this
+parameter is set to on, accounting information is
+written even if the local site was not charged or no
+charging information is available or is not subscribed.
+(optional)
+
+acctfile
+
+Specifies the
+name of the accounting file which is used when the keyword
+useacctfile (see below) is set to on. See also
+system keyword rotatesuffix. If this keyword is
+omitted the system default is used. (optional)
+
+add-prefix
+
+If set to
+on, for incoming numbers, have a look at the
+"type of number" indicator and adjust the number
+as specified by the prefix-national and
+prefix-international keywords described later. If
+this keyword is omitted, the system default (off) is used.
+(optional)
+
+aliasing
+
+If this
+parameter is set to on, alias processing of
+telephone-number to name is enabled (see also the
+aliasfile keyword below). The default is off.
+(optional)
+
+aliasfile
+
+Specifies the
+name of the telephone number-to-name alias database file
+shared with the isdntel(1) utility when alias processing is
+enabled via the aliasing keyword. (optional)
+
+beepconnect
+
+In full-screen
+mode, if this parameter is set to on, ring the bell
+when connecting or disconnecting a call.
+
+extcallattr
+
+If this
+parameter is set to on, the extended caller
+attributes "screening indicator" and
+"presentation indicator" are written to the
+log-file. The default is off. (optional)
+
+holidayfile
+
+Specifies the
+name of the holiday file containing the dates of holidays.
+This file is used in conjunction with the valid
+keyword to lookup the dates of holidays. (optional)
+
+isdntime
+
+If this
+parameter is set to on, date/time information from
+the exchange (if provided) is written to the log-file. The
+default is off. (optional)
+
+mailer
+
+This keyword is
+used to specify the path/name of a mail program which is
+able to use the "-s" flag to specify a subject on
+its command line. In case of a fatal error exit of
+isdnd.rc this program is used to send mail to an
+administrator specified by the keyword mailto.
+(optional)
+
+mailto
+
+This keyword is
+used to specify the email address of someone to notify in
+case of a fatal error exit of isdnd.rc. (See also
+keyword mailer). (optional)
+
+monitor-allowed
+
+If this parameter is set to
+on or yes, monitoring via a local or remote
+machine is enabled. This parameter is optional and is set to
+off by default.
+
+monitor-port
+
+sets the TCP port number for
+remote monitoring. This integer parameter is optional and is
+set to port 451 by default.
+
+monitor
+
+This keyword
+specifies a local socket name or a host or network for
+remote monitoring. The monitor specification may
+either be:
+
+the name of a local
+(UNIX-domain) socket
+
+this MUST start with a
+"/", example: /var/run/isdn-monitor
+
+a dotted-quad host specification
+
+example: 192.168.1.2
+
+a dotted-quad network address with netmask
+
+example: 192.168.1.0/24
+
+a resolvable host name
+
+example: localhost
+
+a resolvable network name with netmask
+
+example: up-vision-net/24
+
+monitor-access
+
+This keyword specifies the
+access rights for a previously used monitor keyword.
+The supported access rights are:
+
+fullcmd 
+restrictedcmd 
+channelstate 
+logevents 
+callin 
+callout
+
+prefix-international
+
+In conjunction with the
+add-prefix switch (see above), specify the prefix
+number string for incoming numbers with the international
+number tag. If aliases are used, they have to be adjusted
+accordingly. (optional)
+
+prefix-national
+
+In conjunction with the
+add-prefix switch (see above), specify the prefix
+number string for incoming numbers with the national number
+tag. If aliases are used, they have to be adjusted
+accordingly. (optional)
+
+ratesfile
+
+Specifies the
+name of the ratesfile. If this keyword is omitted the system
+default is used. (optional)
+
+regexpr
+
+This keyword is
+used to specify regular expressions. It can be specified
+more than once up to a compile time dependent value
+(currently set to 5 by the MAX_RE definition in the
+source).
+
+All specified
+regular expressions are compared to the log strings at
+runtime and if a match is found, a program is run with the
+log text as a parameter (see also the keyword regprog
+below).
+
+For an
+explanation how regular expressions are specified, please
+have a look at re_format(7) and regex(3). The
+extended regular expression syntax is supported
+here.
+
+Hint: it might
+be necessary to properly quote the expression to avoid
+improper interpretation by the configuration file parser.
+(optional)
+
+regprog
+
+This keyword is
+used to specify the name of a program which is run in case a
+corresponding regular expression is matched by a logging
+string. Isdnd expects to find the program below the
+path /etc/isdn which is prepended to the string
+specified as a parameter to this keyword. (optional)
+
+rotatesuffix
+
+Specifies a suffix for renaming
+the log- and the accounting-filename. In case rotatesuffix
+is used and a USR1 signal is sent to isdnd, the log-file and
+the accounting file is not only closed and reopened but the
+old log-file is also renamed to the former filename with the
+rotatesuffix string appended. If this keyword is omitted,
+the log-files are just closed and reopened; this is also the
+default behavior. (optional)
+
+rtprio
+
+Specifies the
+real-time priority isdnd runs at as an integer value
+in the range 0...31 with 0 being the highest priority. This
+keyword is optional; if not specified the process priority
+of isdnd is not touched in any way. ( See also
+rtprio(1)). This keyword is only available if
+isdnd.rc was compiled with -DUSE_RTPRIO.
+
+useacctfile
+
+If this
+parameter is set to on charging (if available) and
+accounting information is written to the accounting file.
+(optional)
+
+controller
+
+This keyword starts the
+controller configuration section. It must not have a
+parameter and may be used once for every controller. The
+keyword is optional. The following keywords are valid in a
+controller configuration section:
+
+protocol
+
+This keyword is
+used to set the D-channel protocol for the S0-bus a
+controller is connected to. The following parameters are
+currently supported:
+
+dss1
+
+The DSS1 or
+so-called "Euro-ISDN" D-channel protocol according
+to ITU Recommendations Q.921 and Q.931.
+
+d64s
+
+An ISDN leased
+line with a single B-channel (called D64S in Germany).
+
+firmware
+
+This keyword is
+used like firmware=/path/to/file to download the
+firmware to active controllers supported by the iavc
+driver (AVM B1, T1). This keyword is supported for all
+controller types, and causes I4B_CTRL_DOWNLOAD ioctl to be
+invoked with the specified file as an argument. In systems
+equipped with both active and passive adapters, and the
+passive cards being detected first, dummy
+&rsquo;controller&rsquo; entries are required for the
+passive cards to get the correct firmwares to correct
+adapters.
+
+entry
+
+This keyword
+starts one configuration entry. It must not have a
+parameter. This keyword must be used at least once. The
+following keywords are valid in an entry section:
+
+answerprog
+
+This keyword is
+used to specify the name of a program which is run in case
+an incoming telephone connection specified answer in
+its configuration entry. The default name is answer.
+Isdnd expects to find this program beneath the path
+/etc/isdn which is prepended to the string specified
+as a parameter to this keyword. (optional)
+
+alert
+
+is used to
+specify a time in seconds to wait before accepting a call.
+This keyword is only usable for incoming telephone calls
+(dialin-reaction = answer). It is used to have a chance to
+accept an incoming call on the phone before the answering
+machine starts to run. The minimum value for the alert
+parameter is 5 seconds and the maximum parameter allowed is
+180 seconds. (optional)
+
+b1protocol
+
+The B channel
+layer 1 protocol used for this connection. The keyword is
+mandatory. The currently configurable values are:
+
+hdlc
+
+HDLC
+framing.
+
+raw
+
+No framing at
+all (used for telephony).
+
+bcap
+
+Use a special
+bearer capability for this connection. The keyword is
+optional.
+
+Any other value
+than dov sets the bearer capability as configured by
+the b1protocol keyword (see above). The currently
+configurable values are:
+
+dov
+
+This connection
+is a Dov (Data over Voice) connection. The b1protocol
+keyword must be set to hdlc. This feature is
+experimental and does work on outgoing calls only.
+
+budget-calloutperiod
+
+is used to specify a time
+period in seconds. Within this period, the number of calls
+specified by budget-calloutncalls are allowed to
+succeed, any further attempt to call out will be blocked for
+the rest of the time left in the time period. (optional)
+
+budget-calloutncalls
+
+The number of outgoing calls
+allowed within the time period specified by
+budget-calloutperiod. (optional)
+
+budget-calloutsfile
+
+A path/filename to which the
+number of successfull callouts are written. The contents of
+the file is preserved when it exists during startup of
+isdnd. The format of this file is: start time, last update
+time, number of calls. (optional)
+
+budget-calloutsfile-rotate
+
+If set to on rotate
+budget-calloutsfile every night when an attempt is made to
+update the file on a new day. The statistics for the
+previous day are witten to a file with the filename
+specified by budget-calloutsfile to which a hyphen and the
+new day&rsquo;s (!) day of month number is appended.
+(optional)
+
+budget-callbackperiod
+
+budget-callbackncalls
+
+budget-callbacksfile
+
+budget-calloutsfile-rotate
+
+See
+budget-calloutperiod, budget-calloutncalls,
+budget-calloutsfile, and
+budget-calloutsfile-rotate above. These are used to
+specify the budgets for calling back a remote site.
+
+callbackwait
+
+The time in
+seconds to wait between hanging up the call from a remote
+site and calling back the remote site. (optional)
+
+calledbackwait
+
+The time in seconds to wait for
+a remote site calling back the local site after a call from
+the local site to the remote site has been made.
+(optional)
+
+clone
+
+This causes the
+contents of the specified entry to be copied from the
+existing named entry to the current one. When using this
+feature at least a new entry specific &rsquo;name&rsquo; and
+&rsquo;usrdeviceunit&rsquo; value should be specified for
+the current entry.
+
+connectprog
+
+specifies a
+program run every time after a connection is established and
+address negotiation is complete (i.e.: the connection is
+usable). Isdnd expects to find the program below the
+path /etc/isdn which is prepended to the string
+specified as a parameter to this keyword. The programs
+specified by connect and disconnect will get the following
+command line arguments: -d (device) -f (flag) [ -a (addr) ]
+where device is the name of device, e.g.
+"isp0", flag will be "up" if
+connection just got up, or "down" if interface
+changed to down state and addr the address that got
+assigned to the interface as a dotted-quad ip address
+(optional, only if it can be figured out by isdnd).
+(optional)
+
+dialin-reaction
+
+Used to specify what to do when
+an incoming connection request is received. The keyword is
+mandatory. The currently supported parameters are:
+
+accept
+
+Accept an
+incoming call.
+
+reject
+
+Reject an
+incoming call.
+
+ignore
+
+Ignore an
+incoming call.
+
+answer
+
+Start telephone
+answering for an incoming voice call.
+
+callback
+
+When a remote
+site calls, hang up and call back the remote site.
+
+dialout-type
+
+This keyword is
+used to configure what type of dialout mode is used. The
+keyword is mandatory. The currently supported parameters
+are:
+
+normal
+
+Normal
+behavior, call the remote site which is supposed to accept
+the call.
+
+calledback
+
+Callback behavior, call the
+remote side which rejects the call and calls us back.
+
+dialrandincr
+
+When dialing or
+re-dialing and this parameter is set to on, the dial
+retry time is added with a random value (currently 0...3
+seconds) to minimize the chance of two sites dialing
+synchronously so each gets a busy each time it dials because
+the other side is also dialing.
+
+dialretries
+
+The number of
+dialing retries before giving up. Setting this to -1
+gives an unlimited number of retries! (optional)
+
+direction
+
+This keyword is
+used to configure if incoming and outgoing, incoming-only or
+outgoing only connections are possible. The keyword is
+optional, the default is inout.
+
+The currently
+supported parameters are:
+
+inout
+
+Normal
+behavior, connection establishment is possible from remote
+and local.
+
+in
+
+Only incoming
+connections are possible.
+
+out
+
+Only outgoing
+connections are possible.
+
+disconnectprog
+
+specifies a program run every
+time after a connection was shut down. Isdnd expects
+to find the program below the path /etc/isdn which is
+prepended to the string specified as a parameter to this
+keyword. (optional)
+
+downtries
+
+is used to
+configure the number of unsuccessful tries (= retry cycles!)
+before the interface is disabled (for downtime
+seconds). (see also the keyword usedown further up).
+This keyword is optional.
+
+downtime
+
+is used to
+configure the time in seconds an interface is disabled after
+the configured number of downtries. (see also the
+keyword usedown further up). This keyword is optional
+and is set to 60 seconds by default.
+
+earlyhangup
+
+A (safety) time
+in seconds which specifies the time to hang up before an
+expected next charging unit will occur. (optional)
+
+idle-algorithm-outgoing
+
+The algorithm used to determine
+when to hang up an outgoing call when the line becomes idle.
+The current algorithms are:
+
+fix-unit-size
+
+idle algorithm which assumes
+fixed sized charging units during the whole call.
+
+var-unit-size
+
+idle algorithm which assumes
+that the charging is time based after the first units time
+has expired.
+
+idletime-outgoing
+
+The time in seconds an outgoing
+connection must be idle before hanging up. An idle timeout
+of zero disables this functionality. (optional)
+
+idletime-incoming
+
+The time in seconds an incoming
+connection must be idle before hanging up. An idle timeout
+of zero disables this functionality. (optional)
+
+isdncontroller
+
+The ISDN controller number to
+be used for connections for this entry. (mandatory)
+
+isdnchannel
+
+The ISDN
+controller channel number to be used for connections for
+this entry. In case a channel is explicitly selected here,
+the SETUP message will request this channel but mark the
+request as preferred (the indicated channel is
+preferred) instead of exclusive (only the indicated channel
+is acceptable). Thus the exchange is still free to select
+another than the requested channel! (mandatory)
+
+isdntxdel-incoming
+
+A delay value suitable for the
+timeout(9) kernel subroutine to delay the transmission of
+the first packet after a successful connection is made by
+this value for incoming ISDN connections. The
+specification unit is 1/100 second. A zero (0) disables this
+feature and is the default value. This feature is
+implemented (and makes sense only) for the i4bipr(4) IP over
+raw HDLC ISDN driver. (optional)
+
+isdntxdel-outgoing
+
+A delay value suitable for the
+timeout(9) kernel subroutine to delay the transmission of
+the first packet after a successful connection is made by
+this value for outgoing ISDN connections. The
+specification unit is 1/100 second. A zero (0) disables this
+feature and is the default value. This feature is
+implemented (and makes sense only) for the i4bipr(4) IP over
+raw HDLC ISDN driver. (optional)
+
+local-phone-dialout
+
+The local telephone number used
+when the local site dials out. When dialing out to a remote
+site, the number specified here is put into the Calling
+Party Number Information Element.
+
+This keyword is
+mandatory for the ipr user-land interfaces.
+
+local-subaddr-dialout
+
+The local subaddress used when
+the local site dials out. When dialing out to a remote site,
+the subaddress specified here is put into the Calling
+Party Subaddress Information Element.
+
+This keyword is
+mandatory for the ipr user-land interfaces.
+
+local-phone-incoming
+
+The local telephone number used
+for verifying the destination of incoming calls. When a
+remote site dials in, this number is used to verify that it
+is the local site which the remote site wants to connect to.
+It is compared with the Called Party Number Information
+Element got from the telephone exchange.
+
+This keyword is
+mandatory for the ipr interfaces.
+
+local-subaddr-incoming
+
+The local subaddress used for
+verifying the destination of incoming calls. When a remote
+site dials in, this subaddress is used to verify that it is
+the local site which the remote site wants to connect to. It
+is compared with the Called Party Subaddress Information
+Element got from the telephone exchange.
+
+This keyword is
+mandatory for the ipr interfaces.
+
+name
+
+Defines a
+symbolic name for this configuration entry. Its purpose is
+to use this name in the full-screen display for easy
+identification of a link to a remote site and for accounting
+purposes. (mandatory)
+
+maxconnecttime
+
+Specify a maximum connection
+time in seconds. Use this to define an absolute upper limit
+for a connection on the B-channel to last. CAUTION:
+This feature is used to limit the connection time, _not_
+number of attempts to establish a connection: when using
+this please take care to also enable the use of budgets to
+limit the connection establish attempts (otherwise the line
+will cycle thru an endless loop of connections and
+reconnections which will have an undesired effect on your
+telco bill)!
+
+ppp-auth-paranoid
+
+If set to no, the remote
+site is not required to prove its authentity for connections
+that are initiated by the local site. The default is
+yes and requires the remote site to always
+authenticate.
+
+This keyword is
+only used if ppp-send-auth has been set to pap or
+chap for an isp PPP interface. (optional)
+
+ppp-auth-rechallenge
+
+Set to no, if the other
+side does not support re-challenging for chap. The default
+is yes, which causes verification of the remote
+site&rsquo;s authentity once in a while.
+
+This keyword is
+only used if ppp-expect-auth has been set to chap for
+an isp PPP interface. (optional)
+
+ppp-expect-auth
+
+The local site expects the
+authentity of the remote site to be proved by the specified
+method. The supported methods are:
+
+none
+
+Do not require
+the other side to authenticate. Typical uses are dial-out to
+an ISP (many ISPs do not authenticate themselves to clients)
+or offering anonymous dial-in at the local site.
+
+chap
+
+The preferred
+authentication method, which does not require a password to
+be sent in the clear.
+
+pap
+
+The unprotected
+authentication method, which allows anybody watching the
+wire to grab name and password.
+
+If
+ppp-auth-paranoid is set to no (the default is
+yes) outgoing connections will not require the remote
+site to authenticate itself.
+
+This keyword is
+only used for the isp PPP interfaces. (optional)
+
+ppp-expect-name
+
+The name that has to be
+provided by the remote site to prove its authentity.
+
+This keyword is
+only used if ppp-expect-auth has been set to pap or
+chap for an isp PPP interface. (optional)
+
+ppp-expect-password
+
+The secret that has to be
+provided by the remote site to prove its authentity.
+
+This keyword is
+only used if ppp-expect-auth has been set to pap or
+chap for an isp PPP interface. (optional)
+
+ppp-send-auth
+
+The
+authentication method required by the remote site. The
+currently supported parameters are:
+
+none
+
+The remote site
+does not expect or support authentication.
+
+chap
+
+The preferred
+authentication method, which does not require a password to
+be sent in the clear.
+
+pap
+
+The unprotected
+authentication method, which allows anybody watching the
+wire to grab name and password.
+
+This keyword is
+only used for the isp PPP interfaces. (optional)
+
+ppp-send-name
+
+The
+authentication name sent to the remote site.
+
+This keyword is
+only used if ppp-send-auth has been set to pap or
+chap for an isp PPP interface. (optional)
+
+ppp-send-password
+
+The secret used to prove the
+local site&rsquo;s authentity to the remote site.
+
+This keyword is
+only used if ppp-send-auth has been set to pap or
+chap for an isp PPP interface. (optional)
+
+ratetype
+
+The rate entry
+used from the rates file. (optional)
+
+For example,
+ratetype=0 selects lines beginning "ra0" in
+/etc/isdn/isdnd.rates; (typically ra0 lines are a set of
+tables for local call rates on different days of the week
+& times per day).
+
+recoverytime
+
+The time in
+seconds to wait between dial retries. (optional)
+
+remdial-handling
+
+is used to specify the dialout
+behavior in case more than one outgoing number is specified.
+The currently supported parameters are:
+
+first
+
+For every new
+(non-retry) call setup, start with the first number.
+
+last
+
+For every new
+(non-retry) call setup, start with the last number with
+which a successful connection was made.
+
+next
+
+For every new
+(non-retry) call setup, start with the next number which
+follows the last one used.
+
+remote-phone-dialout
+
+The remote telephone number
+used when the local site dials out. When dialing out to a
+remote site, the number specified here is put into the
+Called Party Number Information Element.
+
+This keyword is
+mandatory for the ipr interfaces. It may be specified
+more than once to try to dial to several numbers until one
+succeeds.
+
+remote-subaddr-dialout
+
+The remote subaddress used when
+the local site dials out. When dialing out to a remote site,
+the subaddress specified here is put into the Called
+Party Subaddress Information Element.
+
+This keyword is
+mandatory for the ipr interfaces. It may be specified
+more than once to linked it to the remote-phone-dialout
+numbers until one succeeds.
+
+remote-phone-incoming
+
+The remote telephone number
+used to verify an incoming call. When a remote site dials
+in, this number is used to verify that it is the correct
+remote site which is herewith authorized to connect into the
+local system. This parameter is compared against the
+Calling Party Number Information Element got from the
+telephone exchange.
+
+This keyword is
+mandatory for the ipr interfaces.
+
+This keyword
+may have a wildcard parameter &rsquo;*&rsquo; to permit
+anyone dialing in.
+
+remote-subaddr-incoming
+
+The remote subaddress used to
+verify an incoming call. When a remote site dials in, this
+subaddress is used to verify that it is the correct remote
+site which is herewith authorized to connect into the local
+system. This parameter is compared against the Calling
+Party Subaddress Information Element got from the
+telephone exchange.
+
+This keyword is
+mandatory for the ipr interfaces.
+
+This keyword
+may have a wildcard parameter &rsquo;*&rsquo; to permit
+anyone dialing in.
+
+unitlength
+
+The length of a
+charging unit in seconds. This is used in conjunction with
+the idletime to decide when to hang up a connection.
+(optional)
+
+unitlengthsrc
+
+This keyword is
+used to specify from which source isdnd(8) takes the
+unitlength for short-hold mode. The currently configurable
+values are:
+
+none
+
+Then unitlength
+is not specified anywhere.
+
+cmdl
+
+Use the
+unitlength specified on the command line.
+
+conf
+
+Use the
+unitlength specified in the configuration file with the
+keyword unitlength.
+
+rate
+
+Use the
+unitlength from the ratesfile specified in the configuration
+file with the keyword ratetype.
+
+aocd
+
+Use a
+dynamically calculated unitlength in case AOCD is subscribed
+on the ISDN line. (AOCD is an acronym for
+&rsquo;&rsquo;Advice Of Charge During the call&rsquo;&rsquo;
+which is a service provided by the telecommunications (ie
+phone) provider, to indicate billable units).
+
+usrdevicename
+
+Specifies the
+user-land interface which is used for interfacing ISDN B
+channel data to the user-land. The keyword is mandatory.
+This keyword accepts the following parameters:
+
+ipr
+
+This parameter
+configures a raw HDLC IP over ISDN interface.
+
+isp
+
+This parameter
+configures a synchronous PPP over ISDN interface.
+
+rbch
+
+This specifies
+a Raw B CHannel access interface.
+
+tel
+
+ISDN
+telephony.
+
+ing
+
+configures an
+ISDN B-channel to NetGraph interface.
+
+usrdeviceunit
+
+Specifies the
+unit number for the device which is specified with
+usrdevicename.
+
+usedown
+
+is used to
+enable the use of the keywords downtries and
+downtime in the entries section(s). It is used in the
+isdnd daemon to dynamically enable and disable the IP
+interfaces to avoid excessive dialing activities in case of
+transient failures (such as busy lines). This parameter is
+optional and is set to off by default.
+
+usesubaddr
+
+is used to
+enable the use of subaddresses. This parameter is optional
+and is set to off by default.
+
+valid
+
+Note:
+this feature is considered experimental! The parameter to
+this keyword is a string specifying a time range within
+which this entry is valid. The time specification consists
+of a list of weekdays and/or a holiday indicator ( see also
+the holidayfile keyword in the system section )
+separated by commas followed by an optional daytime range
+specification in the form hh:mm-hh:mm. The weekdays are
+specified as numbers from 0 to 6 and the number 7 for
+holidays:
+
+0
+
+Sunday
+
+1
+
+Monday
+
+2
+
+Tuesday
+
+3
+
+Wednesday
+
+4
+
+Thursday
+
+5
+
+Friday
+
+6
+
+Saturday
+
+7
+
+a Holiday
+
+The following
+examples describe the "T-ISDN xxl" tariff of the
+german Telekom:
+
+1,2,3,4,5,6,09:00-18:00
+
+Monday through Saturday,
+daytime 9:00 to 18:00
+
+1,2,3,4,5,6,18:00-9:00
+
+Monday through Saturday,
+nighttime 18:00 to 9:00
+
+0,7
+
+Sunday and on
+holidays, all 24 hours
+
+The use of this
+keyword is optional.
+
+IDLETIME CALCULATION AND
+SHORT-HOLD MODE 
+incoming calls
+
+It is assumed
+that the calling side knows most about charging structures
+and such and as a consequence only the keyword
+idletime-incoming has a function for incoming
+calls.
+
+For incoming
+calls the line is constantly monitored, and in case there
+was not traffic taking place for the time in seconds
+specified by idletime-incoming the call is
+closed.
+
+Typically,
+idletime-incoming is used as a last resort and is
+therefore set much higher than a charging unit time: typical
+values are one to five minutes.
+
+outgoing calls
+
+Outgoing call
+disconnect time can be setup in one of three ways:
+
+simple mode
+
+For simple
+mode, the idle-algorithm-outgoing must be
+fix-unit-size and the selected unitlength must
+be 0 (zero) and idletime-outgoing greater zero.
+
+The outgoing
+traffic is constantly monitored, and in case there was not
+traffic taking place for the time in seconds specified by
+idletime-outgoing the call is closed.
+
+Typical values
+in simple mode are 10 to 30 seconds.
+
+shorthold mode for fixed unit
+charging
+
+For shorthold mode, the
+idle-algorithm-outgoing must be fix-unit-size
+and the selected unitlength and
+idletime-outgoing must be greater than 0 (zero);
+earlyhangup must be >= 0 (zero).
+
+||||
+
+| | | | 
++------------------+-------------+--------------+ 
+| | | | 
+| ||| 
+||
+
+During the
+unchecked window which is (unitlength -
+(idle-time+earlyhangup)) in length, no idle check is done.
+After the unchecked window has ended, the line is checked
+for idle-time length if no traffic takes place. In case
+there was traffic detected in the check-window, the same
+procedure is restarted at the beginning of the next unit. In
+case no traffic was detected during the check-window, the
+line is closed at the end of the check window.
+
+Notice:
+unitlength must (!) be greater than the sum of
+idletime-outgoing and earlyhangup!
+
+shorthold mode for variable unit
+charging
+
+For shorthold mode, the
+idle-algorithm-outgoing must be var-unit-size
+and the selected unitlength and
+idletime-outgoing must be greater than 0 (zero);
+
+This shorthold
+mode is suitable when your calls are billed on the elapse
+time of the call plus a fixed connection charge. For example
+British Telecom bill this way.
+
+Each call is
+divided into two periods, the first is the unchecked
+period and the second is the checked. The
+checked period starts 1 second before the first units
+time expires.
+
+During the
+checked period if there is no traffic for
+idle-time seconds the call is disconnected.
+
+||
+
++------------------+-------------+ 
+| || 
+||
+
+Experience
+shows that useful values for idle-time are from 15 to 30
+seconds.
+
+If idle-time is
+too short an application that is not yet finished with the
+network will cause a new call to be placed.
+
+FILES 
+/etc/isdn/isdnd.rc
+
+The default
+configuration file for the isdnd ISDN daemon.
+
+SEE ALSO
+
+regex(3), re_format(7),
+isdnd(8), isdnmonitor(8)
+
+AUTHORS
+
+The isdnd(8) daemon and this
+manual page were written by Hellmuth Michaelis
+hm [AT] FreeBSD.org>.
+
+Additions to
+this manual page by Barry Scott
+barry [AT] scottb.uk>.
+
+BSD
+August 11, 2002 BSD

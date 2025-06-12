@@ -1,0 +1,398 @@
+NAME
+
+Shapefile.tmpl,
+Makefile.tmpl, Release.tmpl, release.c.tmpl &mdash;
+templates in the shapeTools RMS
+
+DESCRIPTION
+
+When working
+with the shapeTools Release Management System, all system
+model files (Shape- and Makefiles) must be derived from
+templates, namely Shapefile.tmpl and
+Makefile.tmpl. The templates define a certain number
+of standard macros names used througout the shapeTools RMS.
+Deriving system model files from the templates is mainly
+filling in the appropriate macro values. The following
+section gives an overview of all macro names defined in the
+templates and a short explanation on the semantics of each
+macro.
+
+Release.tmpl
+and release.c.tmpl are templates for release
+identification files. They do not need to be adapted in any
+way.
+
+MACROS
+
+The following
+is a list of macros that occur in the Shape- and Makefile
+templates. Most of them are defined in the Makefile. As
+Makefiles are included in the Shapefiles, these are used by
+both, calls of make and calls of shape. Some shape specific
+macros (defined in the Shapefile template) are described at
+the end of this section.
+
+As the
+shapeTools RMS performs recursive calls of shape (resp.
+make), some of the standard macro settings get inherited to
+a recursively called sub-build-process. The macros are
+marked in the list accordingly. The inheritance mechanism
+allows installation dependent macros (eg. BASE) to be set
+for the whole project by only modifying the value in the top
+level Shape-/Makefile.
+
+Locations
+and General Macros 
+BASE (inherited)
+
+The base directory of the
+project&rsquo;s central source repository.
+
+NODEPATH
+
+The relative path name of a
+system node within the project&rsquo;s source repository. In
+the top node, this macro has an empty value. For subsystems,
+it is to be set to the path relative to $(BASE) (eg.
+"/subsystem/library").
+
+NODENAME
+
+A short name for the developed
+system node. This name will also to be used for generating
+release identification strings having the form
+-.
+
+HOSTSYSTEM (inherited)
+
+The underlying operating
+system. The value of the HOSTSYSTEM macro is built after the
+schema s-. This macro has different
+meanings in make and in shape. 
+Make treats it as an an extension to a known base path
+for accessing the appropriate versions of operating system
+dependent files. The base path points to a directory
+containing subdirectories for each supported operating
+system type. All subdirectories carry the same list of
+filenames with in each case different (operating system
+specific) contents. 
+For shape, the HOSTSYSTEM macro is treated as variant
+definition. With the corresponding variant definition
+defined in the variant definitions include file (see
+shape_stdvar(7)), a whole bunch of macros is set (resp.
+modified).
+
+HOSTTYPE (inherited)
+
+The machine architecture. This
+macro should be used for installing different binaries (for
+different machine architectures) compiled from the same
+program source in a heterogeneous network. On systems
+containing the arch command, HOSTTYPE may be
+dynamically set by HOSTTYPE=&rsquo;arch&rsquo;. This macro
+is currently not supported in the default installation
+setup.
+
+SWITCHES (inherited)
+
+Preprocessor switches for
+conditional compilation. This macro may be used for system
+wide switching on/off certain program behavior. The SWITCHES
+are passed as arguments to the language preprocessor.
+
+INSTALLBASE (inherited)
+
+Locations and modes for
+installation of executables, header files, libraries, and
+manuals. The INSTALLBASE macro eases the definition and
+redefinition of the following installation path macros, as
+the values of these may cite INSTALLBASE. Each of the
+installation path macros may also be set to a value
+independent of INSTALLBASE. 
+INSTALLBINPATH (inherited) - installation directory for
+executables 
+INSTALLBINMODE (inherited) - file protection mode to be set
+for installed executables 
+INSTALLINCPATH (inherited) - installation directory for
+include files 
+INSTALLINCMODE (inherited) - file protection mode to be set
+for installed include files 
+INSTALLLIBPATH (inherited) - installation directory for
+libraries 
+INSTALLLIBMODE (inherited) - file protection mode to be set
+for installed libraries 
+INSTALLMANPATH (inherited) - installation directory for
+manuals 
+INSTALLMANMODE (inherited) - file protection mode to be set
+for installed manuals 
+Installimn manuals using the INSTALLMANPATH macro expects
+appropriate manX (man1, ...) subdirectories there.
+
+LIBPATH (inherited)
+
+The directory, where local
+libraries, developed within the project, shall be installed
+for project wide use.
+
+INCLUDEPATH (inherited)
+
+Similar to LIBPATH. The
+location of project internal header files.
+
+The System
+Components
+
+TARGET
+
+The name of the main target to be built. This can be a
+program, a library, or anything else to be produced. If the
+construction of the main target does not require any real
+transformation (if eg. only subsystems are to be built), it
+is advisable to have a file $(SUBSYSTEMNAME).date as main
+target. The system building action should just touch this
+file, so that it&rsquo;s modification date shows, when the
+last system building action happened. If the managed system
+consists of multiple programs, this macro should be
+multiplied (eg. TARGET_1 TARGET_2 ... TARGET_N). In that
+case, all places in the Makefile, where $(TARGET) occurs
+have to be modified accordingly !
+
+VERSIONFILE
+
+The name of a file, used as
+release number generator. With each new release, a new
+version of this file is generated automatically. When
+developing a program, this file ideally contains exactly one
+function returning a version identification string. When
+using the ShapeTools version control system&rsquo;s
+attribute citation mechanism, the contents of such a file
+needs only to be written once and never be changed
+afterwards. There are different prototypes for such a file
+in $(LIBPATH)/shape. For system parts not incorporating an
+executable program, any other source file could be chosen as
+release number generator. In any case should $(VERSIONFILE)
+never be saved explicitly by the user.
+
+VERSIONOBJECT
+
+The object file (.o file)
+derived from VERSIONFILE. This macros is only to be set,
+when VERSIONFILE contains program text.
+
+SUBSYSTEMS
+
+All subdirectories, where
+additional parts of the system wait for being built. For
+each subtarget, a recursive shape (resp. make) call is
+performed with the current macro settings getting inherited.
+The SUBSYSTEMS will be build before TARGET. This macro may
+also be empty.
+
+ALIASES
+
+This is a list of aliases for
+TARGET. This macro is to be set, when TARGET should be
+accessible by multiple names (eg. a program to be activated
+under different names).
+
+SOURCES
+
+A list of all programming
+language source files belonging to the system. In the case
+of C development, these are the .c files
+
+HEADERS
+
+The header files belonging to
+the system. The .h files in case on C
+development.
+
+AUXSOURCES
+
+Auxiliary source files. These
+are source files that shall also be processed when building
+the system, but that are not genuine part of the system.
+These are for example sources of auxiliary test programs,
+needed to perform test in the development area.
+
+AUXHEADERS
+
+Auxiliary header files, similar
+to auxiliary sources.
+
+VARIANTSOURCES 
+VARIANTHEADERS
+
+Equally named source and header
+files, located in subdirectories, each named after a certain
+variant. For system building, only one of the directories is
+used, according to the specified HOSTSYSTEM. In the
+shape_RMS environment, the subdirectory names should be
+chosen from the value set of the HOSTSYSTEM macro (for more
+details, see the description of the HOSTSYSTEM macro
+above).
+
+MANUALS
+
+The manual files for the
+system, distinguished by categories.
+
+COMPONENTS
+
+All source components belonging
+to the system. These are the source files (SOURCES), the
+include files (HEADERS), the manuals (MANUALS), the
+Shapefile, the Makefile and a (generated) file named
+Dependencies.
+
+OBJECTS
+
+All files, automatically
+produced during a build process except TARGET. These are
+usually the .o files.
+
+Tools, Flags
+and Libraries 
+MAKE (inherited)
+
+The make program. This macro is
+used for recursive calls of make. During execution of shape,
+this macro is explicitly (in the Shapefile) set to the value
+of the SHAPE macro. This causes recursive builds also to be
+performed by shape.
+
+SHELL (inherited)
+
+The shell to be used by make,
+resp. shape for interpreting the build actions in the
+Makefile or Shapefile.
+
+CC (inherited)
+
+The C compiler to be used.
+
+CFLAGS (inherited)
+
+The C compilation flags (see
+SWITCHES for additional compilation flags).
+
+LDFLAGS (inherited)
+
+The linker flags.
+
+RANLIB (inherited)
+
+The program for adding a table
+of contents to archives.
+
+SYSLIBS (inherited)
+
+Additional system libraries to
+be linked to TARGET
+
+LOCALLIBS
+
+Local libraries to be linked to
+TARGET
+
+LINTLIBS
+
+Libraries to be invoked when
+executing "lint".
+
+Shape
+Specific Macros 
+VERSIONS
+
+The default version binding
+(version selection) rule to be applied for each component.
+Selection rules are globally defined in the
+$(SHAPELIBPATH)/stdrules file (see shape_stdrul(7)). It is
+strongly recommended, to define a project wide version
+selection policy only in the stdrules file and to renounce
+version selection rules in local Shapefiles.
+
+BINDDEFAULT (inherited)
+
+Internal name for VERSIONS.
+Should not be redefined.
+
+BINDINSTALL (inherited)
+
+THe default version binding
+rule to be applied when installang a system or system part
+for project wide or global use.
+
+COMPILER (inherited)
+
+The compile environment. This
+macro represents a shape variant selection. With each
+variant, a whole bunch of macro settings may be associated,
+so that the COMPILER variant not only sets the actual
+compiler (CC), but also some compilation flags. See
+stdvar for the default variant raster. The same as
+version selection rules, the variant raster should be
+defined project wide. Local variant definitions can very
+easyly lead to confusion and improper configurations.
+
+QUALITY (inherited)
+
+The desired quality of the
+produced object code. This is also a variant definition (see
+stdvar for other options).
+
+RELEASEBASE (inherited) 
+PARTIALRELEASEBASE (inherited)
+
+The base of the directory tree,
+where prereleases and releases of the system are to be
+constructed. When building a (pre)release, the appropriate
+versions of all components of the system are copied from the
+development area to the release area. The release area
+should only be used for performing final tests and for
+bundling up a shippable package.
+
+RELEASESRCPATH
+
+The relative path within the
+release or partial release area where the suorce files ar to
+be copied to. Ususally, this is identical to
+$(NODEPATH).
+
+RELEASEMANPATH
+
+The relative path within the
+release or partial release area where all manuals are
+gathered.
+
+SHAPELIBPATH (inherited)
+
+The directory, where all common
+parts of the shape_RMS environment reside. Here are all the
+templates and shape include files located.
+
+.BPOOL:
+
+This is rather a pseudu-target,
+than a Macro. Shape interprets this as directive that causes
+only the listed files ($(OBJECTS)) to be put into the
+derived object cache. Defining the pseudo target .NOBPOOL:
+(without dependents) deactivates the derived object cache.
+This is necessary, when the development environment requires
+access to the same derived object cache from machines with
+different architectures. The reason is, that "dbm"
+databases (and derived object caches use dbm databases) are
+not portable between different machine architectures.
+
+FILES
+
+Shapefile.tmpl-
+Template for node specific Shapefiles 
+Makefile.tmpl- Template for node specific Makefiles 
+release.c.template 
+Release.template
+
+SEE ALSO
+
+shape_RMS(1)

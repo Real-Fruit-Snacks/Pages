@@ -1,0 +1,364 @@
+NAME
+
+mh-sequence -
+sequence specification for nmh message system
+
+DESCRIPTION
+
+A sequence (or
+sequence set) is a symbolic name representing a message or
+collection of messages. nmh has several internally
+defined sequences, as well as allowing users to define their
+own sequences.
+
+Message
+Specification and Pre-Defined Message Sequences 
+Most nmh commands accept a &rsquo;msg&rsquo; or
+&rsquo;msgs&rsquo; specification, where &rsquo;msg&rsquo;
+indicates one message and &rsquo;msgs&rsquo; indicates one
+or more messages. To designate a message, you may use either
+its number (e.g., 1, 10, 234) or one of these
+&ldquo;reserved&rdquo; message names:
+
+first
+
+the first message in the folder
+
+last
+
+the last message in the folder
+
+cur
+
+the most recently accessed message
+
+prev
+
+the message numerically preceding &ldquo;cur&rdquo;
+
+next
+
+the message numerically following &ldquo;cur&rdquo;
+
+In commands
+that take a &rsquo;msg&rsquo; argument, the default is
+&ldquo;cur&rdquo;. As a shorthand, &ldquo;.&rdquo; is
+equivalent to &ldquo;cur&rdquo;.
+
+For example: In
+a folder containing five messages numbered 5, 10, 94, 177
+and 325, &ldquo;first&rdquo; is 5 and &ldquo;last&rdquo; is
+325. If &ldquo;cur&rdquo; is 94, then &ldquo;prev&rdquo; is
+10 and &ldquo;next&rdquo; is 177.
+
+The word
+&rsquo;msgs&rsquo; indicates that one or more messages may
+be specified. Such a specification consists of one message
+designation or of several message designations, as separate
+arguments. A message designation consists either of a
+message name as defined above, or a message range.
+
+A message range
+is specified as &ldquo;name1-name2&rdquo; or
+&ldquo;name:n&rdquo;, where &rsquo;name&rsquo;,
+&rsquo;name1&rsquo; and &rsquo;name2&rsquo; are message
+names, and &rsquo;n&rsquo; is an integer.
+
+The
+specification &ldquo;name1-name2&rdquo; designates all
+currently existing messages from &rsquo;name1&rsquo; to
+&rsquo;name2&rsquo; inclusive. The &ldquo;reserved&rdquo;
+message name &ldquo;all&rdquo; is a shorthand for the
+message range &ldquo;first-last&rdquo;.
+
+The
+specification &ldquo;name:n&rdquo; designates up to
+&rsquo;n&rsquo; messages. These messages start with
+&rsquo;name&rsquo; if &rsquo;name&rsquo; is a message number
+or one of the reserved names &ldquo;first&rdquo;
+&ldquo;cur&rdquo;, or &ldquo;next&rdquo;, The messages end
+with &rsquo;name&rsquo; if &rsquo;name&rsquo; is
+&ldquo;prev&rdquo; or &ldquo;last&rdquo;. The interpretation
+of &rsquo;n&rsquo; may be overridden by preceding
+&rsquo;n&rsquo; with a plus or minus sign; &rsquo;+n&rsquo;
+always means up to &rsquo;n&rsquo; messages starting with
+&rsquo;name&rsquo;, and &rsquo;-n&rsquo; always means up to
+&rsquo;n&rsquo; messages ending with &rsquo;name&rsquo;.
+
+Substituting
+&rsquo;=&rsquo; for &rsquo;:&rsquo; (i.e.,
+&ldquo;name=n&rdquo;) will reduce the selection from a range
+of up to &rsquo;n&rsquo; messages, to a selection of just
+the &rsquo;n&rsquo;th message. So for example, while
+&ldquo;name:-3&rdquo; selects the 3 messages ending with
+&rsquo;name&rsquo;, &ldquo;name=-3&rdquo; selects just the
+2nd previous message. It is an error if the requested
+message does not exist (i.e., there aren&rsquo;t enough
+messages in the folder).
+
+In commands
+which accept a &rsquo;msgs&rsquo; argument, the default is
+either &ldquo;cur&rdquo; or &ldquo;all&rdquo;, depending on
+which makes more sense for each command (see the individual
+man pages for details). Repeated specifications of the same
+message have the same effect as a single specification of
+the message.
+
+There is also a
+special &ldquo;reserved&rdquo; message name
+&ldquo;new&rdquo; which is used by the mhpath
+command.
+
+User-Defined
+Message Sequences 
+In addition to the &ldquo;reserved&rdquo; (pre-defined)
+message names given above, nmh supports user-defined
+sequence names. User-defined sequences allow the nmh
+user a tremendous amount of power in dealing with groups of
+messages in the same folder by allowing the user to bind a
+group of messages to a meaningful symbolic name.
+
+The name used
+to denote a message sequence must consist of an alphabetic
+character followed by zero or more alphanumeric characters,
+and can not be one of the &ldquo;reserved&rdquo; message
+names above. After defining a sequence, it can be used
+wherever an nmh command expects a &rsquo;msg&rsquo;
+or &rsquo;msgs&rsquo; argument.
+
+Some forms of
+message ranges are allowed with user-defined sequences. The
+specification &ldquo;name:n&rdquo; may be used, and it
+designates up to the first &rsquo;n&rsquo; messages (or last
+&rsquo;n&rsquo; messages for &rsquo;-n&rsquo;) which are
+elements of the user-defined sequence
+&rsquo;name&rsquo;.
+
+The
+specifications &ldquo;name:next&rdquo; and
+&ldquo;name:prev&rdquo; may also be used, and they designate
+the next or previous message (relative to the current
+message) which is an element of the user-defined sequence
+&rsquo;name&rsquo;. The specifications
+&ldquo;name:first&rdquo; and &ldquo;name:last&rdquo; are
+equivalent to &ldquo;name:1&rdquo; and
+&ldquo;name:-1&rdquo;, respectively. The specification
+&ldquo;name:cur&rdquo; is not allowed (use just
+&ldquo;cur&rdquo; instead). The syntax of these message
+range specifications is subject to change in the future.
+
+Single messages
+(as opposed to ranges) may also be selected by substituting
+&rsquo;=&rsquo; for &rsquo;:&rsquo;, as in
+&ldquo;name=n&rdquo;. This will reduce the selection from
+being a range of up to &rsquo;n&rsquo; messages, to being a
+selection of just the &rsquo;n&rsquo;th message. So while
+&ldquo;seq:5&rdquo; selects the first 5 messages of sequence
+&rsquo;seq&rsquo;, &ldquo;seq=5&rdquo; selects just the 5th
+message of the sequence. It is an error if the requested
+message does not exist (i.e., there aren&rsquo;t at least
+&rsquo;n&rsquo; messages in the sequence).
+
+User-defined
+sequence names are specific to each folder. They are defined
+using the pick and mark commands.
+
+Public and
+Private User-Defined Sequences 
+There are two varieties of user-defined sequences: public
+and private. Public sequences of a folder are accessible to
+any nmh user that can read that folder. They are kept
+in each folder in the file determined by the
+&ldquo;mh-sequences&rdquo; profile entry (default is
+.mh_sequences). Private sequences are accessible only
+to the nmh user that defined those sequences and are
+kept in the user&rsquo;s nmh context file.
+
+In general, the
+commands that create sequences (such as pick and
+mark) will create public sequences if the folder for
+which the sequences are being defined is writable by the
+nmh user. For most commands, this can be overridden
+by using the switches -public and -private.
+But if the folder is read-only, or if the
+&ldquo;mh-sequences&rdquo; profile entry is defined but
+empty, then private sequences will be created
+instead.
+
+Sequence
+Negation 
+Nmh provides the ability to select all messages not
+elements of a user-defined sequence. To do this, the user
+should define the entry &ldquo;Sequence-Negation&rdquo; in
+the nmh profile file; its value may be any string.
+This string is then used to preface an existing user-defined
+sequence name. This specification then refers to those
+messages not elements of the specified sequence name. For
+example, if the profile entry is:
+
+Sequence-Negation:
+not
+
+then any time
+an nmh command is given &ldquo;notfoo&rdquo; as a
+&rsquo;msg&rsquo; or &rsquo;msgs&rsquo; argument, it would
+substitute all messages that are not elements of the
+sequence &ldquo;foo&rdquo;.
+
+Obviously, the
+user should beware of defining sequences with names that
+begin with the value of the &ldquo;Sequence-Negation&rdquo;
+profile entry.
+
+The Previous
+Sequence 
+Nmh provides the ability to remember the
+&rsquo;msgs&rsquo; or &rsquo;msg&rsquo; argument last given
+to an nmh command. The entry
+&ldquo;Previous-Sequence&rdquo; should be defined in the
+nmh profile; its value should be a sequence name or
+multiple sequence names, as separate arguments. If this
+entry is defined, when an nmh command finishes, it
+will define the sequence(s) named in the value of this entry
+to be those messages that were specified to the command.
+Hence, a profile entry of
+
+Previous-Sequence:
+pseq
+
+directs any
+nmh command that accepts a &rsquo;msg&rsquo; or
+&rsquo;msgs&rsquo; argument to define the sequence
+&ldquo;pseq&rdquo; as those messages when it finishes.
+
+Note:
+there can be a performance penalty in using the
+&ldquo;Previous-Sequence&rdquo; facility. If it is used,
+all nmh programs have to write the sequence
+information to the .mh_sequences file for the folder
+each time they run. If the &ldquo;Previous-Sequence&rdquo;
+profile entry is not included, only pick and
+mark will write to the .mh_sequences file.
+
+The Unseen
+Sequence 
+Finally, many users like to indicate which messages have not
+been previously seen by them. The commands flist,
+inc, mhshow, rcvstore, and show
+honor the profile entry &ldquo;Unseen-Sequence&rdquo; to
+support this activity. This entry in the .mh_profile
+should be defined as one or more sequence names, as separate
+arguments. If there is a value for
+&ldquo;Unseen-Sequence&rdquo; in the profile, then whenever
+new messages are placed in a folder (using inc or
+rcvstore), the new messages will also be added to all
+the sequences named in this profile entry. For example, a
+profile entry of
+
+Unseen-Sequence:
+unseen
+
+directs
+inc to add new messages to the sequence
+&ldquo;unseen&rdquo;. Unlike the behavior of the
+&ldquo;Previous-Sequence&rdquo; entry in the profile,
+however, the sequence(s) will not be zeroed by
+inc.
+
+Similarly,
+whenever show, mhshow, next, or
+prev displays a message, that message will be removed
+from any sequences named by the
+&ldquo;Unseen-Sequence&rdquo; entry in the profile.
+
+Sequence
+File Format 
+The sequence file format is based on the RFC 5322 message
+format. Each line of the sequence file corresponds to one
+sequence. The line starts with the sequence name followed by
+a &rsquo;:&rsquo;, then followed by a space-separated list
+of message numbers that correspond to messages that are part
+of the named sequence. A contiguous range of messages can be
+represented as &ldquo;lownum-highnum&rdquo;.
+
+Sample
+sequence file
+
+work: 3 6 8
+22-33 46 
+unseen: 47 49-51 54 
+cur: 46
+
+Nmh
+commands that modify the sequence file will silently remove
+sequences for nonexistent messages when the sequence file is
+updated. The exception to this is the &ldquo;cur&rdquo;
+sequence, which is allowed to point to a nonexistent
+message.
+
+Sequence
+File Locking 
+The &ldquo;datalocking&rdquo; profile entry controls the
+type of locking used when reading and writing sequence
+files. The locking mechanisms supported are detailed in
+mh-profile(5). This protects sequence file integrity
+when multiple nmh commands are run simultaneously.
+Nmh commands that modify the sequence file use
+transactional locks; the lock is held from the time the
+sequence file is read until it it written out. This ensures
+that modifications to the sequence file will not be lost if
+multiple commands are run simultaneously. Long-running
+nmh commands, such as inc and pick,
+will release the sequence lock during the bulk of their
+runtime and reread the sequence file after their processing
+is complete to reduce lock contention time.
+
+Note: Currently
+transactional locks are only supported for public sequences;
+private sequences will not get corrupted, but the
+possibility exists that two nmh commands run
+simultaneously that add messages to a private sequence could
+result in one command&rsquo;s messages not appearing on the
+requested sequence.
+
+FILES
+
+$HOME/.mh-profile
+
+The user&rsquo;s profile.
+
+/context
+
+The user&rsquo;s context.
+
+/.mh-sequences
+
+File for public sequences.
+
+PROFILE COMPONENTS
+
+mh-sequences:
+
+Name of file to store public
+sequences. 
+
+Sequence-Negation:
+
+To designate messages not in a sequence.
+
+Previous-Sequence:
+
+The last message specification given.
+
+Unseen-Sequence:
+
+Those messages not yet seen by the user.
+
+SEE ALSO
+
+flist(1),
+mark(1), pick(1), mh-profile(5)
+
+DEFAULTS
+
+None

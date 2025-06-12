@@ -1,0 +1,134 @@
+NAME
+
+nfsmount.conf -
+Configuration file for NFS mounts
+
+SYNOPSIS
+
+Configuration
+file for NFS mounts that allows options to be set globally,
+per server or per mount point.
+
+DESCRIPTION
+
+The
+configuration file is made up of multiple section headers
+followed by variable assignments associated with that
+section. A section header is defined by a string enclosed by
+[ and ] brackets. Variable assignments are
+assignment statements that assign values to particular
+variables using the = operator, as in
+Proto=Tcp. The variables that can be assigned are the
+set of NFS specific mount options listed in nfs(5)
+together with the filesystem-independant mount options
+listed in mount(8) and three additions:
+Sloppy=True has the same effect as the -s
+option to mount, and Foreground=True and
+Background=True have the same effect as bg and
+fg.
+
+Options in the
+config file may be given in upper, lower, or mixed case and
+will be shifted to lower case before being passed to the
+filesystem.
+
+Boolean mount
+options which do not need an equals sign must be given as
+"option=True". Instead of preceeding such
+an option with "no" its negation must be
+given as "option=False".
+
+Sections are
+broken up into three basic categories: Global options,
+Server options and Mount Point options.
+
+[ NFSMount_Global_Options
+] 
+
+- This statically named section
+defines all
+
+of the global mount options
+that can be applied to every NFS mount.
+
+[ Server
+"Server_Name" ]
+
+- This section defines all the
+mount options
+
+that should be used on mounts
+to a particular NFS server. The
+"Server_Name" strings needs to be
+surrounded by &rsquo;"&rsquo; and be an exact match
+(ignoring case) of the server name used in the mount
+command.
+
+[ MountPoint
+"Mount_Point" ]
+
+- This section defines all the
+mount 
+
+options that should be used on
+a particular mount point. The "Mount_Point"
+string needs to be surrounded by &rsquo;"&rsquo; and be
+an exact match of the mount point used in the mount
+command. Though path names are usually case-sensitive, the
+Mount_Point name is matched insensitive to case.
+
+The sections
+are processed in the reverse of the order listed above, and
+any options already seen, either in a previous section or on
+the command line, will be ignored when seen again.
+
+EXAMPLES
+
+These are some
+example lines of how sections and variables are defined in
+the configuration file.
+
+[
+NFSMount_Global_Options ] 
+Proto=Tcp
+
+The TCP/IPv4
+protocol will be used on every NFS mount.
+
+[ Server
+"nfsserver.foo.com" ] 
+rsize=32k 
+wsize=32k 
+proto=udp6
+
+A 32k (32768
+bytes) block size will be used as the read and write size on
+all mounts to the &rsquo;nfsserver.foo.com&rsquo; server.
+UDP/IPv6 is the protocol to be used.
+
+[ MountPoint
+"/export/home" ] 
+Background=True
+
+All mounts to
+the &rsquo;/export/home&rsquo; export will be performed in
+the background (i.e. done asynchronously).
+
+FILES
+
+/etc/nfsmount.conf
+
+Default NFS mount configuration
+file
+
+/etc/nfsmount.conf.d
+
+When this directory exists and
+files ending with ".conf" exist, those files will
+be used to set configuration variables. These files will
+override variables set in /etc/nfsmount.conf
+
+SEE ALSO
+
+nfs(5),
+mount(8),

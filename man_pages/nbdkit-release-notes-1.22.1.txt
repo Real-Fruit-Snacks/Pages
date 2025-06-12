@@ -1,0 +1,347 @@
+NAME
+
+nbdkit-release-notes-1.22
+- release notes for nbdkit 1.22
+
+DESCRIPTION
+
+These are the
+release notes for nbdkit stable release 1.22. This describes
+the major changes since 1.20.
+
+nbdkit 1.22.0
+was released on 27 August 2020.
+
+Security
+
+There were no security issues found. All past security
+issues and information about how to report new ones can be
+found in nbdkit-security(1).
+
+Plugins
+
+New nbdkit-cdi-plugin(1) (Containerized Data
+Importer) lets you export a single layer from a container
+image, allowing you to access disk images distributed using
+container registry infrastructure.
+
+New
+nbdkit-ondemand-plugin(1) creates filesystems for
+clients on demand.
+
+New
+nbdkit-torrent-plugin(1) serves a BitTorrent file or
+magnet link over NBD.
+
+nbdkit-data-plugin(1)
+and nbdkit-memory-plugin(1) have a new
+"allocator" parameter giving more fine-grained
+control over the allocation strategy. Currently implemented
+strategies are: sparse array, sparse array with zstd
+compression, malloc, and malloc with mlock.
+
+nbdkit-data-plugin(1)
+data format now supports strings and alignment. The
+"disk2data.pl" script has been enhanced to detect
+repeated sequences and produce a more compact output.
+
+nbdkit-curl-plugin(1)
+adds support for arbitrary custom request headers. Also it
+now supports scripts for generating cookies and custom
+request headers. This is especially useful when accessing
+web servers that require authentication which has to be
+renewed periodically.
+
+nbdkit-curl-plugin(1)
+now supports HTTP/2 servers (David Edmondson, Pino Toscano,
+Zi Liu).
+
+nbdkit-curl-plugin(1)
+adds support for the "User-Agent" header.
+
+nbdkit-file-plugin(1)
+can export multiple files in a directory as separate exports
+(Eric Blake).
+
+nbdkit-file-plugin(1)
+supports new "cache=none" and
+"fadvise=normal|random|sequential" parameters
+which can be used to optimize access patterns and avoid
+filling the page cache.
+
+nbdkit-nbd-plugin(1)
+supports proxying to another NBD server over
+"AF_VSOCK" (Eric Blake).
+
+nbdkit-nbd-plugin(1)
+supports new "command=" and "socket-fd="
+parameters which allow you to run a subordinate NBD server
+as a command directly from the plugin, or pass in an already
+connected NBD endpoint.
+
+nbdkit-streaming-plugin(1)
+supports streaming to and from local pipes.
+
+nbdkit-vddk-plugin(1)
+now has support for VDDK 7.0. A new and useless
+"error" message printed by VDDK 7 has been
+suppressed (thanks Ming Xie, Pino Toscano).
+
+nbdkit-ext2-plugin
+has been removed. It was deprecated in nbdkit 1.17.8.
+All existing uses can be replaced with
+nbdkit-ext2-filter(1).
+
+The
+"-" character is now permitted within plugin and
+filter names (Eric Blake).
+
+Filters
+
+New nbdkit-ddrescue-filter(1) lets you test disk
+images recovered by ddrescue(1) (Fran&ccedil;ois
+Revol).
+
+New
+nbdkit-gzip-filter(1) can decompress a plugin that
+contains gzip-compressed data. It replaces
+nbdkit-gzip-plugin which is deprecated and will be removed
+in nbdkit 1.26.
+
+New
+nbdkit-pause-filter(1) can temporarily stop and later
+resume NBD requests. This can be used when taking
+snapshots.
+
+New
+nbdkit-swab-filter(1) swaps bytes in the underlying
+plugin, which can be used to adjust images that have an
+incorrect byte order (Fran&ccedil;ois Revol).
+
+New
+nbdkit-tar-filter(1) reads and writes files inside a
+tar file in the underlying plugin. It replaces
+nbdkit-tar-plugin which is deprecated and will be removed in
+nbdkit 1.26.
+
+New
+nbdkit-tls-fallback-filter(1) provides alternate
+content when a client connects without using TLS to a server
+that permits but does not require TLS (Eric Blake).
+
+nbdkit-fua-filter(1)
+has new option "fuamode=pass" to pass through FUA
+and flush requests unchanged (disabling the filter). A new,
+unsafe "fuamode=discard" mode was added which
+discards FUA and flush requests.
+
+Language
+bindings 
+New nbdkit-cc-plugin(3) lets you write small nbdkit
+plugins as inline C, C++ or OCaml "scripts" (and
+potentially other ahead-of-time compiled programming
+languages).
+
+nbdkit-rust-plugin(3)
+bindings have been replaced by higher level and more
+idiomatic bindings. These also support a greater range of
+server features (Alan Somers).
+
+nbdkit-python-plugin(3)
+now supports parallel plugins. These cannot run Python code
+in parallel (because of the Python GIL), but for Python code
+that blocks, eg. calling out to external services, requests
+can now be handled in parallel (thanks Nir Soffer).
+
+nbdkit-python-plugin(3)
+has a greater range of examples (Nir Soffer).
+
+nbdkit-python-plugin(3)
+adds support for getting the client export name, calling
+"nbdkit_debug", and also for extents.
+
+Server
+
+"nbdkit --dump-config" has new fields:
+"version_major" and "version_minor" to
+allow easier version parsing from scripts.
+"host_cpu" and "host_os" so you can find
+out if nbdkit was cross-compiled for another platform.
+"zstd=(yes|no)" so you can find out if nbdkit was
+compiled with zstd compression support.
+
+The
+-e/--exportname option (which never did
+anything useful previously) is now used to pass the
+preferred exportname to the --run option. In general
+you should never use this option except in very limited and
+exceptional circumstances (Eric Blake).
+
+API 
+New ".after_fork" callback which can be used for
+plugins which need to create background threads, since those
+threads would otherwise be stranded if the server forks into
+the background. The VDDK plugin now defers VDDK library
+initialization til ".after_fork" because it is
+thought that the library creates background threads
+especially when accessing remote servers.
+
+New API
+"nbdkit_extents_aligned" is a helper function for
+filters that retrieves extents as needed until at least a
+certain range is covered (Eric Blake).
+
+New
+"nbdkit_is_tls" can be called to determine if TLS
+was negotiated on the connection. Plugins could use this to
+hide certain exports from non-authenticated/non-encrypted
+clients (Eric Blake).
+
+"nbdkit_read_password"
+with "password=-" will now return an error if the
+input is not a tty. Also "password=-FD" is
+disallowed if the file descriptor is 0, 1 or 2.
+
+Bug
+fixes 
+The VDDK plugin was extensively refactored to fix many bugs:
+Reading passwords from a tty should work again. The plugin
+should now work properly when daemonized or using the
+--run option. The threading model has been relaxed to
+"SERIALIZE_REQUESTS" which should give small
+performance improvements when using multiple
+connections.
+
+The
+"base64" option of nbdkit-data-plugin(1)
+has been fixed so it sets the implicit size correctly.
+
+The
+"nbdkit-data-plugin(1) now works if you use it more
+than once.
+
+Documentation
+
+New nbdkit-client(1) manual page documents how to
+mount filesystems from NBD exports on client machines,
+either directly or using systemd mountpoints.
+
+Examples now
+use "NBDKIT_API_VERSION 2" so that the examples
+match the documentation.
+
+Tests
+
+The tests should now pass on OpenBSD &ge; 6.4.
+
+tests/Makefile.am
+was refactored: There is now no longer a single massive
+"EXTRA_DIST". Creation of test disks was
+refactored.
+
+Some tests will
+now use new libnbd 1.4 tools nbdcopy(1) and
+nbdinfo(1) if available, and skip the tests
+otherwise.
+
+New test
+functions "requires_plugin" and
+"requires_filter" allows tests to be skipped if
+the corresponding plugin/filter was not compiled on a
+particular platform. So tests should now not fail when an
+optional external library needed by a plugin/filter is not
+available.
+
+Build
+
+Honggfuzz may now be used for fuzz testing.
+
+If
+nbdkit-python-plugin(3) is enabled, Python &ge; 3.6
+must be used.
+
+Internals
+
+The export name is now passed down through filter
+".open" callbacks, allowing filters to modify the
+export name passed through to plugins.
+
+The final
+thread model is passed to filter ".get_ready"
+callbacks.
+
+SEE ALSO
+
+nbdkit(1).
+
+AUTHORS
+
+Authors of
+nbdkit 1.22: 
+Alan Somers
+
+(7 commits)
+
+Eric Blake
+
+(53 commits)
+
+Fran&ccedil;ois Revol
+
+(2 commits)
+
+Nir Soffer
+
+(2 commits)
+
+Richard W.M. Jones
+
+(285 commits)
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

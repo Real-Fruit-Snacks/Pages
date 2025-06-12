@@ -1,0 +1,112 @@
+SAVECORE(8) BSD System Manager&rsquo;s Manual
+SAVECORE(8)
+
+NAME
+
+savecore &mdash; save a
+core dump of the operating system
+
+SYNOPSIS
+
+savecore &minus;c 
+savecore &minus;C [&minus;v]
+[directory device] 
+savecore [&minus;fkvz]
+[directory [device ...]]
+
+DESCRIPTION
+
+The savecore utility
+copies a core dump into directory, or the current
+working directory if no directory argument is given,
+and enters a reboot message and information about the core
+dump into the system log.
+
+The options are
+as follows:
+
+&minus;C
+
+Check to see if
+a dump exists, and display a brief message to indicate the
+status. An exit status of 0 indicates that a dump is there,
+1 indicates that none exists. This option is compatible only
+with the [&minus;v] option.
+
+&minus;c
+
+Clear the dump,
+so that future invocations of savecore will ignore
+it.
+
+&minus;f
+
+Force a dump to
+be taken even if the dump was cleared.
+
+&minus;k
+
+Do not clear
+the dump after saving it.
+
+&minus;v
+
+Print out some
+additional debugging information.
+
+&minus;z
+
+Compress the
+core dump and kernel (see gzip(1)).
+
+The
+savecore utility looks for dumps on each device
+specified by the device argument(s), or on each
+device in /etc/fstab marked as
+&rsquo;&rsquo;dump&rsquo;&rsquo; or
+&rsquo;&rsquo;swap&rsquo;&rsquo;. The savecore
+utility checks the core dump in various ways to make sure
+that it is complete. If it passes these checks, it saves the
+core image in directory/vmcore.# and information
+about the core in directory/info.# The
+&rsquo;&rsquo;#&rsquo;&rsquo; is the number from the first
+line of the file directory/bounds, and it is
+incremented and stored back into the file each time
+savecore successfully runs.
+
+The
+savecore utility also checks the available disk space
+before attempting to make the copies. If there is
+insufficient disk space in the file system containing
+directory, or if the file directory/minfree
+exists and the number of free kilobytes (for non-superusers)
+in the file system after the copies were made would be less
+than the number in the first line of this file, the copies
+are not attempted.
+
+If
+savecore successfully copies the kernel and the core
+dump, the core dump is cleared so that future invocations of
+savecore will ignore it.
+
+The
+savecore utility is meant to be called near the end
+of the initialization file /etc/rc (see rc(8)).
+
+BUGS
+
+The minfree code does not
+consider the effect of compression or sparse files.
+
+SEE ALSO
+
+gzip(1), getbootfile(3),
+dumpon(8), syslogd(8)
+
+HISTORY
+
+The savecore utility
+appeared in 4.1BSD.
+
+BSD
+September 23, 1994 BSD

@@ -1,0 +1,201 @@
+CONFIG(8) BSD System Manager&rsquo;s Manual
+CONFIG(8)
+
+NAME
+
+config &mdash; build
+system configuration files
+
+SYNOPSIS
+
+config
+[&minus;gp] [&minus;d destdir]
+SYSTEM_NAME
+
+DESCRIPTION
+
+This is the old version of the
+config utility. It understands the old
+autoconfiguration scheme used on the HP300, i386,
+DECstation, and derivative platforms. The new version of
+config is used with the SPARC platform. Only the
+version of config applicable to the architecture that
+you are running will be installed on your machine.
+
+The
+config utility builds a set of system configuration
+files from the file SYSTEM_NAME which describes the
+system to configure. A second file tells config what
+files are needed to generate a system and can be augmented
+by configuration specific set of files that give alternate
+files for a specific machine (see the FILES section
+below).
+
+Available
+options and operands:
+
+&minus;d
+destdir
+
+Use
+destdir as the output directory, instead of the
+default one. Note that config does not append
+SYSTEM_NAME to the directory given.
+
+&minus;g
+
+Configure a
+system for debugging.
+
+&minus;p
+
+Configure a
+system for profiling; for example, kgmon(8) and gprof(1). If
+two or more &minus;p options are supplied,
+config configures a system for high resolution
+profiling.
+
+SYSTEM_NAME
+
+Specify the
+name of the system configuration file containing device
+specifications, configuration options and other system
+parameters for one system configuration.
+
+The
+config utility should be run from the conf
+subdirectory of the system source (usually
+/sys/ARCH/conf), where ARCH represents one of
+the architectures supported by FreeBSD. The config
+utility creates the directory ../compile/SYSTEM_NAME
+or the one given with the &minus;d option as
+necessary and places all output files there. The output of
+config consists of a number of files; for the i386,
+they are: ioconf.c, a description of what I/O devices
+are attached to the system; Makefile, used by make(1)
+in building the system; header files, definitions of the
+number of various devices that will be compiled into the
+system.
+
+After running
+config, it is necessary to run &rsquo;&rsquo;make
+depend&rsquo;&rsquo; in the directory where the new makefile
+was created. The config utility prints a reminder of
+this when it completes.
+
+If any other
+error messages are produced by config, the problems
+in the configuration file should be corrected and
+config should be run again. Attempts to compile a
+system that had configuration errors are likely to fail.
+
+If the
+options INCLUDE_CONFIG_FILE is used in the
+configuration file the entire input file is embedded in the
+new kernel. This means that strings(1) can be used to
+extract it from a kernel: to extract the configuration
+information, use the command
+
+strings -n 3
+kernel | sed -n &rsquo;s/^___//p&rsquo;
+
+DEBUG KERNELS
+
+Traditional BSD kernels are
+compiled without symbols due to the heavy load on the system
+when compiling a &rsquo;&rsquo;debug&rsquo;&rsquo; kernel. A
+debug kernel contains complete symbols for all the source
+files, and enables an experienced kernel programmer to
+analyse the cause of a problem. The debuggers available
+prior to 4.4BSD&minus;Lite were able to find some
+information from a normal kernel; gdb(1) provides very
+little support for normal kernels, and a debug kernel is
+needed for any meaningful analysis.
+
+For reasons of
+history, time and space, building a debug kernel is not the
+default with FreeBSD: a debug kernel takes up to 30% longer
+to build and requires about 30 MB of disk storage in the
+build directory, compared to about 6 MB for a non-debug
+kernel. A debug kernel is about 11 MB in size, compared to
+about 2 MB for a non-debug kernel. This space is used both
+in the root file system and at run time in memory. Use the
+&minus;g option to build a debug kernel. With this
+option, config causes two kernel files to be built in
+the kernel build directory:
+
+&bull;
+
+kernel.debug is the
+complete debug kernel.
+
+&bull;
+
+kernel is a copy of the
+kernel with the debug symbols stripped off. This is
+equivalent to the normal non-debug kernel.
+
+There is
+currently little sense in installing and booting from a
+debug kernel, since the only tools available which use the
+symbols do not run on-line. There are therefore two options
+for installing a debug kernel:
+
+&bull;
+
+&rsquo;&rsquo;make
+install&rsquo;&rsquo; installs kernel in the root
+file system.
+
+&bull;
+
+&rsquo;&rsquo;make
+install.debug&rsquo;&rsquo; installs kernel.debug in
+the root file system.
+
+FILES 
+/sys/conf/files
+
+list of common
+files system is built from
+
+/sys/conf/Makefile.ARCH
+
+generic
+makefile for the ARCH
+
+/sys/conf/files.ARCH
+
+list of
+ARCH specific files
+
+/sys/ARCH/compile/SYSTEM_NAME
+
+default kernel
+build directory for system SYSTEM_NAME on
+ARCH.
+
+SEE ALSO
+
+config(5)
+
+The
+SYNOPSIS portion of each device in section 4.
+
+Building 4.3 BSD UNIX System
+with Config
+
+.
+
+BUGS
+
+The line numbers reported in
+error messages are usually off by one.
+
+HISTORY
+
+The config utility
+appeared in 4.1BSD.
+
+BSD July 4,
+2001 BSD

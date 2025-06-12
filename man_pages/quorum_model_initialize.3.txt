@@ -1,0 +1,156 @@
+NAME
+
+quorum_model_initialize
+- Create a new connection to the Quorum service
+
+SYNOPSIS
+
+#include
+
+cs_error_t
+quorum_model_initialize(quorum_handle_t
+*handle, quorum_model_t model,
+quorum_model_data_t *model_data, uint32_t
+*quorum_type,void
+*context);
+
+DESCRIPTION
+
+The
+quorum_model_initialize function is an enhanced way
+to initialize a connection to the quorum API.
+
+Each
+application may have several connections to the quorum API.
+Each application uses the handle argument to uniquely
+identify the connection. The handle argument is then
+used in other function calls to identify the connection to
+be used for communication with the quorum service.
+
+The
+model is used to explicitly choose set of callbacks
+and internal parameters. Currently two models
+QUORUM_MODEL_V0 and QUORUM_MODEL_V1 are
+defined. QUORUM_MODEL_V0 exists only for
+compatibility reasons with quorum_initialize(3)
+function and it is not recommended to be used as an argument
+for quorum_model_initialize(3).
+
+The Following
+description is focused only on QUORUM_MODEL_V1
+model.
+
+Every time the
+voting configuration changes (eg a node joins or leave the
+cluster) or the quorum status changes the quorum callback is
+called. The quorum callback function is described by the
+following type definitions:
+
+typedef void
+(*quorum_v1_quorum_notification_fn_t) ( 
+quorum_handle_t handle, 
+uint32_t quorate, 
+struct quorum_ring_id ring_id, 
+uint32_t member_list_entries, 
+const uint32_t *member_list 
+);
+
+Also every time
+when membership configuration changes (eg a node joins or
+leave the cluster) the node list change callback is called
+before the quorum callback. The node list change callback
+function is described by the following type definitions:
+
+typedef void
+(*quorum_v1_nodelist_notification_fn_t) ( 
+quorum_handle_t handle, 
+struct quorum_ring_id ring_id, 
+uint32_t member_list_entries, 
+const uint32_t *member_list, 
+uint32_t joined_list_entries, 
+const uint32_t *joined_list, 
+uint32_t left_list_entries, 
+const uint32_t *left_list 
+);
+
+The
+model_data argument for QUORUM_MODEL_V1 is of
+the type:
+
+typedef struct
+{ 
+quorum_model_t model; 
+quorum_v1_quorum_notification_fn_t quorum_notify_fn; 
+quorum_v1_nodelist_notification_fn_t nodelist_notify_fn;
+
+} quorum_model_v1_data_t;
+
+It&rsquo;s not
+required (nor recommended) to set model field in the
+structure. It is also fine if only some of notification
+callbacks are used (only these events will be delivered
+then).
+
+The
+quorum_type argument is set to:
+
+#define
+QUORUM_FREE 0 
+#define QUORUM_SET 1
+
+QUORUM_FREE
+value means that no quorum algorithm is loaded and that no
+callbacks will take place.
+
+QUORUM_SET
+value means that one quorum algorithm is configured and that
+callbacks will take place.
+
+The
+context argument sets context same way as
+quorum_context_set(3).
+
+When a
+configuration change occurs, the callback is called from the
+quorum_dispatch(3) function.
+
+RETURN VALUE
+
+This call
+returns the CS_OK value if successful, otherwise an error is
+returned.
+
+ERRORS
+
+CS_ERR_TRY_AGAIN
+Resource temporarily unavailable
+
+CS_ERR_INVALID_PARAM
+Invalid argument
+
+CS_ERR_ACCESS
+Permission denied
+
+CS_ERR_LIBRARY
+The connection failed
+
+CS_ERR_INTERRUPT
+System call interrupted by a signal
+
+CS_ERR_NOT_SUPPORTED
+The requested protocol/functionality not supported
+
+CS_ERR_MESSAGE_ERROR
+Incorrect auth message received
+
+CS_ERR_NO_MEMORY
+Not enough memory to complete the requested task
+
+SEE ALSO
+
+quorum_overview(3),
+quorum_initialize(3), quorum_finalize(3),
+quorum_getquorate(3), quorum_trackstart(3),
+quorum_trackstop(3), quorum_fd_get(3),
+quorum_dispatch(3), quorum_context_set(3),
+quorum_context_get(3)

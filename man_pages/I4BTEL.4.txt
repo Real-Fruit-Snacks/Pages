@@ -1,0 +1,122 @@
+I4BTEL(4) BSD Kernel Interfaces Manual I4BTEL(4)
+
+NAME
+
+i4btel &mdash; isdn4bsd
+ISDN B-channel telephony interface driver
+
+SYNOPSIS
+
+device
+"i4btel" [count]
+
+DESCRIPTION
+
+The i4btel driver
+provides an interface to the ISDN B-channel for telephony
+applications and is currently used by the isdnd(8) for
+answering machine support. The driver is part of the
+isdn4bsd package.
+
+The lower six
+bits of the drivers&rsquo;s minor number is used to specify
+a unit number, whereas the upper two bits specify a
+functionality.
+
+Functionality
+zero is the usual telephony data stream i/o driver.
+
+Functionality
+one is used to enable commands to dial out and hang up and
+receive responses about the state of the dial out progress
+and status. This commands may change in the future, for
+details see the file i4b_tel_ioctl.h and the
+isdnphone(8) utility.
+
+The telephony
+data stream comes out of the line in a bit-reversed format,
+so the i4btel driver does the bit-reversion process
+in any case.
+
+Additionally,
+the user can specify to do A-law to u-law, u-law to A-law or
+no conversion at all in the i4btel driver by using the
+isdntelctl(8) utility.
+
+The driver is
+able to process several ioctl&rsquo;s:
+
+I4B_TEL_GETAUDIOFMT
+
+get currently used audio format
+conversion.
+
+I4B_TEL_SETAUDIOFMT
+
+set currently used audio format
+conversion.
+
+I4B_TEL_EMPTYINPUTQUEUE
+
+clear the input queue.
+
+For the
+I4B_TEL_GETAUDIOFMT and I4B_TEL_SETAUDIOFMT, the following
+parameters are available:
+
+CVT_NONE
+
+do no A-law/u-law audio format
+conversion. The conversion path looks like this:
+
+USER 
+bitreversing  ISDN-line
+
+CVT_ALAW2ULAW
+
+set set audio format conversion
+to do an audio conversion from A-law (on the ISDN line) to
+u-law (in the userland). The read(2) conversion path looks
+like this:
+
+USER 
+
+and the
+write(2) conversion path looks like this:
+
+USER -->
+u-law/A-law --> bitreversing --> ISDN-line
+
+CVT_ULAW2ALAW
+
+set set audio format conversion
+to do an audio conversion from u-law (on the ISDN line) to
+A-law (in the userland). The read(2) conversion path looks
+like this:
+
+USER 
+
+and the
+write(2) conversion path looks like this:
+
+USER -->
+A-law/u-law --> bitreversing --> ISDN-line
+
+SEE ALSO
+
+g711conv(1), isdnd.rc(5),
+isdnd(8), isdnphone(8), isdntelctl(8)
+
+STANDARDS
+
+A-Law and u-Law are specified in
+ITU Recommendation G.711.
+
+AUTHORS
+
+The i4btel device driver
+and this manpage were written by Hellmuth Michaelis
+hm [AT] FreeBSD.org>.
+
+BSD
+July 28, 2002 BSD

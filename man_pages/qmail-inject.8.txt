@@ -1,0 +1,213 @@
+NAME
+
+qmail-inject -
+preprocess and send a mail message
+
+SYNOPSIS
+
+qmail-inject
+[ -nNaAhH ] [ -fsender ] [ recip
+... ]
+
+DESCRIPTION
+
+qmail-inject
+reads a mail message from its standard input, adds
+appropriate information to the message header, and invokes
+qmail-queue to send the message to one or more
+recipients.
+
+See
+qmail-header(5) for information on how
+qmail-inject rewrites header fields.
+
+qmail-inject
+normally exits 0. It exits 100 if it was invoked improperly
+or if there is a severe syntax error in the message. It
+exits 111 for temporary errors.
+
+ENVIRONMENT VARIABLES
+
+For the
+convenience of users who do not run qmail-inject
+directly, qmail-inject takes many options through
+environment variables.
+
+The user name
+in the From header field is set by QMAILUSER,
+MAILUSER, USER, or LOGNAME, whichever
+comes first.
+
+The host name
+is normally set by the defaulthost control but can be
+overridden with QMAILHOST or MAILHOST.
+
+The personal
+name is QMAILNAME, MAILNAME, or
+NAME.
+
+The default
+envelope sender address is the same as the default
+From address, but it can be overridden with
+QMAILSUSER and QMAILSHOST. It may also be
+modified by the r and m letters described
+below. Bounces will be sent to this address.
+
+If
+QMAILMFTFILE is set, qmail-inject reads a list
+of mailing list addresses, one per line, from that file. If
+To+Cc includes one of those addresses (without regard to
+case), qmail-inject adds a Mail-Followup-To field
+with all the To+Cc addresses. qmail-inject does not
+add Mail-Followup-To to a message that already has one.
+
+The
+QMAILINJECT environment variable can contain any of
+the following letters:
+
+c
+
+Use address-comment style for the From field.
+Normally qmail-inject uses name-address style.
+
+s
+
+Do not look at any incoming Return-Path field.
+Normally, if Return-Path is supplied, it sets the
+envelope sender address, overriding all environment
+variables. Return-Path is deleted in any case.
+
+f
+
+Delete any incoming From field. Normally, if
+From is supplied, it overrides the usual From
+field created by qmail-inject.
+
+i
+
+Delete any incoming Message-ID field. Normally,
+if Message-ID is supplied, it overrides the usual
+Message-ID field created by qmail-inject.
+
+r
+
+Use a per-recipient VERP. qmail-inject will
+append each recipient address to the envelope sender of the
+copy going to that recipient.
+
+m
+
+Use a per-message VERP. qmail-inject will append
+the current date and process ID to the envelope sender.
+
+OPTIONS
+
+-a
+
+Send the message to all
+addresses given as recip arguments; do not use header
+recipient addresses.
+
+-h
+
+Send the message to all header recipient addresses. For
+non-forwarded messages, this means the addresses listed
+under To, Cc, Bcc,
+Apparently-To. For forwarded messages, this means the
+addresses listed under Resent-To, Resent-Cc,
+Resent-Bcc. Do not use any recip
+arguments. 
+
+-A
+
+(Default.) Send the message to all addresses given as
+recip arguments. If no recip arguments are
+supplied, send the message to all header recipient
+addresses. 
+
+-H
+
+Send the message to all header recipient addresses, and
+to all addresses given as recip arguments.
+
+-fsender
+
+Pass sender to
+qmail-queue as the envelope sender address. This
+overrides Return-Path and all environment
+variables.
+
+-N
+
+(Default.) Feed the resulting message to
+qmail-queue. 
+
+-n
+
+Print the message rather than feeding it to
+qmail-queue. 
+
+CONTROL FILES
+
+defaultdomain
+
+Default domain name. Default:
+me, if that is supplied; otherwise the literal name
+defaultdomain, which is probably not what you want.
+qmail-inject adds this name to any host name without
+dots, including defaulthost if defaulthost
+does not have dots. (Exception: see plusdomain.)
+
+The
+QMAILDEFAULTDOMAIN environment variable overrides
+defaultdomain.
+
+defaulthost
+
+Default host name. Default:
+me, if that is supplied; otherwise the literal name
+defaulthost, which is probably not what you want.
+qmail-inject adds this name to any address without a
+host name. defaulthost need not be the current
+host&rsquo;s name. For example, you may prefer that outgoing
+mail show just your domain name.
+
+The
+QMAILDEFAULTHOST environment variable overrides
+defaulthost.
+
+idhost
+
+Host name for Message-IDs.
+Default: me, if that is supplied; otherwise the
+literal name idhost, which is certainly not what you
+want. idhost need not be the current host&rsquo;s
+name. For example, you may prefer to use fake host names in
+Message-IDs. However, idhost must be a
+fully-qualified name within your domain, and each host in
+your domain should use a different idhost.
+
+The
+QMAILIDHOST environment variable overrides
+idhost.
+
+plusdomain
+
+Plus domain name. Default:
+me, if that is supplied; otherwise the literal name
+plusdomain, which is probably not what you want.
+qmail-inject adds this name to any host name that
+ends with a plus sign, including defaulthost if
+defaulthost ends with a plus sign. If a host name
+does not have dots but ends with a plus sign,
+qmail-inject uses plusdomain, not
+defaultdomain.
+
+The
+QMAILPLUSDOMAIN environment variable overrides
+plusdomain.
+
+SEE ALSO
+
+addresses(5),
+qmail-control(5), qmail-header(5), qmail-queue(8)

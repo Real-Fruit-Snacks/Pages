@@ -1,0 +1,646 @@
+BGPCTL(8) BSD System Manager&rsquo;s Manual
+BGPCTL(8)
+
+NAME
+
+bgpctl &mdash; control
+the BGP routing daemon
+
+SYNOPSIS
+
+bgpctl [-jnV]
+[-s socket] command
+[argument ...]
+
+DESCRIPTION
+
+The bgpctl program
+controls the bgpd(8) daemon. Commands may be abbreviated to
+the minimum unambiguous prefix; for example, s su for
+show summary.
+
+The options are
+as follows:
+
+-j
+
+Create output
+as JSON object.
+
+-n
+
+Show
+neighbors&rsquo; IP addresses instead of their
+description.
+
+-s socket
+
+Use socket to
+communicate with bgpd(8) instead of the default
+/run/openbgpd/bgpd.sock. where
+ is the routing domain bgpctl
+is running in. To administer bgpd(8) in a different routing
+domain, run bgpctl in said routing domain.
+
+-V
+
+Show the
+version and exit.
+
+The commands are
+as follows:
+
+fib [table
+number] couple
+
+Insert the learned routes into
+the specified Forwarding Information Base a.k.a. the kernel
+routing table.
+
+fib [table
+number] decouple
+
+Remove the learned routes from
+the specified Forwarding Information Base a.k.a. the kernel
+routing table.
+
+flowspec add family
+rule [set argument ...]
+
+Add the specified flowspec rule
+to the list of announced rules. Currently family can
+be either inet or inet6. It is possible to set
+various path attributes with additional arguments. Adding a
+rule will replace an existing equal rule, including rules
+loaded from the configuration. See bgpd.conf(5) for
+information on how to write a flowspec rule.
+
+flowspec delete family
+rule
+
+Remove the specified flowspec
+rule from the list of announced rules.
+
+flowspec flush
+
+Remove all dynamically added
+(i.e. with bgpctl flowspec add) flowspec rules from
+the list of announced rules.
+
+flowspec show
+family
+
+Show all announced flowspec
+rules. family, if given, limits the output to the
+given address family. The supported families are inet
+and inet6.
+
+log brief
+
+Disable verbose debug
+logging.
+
+log verbose
+
+Enable verbose debug
+logging.
+
+neighbor peer
+clear [reason]
+
+Stop and restart the BGP
+session to the specified neighbor. If a reason is
+provided, the reason is sent as Administrative
+Shutdown Communication to the neighbor. peer may be
+the neighbor&rsquo;s address, description or the word
+group followed by a group description.
+
+neighbor peer
+destroy
+
+Destroy a previously cloned
+peer. The peer must be down before calling this function.
+peer may be the neighbor&rsquo;s address, description
+or the word group followed by a group
+description.
+
+neighbor peer
+down [reason]
+
+Take the BGP session to the
+specified neighbor down. If a reason is provided, the
+reason is sent as Administrative Shutdown
+Communication to the neighbor. peer may be the
+neighbor&rsquo;s address, description or the word
+group followed by a group description.
+
+neighbor peer
+refresh
+
+Request the neighbor to re-send
+all routes. Note that the neighbor is not obliged to re-send
+all routes, or any routes at all, even if it announced the
+route refresh capability. peer may be the
+neighbor&rsquo;s address, description or the word
+group followed by a group description.
+
+neighbor peer
+up
+
+Bring the BGP session to the
+specified neighbor up. peer may be the
+neighbor&rsquo;s address, description or the word
+group followed by a group description.
+
+network add prefix
+[argument ...]
+
+Add the specified prefix to the
+list of announced networks. It is possible to set various
+path attributes with additional arguments. Adding a prefix
+will replace an existing equal prefix, including prefixes
+loaded from the configuration.
+
+network bulk add
+[argument ...]
+
+Bulk add specified prefixes to
+the list of announced networks. Prefixes should be sent via
+stdin. It is possible to set various path attributes with
+additional arguments.
+
+network bulk delete
+
+Bulk remove the specified
+prefixes from the list of announced networks. Prefixes
+should be sent via stdin.
+
+network delete
+prefix
+
+Remove the specified prefix
+from the list of announced networks.
+
+network flush
+
+Remove all dynamically added
+(i.e. with bgpctl network add) prefixes from the list
+of announced networks.
+
+network mrt file file
+filter
+
+Import networks from an MRT
+table dump for debugging purposes. filter can be
+specified similarly to the show mrt command. Only
+networks matching the filter will be imported.
+
+network show
+family
+
+Show all announced networks.
+family, if given, limits the output to the given
+address family. The supported families are inet and
+inet6.
+
+reload [reason]
+
+Reload the configuration file.
+Changes to the following neighbor options in bgpd.conf(5)
+only take effect when the session is reset: ipsec and
+tcp md5sig.
+
+show fib
+filter
+
+Show routes from
+bgpd(8)&rsquo;s view of the Forwarding Information Base.
+filter can be an IP address, in which case the route
+to this address is shown, or a flag:
+
+bgp
+
+Show only
+routes originating from bgpd(8) itself.
+
+connected
+
+Show only
+connected routes.
+
+inet
+
+Show only IPv4
+routes.
+
+inet6
+
+Show only IPv6
+routes.
+
+nexthop
+
+Show only
+routes required to reach a BGP nexthop.
+
+static
+
+Show only
+static routes.
+
+table number
+
+Show the
+routing table with ID number instead of the default
+routing table with ID 0.
+
+show interfaces
+
+Show the interface states.
+
+show metrics
+
+Dump various BGP statistics in
+OpenMetrics format.
+
+show mrt [options]
+filter
+
+Show routes from an MRT table
+dump file. filter can be an IP address, a CIDR
+prefix, an AS filter, a combination or nothing:
+
+address
+
+Show best
+matching route for address.
+
+address/len
+
+Show RIB entry
+for this CIDR prefix.
+
+address/len all
+
+Show all
+entries in the specified range.
+
+address/len or-shorter
+
+Show all
+entries covering and including the specified prefix.
+
+as as
+
+Show all
+entries with as anywhere in the AS path.
+
+empty-as
+
+Show all
+entries that are internal routes with no AS&rsquo;s in the
+AS path.
+
+neighbor ip
+
+Show only
+entries from the specified peer.
+
+peer-as as
+
+Show all
+entries with as as leftmost AS.
+
+source-as as
+
+Show all
+entries with as as rightmost AS.
+
+transit-as as
+
+Show all
+entries with as anywhere but rightmost.
+
+Additionally,
+the following options are defined:
+
+detail
+
+Show more
+detailed output for matching routes.
+
+family
+
+Limit the
+output to the given address family.
+
+file name
+
+Read the MRT
+dump from file name instead of using stdin.
+
+peers
+
+Print the
+neighbor table of MRT TABLE_DUMP_V2 dumps. Using this on
+other table dumps will only show the neighbor of the first
+entry.
+
+Multiple
+options and filters can be used at the same time.
+
+show neighbor peer
+modifier
+
+Show detailed information about
+the neighbor identified by peer, according to the
+given modifier:
+
+messages
+
+Show statistics
+about sent and received BGP messages.
+
+terse
+
+Show statistics
+in an easily parseable terse format. The printed numbers are
+the sent and received open, sent and received notifications,
+sent and received updates, sent and received keepalives, and
+sent and received route refresh messages plus the current
+and maximum prefix count, the number of sent and received
+updates, sent and received withdraws, the neighbor&rsquo;s
+address (or subnet, for a template), AS number, and finally
+description.
+
+timers
+
+Show the BGP
+timers.
+
+peer may be the
+neighbor&rsquo;s address, description or the word
+group followed by a group description.
+
+show nexthop
+
+Show the list of BGP nexthops
+and the result of their validity check.
+
+show rib [options]
+filter
+
+Show routes from the bgpd(8)
+Routing Information Base. filter can be an IP
+address, a CIDR prefix, an AS filter or nothing:
+
+address
+
+Show best
+matching route for address.
+
+address/len
+
+Show RIB entry
+for this CIDR prefix.
+
+address/len all
+
+Show all
+entries in the specified range.
+
+address/len or-shorter
+
+Show all
+entries covering and including the specified prefix.
+
+as as
+
+Show all
+entries with as anywhere in the AS path.
+
+avs (valid | unknown |
+invalid)
+
+Show all entries with matching
+ASAP Validation State (AVS).
+
+community community
+
+Show all
+entries with community community.
+
+empty-as
+
+Show all
+entries that are internal routes with no AS&rsquo;s in the
+AS path.
+
+large-community large-community
+
+Show all entries with
+large-community large-community.
+
+memory
+
+Show RIB memory
+statistics.
+
+neighbor peer
+
+Show only
+entries from the specified peer.
+
+neighbor group description
+
+Show only entries from the
+specified peer group.
+
+ovs (valid | not-found |
+invalid)
+
+Show all entries with matching
+Origin Validation State (OVS).
+
+path-id pathid
+
+Show only
+entries which match the specified pathid. Must be
+used together with either neighbor or out.
+
+peer-as as
+
+Show all
+entries with as as leftmost AS.
+
+source-as as
+
+Show all
+entries with as as rightmost AS.
+
+summary
+
+This is the
+same as the show summary command.
+
+table rib
+
+Show only
+entries from the specified RIB table.
+
+transit-as as
+
+Show all
+entries with as anywhere but rightmost.
+
+Additionally,
+the following options are defined:
+
+best
+
+Alias for
+selected.
+
+detail
+
+Show more
+detailed output for matching routes.
+
+disqualified
+
+Show only
+routes which are not eligible.
+
+error
+
+Show only
+prefixes which are marked invalid and were treated as
+withdrawn.
+
+family
+
+Limit the
+output to the given address family.
+
+in
+
+Show routes
+from the unfiltered Adj-RIB-In. The neighbor needs to
+be specified.
+
+leaked
+
+Show only
+routes where a route leak was detected.
+
+out
+
+Show the
+filtered routes sent to a neighbor. The neighbor
+needs to be specified.
+
+selected
+
+Show only
+selected routes.
+
+ssv
+
+Show each RIB
+entry as a single line, with fields separated by semicolons.
+Only works if detail is specified.
+
+Options are
+silently ignored when used together with summary or
+memory. Multiple options can be used at the same time
+and the neighbor filter can be combined with other
+filters.
+
+show rtr
+
+Show a list of all RTR
+sessions, including information about the session state.
+
+show sets
+
+Show a list summarizing all
+roa-set, as-set, prefix-set, and
+origin-set tables.
+
+show summary
+
+Show a list of all neighbors,
+including information about the session state and message
+counters:
+
+Neighbor
+
+Description of
+the neighbor.
+
+AS
+
+Autonomous
+system number.
+
+MsgRcvd
+
+Number of
+messages received from the neighbor.
+
+MsgSent
+
+Number of
+messages sent to the neighbor.
+
+OutQ
+
+Number of
+outgoing messages queued.
+
+Up/Down
+
+Number of days
+and hours that the session has been up.
+
+State/PrfRcvd
+
+State of the
+session / Number of routes received. The session is up if
+there is no information for the State column (Established is
+not displayed).
+
+show summary terse
+
+Show a list of all neighbors,
+including information about the session state, in a terse
+format.
+
+show tables
+
+Show a list of all currently
+loaded fib routing tables.
+
+FILES 
+/etc/bgpd.conf
+
+default bgpd(8)
+configuration file
+
+/run/openbgpd/bgpd.sock
+
+default bgpd(8)
+control socket
+
+SEE ALSO
+
+bgpd.conf(5), bgpd(8), bgplg(8),
+bgplgsh(8)
+
+HISTORY
+
+The bgpctl program first
+appeared in OpenBSD 3.5.
+
+BSD May 9,
+2023 BSD

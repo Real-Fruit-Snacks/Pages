@@ -1,0 +1,208 @@
+NAME
+
+curl_url_set -
+set a URL part
+
+SYNOPSIS
+
+#include
+
+CURLUcode
+curl_url_set(CURLU *url, 
+CURLUPart part, 
+const char *content, 
+unsigned int flags)
+
+DESCRIPTION
+
+Given the
+url handle of an already parsed URL, this function
+lets the user set/update individual pieces of it.
+
+The part
+argument should identify the particular URL part (see list
+below) to set or change, with content pointing to a
+null-terminated string with the new contents for that URL
+part. The contents should be in the form and encoding
+they&rsquo;d use in a URL: URL encoded.
+
+Setting a part
+to a NULL pointer will effectively remove that part&rsquo;s
+contents from the CURLU handle.
+
+The
+flags argument is a bitmask with independent
+features.
+
+PARTS
+
+CURLUPART_URL
+
+Allows the full URL of the
+handle to be replaced. If the handle already is populated
+with a URL, the new URL can be relative to the previous.
+
+When
+successfully setting a new URL, relative or absolute, the
+handle contents will be replaced with the information of the
+newly set URL.
+
+Pass a pointer
+to a null-terminated string to the url parameter. The
+string must point to a correctly formatted "RFC
+3986+" URL or be a NULL pointer.
+
+CURLUPART_SCHEME
+
+Scheme cannot be URL decoded on
+set.
+
+CURLUPART_USER 
+CURLUPART_PASSWORD 
+CURLUPART_OPTIONS 
+CURLUPART_HOST
+
+The host name. If it is IDNA
+the string must then be encoded as your locale says or UTF-8
+(when WinIDN is used). If it is a bracketed IPv6 numeric
+address it may contain a zone id (or you can use
+CURLUPART_ZONEID).
+
+CURLUPART_ZONEID
+
+If the host name is a numeric
+IPv6 address, this field can also be set.
+
+CURLUPART_PORT
+
+Port cannot be URL encoded on
+set. The given port number is provided as a string and the
+decimal number must be between 1 and 65535. Anything else
+will return an error.
+
+CURLUPART_PATH
+
+If a path is set in the URL
+without a leading slash, a slash will be inserted
+automatically when this URL is read from the handle.
+
+CURLUPART_QUERY
+
+The query part will also get
+spaces converted to pluses when asked to URL encode on set
+with the CURLU_URLENCODE bit.
+
+If used
+together with the CURLU_APPENDQUERY bit, the provided
+part will be appended on the end of the existing query - and
+if the previous part didn&rsquo;t end with an ampersand
+(&), an ampersand will be inserted before the new
+appended part.
+
+When
+CURLU_APPENDQUERY is used together with
+CURLU_URLENCODE, the first &rsquo;=&rsquo; symbol
+will not be URL encoded.
+
+The question
+mark in the URL is not part of the actual query
+contents.
+
+CURLUPART_FRAGMENT
+
+The hash sign in the URL is not
+part of the actual fragment contents.
+
+FLAGS
+
+The flags
+argument is zero, one or more bits set in a bitmask. 
+CURLU_NON_SUPPORT_SCHEME
+
+If set, allows
+curl_url_set(3) to set a non-supported scheme.
+
+CURLU_URLENCODE
+
+When set,
+curl_url_set(3) URL encodes the part on entry, except
+for scheme, port and URL.
+
+When setting
+the path component with URL encoding enabled, the slash
+character will be skipped.
+
+The query part
+gets space-to-plus conversion before the URL conversion.
+
+This URL
+encoding is charset unaware and will convert the input on a
+byte-by-byte manner.
+
+CURLU_DEFAULT_SCHEME
+
+If set, will make libcurl allow
+the URL to be set without a scheme and then sets that to the
+default scheme: HTTPS. Overrides the
+CURLU_GUESS_SCHEME option if both are set.
+
+CURLU_GUESS_SCHEME
+
+If set, will make libcurl allow
+the URL to be set without a scheme and it instead
+"guesses" which scheme that was intended based on
+the host name. If the outermost sub-domain name matches
+DICT, FTP, IMAP, LDAP, POP3 or SMTP then that scheme will be
+used, otherwise it picks HTTP. Conflicts with the
+CURLU_DEFAULT_SCHEME option which takes precedence if
+both are set.
+
+CURLU_NO_AUTHORITY
+
+If set, skips authority checks.
+The RFC allows individual schemes to omit the host part
+(normally the only mandatory part of the authority), but
+libcurl cannot know whether this is permitted for custom
+schemes. Specifying the flag permits empty authority
+sections, similar to how file scheme is handled.
+
+RETURN VALUE
+
+Returns a
+CURLUcode error value, which is CURLUE_OK (0) if everything
+went fine.
+
+A URL string
+passed on to curl_url_set(3) for the
+CURLUPART_URL part, must be shorter than 8000000
+bytes otherwise it returns CURLUE_MALFORMED_INPUT
+(added in 7.65.0).
+
+If this
+function returns an error, no URL part is returned.
+
+EXAMPLE
+
+CURLUcode rc;
+
+CURLU *url = curl_url(); 
+rc = curl_url_set(url, CURLUPART_URL,
+"https://example.com&quot;, 0); 
+if(!rc) { 
+char *scheme; 
+/* change it to an FTP URL */ 
+rc = curl_url_set(url, CURLUPART_SCHEME, "ftp",
+0); 
+} 
+curl_url_cleanup(url);
+
+AVAILABILITY
+
+Added in curl
+7.62.0. CURLUPART_ZONEID was added in 7.65.0.
+
+SEE ALSO
+
+curl_url_cleanup(3),
+curl_url(3), curl_url_get(3),
+curl_url_dup(3),

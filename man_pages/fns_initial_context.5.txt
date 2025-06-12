@@ -1,0 +1,280 @@
+NAME
+
+fns_initial_context
+&minus; overview of the FNS Initial Context
+
+DESCRIPTION
+
+Every
+FNS name is interpreted relative to some context, and
+every FNS naming operation is performed on a context
+object. The FNS programming interface (XFN) provides
+a function that allows the client to obtain an Initial
+Context object. The Initial Context provides the initial
+pathway to other FNS contexts. FNS defines a
+set of bindings that the client can expect to find in this
+context,
+
+FNS
+assumes that for every process:
+
+1.
+
+There is a user associated with the process when
+fn_ctx_handle_from_initial() is invoked. This
+association is based on the effective uid of the process. In
+the following discussion this user is denoted by U.
+The association of user to process may change during the
+life of a process but does not affect the context handle
+originally returned by
+fn_ctx_handle_from_initial(). 
+
+2.
+
+The process is running on a host when
+fn_ctx_handle_from_initial() is invoked. In the
+following discussion this host is denoted by H.
+
+The following
+atomic names can appear in the Initial Context:
+
+Except for
+..., these names with an added underscore
+(&rsquo;_&rsquo;) prefix are also in the Initial
+Context and have the same binding as their counterpart (for
+example, thishost and _thishost have the same
+binding). In addition, org has the same binding as
+orgunit, and thisuser has the same binding as
+myself. The bindings for these names are summarized
+in the following table.
+
+Some of these
+names may not necessarily appear in all Initial Contexts.
+For example, a process owned by the super-user of a machine
+does not have any of the user-related bindings. Or, for
+another example, an installation that has not set up a site
+namespace will not have the site-related bindings.
+
+...
+
+global context for resolving DNS
+or X.500 names. Synonym: /...
+
+thishost
+
+H&rsquo;s host context.
+Synonym: _thishost
+
+thisens
+
+the enterprise root of
+H. Synonym: _thisens
+
+thisorgunit
+
+H&rsquo;s distinguished
+organizational unit context. In Solaris, this is
+H&rsquo;s NIS+ home domain. Synonym:
+_thisorgunit
+
+myself
+
+U&rsquo;s user context.
+Synonyms: _myself, thisuser
+
+myens
+
+the enterprise root of U. Synonym:
+_myens 
+
+myorgunit
+
+U&rsquo;s distinguished
+organizational unit context. In Solaris, this is
+U&rsquo;s NIS+ home domain. Synonym:
+_myorgunit
+
+user
+
+the context in which users in the same organizational
+unit as H are named. Synonym: _user
+
+host
+
+the context in which hosts in the same organizational
+unit as H are named. Synonym: _host
+
+org
+
+the root context of the organizational unit namespace in
+H&rsquo;s enterprise. In Solaris, this corresponds to
+the NIS+ root domain. Synonyms: orgunit,
+_orgunit 
+
+site
+
+the root context of the site namespace in
+H&rsquo;s enterprise, if the site namespace has been
+configured. Synonym: _site
+
+EXAMPLES
+
+Example 1:
+Names beginning with the enterprise root
+
+The types of
+objects that may be named relative to the enterprise root
+are user, host, service, organizational unit, file, and
+site. Here are some examples of names that begin with the
+enterprise root: 
+thisens/orgunit/multimedia.servers.engineering
+
+names an organizational unit
+multimedia.servers.engineering in H&rsquo;s
+enterprise.
+
+thisens/site/northwing.floor3.admin
+
+names the north wing site, on
+the third floor of the administrations building in
+H&rsquo;s enterprise.
+
+myens/user/hdiffie
+
+names the user hdiffie
+in U&rsquo;s enterprise.
+
+myens/service/teletax
+
+names the teletax
+service of U&rsquo;s enterprise.
+
+Example 2:
+Names beginning with organizational unit names
+
+The types of
+objects that may be named relative to an organizational unit
+name are: user, host, service, file, and site. Here are some
+examples of names that begin with organizational unit names
+(either explicitly via org, or implicitly via
+thisorgunit or myorgunit), and name objects
+relative to organizational unit names when resolved in the
+Initial Context: 
+
+org/accounts_payable.finance/site/videoconference.northwing
+
+names a conference room
+videoconference located in the north wing of the site
+associated with the organizational unit
+accounts_payable.finance.
+
+org/finance/user/mjones
+
+names a user mjones in
+the organizational unit 
+finance.
+
+org/finance/host/inmail
+
+names a machine inmail
+belonging to the organizational unit finance.
+
+org/accounts_payable.finance/fs/pub/blue-and-whites/FY92-124
+
+names a file
+pub/blue-and-whites/FY92-124 belonging to the
+organizational unit accounts_payable.finance.
+
+org/accounts_payable.finance/service/calendar
+
+names the calendar
+service of the organizational unit
+accounts_payable.finance. This might manage the
+meeting schedules of the organizational unit.
+
+thisorgunit/user/cmead
+
+names the user cmead in
+H&rsquo;s organizational unit.
+
+myorgunit/fs/pub/project_plans/widget.ps
+
+names the file
+pub/project_plans/widget.ps exported by
+U&rsquo;s organizational unit&rsquo;s file
+system.
+
+Example 3:
+Names beginning with site names
+
+The types of
+objects that may be named relative to a site name are users,
+hosts, services, and files. Here are some examples of names
+that begin with site names via site, and name objects
+relative to sites when resolved in the Initial Context:
+
+site/b5.mtv/service/printer/speedy
+
+names a printer speedy
+in the b5.mtv site.
+
+site/admin/fs/usr/dist
+
+names a file directory
+usr/dist available in the site admin.
+
+Example 4:
+Names beginning with user names
+
+The types of
+objects that may be named relative to a user name are
+services and files. Here are some examples of names that
+begin with user names (explicitly via user or
+implicitly via thisuser), and name objects relative
+to users when resolved in the Initial Context: 
+user/jsmith/service/calendar
+
+names the 
+calendar service of the user jsmith.
+
+user/jsmith/fs/bin/games/riddles
+
+names the file
+bin/games/riddles of the user jsmith.
+
+thisuser/service/printer
+
+names the printer
+service of U.
+
+Example 5:
+Names beginning with host names
+
+The types of
+objects that may be named relative to a host name are
+services and files. Here are some examples of names that
+begin with host names (explicitly via host or implicitly
+via thishost), and name objects relative to hosts when
+resolved in the Initial Context: 
+host/mailhop/service/mailbox
+
+names the 
+mailbox service associated with the machine
+mailhop.
+
+host/mailhop/fs/pub/saf/archives.91
+
+names the directory
+pub/saf/archives.91 found under the root directory of
+the machine mailhop.
+
+thishost/service/printer
+
+names the printer
+service of H.
+
+SEE ALSO
+
+nis+(1),
+geteuid(2), fn_ctx_handle_from_initial(3XFN),
+xfn(3XFN), fns(5), fns_policies(5)

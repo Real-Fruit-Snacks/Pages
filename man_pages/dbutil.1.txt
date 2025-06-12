@@ -1,0 +1,243 @@
+NAME
+
+dbutil &minus;
+database utility
+
+SYNOPSIS
+
+dbutil
+{&minus;d | &minus;&minus;dump} dbfile
+
+dbutil
+{&minus;q | &minus;&minus;query} [&minus;t] dbfile
+key
+
+dbutil
+{&minus;u | &minus;&minus;update} [&minus;n] dbfile
+key [value]
+
+dbutil
+{&minus;x | &minus;&minus;delete} dbfile key
+
+dbutil &minus;t
+[date | [+|&minus;]interval]
+
+DESCRIPTION
+
+The dbutil
+program maintains a database of key-value pairs that can be
+queried and updated from the command line. For each such
+pair in the database, it also keeps an expiration time, so
+that unused entries can be purged from the database. dbutil
+must be given an option specifying in which mode to run the
+program. The following modes are available: 
+&minus;&minus;dump (&minus;d)
+
+Prints the contents of the
+database. Each database entry is printed in one of the the
+following two formats, depending on whether the record has
+an expiration time:
+
+key
+value
+
+key
+value (expiration-time)
+
+&minus;&minus;query
+(&minus;q)
+
+Prints the value of a
+particular key in the database. If the &minus;t flag
+is also specified, prints the expiration time of the record.
+In addition, the &minus;&minus;expire flag can be
+specified to update the expiration time on the record. Exits
+0 if the key was found, 1 if the key was not in the
+database, or 2 if there is a system error.
+
+&minus;&minus;update
+(&minus;u)
+
+Sets the value of a key in the
+database to a particular value. If no value is supplied,
+sets the value to the empty string (which is not the same as
+deleting the record). The &minus;&minus;expire flag
+can also be specified to set an expiration time on the
+record.
+
+Ordinarily,
+this option overwrites any previous value in the database.
+If the &minus;n option is supplied, dbutil will not
+overwrite a previously stored value in the database (and
+will not update the expiration time on the record). Exits 0
+if the key was found, 1 if &minus;n was specified and
+the key was already in the database, or 2 if there is a
+system error.
+
+&minus;&minus;expire={date
+| [+|&minus;]interval}
+
+This option can be specified in
+conjunction with &minus;&minus;update or
+&minus;&minus;query to set an expiration time on the
+record. The option has two formats. You can either specify
+an absolute time, as the number of seconds since Jan 1, 1970
+GMT, or you can specify an offset from the
+current time with the format:
+
+[+|&minus;]countunits
+
+Where +
+means in the future, &minus; means in the past,
+count is a number, and units is one of the
+following characters: 
+s &minus; seconds 
+m &minus; minutes 
+h &minus; hours 
+D &minus; days 
+W &minus; weeks 
+M &minus; months 
+Y &minus; years
+
+For example
+&minus;&minus;expire=+36D means the record will be
+deleted in 36 days. If you always look up key with
+the command:
+
+dbutil
+&minus;&minus;query &minus;&minus;expire=+36D
+key
+
+then the key
+will only expire if you do not look it up within 36
+days.
+
+Note that
+dbutil keeps a sorted list of the records by time of last
+access. Thus, purging old records is not an inherently
+expensive operation, and happens automatically whenever you
+modify the database.
+
+&minus;&minus;nosync
+(&minus;N)
+
+Ordinarily, dbutil
+synchronously flushes the database file to disk after making
+any modifications, to minimize the window of vulnerability
+in which a crash could corrupt the database (if the
+&minus;&minus;dbhome option is not supplied).
+Synchronously flushing the database file is slow, however.
+This option suppresses that behavior, and can be used to
+build lookup tables efficiently. For example, you might have
+a script that builds a file x.db by issuing the
+following commands:
+
+        #!/bin/sh &minus;e
+        rm &minus;f x.db~
+        dbutil &minus;Nu x.db~ key1 val1
+        dbutil &minus;Nu x.db~ key2 val2
+        # ...
+        dbutil &minus;Nu x.db~ keyn valn
+        dbutil &minus;u @ @
+        mv &minus;f x.db~ x.db
+
+&minus;&minus;delete
+(&minus;x)
+
+Deletes a particular key from
+the database (if the database contains the key). Exits 0 if
+the key was found, 1 if the key was not in the database, or
+2 if there was a system error.
+
+&minus;t
+[date|interval]
+
+With no options, prints the
+number of seconds since Jan 1, 1970, GMT.
+With an argument that takes the same format as
+&minus;&minus;expire, prints the expiration time as
+an absolute number of seconds since 1970. Not really a
+database function, but useful hen you want to store a
+timestamp in the database.
+
+Note that
+&minus;t can also be combined with the
+&minus;&minus;query option, in which case it causes
+dbutil to print the expiration time of the key, rather than
+its value.
+
+dbutil attempts
+to minimize the damage from an inopportune crash by flushing
+the database file to disk whenever it is modified. However,
+there is still a small window in which your database can be
+irrevocably corrupted. This may be alright if you are just
+using the database to store "soft state".
+
+If you want the
+database to be recoverable under any circumstances, you must
+use write-ahead logging, in which case dbutil needs to keep
+a directory with database logs, not just a single database
+file. The following option specifies where to keep the log
+files. It must be used in conjunction with the other options
+for each mode except &minus;t: 
+&minus;&minus;dbhome=dbhome
+
+Specifies that database log
+files should be kept in directory dbhome (which will
+be created if it does not already exist). Note that database
+files with relative pathnames will also be stored in this
+directory. It is highly recommended that you use relative
+pathnames so as to store database files and log files
+together. Otherwise, you run the risk of accessing a logged
+database without the &minus;&minus;dbhome option and
+trashing its contents.
+
+ENVIRONMENT
+
+DB_HOME
+
+When set, specifies a directory
+in which to keep log files, so as to make the database
+crash-recoverable. This is equivalent to specifying the
+option &minus;&minus;dbhome=$DB_HOME (except that any
+actual &minus;&minus;dbhome argument will override
+the environment variable).
+
+SEE ALSO
+
+avenger(1)
+
+The Mail
+Avenger home page: http://www.mailavenger.org/&gt;.
+
+BUGS
+
+If you do not
+use the &minus;&minus;dbhome option or
+DB_HOME environment variable and your
+machine crashes at the wrong time, you can lose your whole
+database.
+
+The
+&minus;&minus;dbhome may or may not work if the
+directory is stored on NFS ; it depends on
+the NFS implementation.
+
+If you access
+the database from multiple machines simultaneously, you will
+likely corrupt the database. Accessing from multiple
+processes on one machine is fine, because dbutil does
+locking.
+
+If you ever
+access the same database file with and without the
+&minus;&minus;dbhome option (or
+DB_HOME ), you will probably
+irrevocably trash it. For that reason, databases with
+relative pathnames are actually stored in the log
+directory.
+
+AUTHOR
+
+David
+Mazieres

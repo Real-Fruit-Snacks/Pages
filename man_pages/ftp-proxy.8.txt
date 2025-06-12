@@ -1,0 +1,197 @@
+NAME
+
+ftp-proxy -
+application level proxy for the FTP protocol
+
+SYNOPSIS
+
+ftp-proxy
+[-c] [-d|-i] [-f file] [-n] [-v level] [-V]
+
+DESCRIPTION
+
+FTP-Proxy
+acts as an application level gateway between FTP clients and
+servers. Its main purpose is to secure local FTP servers
+against possibly insecure clients or malicious attacks.
+FTP-Proxy is believed to be immune against current known
+attacks based on the FTP protocol.
+
+FTP-Proxy can
+be started from the inetd (or xinetd, or any other) internet
+super daemon or executed on its own as a standalone daemon,
+in which case it will fork child processes to handle
+connections. The behaviour depends on the
+ftp-proxy.conf(5) configuration option
+ServerType or the -i and -d command
+line switches, where the latter two take precedence.
+
+FTP-Proxy
+features a rich set of auditing and command restriction
+capabilities and is specifically suited for deployment in
+firewall environments.
+
+OPTIONS
+
+-V
+
+Print the program&rsquo;s
+version information and terminate with exit code 0.
+
+-c
+
+Read the configuration file, output its contents sorted
+by section and option name to standard output, and terminate
+with exit code 0. This option is mostly interesting for
+diagnostic purposes.
+
+-d
+
+Force FTP-Proxy to run in standalone (daemon) mode, even
+if a ServerType inetd directive exists in the
+configuration file.
+
+-i
+
+Force FTP-Proxy to run in inetd mode, even if a
+ServerType standalone directive exists in the
+configuration file.
+
+-f filename
+
+Specify an alternate
+configuration file to be read instead of the standard
+/etc/proxy-suite/ftp-proxy.conf file.
+
+Please note
+that the default path for the configuration file is a
+compile time option. It can be changed using the
+--prefix and --sysconfdir options when running
+the configure script - see also the INSTALL
+file for usage description.
+
+-n
+
+Do not detach from the controlling terminal. This
+prevents the default of becoming a daemon and is ignored if
+running in inetd mode. The main purpose of this
+option is to support the AIX System Resource Controller or
+similar setups, where several daemons are controlled by a
+master daemon.
+
+-v level
+
+Enable diagnostic output to be
+sent to the file /tmp/ftp-proxy.debug. The given
+level must be in the range from 0 (no output at all) to 4
+(maximum verbosity). See also DIAGNOSTICS bellow.
+
+SIGNALS
+
+SIGTERM,
+SIGQUIT, SIGINT
+
+These signals instruct
+FTP-Proxy to abort any existing transfer, close all
+connections and terminate the process. If the target of the
+signal is a running FTP-Proxy daemon, all current child
+processes wil also be terminated.
+
+SIGHUP
+
+This signal will be accepted if running in daemon mode
+and ignored in inetd mode.
+
+It causes the FTP-Proxy to
+reread its configuration file and to reopen the log
+destination if it was changed in the configuration file, or
+rotated if it is a log file. 
+See also dedicated rotation singnal SIGUSR1
+bellow.
+
+SIGUSR1
+
+This signal will be accepted if
+running in daemon mode and ignored in inetd mode. 
+It causes the FTP-Proxy to close its current logfile, rename
+it to a date and time derived value, and open a new logfile.
+This procedure is also known as Logfile Rotation.
+Child processes forked before the reception of this signal
+and processes run from inetd will not be affected.
+
+See also the ServerRoot configuration option in
+ftp-proxy.conf(5).
+
+NOTES
+
+When running
+FTP-Proxy in inetd mode, it is always an excellent
+idea to check that the inetd configuration file includes a
+line that invokes FTP-Proxy. An example for a line in
+/etc/inetd.conf follows:
+
+ftp stream
+tcp nowait root /usr/sbin/ftp-proxy -i
+
+Please note
+that this is just an example and does not provide much
+security, like running as a non-privileged user or using the
+TCP Wrapper functionality.
+
+DIAGNOSTICS
+
+The -v
+option is is only available if enabled using the
+--enable-debug option when running the configure
+script - see also the INSTALL file for usage
+description. This option should be used with great care
+only. It is strongly recommended to not to use it in
+production environments.
+
+If debugging is
+activated, it always adds output to the file
+/tmp/ftp-proxy.debug which is created with
+0666 mode. This allows child processes to open and
+write the file after they have given up their root
+privileges.
+
+If the
+configuration file contains a ServerRoot directive,
+child processes and processes run from inetd will try
+to open the file within their chroot(2) environment.
+If this fails, e.g. because there is no /tmp
+directory, it is silently ignored and no debug output is
+generated.
+
+Please note
+that the program makes no attempt to erase the debug file
+after use. Thus it will stay around with world writeability
+until the operator manually removes it!
+
+FILES
+
+/etc/proxy-suite/ftp-proxy.conf
+
+/usr/sbin/ftp-proxy
+
+SEE ALSO
+
+ftp-proxy.conf(5)
+
+The SuSE
+Proxy-Suite documentation included in the doc
+subdirectory of the package.
+
+AUTHORS
+
+Jens-Gero Boehm
+jens-gero.boehm [AT] suse.de> 
+Pieter Hollants pieter.hollants [AT] suse.de> 
+Volker Wiegand volker.wiegand [AT] suse.de> 
+Marius Tomaschewski mt [AT] suse.de>
+
+COPYRIGHT
+
+The whole
+SuSE Proxy-Suite is released under the 
+GNU General Public License (GPL).

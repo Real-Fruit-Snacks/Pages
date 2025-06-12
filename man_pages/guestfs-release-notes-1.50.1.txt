@@ -1,0 +1,316 @@
+NAME
+
+guestfs-release-notes
+- libguestfs Release Notes
+
+RELEASE NOTES FOR LIBGUESTFS 1.50
+
+These are the
+release notes for libguestfs stable release 1.50. This
+describes the major changes since 1.48.
+
+Libguestfs
+1.50.0 was released on 7 February 2023.
+
+Language
+bindings 
+Fix the PHP bindings for PHP8 (Geoff Amey).
+
+Fix various
+deprecation warnings in the GObject bindings.
+
+We no longer
+use the deprecated Python distutils library (thanks Miro
+Hron&#269;ok).
+
+Inspection
+
+When listing the packages in RPM-based guests, the
+inspection API no longer checks package signatures. This is
+because the newer librpm used by libguestfs does not
+understand signatures stored in older guests, such as SHA1
+used by RHEL 6 (thanks Panu Matilainen).
+
+"guestfs_inspect_get_hostname"
+in guestfs(3) can now handle /etc/hostname
+files containing comments (thanks Dawid Zamirski).
+
+"guestfs_file_architecture"
+in guestfs(3) can now parse files using zstd
+compression.
+
+"guestfs_inspect_get_osinfo"
+in guestfs(3) now returns the correct osinfo field
+for Windows 11. However because of decisions made by
+Microsoft, these guests still return product name and other
+strings identifying as Windows 10 (thanks Yaakov Selkowitz,
+Yongkui Guo).
+
+API
+
+New APIs
+
+"guestfs_device_name"
+in guestfs(3) is a new API to read the device name
+associated with a drive, for example calling this with 0
+will return "/dev/sda".
+
+"guestfs_clevis_luks_unlock"
+in guestfs(3) is a new API for unlocking disks using
+the Clevis/Tang network-based full disk encryption scheme.
+Furthermore implement this in guestfish and guestmount
+(Laszlo Ersek).
+
+"guestfs_inspect_get_build_id"
+in guestfs(3) is a new API for reading the build ID
+from some Linux and Windows guests. It is not widely used on
+Linux, but for Windows it is vital for identifying Windows
+11.
+
+Other API
+changes
+
+In the
+"guestfs_add_drive" in guestfs(3) API, the
+"name" and "iface" fields are not used.
+"name" has not been used since around 2017, but
+the documentation has only just been updated to reflect
+this. "iface" was never allowed for the libvirt
+backend and didn&rsquo;t work reliably with the direct
+backend (Laszlo Ersek).
+
+"guestfs_readdir"
+in guestfs(3) is no longer limited to the maximum
+message size but can read a directory of any size (Laszlo
+Ersek).
+
+Build
+changes 
+Note that the Augeas bindings for libguestfs are no
+longer bundled with libguestfs and must be built separately.
+See: https://people.redhat.com/~rjones/augeas/ For RHEL 7+
+rebuilding the Fedora Rawhide package will work.
+
+Note
+that libguestfs now requires minimum OCaml 4.04. It will not
+compile on RHEL 6.
+
+Note
+that zstd is now a required dependency.
+
+OCaml gettext
+is no longer a dependency of libguestfs. (Plain gettext is
+still optionally used to translate C source files.)
+
+Add support for
+OCaml 4.14.
+
+Fix build for
+missing stdlib functions in OCaml 4.04.
+
+Fix
+"./configure --disable-ocaml". OCaml is still
+required to build libguestfs, but this now correctly
+disables the OCaml bindings of the API.
+
+Add support for
+building on Artix, Rocky and Virtuozzo (Halil Tezcan
+KARABULUT, Neil Hanlon, Andrey Drobyshev). In addition when
+working out the local distro we now look at $ID_LIKE in
+/etc/os-release before $ID which helps on Arch
+(thanks S D Rausty).
+
+Add preliminary
+support for compiling libguestfs on macOS.
+
+Fix website
+description of cloning the libguestfs repository (Kashyap
+Chamarthy).
+
+We no longer
+use glibc custom printf.
+
+We no longer
+use "LD_PRELOAD=libSegFault.so" in the appliance.
+This feature was removed in glibc 2.35.
+
+We no longer
+use dtrace / systemtap probes.
+
+Internals
+
+Fix regression tests to use correct paths (Nikolay
+Shirokovskiy).
+
+Various
+improvements to qcow2 appliance handling (Andrey
+Drobyshev).
+
+Disable 5-level
+page tables in qemu. This avoids a bug in older versions of
+qemu.
+
+Disable the
+LVM2 devicesfile in the appliance since it interferes with
+cloned LVs that have the same UUID (Laszlo Ersek).
+
+Don&rsquo;t use
+"-cpu max" on RISC-V as it is not yet supported by
+qemu&rsquo;s TCG emulation of that architecture. This will
+be reenabled when qemu gets support.
+
+Avoid a rare
+hang that would happen when launching the appliance. This
+turned out to be caused by using the unsafe call
+setenv(3) between fork and exec (thanks Siddhesh
+Poyarekar).
+
+When running
+the file command inside the appliance we now disable seccomp
+since it interferes with processing compressed files (thanks
+David Runge, Toolybird).
+
+Bugs
+fixed 
+https://bugzilla.redhat.com/2108425
+
+compile of libguestfs-1.48.4
+fails with Error: static declaration of
+&rsquo;caml_alloc_initialized_string&rsquo; follows
+non-static declaration
+
+https://bugzilla.redhat.com/2064182
+
+SHA 1 signatures required to
+inspect packages in RHEL 6 guests
+
+https://bugzilla.redhat.com/2033247
+
+document encrypted RBD disk
+limitation
+
+https://bugzilla.redhat.com/2012658
+
+libguestfs fails to detect
+Windows 11 guest image
+
+https://bugzilla.redhat.com/1965941
+
+lvm-set-filter failed in
+guestfish with the latest lvm2 package
+
+https://bugzilla.redhat.com/1844341
+
+The duplicate block device is
+listed when iface is set to &rsquo;virtio&rsquo;
+
+https://bugzilla.redhat.com/1809453
+
+[RFE] Add support for LUKS
+encrypted disks with Clevis & Tang
+
+https://bugzilla.redhat.com/1794518
+
+Rewrite libguestfs use of
+setfiles so that it doesn&rsquo;t stop on ext4 immutable
+bits
+
+https://bugzilla.redhat.com/1674392
+
+No return values from a
+directory listing when there are simply too many files in
+that directory (NULL value return)
+
+https://bugzilla.redhat.com/1554735
+
+RFE: customize
+--selinux-relabel should be the default, with
+--no-selinux-relabel used to opt out
+
+SEE ALSO
+
+guestfs-examples(1),
+guestfs-faq(1), guestfs-performance(1),
+guestfs-recipes(1), guestfs-testing(1),
+guestfs(3), guestfish(1),
+http://libguestfs.org/
+
+AUTHORS
+
+Adolfo Jayme
+Barrientos 
+Andrey Drobyshev 
+Emilio Herrera 
+Ettore Atalan 
+Geoff Amey 
+Hela Basa 
+Jan Kuparinen 
+Kashyap Chamarthy 
+Laszlo Ersek 
+Marcin Stanclik 
+Micha&#322; Smyk 
+Neil Hanlon 
+Nikolay Shirokovskiy 
+Pavel Borecki 
+Piotr Dr&#261;g 
+Richard W.M. Jones 
+Ricky Tigg 
+Temuri Doghonadze 
+Yuri Chornoivan
+
+COPYRIGHT
+
+Copyright (C)
+2009-2023 Red Hat Inc.
+
+LICENSE
+
+This program is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have
+received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation,
+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
+USA.
+
+BUGS
+
+To get a list
+of bugs against libguestfs, use this link:
+https://bugzilla.redhat.com/buglist.cgi?component=libguestfs&product=Virtualization+Tools
+
+To report a new
+bug against libguestfs, use this link:
+https://bugzilla.redhat.com/enter_bug.cgi?component=libguestfs&product=Virtualization+Tools
+
+When reporting
+a bug, please supply:
+
+&bull;
+
+The version of libguestfs.
+
+&bull;
+
+Where you got libguestfs (eg. which Linux distro,
+compiled from source, etc)
+
+&bull;
+
+Describe the bug accurately and give a way to reproduce
+it. 
+
+&bull;
+
+Run libguestfs-test-tool(1) and paste the
+complete, unedited output into the bug report.

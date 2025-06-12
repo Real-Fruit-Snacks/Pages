@@ -1,0 +1,336 @@
+NAME
+
+readnews
+&minus; read news articles
+
+SYNOPSIS
+
+readnews
+[ &minus;n newsgroups ] [ &minus;d commands ]
+[ &minus;i ] [ &minus;c ] [ &minus;l ]
+[ &minus;p ] [ &minus;C ] [ &minus;L ]
+[ &minus;Agroup ] [ &minus;Dgroup ]
+
+DESCRIPTION
+
+Readnews
+without arguments enters command mode, which allows printing
+of unread articles. This is the normal way of using
+readnews.
+
+Readnews
+maintains a .newsrc file in the user&rsquo;s home
+directory that specifies all news articles already read. It
+is updated at the end of each reading session.
+
+Some useful
+functions are available which don&rsquo;t use command mode.
+The flags for these are:
+
+&minus;c
+
+Check if there is news, and if so print &rsquo;You have
+news.&rsquo;. 
+
+&minus;C
+
+Check if there is news, and print the groups and number
+of articles in each group to be read.
+
+&minus;l
+
+List the titles of available news articles.
+
+&minus;p
+
+Print all articles on standard output, and update
+newsrc. 
+
+&minus;L
+
+Print the newsgroup subscription list.
+
+&minus;Agroup
+
+Add group to the
+subscription list.
+
+&minus;Dgroup
+
+Delete group from the
+subscription list.
+
+The remaining
+flags mostly determine article selection, and may also
+appear in the .newsrc file. Options may be specified
+in the .newsrc file by entering lines prefixed with
+the word &rsquo;options&rsquo;, followed by the options
+arguments. This is most useful with the &minus;n
+flag, specifying the usual groups one wishes to subscribe
+to. 
+&minus;n newsgroups
+
+Select all articles belonging
+to newsgroups. Newsgroups is a comma separated
+list of newsgroup names. The character &rsquo;!&rsquo; may
+be used to exclude certain groups, and the word
+&rsquo;all&rsquo; can be used to match any group. e.g.
+&rsquo;-n all,!net.jokes&rsquo;
+
+&minus;i
+
+Ignore .newsrc file. It is not read or updated.
+This allows selection of articles that have already been
+read. 
+
+&minus;d
+commands
+
+Disable the commands.
+Commands is a string of command characters (see the
+next section); entering any command beginning with any of
+them will result in an error message.
+
+Some overall
+parameters are set by a control file,
+/var/lib/news/readnews.ctl, which contains control
+lines (each a keyword followed by white space followed by a
+value) and comments (each starting with
+&rsquo;#&rsquo;).
+
+If no
+&minus;n option is specified, either by the user or
+his .newsrc file, the value specified on the
+defsub line of the control file is used as the list
+of newsgroups to be presented. A single mandatory newsgroup
+may be specified as the value of the mustsub control
+line; in the absence of a command-line &minus;n (not
+one from a .newsrc), that newsgroup is always
+presented to the user even if he did not ask for it. Both
+defsub and mustsub default to
+&rsquo;&rsquo;general&rsquo;&rsquo;.
+
+COMMANDS
+
+This section
+details the commands available when readnews is in
+command mode (no &minus;clpsC arguments). The
+simplest way of using this mode, is to enter RETURN after
+every prompt. This will present to the user, a short heading
+for an article, then a prompt. Typing RETURN again will
+print the article body. Typing RETURN yet again will print
+the next heading, and so on. If having read the heading, you
+don&rsquo;t wish to read the article, you may type
+&rsquo;n&rsquo; (or &rsquo;+&rsquo; or &rsquo;;&rsquo;)
+which will take you directly to the next heading.
+
+An article is
+treated as having been read, if either you have seen the
+article body, or typed &rsquo;n&rsquo; to skip over it.
+
+A number of
+commands operate on the &rsquo;current&rsquo; article. This
+is defined as the article whose header you have most
+recently seen.
+
+The commands to
+read news are:
+
+RETURN
+
+Either print the current article, or go to the next
+article and print its header.
+
+n or + or
+;
+
+Go to the next article and
+print its header.
+
+.
+
+Print the current article.
+
+&minus;
+
+Go back to the previous article. This is a toggle,
+typing it twice returns you to the original article.
+
+number
+
+Go to the article number in the current
+newsgroup. Like the &rsquo;-&rsquo; command, you always
+return to the original article after reading the selected
+article. 
+
+s [file]
+
+Save the current article,
+appending it to the specified file (default
+$HOME/articles).
+
+h
+
+Print the current header (slightly more verbose than
+normal header).
+
+H
+
+Print the current header in full (very verbose).
+
+N [newsgroup]
+
+Go to the next newsgroup, or to
+the specified newsgroup. (A specified newsgroup must be in
+the &minus;n list, if any, or subscribed to.)
+
+U
+
+Unsubscribe from this newsgroup, and go to the next
+newsgroup. 
+
+!command
+
+Shell escape. Command is
+executed. If command is &rsquo;!&rsquo; the last
+escape command is executed.
+
+q or EOT
+
+Quit. The .newsrc file
+will be updated provided the flag &minus;i was not
+specified.
+
+x
+
+Exit. .newsrc is left unchanged (as if no
+articles had been read).
+
+Some commands
+are available to send/reply or post news articles:
+
+r
+
+Reply to sender of the current
+article by mail. Readnews sets up the appropriate
+headers, and then calls mail(1) (or $MAILER, if there
+is such an environment variable) to send a reply to the
+sender. If there is no mailvia line in the control
+file, the address is taken from the
+&rsquo;&rsquo;From&rsquo;&rsquo; header of the article, and
+is in Internet form. If the value in the mailvia line
+is &rsquo;&rsquo;&rsquo;&rsquo;, the address is
+taken from the &rsquo;&rsquo;Path&rsquo;&rsquo; header and
+is in UUCPnet form. If the value of mailvia is
+something else, the &rsquo;&rsquo;From&rsquo;&rsquo; address
+is transformed to UUCPnet syntax
+(&rsquo;&rsquo;site.x.y!user&rsquo;&rsquo; rather than
+&rsquo;&rsquo;user [AT] site.y&rsquo;&rsquo;), and the
+mailvia value is prepended to it, with an intervening
+&rsquo;&rsquo;!&rsquo;&rsquo;. 
+
+f
+
+Post a followup to the current article. Readnews
+sets up the appropriate headers, and then calls
+postnews(1CN) to post the followup article.
+
+p
+
+Post an article on a new topic. postnews(1CN) is
+called to post the new article, in the current newsgroup by
+default. 
+
+In order to
+permanently resubscribe to a newsgroup denied by
+&rsquo;U&rsquo;, it is necessary to understand the format of
+the .newsrc file. The .newsrc file consists of
+two types of lines: 
+option lines
+
+These start with the word
+&rsquo;options&rsquo; and contain the same arguments as the
+readnews command on the command line.
+
+read newsgroup lines
+
+These have the format
+&rsquo;:&rsquo; , where
+ represents the last item number seen in that
+particular newsgroup. If the newsgroup has been
+unsubscribed, the &rsquo;:&rsquo; is replaced by a
+&rsquo;!&rsquo;. To resubscribe the &rsquo;!&rsquo; must be
+changed back to a &rsquo;:&rsquo;.
+
+EXAMPLES
+
+To invoke
+readnews for &rsquo;&rsquo;read only&rsquo;&rsquo;
+access to specified newsgroups, with the user unable to do
+anything but read those groups, a shell file might do:
+
+readnews
+&minus;d rfps!U &minus;n newsgroups
+
+which disables
+responses (r, f, and p), saving of copies (s), shell escapes
+(!), and unsubscribing (U).
+
+FILES
+
+$HOME/.newsrc
+options and list of previously read articles
+
+/var/lib/news/active
+
+current newsgroups
+
+/var/lib/news/readnews.ctl
+
+control file
+
+/var/lib/news/readnews.help
+
+help file
+
+/usr/lib/news/inject/postnews
+
+for postings
+
+SEE ALSO
+
+postnews(1CN),
+mail(1), ed(1)
+
+HISTORY
+
+Originally
+written by Michael Rourke, University of N.S.W
+(decvax!mulga!michaelr:elecvax). Modified and simplified for
+the C News project.
+
+BUGS
+
+The
+mustsub control line really ought to be able to
+specify a subscription, i.e. multiple groups.
+
+Control
+characters other than tab and backspace are turned into
+&rsquo;#&rsquo; when displaying article bodies. This heads
+off letter bombs at the price of interfering with use of
+non-ASCII character sets.
+
+Cleanup of
+command-line syntax has eliminated the old &minus;s
+option in favor of &minus;L, &minus;A, and
+&minus;D. This is a change for the better, but an
+incompatible one.
+
+The
+&minus;A and &minus;D options have a nasty
+tendency to dump core; they should be fixed or deleted.
+
+This program is
+about as simple as they come. Almost any seasoned news user
+will want something more complex.

@@ -1,0 +1,277 @@
+NAME
+
+nbdkit-release-notes-1.30
+- release notes for nbdkit 1.30
+
+DESCRIPTION
+
+These are the
+release notes for nbdkit stable release 1.30. This describes
+the major changes since 1.28.
+
+nbdkit 1.30.0
+was released on 24 February 2022.
+
+Security
+
+There were no security issues found. All past security
+issues and information about how to report new ones can be
+found in nbdkit-security(1).
+
+Plugins 
+nbdkit-streaming-plugin has been removed. It was
+deprecated in 1.26 and scheduled for removal in this
+release. If you were using this plugin, use
+nbdcopy(1) instead.
+
+nbdkit-vddk-plugin(1)
+has several changes:
+
+&bull;
+
+This plugin can now create (as well as reading and
+writing) local VMDK files. See the new
+"create=true" option and the various
+"create-*" options.
+
+&bull;
+
+Read and write is now implemented using the VDDK Async
+functions, which improves performance. The full nbdkit
+parallel thread model is supported.
+
+&bull;
+
+VDDK &ge; 6.5 (released Nov 2016) is now the minimum
+required version.
+
+&bull;
+
+Stats collected when using -D vddk.stats=1 have
+been extended to include number of calls and bytes
+transferred. 
+
+&bull;
+
+--dump-plugin output now includes the VDDK major
+version and information about each VDDK API that is
+implemented by the library.
+
+&bull;
+
+A new example scripts/vddk-open.sh is provided to
+help with automating connections to remote ESXi virtual
+machines. 
+
+nbdkit-curl-plugin(1)
+adds support for choosing TLS/SSL versions and ciphers and
+TLS 1.3 cipher versions (Przemyslaw Czarnowski).
+
+nbdkit-file-plugin(1)
+now implements "cache=none" for writes so that the
+Linux page cache is not destroyed when writing huge
+files.
+
+nbdkit-cc-plugin(1)
+now implements the ".cleanup" callback. Also we
+document how to use this plugin to implement OCaml plugin
+scripts.
+
+nbdkit-info-plugin(1)
+--dump-plugin option now prints
+"info_address=yes" when the platform supports
+"mode=address".
+
+Filters
+
+New nbdkit-retry-request-filter(1), which is similar
+to nbdkit-retry-filter(1) but only retries a single
+failing request.
+
+New
+nbdkit-protect-filter(1) lets you add
+write-protection over regions of a plugin.
+
+New
+nbdkit-blocksize-policy-filter(1) lets you adjust or
+set the block size constraints and policy of underlying
+plugins. See "API" below.
+
+nbdkit-cow-filter(1)
+now permits the COW block size to be set as small as 4096
+bytes.
+
+Debug messages
+in nbdkit-error-filter(1) are now easier to read
+because they no longer all have an "error:" prefix
+(Eric Blake).
+
+Language
+bindings 
+For plugins written in OCaml the minimum version of OCaml is
+now 4.03 (instead of 4.02.2 previously). Various
+source-level incompatible changes were made to OCaml plugins
+in this release. Please consult the new documentation and
+example if writing plugins in OCaml.
+
+OCaml plugins
+now support "magic_config_key".
+
+Several fixes
+to the handling of integers in Python plugins (Nir
+Soffer).
+
+New Python
+example which simulates request errors (Nir Soffer).
+
+Server
+
+The server no longer requests the "AI_ADDRCONFIG"
+hint when opening a server socket. This improves handling of
+IPv6. In a related change, the -i (--ipaddr)
+option now works as intended, and new -4 and
+-6 options have been added to restrict the listening
+socket to IPv4 or IPv6 addresses (Laszlo Ersek).
+
+API 
+There is a new ".block_size" callback for plugins
+and filters. nbdkit uses this to export block size
+constraints to clients, specifically the minimum, preferred
+and maximum block size that clients should use.
+
+As well as
+regular C plugins, nbdkit-cc-plugin(3),
+nbdkit-eval-plugin(1), nbdkit-ocaml-plugin(3),
+nbdkit-python-plugin(3) and
+nbdkit-sh-plugin(3) support block size constraints.
+nbdkit-nbd-plugin(1) reexports block size constraints
+from the proxied NBD server. nbdkit-vddk-plugin(1)
+now advertises a minimum 512 byte block size.
+
+nbdkit-blocksize-filter(1),
+nbdkit-cache-filter(1), nbdkit-cow-filter(1)
+and nbdkit-swab-filter(1) adjust block size
+constraints from plugins (Eric Blake).
+
+nbdkit-blocksize-filter(1)
+can also use the block size hints from the plugin instead of
+needing manual adjustment on the command line.
+nbdkit-log-filter(1) logs block size constraints
+(Eric Blake).
+
+nbdkit-blocksize-policy-filter(1)
+can be used to add block size constraints to plugins which
+don&rsquo;t support it, or adjust constraints, or set the
+error policy.
+
+Bug fixes
+
+nbdkit-memory-plugin(1) (and others), using
+"allocator=malloc,mlock=true" was broken. This was
+especially evident on non-Linux or on Linux with 64K pages
+(eg. POWER). It should now work correctly.
+
+Tests
+
+"./configure --disable-libguestfs-tests" can now
+be used to disable tests which need libguestfs, without
+disabling nbdkit-guestfs-plugin(1).
+
+We now use
+mke2fs(8) instead of guestfish(1) to create
+the ext4 test image. On armv7 this allows the test suite to
+run much more quickly.
+
+The time taken
+to run the test suite has been reduced significantly.
+
+Build
+
+Multiple fixes to the Windows (MinGW) build. The test suite
+should now pass fully if you have the version of Wine with
+the unofficial "AF_UNIX" patch.
+
+The top level
+bash source directory has been renamed to
+bash-completion. This prevents problems when setting
+$PATH to the source directory and trying to run bash.
+
+Internals
+
+The performance of the internal vector library has been
+improved greatly and overflow is now handled correctly (Nir
+Soffer, Laszlo Ersek and Eric Blake).
+
+New
+"nbdkit-string.h" header file which defines a
+common string type (based on vector). Existing places which
+defined a string based on vector have been updated to use
+it.
+
+"MIN"
+and "MAX" macros can be nested (thanks Eric
+Blake).
+
+SEE ALSO
+
+nbdkit(1).
+
+AUTHORS
+
+Authors of
+nbdkit 1.30: 
+Alan Somers 
+Eric Blake 
+Hilko Bengen 
+Laszlo Ersek 
+Nir Soffer 
+Przemyslaw Czarnowski 
+Richard W.M. Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

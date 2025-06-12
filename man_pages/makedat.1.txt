@@ -1,0 +1,112 @@
+NAME
+
+makedat &minus;
+create GDBM/DB files for maildrop
+
+SYNOPSIS
+
+makedat
+-src=textfile -tmp=tmpfile
+-file=gdbmfile [ -cidr ]
+
+DESCRIPTION
+
+The gdbm family
+of functions in maildrop provides access to GDBM/DB
+databases - simple database files. The gdbm family of
+functions provide a way of quickly storing and looking up
+key/data pairs.
+
+You can use any
+program to create GDBM/DB database files. makedat is
+a quick utility to create GDBM or DB files from plain text
+files.
+
+The system
+administrator selects whether maildrop uses GDBM or
+DB database files and whether makedat creates GDBM or
+DB database files as well.
+
+The
+makedat command may not be available to you. GDBM/DB
+support in maildrop is optional, and the system
+administrator may choose not to install GDBM/DB support and
+the makedat command.
+
+To see whether
+GDBM or DB support is being used, run the command
+"maildrop -v".
+
+The
+textfile argument to makedat is a plain text
+file containing key/value pairs. Each line in the text file
+contains a key value, followed by a tab and a data value.
+The data value may be omitted, which defaults to
+"1". For example, the following three lines:
+
+example.com
+
+domain.comok
+
+foo.domain.combad
+
+Three key/value
+pairs are created: example.com, value "1";
+domain.com, value "ok", and
+"foo.domain.com", value "bad".
+
+Empty lines in
+textfile, and lines starting with the # character,
+are ignored.
+
+textfile
+can be "-", in which case standard input is
+used.
+
+gdbmfile
+is the GDBM/DB file to create. If this file exists, its
+existing contents are replaced.
+
+tmpfile
+is a name of a temporary file in the same directory as
+gdbmfile. tmpfile is used by makedat to
+create the GDBM file, then tmpfile is renamed to
+gdbmfile.
+
+This approach
+foregoes any need for locking in order to be able to
+dynamically update GDBM/DB files used by
+maildrop&rsquo;s gdbm functions. However,
+makedat does not use any locks on tmpfile, so
+multiple instances of makedat using the same
+tmpfile are prohibited.
+
+The
+-cidr flag specifies that the key is an IP netblock
+in CIDR notation. This flag requires the Net::CIDR
+Perl module to be installed separately. Download Net::CIDR
+from http://www.cpan.org.
+
+BUGS
+
+There are
+historical reasons why database functions in maildrop are
+called gdbm functions. The initial implementation used GDBM
+functions exclusively. The ability to use the DB library
+instead of the GDBM library has been added later.
+
+EXAMPLE
+
+makedat
+blacklist /etc/mail/blacklist.tmp
+/etc/mail/blacklist.dat
+
+Takes
+blacklist, and creates
+/etc/mail/blacklist.dat, using
+/etc/mail/blacklist.tmp as a temporary file.
+
+SEE ALSO
+
+maildrop(1),
+maildropgdbm(5).

@@ -1,0 +1,324 @@
+NAME
+
+git-annex-import
+- import files from a special remote
+
+SYNOPSIS
+
+git annex
+import --from remote branch[:subdir] | [path ...]
+
+DESCRIPTION
+
+This command is
+a way to import a tree of files from elsewhere into your
+git-annex repository. It can import files from a git-annex
+special remote, or from a directory.
+
+IMPORTING FROM A SPECIAL REMOTE
+
+Importing from
+a special remote first downloads or hashes all new content
+from it, and then constructs a git commit that reflects
+files that have changed on the special remote since the last
+time git-annex looked at it. Merging that commit into your
+repository will update it to reflect changes made on the
+special remote.
+
+This way,
+something can be using the special remote for file storage,
+adding files, modifying files, and deleting files, and you
+can track those changes using git-annex.
+
+You can combine
+using git annex import to fetch changes from a
+special remote with git annex export to send your
+local changes to the special remote.
+
+You can only
+import from special remotes that were configured with
+importtree=yes when set up with
+git-annex-initremote(1). Only some kinds of special remotes
+will let you configure them this way. A perhaps
+non-exhaustive list is the directory, s3, and adb special
+remotes.
+
+To import from
+a special remote, you must specify the name of a branch. A
+corresponding remote tracking branch will be updated by
+git annex import. After that point, it&rsquo;s the
+same as if you had run a git fetch from a regular git
+remote; you can merge the changes into your currently
+checked out branch.
+
+For
+example:
+
+git annex
+import master --from myremote 
+git annex merge --allow-unrelated-histories
+myremote/master
+
+You could just
+as well use git merge --allow-unrelated-histories
+myremote/master as the second step, but using
+git-annex merge avoids a couple of gotchas. When
+using adjusted branches, it adjusts the branch before
+merging from it.
+
+The
+--allow-unrelated-histories option is needed for at least
+the first merge of an imported remote tracking branch, since
+the branch&rsquo;s history is not connected. Think of this
+as the remote being a separate git repository with its own
+files. If you first git annex export files to a
+remote, and then git annex import from it, you
+won&rsquo;t need that option.
+
+You can import
+into a subdirectory, using the "branch:subdir"
+syntax. For example, if "camera" is a special
+remote that accesses a camera, and you want to import those
+into the photos directory, rather than to the root of your
+repository:
+
+git annex
+import master:photos --from camera 
+git merge camera/master
+
+The git
+annex sync --content command (and the git-annex
+assistant) can also be used to import from a special remote.
+To do this, you need to configure
+"remote..annex-tracking-branch" to
+tell it what branch to track. For example:
+
+git config
+remote.myremote.annex-tracking-branch master 
+git annex sync --content
+
+Any files that
+are gitignored will not be included in the import, but will
+be left on the remote.
+
+When the
+special remote has a preferred content expression set by
+git-annex-wanted(1), that is used to pick which files to
+import from it. Files that are not preferred content of the
+remote will not be imported from it, but will be left on the
+remote.
+
+So for example,
+a preferred content expression like "include=*.jpeg
+or largerthan=100mb" will make only jpegs and large
+files be imported.
+
+Parts of a
+preferred content expression that relate to the key, such as
+"copies=" are ignored when importing, because the
+key is not known before importing.
+
+Things in the
+expression like "include=" match relative to the
+top of the tree of files on the remote, even when importing
+into a subdirectory.
+
+OPTIONS FOR IMPORTING FROM A SPECIAL REMOTE
+
+--content,
+--no-content
+
+Controls
+whether annexed content is downloaded from the special
+remote.
+
+The default is
+to download content into the git-annex repository.
+
+With
+--no-content, git-annex keys are generated from information
+provided by the special remote, without downloading it.
+Commands like git-annex get can later be used to
+download files, as desired. The --no-content option is not
+supported by all special remotes.
+
+--message=msg -m msg
+
+Use this option to specify a
+commit message for the changes that have been made to the
+special remote since the last import from it.
+
+If multiple -m
+options are given, their values are concatenated as separate
+paragraphs.
+
+IMPORTING FROM A DIRECTORY
+
+When run with a
+path, git annex import **moves** files from somewhere
+outside the git working copy, and adds them to the annex. In
+contrast to importing from a special directory remote,
+imported files are **deleted from the given path**.
+
+This is a
+legacy interface. It is still supported, but please consider
+switching to importing from a directory special remote
+instead, using the interface documented above.
+
+Individual
+files to import can be specified. If a directory is
+specified, the entire directory is imported. Please note
+that the following instruction will **delete all files from
+the source directory**.
+
+git annex
+import /media/camera/DCIM/*
+
+When importing
+files, there&rsquo;s a possibility of importing a duplicate
+of a file that is already known to git-annex -- its content
+is either present in the local repository already, or
+git-annex knows of another repository that contains it, or
+it was present in the annex before but has been removed
+now.
+
+By default,
+importing a duplicate of a known file will result in a new
+filename being added to the repository, so the duplicate
+file is present in the repository twice. (With all
+checksumming backends, including the default SHA256E, only
+one copy of the data will be stored.)
+
+Several options
+can be used to adjust handling of duplicate files, see
+--duplicate, --deduplicate,
+--skip-duplicates, --clean-duplicates, and
+--reinject-duplicates documentation below.
+
+symbolic links
+in the directory being imported are skipped to avoid
+accidentially importing things outside the directory that
+import was ran on. The directory that import is run on can,
+however inself be a symbolic link, and that symbolic link
+will be followed.
+
+OPTIONS FOR IMPORTING FROM A DIRECTORY
+
+--duplicate
+
+Do not delete
+files from the import location.
+
+Running with
+this option repeatedly can import the same files into
+different git repositories, or branches, or different
+locations in a git repository.
+
+--deduplicate
+
+Only import files that are not
+duplicates; duplicate files will be deleted from the import
+location.
+
+--skip-duplicates
+
+Only import files that are not
+duplicates. Avoids deleting any files from the import
+location.
+
+--clean-duplicates
+
+Does not import any files, but
+any files found in the import location that are duplicates
+are deleted.
+
+--reinject-duplicates
+
+Imports files that are not
+duplicates. Files that are duplicates have their content
+reinjected into the annex (similar to
+git-annex-reinject(1)).
+
+--force
+
+Allow existing files to be
+overwritten by newly imported files.
+
+Also, causes
+.gitignore to not take effect when adding files.
+
+file matching options
+
+Many of the
+git-annex-matching-options(1) can be used to specify files
+to import.
+
+git annex import /dir --include=&rsquo;*.png&rsquo;
+
+COMMON OPTIONS
+
+--jobs=N
+-JN
+
+Imports
+multiple files in parallel. This may be faster. For example:
+-J4
+
+Setting this to
+"cpus" will run one job per CPU core.
+
+--backend
+
+Specifies which key-value
+backend to use for the imported files.
+
+--no-check-gitignore
+
+Add gitignored files.
+
+--json
+
+Enable JSON output. This is intended to be parsed by
+programs that use git-annex. Each line of output is a JSON
+object. 
+
+--json-progress
+
+Include progress objects in
+JSON output.
+
+--json-error-messages
+
+Messages that would normally be
+output to standard error are included in the JSON
+instead.
+
+Also the
+git-annex-common-options(1) can be used.
+
+CAVEATS
+
+Note that using
+--deduplicate or --clean-duplicates with the
+WORM backend does not look at file content, but filename and
+mtime.
+
+If
+annex.largefiles is configured, and does not match a file,
+git annex import will add the non-large file directly to the
+git repository, instead of to the annex.
+
+SEE ALSO
+
+git-annex(1)
+
+git-annex-add(1)
+
+git-annex-export(1)
+
+git-annex-preferred-content(1)
+
+AUTHOR
+
+Joey Hess
+id [AT] joeyh.name>

@@ -1,0 +1,218 @@
+NAME
+
+nbdkit-loop -
+use nbdkit with the Linux kernel client to create loop
+devices and loop mounts
+
+DESCRIPTION
+
+nbdkit (server)
+can be used with the Linux kernel nbd (client) in a loop
+mode allowing any of the plugins supported by nbdkit to be
+turned into Linux block devices.
+
+In addition to
+nbdkit(1) itself, the main commands you will use are:
+
+nbd-client localhost /dev/nbd0
+
+Attaches a locally running
+nbdkit instance to the kernel device /dev/nbd0.
+
+nbd-client -unix /tmp/socket
+/dev/nbd0
+
+Alternative method using a Unix
+domain socket instead of a public TCP/IP socket. Use
+"nbdkit -U /tmp/socket" to serve.
+
+nbd-client -d /dev/nbd0
+
+Detaches /dev/nbd0.
+
+nbd-client -c /dev/nbd0
+
+Queries whether
+/dev/nbd0 is attached or not.
+
+modprobe nbd
+
+You may be need to run this
+command once to load the nbd client kernel module.
+
+The
+nbd-client(8) and modprobe(8) commands must be
+run as root.
+
+Warning: Do
+not loop mount untrusted filesystems 
+Untrusted filesystems and untrusted disk images should not
+be loop mounted because they could contain exploits that
+attack your host kernel. Use the tools from
+libguestfs(3) instead since it safely isolates
+untrusted filesystems from the host.
+
+Loop mount a
+filesystem from a compressed file 
+If you have a filesystem or disk image in xz-compressed
+format then you can use nbdkit-xz-filter(1) and
+nbdkit-file-plugin(1) to loop mount it as
+follows:
+
+nbdkit
+--filter=xz file disk.xz 
+nbd-client localhost /dev/nbd0 
+mount /dev/nbd0p1 /mnt
+
+Loop mount a
+filesystem from a web server 
+You can use nbdkit-curl-plugin(1) to loop mount a
+filesystem from a disk image on a web server:
+
+nbdkit
+[--filter=xz] curl https://example.com/disk.img 
+nbd-client localhost /dev/nbd0 
+mount /dev/nbd0p1 /mnt
+
+Use
+--filter=xz if the remote image is XZ-compressed.
+
+Create a
+giant btrfs filesystem 
+nbdkit is useful for testing the limits of Linux
+filesystems. Using nbdkit-memory-plugin(1) you can
+create virtual disks stored in RAM with a virtual size up to
+2&#8310;&sup3;-1 bytes, and then create filesystems on
+these:
+
+nbdkit memory
+$(( 2**63 - 1 )) 
+nbd-client localhost /dev/nbd0
+
+Partition the
+device using GPT, creating a single partition with all
+default settings:
+
+gdisk
+/dev/nbd0
+
+Make a btrfs
+filesystem on the disk and mount it:
+
+mkfs.btrfs -K
+/dev/nbd0p1 
+mount /dev/nbd0p1 /mnt
+
+Inject
+errors into Linux devices 
+Using nbdkit-error-filter(1) you can see how Linux
+devices react to errors:
+
+nbdkit
+--filter=error \ 
+memory 64M \ 
+error-rate=100% error-file=/tmp/inject 
+nbd-client localhost /dev/nbd0 
+mkfs -t ext4 /dev/nbd0 
+mount /dev/nbd0 /mnt
+
+Inject errors
+by touching /tmp/inject, and stop injecting errors by
+removing this file.
+
+Write Linux
+block devices in shell script 
+Using nbdkit-sh-plugin(3) you can write custom Linux
+block devices in shell script for testing. For example the
+following shell script creates a disk which contains a bad
+sector:
+
+#!/bin/bash -
+
+case "$1" in 
+thread_model) echo parallel ;; 
+get_size) echo 64M ;; 
+pread) 
+if [ $4 -le 100000 ] && [ $(( $4+$3 )) -gt 100000 ];
+then 
+echo EIO Bad block >&2 
+exit 1 
+else 
+dd if=/dev/zero count=$3 iflag=count_bytes 
+fi ;; 
+*) exit 2 ;; 
+esac
+
+Create a loop
+from this shell script using:
+
+nbdkit sh
+./bad-sector.sh 
+nbd-client localhost /dev/nbd0
+
+You can then
+try running tests such as:
+
+badblocks
+/dev/nbd0
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-client(1), nbdkit-plugin(3),
+loop(4), losetup(8), mount(8),
+nbdfuse(1), nbd-client(8), modprobe(8),
+libguestfs(3), http://libguestfs.org.
+
+AUTHORS
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

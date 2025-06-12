@@ -1,0 +1,159 @@
+NAME
+
+irsend -
+basic LIRC program to send infra-red commands
+
+SYNOPSIS
+
+irsend
+[options] send_once 
+ [code...] 
+irsend [options] send_start 
+
+irsend [options] send_stop 
+
+irsend [options] list 
+
+irsend [options] set_transmitters 
+[num...] 
+irsend [options] simulate 
+
+DESCRIPTION
+
+Asks the
+lircd daemon to send one or more CIR (Consumer
+Infra-Red) commands. This is intended for remote control of
+electronic devices such as TV boxes, HiFi sets, etc.
+
+irsend
+supports six sub-commands: 
+send_once - send one or more code(s) once 
+send_start - start repeating a code. 
+send_stop - stop repeating code. 
+list - list configured remote items 
+set_transmitters - set active transmitters 
+simulate - simulate IR event
+
+remote
+is the name of a remote, as described in the lircd
+configuration file.
+
+code is
+the name of a remote control key of remote, as it
+appears in the lircd.conf configuration file.
+
+num is
+the transmitter number of the hardware device.
+
+For the
+list command, remote and/or code can be
+empty:
+
+list
+"" "" - list all configured remote names
+
+list remote "" - list all codes of
+remote 
+list remote code - list only code of
+remote
+
+The
+simulate command only works if it has been explicitly
+enabled in lircd using the --allow-simulate option. The
+required button press packet should formatted as a
+socket broadcast message documented in lircd(8).
+
+OPTIONS
+
+-h
+--help
+
+Display usage summary.
+
+-v --version
+
+Display version.
+
+-d
+--device=device
+
+Use given lircd socket
+[/var/run/lirc/lircd].
+
+-a
+--address=host[:port]
+
+Connect to lircd at this
+address.
+
+-# --count=n
+
+Send command n times.
+
+ENVIRONMENT
+
+LIRC_SOCKET_PATH
+
+The lircd socket to connect to,
+defaults to a hardcoded default value
+/var/run/lirc/lircd
+
+FILES
+
+/etc/lirc/lircd.conf
+
+Default lircd
+configuration file. It should contain all the remotes, their
+infra-red codes and the corresponding timing and waveform
+details.
+
+DIAGNOSTICS
+
+If lircd
+is not running (or /var/run/lirc/lircd lacks write
+permissions) irsend aborts with the following
+diagnostics: 
+"irsend: could not connect to socket" 
+"irsend: Connection refused" (or "Permission
+denied").
+
+EXAMPLES
+
+irsend LIST
+DenonTuner "" 
+irsend SEND_ONCE DenonTuner PROG-SCAN 
+irsend SEND_ONCE OnkyoAmpli VOL-UP VOL-UP VOL-UP VOL-UP 
+irsend SEND_START OnkyoAmpli VOL-DOWN ; sleep 3 
+irsend SEND_STOP OnkyoAmpli VOL-DOWN 
+irsend SET_TRANSMITTERS 1 
+irsend SET_TRANSMITTERS 1 3 4 
+irsend SIMULATE "0000000000000476 00 OK
+TECHNISAT_ST3004S"
+
+DRIVER LOADING
+
+Drivers are
+loaded dynamically. The directory used for this is
+determined by (falling priority):
+
+-
+
+The environment variable LIRC_PLUGINDIR.
+
+-
+
+The &rsquo;plugindir&rsquo; entry in the [lircd] section
+of the lirc_options.conf file.
+
+-
+
+A hardcoded default
+(/usr/lib/i386-linux-gnu/lirc/plugins). 
+
+SEE ALSO
+
+lircd(8), 
+mode2(1), 
+xmode2(1), 
+irrecord(1), 
+ irw(1)

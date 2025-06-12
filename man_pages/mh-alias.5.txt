@@ -1,0 +1,162 @@
+NAME
+
+mh-alias -
+format of nmh email-address alias files
+
+DESCRIPTION
+
+Each line of an
+nmh alias file takes one of the following forms:
+
+alias
+: address-group
+
+alias
+; address-group
+
+alias-file
+
+; |
+: | # comment
+
+where:
+
+address-group
+
+:= address-list
+
+| file
+
+address-list
+
+:= address
+
+| address-list, address
+
+Continuation
+lines end with &ldquo;\&rdquo; followed by a newline
+character. This also applies to comment lines. Thus, the
+line following a &ldquo;\&rdquo;-terminated comment line is
+a continuation of that comment line.
+
+Alias-file
+and file are Unix file names. Alias file contents are
+case-insensitive, with the exception of filesystem path
+names.
+
+If the line
+starts with a &ldquo;
+
+If the
+address-group starts with a &ldquo;address-list for the
+alias.
+
+In match, a
+trailing &ldquo;*&rdquo; on an alias will match just about
+anything appropriate.
+
+An
+approximation of the way aliases are resolved at posting
+time is:
+
+1)
+
+Build a list of all addresses from the message to be
+delivered, eliminating duplicate addresses.
+
+2)
+
+For those addresses in the message that have no host
+specified, perform alias resolution.
+
+3)
+
+For each line in the alias file, compare
+&ldquo;alias&rdquo; against all of the existing addresses.
+If a match, remove the matched &ldquo;alias&rdquo; from the
+address list, and add each new address in the address-group
+to the address list if it is not already on the list. The
+alias itself is not usually output, rather the address-group
+that the alias maps to is output instead. If
+&ldquo;alias&rdquo; is terminated with a &ldquo;;&rdquo;
+instead of a &ldquo;:&rdquo;, then both the
+&ldquo;alias&rdquo; and the address are output in the
+correct format (with the alias quoted if necessary and the
+address wrapped in <>).
+
+Since the
+mh-alias file is read line by line, forward
+references work, but backward references are not
+recognized.
+
+Example
+Alias File
+
+sgroup: fred, fear, freida 
+fred: frated [AT] UCI.example 
+b-people: Blind List: bill, betty 
+Unix-committee: 
+news.*: news
+
+The first line
+says that more aliases should immediately be read from the
+file /etc/nmh/BBoardAliases. Next,
+&ldquo;sgroup&rdquo; is defined as an alias for three names,
+and one of them, &ldquo;fred&rdquo;, is a forward reference
+to another alias for &ldquo;frated [AT] UCI.example&rdquo;.
+
+The alias
+&ldquo;b-people&rdquo; is a blind list which includes the
+addresses &ldquo;bill&rdquo; and &ldquo;betty&rdquo;; the
+message will be delivered to those addresses, but the
+message header will show only &ldquo;Blind List: ;&rdquo;
+(not the addresses). The alias must not be terminated with,
+or contain, a semicolon. Note that blind lists are not
+supported with the sendmail/pipe mail transport
+method.
+
+The definition
+of &ldquo;Unix-committee&rdquo; is given by reading the file
+unix.aliases in the user&rsquo;s nmh
+directory.
+
+Lastly,
+&ldquo;news.anything&rdquo; is aliased to
+&ldquo;news&rdquo;; the full stop is just another literal
+character.
+
+PROFILE COMPONENTS
+
+Aliasfile:
+
+Default alias file.
+
+FILES
+
+/etc/nmh/MailAliases
+
+System-wide default alias
+file.
+
+SEE ALSO
+
+ali(1),
+send(1), whom(1), getgrent(3),
+getpwent(3), post(8)
+
+BUGS
+
+Although the
+forward-referencing semantics of mh-alias files prevent
+recursion, the alias-file directive may defeat this.
+Since the number of file descriptors is finite, such
+infinite recursion will terminate with a meaningless
+diagnostic when all the fds are used up.
+
+Earlier
+versions of this man page showed a semicolon at the end of
+the blind list example. That caused the preceding alias to
+not be expanded. There must not be a semicolon at the end
+of, or within, the address group of a blind list.
+post will append the semicolon to the blind list
+name.

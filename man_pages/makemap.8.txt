@@ -1,0 +1,166 @@
+NAME
+
+makemap -
+create database maps for sendmail
+
+SYNOPSIS
+
+makemap
+[-C file] [-N] [-c
+cachesize] [-d] [-D commentchar]
+[-e] [-f] [-i type] [-l]
+[-o] [-r] [-s] [-t delim]
+[-u] [-v] maptype mapnam
+
+DESCRIPTION
+
+Makemap
+creates the database maps used by the keyed map lookups in
+sendmail(8). It reads input from the standard input and
+outputs them to the indicated mapname.
+
+Depending on
+how it is compiled, makemap handles different
+database formats, selected using the maptype
+parameter. They may be
+
+dbm
+
+DBM format maps. This requires the ndbm(3) library.
+
+btree
+
+B-Tree format maps. This requires the new Berkeley DB
+library. 
+
+hash
+
+Hash format maps. This also requires the Berkeley DB
+library. 
+
+cdb
+
+CDB (Constant DataBase) format maps. This requires the
+tinycdb library.
+
+implicit
+
+The first available format in
+the following order: hash, dbm, and cdb.
+
+In all cases,
+makemap reads lines from the standard input
+consisting of two words separated by white space. The first
+is the database key, the second is the value. The value may
+contain &rsquo;&rsquo;%n&rsquo;&rsquo; strings to
+indicate parameter substitution. Literal percents should be
+doubled (&rsquo;&rsquo;%%&rsquo;&rsquo;). Blank lines and
+lines beginning with &rsquo;&rsquo;#&rsquo;&rsquo; are
+ignored.
+
+Notice: do
+not use makemap to create the aliases data
+base, but newaliases which puts a special token into
+the data base that is required by sendmail.
+
+If the
+TrustedUser option is set in the sendmail
+configuration file and makemap is invoked as root,
+the generated files will be owned by the specified
+TrustedUser.
+
+Flags
+
+-C
+
+Use the specified sendmail configuration file for
+looking up the TrustedUser option.
+
+-N
+
+Include the null byte that terminates strings in the
+map. This must match the -N flag in the sendmail.cf
+&rsquo;&rsquo;K&rsquo;&rsquo; line.
+
+-c
+
+Use the specified hash and B-Tree cache size.
+
+-D
+
+Use to specify the character to use to indicate a
+comment (which is ignored) instead of the default of
+&rsquo;#&rsquo;. 
+
+-d
+
+Allow duplicate keys in the map. This is only allowed on
+B-Tree format maps. If two identical keys are read, they
+will both be inserted into the map.
+
+-e
+
+Allow empty value (right hand side).
+
+-f
+
+Normally all upper case letters in the key are folded to
+lower case. This flag disables that behaviour. This is
+intended to mesh with the -f flag in the K line in
+sendmail.cf. The value is never case folded.
+
+-i
+
+Use the specified type as fallback if the given
+maptype is not available.
+
+-l
+
+List supported map types.
+
+-o
+
+Append to an old file. This allows you to augment an
+existing file. Note: this might not be supported by all
+database types, e.g., cdb.
+
+-r
+
+Allow replacement of existing keys. Normally
+makemap complains if you repeat a key, and does not
+do the insert.
+
+-s
+
+Ignore safety checks on maps being created. This
+includes checking for hard or symbolic links in world
+writable directories.
+
+-t
+
+Use the specified delimiter instead of white space (also
+for dumping a map).
+
+-u
+
+dump (unmap) the content of the database to standard
+output. 
+
+-v
+
+Verbosely print what it is doing.
+
+Example
+
+makemap hash
+/etc/mail/access 
+
+SEE ALSO
+
+sendmail(8),
+newaliases(1)
+
+HISTORY
+
+The
+makemap command appeared in 4.4BSD.

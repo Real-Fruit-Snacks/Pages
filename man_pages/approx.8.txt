@@ -1,0 +1,112 @@
+NAME
+
+approx - proxy
+server for Debian archive files
+
+SYNOPSIS
+
+approx
+[OPTION]...
+
+DESCRIPTION
+
+approx
+responds to HTTP requests made by apt-get(8). It
+maintains a cache of Debian archive files that have been
+previously downloaded, so that it can respond with a local
+copy when possible. If a file not in the cache is requested,
+approx will download it from a remote Debian
+repository and deliver the contents to the client,
+simultaneously caching it for future use.
+
+OPTIONS
+
+-c file,
+--config file
+
+Specify an additional
+configuration file. May be used multiple times.
+
+USAGE
+
+approx
+is invoked by inetd(8).
+
+EXAMPLES
+
+Suppose that a
+client machine&rsquo;s /etc/apt/sources.list file
+contains the following lines:
+
+deb
+http://apt:9999/debian testing main 
+deb http://apt:9999/debian-security testing-security main
+
+deb-src http://apt:9999/debian unstable main
+
+In this
+example, apt is the hostname of the approx
+server machine on the local network. Each distribution, such
+as "debian" or "debian-security", is
+mapped to a remote repository in the approx
+server&rsquo;s configuration file.
+
+For example,
+the approx.conf file on the approx server
+might contain the lines
+
+debian
+http://ftp.debian.org/debian 
+debian-security
+http://security.debian.org/debian-security
+
+The mapping
+scheme is very simple. If the approx.conf file
+contains the line
+
+repository
+
+http://remote-host/initial/path
+
+then any
+request to the approx server of the form
+
+http://approx-server/repository/rest/of/URL
+
+is rewritten
+to
+
+http://remote-host/initial/path/rest/of/URL
+
+when there is a
+"cache miss", and that file is cached as
+
+/var/cache/approx/repository/rest/of/URL
+
+(Note that the
+repository name on the left-hand side is not included in the
+rewritten URL unless it is explicitly mentioned in the
+right-hand side&rsquo;s initial path.)
+
+FILES
+
+/etc/approx/approx.conf
+
+Configuration file for
+approx and related programs.
+
+/var/cache/approx
+
+Default cache directory for
+archive files.
+
+SEE ALSO
+
+approx.conf(5),
+inetd(8), approx-import(8), apt-get(8),
+sources.list(5)
+
+AUTHOR
+
+Eric Cooper
+ecc [AT] cmu.edu>

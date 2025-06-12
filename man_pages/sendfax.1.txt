@@ -1,0 +1,1262 @@
+NAME
+
+sendfax -
+submit a facsimile job for transmission
+
+SYNOPSIS
+
+sendfax
+[ options ] [ files... ]
+
+DESCRIPTION
+
+sendfax
+submits one or more facsimile transmission requests to a
+Hyla FAX facsimile server. Requests
+are normally processed immediately, although they may also
+be queued for transmission at a later time using a syntax
+identical to the at(1) command. For each job that is
+queued, sendfax prints a job identifier and a
+job group identifier on the standard output. A job
+identifier is the token by which jobs are identified within
+Hyla FAX ; job group identifiers are
+used to reference a set of jobs that have been submitted at
+the same time. Job and job group identifiers can be supplied
+to the faxrm(1) command to remove the jobs or to the
+faxalter(1) command to alter job parameters.
+
+Facsimile are
+made from the concatenation of a cover page (see below) and
+one or more files specified on the command line. If no files
+are supplied on the command line, sendfax will read
+data from the standard input unless polling is requested.
+Cover pages are distinguished for the purpose of generating
+&rsquo;&rsquo;continuation cover pages&rsquo;&rsquo;
+on the server; these are makeup cover pages that are
+automatically generated if a job fails after sending the
+original user-specified cover page.
+
+sendfax
+passes P OST S CRIPT &reg; and
+TIFF documents directly through to the fax
+server for transmission, and attempts to convert other file
+formats to either P OST S
+CRIPT or TIFF. In normal
+operation sendfax automatically converts
+ASCII-text, troff(1) output, Portable
+Document Format (PDF), and Silicon Graphics format images
+for transmission. Support for other file formats can be
+easily added through an extensible file typing and
+conversion facility; see typerules(5). Note that
+since TIFF Class F documents are processed
+directly it is simple to forward a received facsimile.
+
+By default
+sendfax will generate a cover page for each facsimile
+that is to be transmitted. This cover page is created by the
+ancillary faxcover(1) program using information
+deduced by sendfax and by information supplied on the
+command line. Automatic cover page generation may be
+suppressed with the -n option.
+
+In addition to
+sending documents, sendfax can be used to poll a
+remote facsimile machine to retrieve waiting documents. If
+the -p option is specified, a polling request will be
+submitted to each destination. If a poll request is made in
+conjunction with the transmission of documents, the poll
+request will take place after the documents are transmitted.
+Documents retrieved by polling are returned to the requestor
+by electronic mail and may be viewed with a suitable viewer
+program.
+
+One or more
+destinations must be specified on the command line using the
+-d option. A destination is the dialing string to use
+to contact the remote fax machine. Phone numbers may include
+non-alphanumeric characters for readability&mdash;only
+alphanumerics, &rsquo;&rsquo;+&rsquo;&rsquo; (for denoting a
+country code), and &rsquo;&rsquo;#&rsquo;&rsquo; (for
+denoting a subaddress) are significant in placing a call.
+Alphabetic characters are automatically mapped to their
+numeric key equivalents: &rsquo;&rsquo;abcABC&rsquo;&rsquo;
+to &rsquo;&rsquo;2&rsquo;&rsquo;,
+&rsquo;&rsquo;defDEF&rsquo;&rsquo; to
+&rsquo;&rsquo;3&rsquo;&rsquo;, etc. Dialing prefixes, such
+as &rsquo;&rsquo;1&rsquo;&rsquo; and
+&rsquo;&rsquo;011&rsquo;&rsquo; (for long distance calling
+in the United States) need not be included if an unambiguous
+number is specified. Examples of unambiguous phone numbers
+are:
+
++31.77.594.131
+
+to call the Netherlands
+
++14159657824
+
+to call California
+
+9657824
+
+to make a local call
+
+1-215-356-1666
+
+to call Pennsylvania from within the US
+
+Non-numeric strings, such as
+&rsquo;&rsquo;*70&rsquo;&rsquo; (to defeat call waiting),
+may be included in the destination phone number. Whether or
+not they are stripped from the string used to dial the
+destination fax machine is dependent on the dialstring rules
+configured for use on the server; c.f.
+hylafax-config(5) and dialrules(5).
+
+A destination
+may also be specified as user@fax-number. In this
+case the user string will be passed to
+faxcover as the identity of the recipient. Note that
+multi-word names must be enclosed in quote marks; for
+example, &rsquo;&rsquo;Sam
+Leffler@+1.415.555.1212&rsquo;&rsquo;.
+
+The order of
+options on the command line is significant. Each fax to be
+transmitted is assigned the current value of parameters
+specified on the command line; e.g. whether or not to
+generate a cover page. This means that options that specify
+parameters for a particular destination must precede the
+dialstring specified with the -d option. For
+example,
+
+sendfax -n -d
+5551212 /etc/passwd
+
+submits a fax
+to 5551212 that has no cover page while
+
+sendfax -d
+5551212 -n /etc/passwd
+
+submits the
+same fax but with the default cover page handling. Note also
+that parameter values persist across -d options so
+the following
+
+sendfax -n -d
+5551212 -d 5551313 /etc/network
+
+submits two
+facsimile, both of which have no cover page.
+
+OPTIONS
+
+-1
+
+Transmit facsimile documents
+using 1-D MH compression. By default Hyla
+FAX will use the optimal compression
+scheme supported by the transmitting modem and receiving
+facsimile device.
+
+-2
+
+Transmit facsimile documents using 2-D MR compression,
+if possible. By default Hyla FAX will
+use the optimal compression scheme supported by the
+transmitting modem and receiving facsimile device.
+
+-3
+
+Transmit facsimile documents using 2-D MMR compression,
+if possible. By default Hyla FAX will
+use the optimal compression scheme supported by the
+transmitting modem and receiving facsimile device.
+
+-a time
+
+Schedule transmission up to one year in advance at the
+indicated time. Time is specified in the
+format: &rsquo;&rsquo;HH:MM [AM|PM] | now [+ N period
+| month DD | dayofweek ]&acute;&acute; where
+month can be Jan(uary), Feb(ruary), Mar(ch), Apr(il),
+May, Jun(e), Jul(y), Aug(ust), Sep(tember), Oct(ober),
+Nov(ember), or Dec(ember); period can be minute(s),
+hour(s), day(s), week(s), or month(s); dayofweek can
+be Mon(day), Tue(sday), Wed(nesday), Thu(rsday), Fri(day),
+Sat(urday), Sun(day); e.g. &rsquo;&rsquo;now + 30
+minutes&acute;&acute; to schedule transmission 30 minutes in
+the future. Trailing information in the time field
+(such as YYYY) is ignored. By default, sendfax
+schedules facsimile for immediate delivery. Time should be
+given in the user&rsquo;s local time.
+
+-A
+
+Archive the job on the server according to the
+bin/archive script when the job is done.
+
+-b speed
+
+Transmit facsimile documents using a signalling rate
+that is constrained to be at least speed bits/second.
+If the specified speed is greater than the transmitting
+modem or receiver is capable of, it is reduced to the
+highest possible speed both devices support. If a negotiated
+signalling rate greater than or equal to speed cannot
+be negotiated then the job is aborted. Possible speeds are:
+2400, 4800, 7200, 9600, 12000, 14400, 16800, 19200, 21600,
+24000, 26400, 28800, 31200, and 33600. By default Hyla
+FAX will use the fastest possible rate
+supported by the transmitting modem and receiving facsimile
+device. 
+
+-B speed
+
+Try to transmit facsimile documents using the desired
+signalling rate. Possible speeds are: 2400, 4800, 7200,
+9600, 12000, 14400, 16800, 19200, 21600, 24000, 26400,
+28800, 31200, and 33600. If the specified speed is greater
+than the transmitting modem or receiver is capable of, it is
+reduced to the highest possible speed both devices support.
+By default Hyla FAX will use the
+fastest possible rate supported by the transmitting modem
+and receiving facsimile device (unless restricted by other
+server configuration); this option can be used to reduce the
+speed. Note that international calls are frequently more
+reliable when transmissions are restricted to 9600
+bits/second. For Class 1/1.0 devices, if the specified speed
+is not greater than 14400 then V.34 will not be attempted,
+and if the specified speed is 9600 or 7200 then V.29 will be
+assumed in lieu of V.17.
+
+-c comments
+
+Pass comments to the faxcover(1) program
+for inclusion in the comments field of any generated cover
+page. 
+
+-C file
+
+Pass file to the faxcover(1) program for
+use as the cover page template.
+
+-D
+
+Enable notification by electronic mail when the
+facsimile has been delivered. By default Hyla
+FAX will notify the submitter only if
+there is a problem with a job.
+
+-d
+destination
+
+Create a job to transmit the
+supplied documents to a facsimile machine at the indicated
+destination. If the destination is of the form
+&rsquo;&rsquo;user@phone-number#subaddress&rsquo;&rsquo;
+then any cover page will show user as the intended
+recipient, and the remote system will be supplied the
+subaddress value (i.e. for routing) provided that the
+sending modem and the receiving system support it.
+
+-E
+
+Disable use of the Error Correction Mode (
+ECM ) when transmitting page data. Setting
+ECM to false will limit the maximum speed to
+14400 bps. By default Hyla FAX will
+attempt to use ECM when both the transmitting
+modem and receiving device support it. Note that
+international calls are sometimes faster when
+ECM is disabled. Beware also that some modems
+and/or facsimile devices do not properly implement
+ECM causing transmission failures.
+
+-f from
+
+Use from as the identity of the facsimile sender.
+Otherwise the sender is the user that invoked
+sendfax. The sender is an account name to which the
+Hyla FAX software should direct
+notification messages. The from identity may be a
+fullblown &rsquo;&rsquo;From:&rsquo;&rsquo; line, e.g. e.g.
+&rsquo;&rsquo;Joe Blow joe [AT] foo.com>&rsquo;&rsquo; and
+&rsquo;&rsquo;joe [AT] foo.com (Joe Blow)&rsquo;&rsquo; are
+acceptable. If no host-part is specified in the from
+string the local hostname is used. This option is useful
+when sendfax is invoked on behalf of another user,
+such as in the implementation of an electronic mail to fax
+gateway. 
+
+-F format
+
+Use the specified format when imaging tag lines
+on outgoing pages. Consult the description of the
+TagLineFormat parameter in hylafax-config(5)
+for an explanation of how to construct a format string.
+
+Note that
+many locales require that proper identification appear on
+all transmitted facsimile; when using this facility one
+should always include proper identification (e.g. a phone
+number) in the imaged taglines.
+
+-G
+
+Enable usage of any extended
+resolutions supported by the receiver. -G supersedes
+the usage of any -l or -m options. Beware that
+increased resolution will increase transmission time.
+
+-h
+[modem@]host[:port]
+
+Force the jobs to be processed
+on a specific host and, optionally, using a
+particular modem. The host may be either a
+symbolic name or a network address. If no -h option
+is supplied, sendfax uses the
+FAXSERVER environment variable to identify
+the Hyla FAX server to which the jobs
+should be directed. If no server is specified then
+sendfax attempts to contact a server on the local
+host. If no modem is specified, the job will be submitted to
+any available modem.
+
+-i identifier
+
+Use the identifier
+string in any notification messages instead of the usual job
+identifier number. This option is useful for applications
+that cross reference notification messages against job
+submissions.
+
+-I time
+
+If a job must be requeued because of a communication
+failure schedule the retry according to the specified
+time. Times are given in seconds. Minutes, hours, and
+days can be specified with
+&rsquo;&rsquo;min&rsquo;&rsquo;,
+&rsquo;&rsquo;hour&rsquo;&rsquo;, and
+&rsquo;&rsquo;day&rsquo;&rsquo; suffixes,
+respectively. By default Hyla FAX
+reschedules jobs using retry times that depend on the manner
+in which the job failed; this interface permits a user to
+override this algorithm and specify a single fixed retry
+time for all communication failures.
+
+-k time
+
+Kill the job if it does not complete in the indicated
+time. The time is specified using notation
+identical to the -a option. Note that the time
+is relative to the time of the initial time-to-send. The
+default kill time is &rsquo;&rsquo;now + 3
+hours&rsquo;&rsquo; (three hours from the time the job is
+first processed). To retry for an hour, &rsquo;&rsquo;now +1
+hour&rsquo;&rsquo; could be used.
+
+-l
+
+Transmit the facsimile at a vertical resolution of 98
+lines/inch; otherwise known as low resolution.
+
+-m
+
+Transmit the facsimile at a vertical resolution of 196
+lines/inch; otherwise known as medium resolution or
+fine mode.
+
+-M mst
+
+Transmit facsimile documents using the specified minimum
+scanline time. Possible times are: 0ms, 5ms, 10ms2, 10ms,
+20ms2, 20ms, 40ms2, and 40ms. If the specified time is less
+than the transmitting modem or receiver is capable of, it is
+increased to the lowest possible time both devices support.
+By default Hyla FAX will use the
+lowest possible time supported by the transmitting modem and
+receiving facsimile device (unless restricted by other
+server configuration). This option is mostly useful for
+debugging. 
+
+-n
+
+Suppress the automatic generation of a cover page for
+subsequent facsimile. Note that polling requests do not
+receive a cover page unless they are combined with the
+transmission of one or more files.
+
+-N
+
+Do not notify the sender by electronic mail when the
+facsimile has been delivered or requeued.
+
+-o owner
+
+Specify the fax owner login name, replacing any
+FAXUSER environment variable that may be set for the
+same purpose. If neither is specified, the user&rsquo;s
+current login name is used.
+
+-p
+
+Poll each destination for any available documents. If a
+poll request is made together with document transmission,
+the poll operation is done after the documents are
+transmitted. Documents received by polling are returned to
+the sender by electronic mail.
+
+-P priority
+
+Assign the specified scheduling priority to
+subsequent jobs. A priority is an integer value in the range
+[0-255]. Lower values result in higher priority processing.
+By default, each job is assigned 127 for an initial
+scheduling priority. If a job&rsquo;s priority is greater
+than bulk faxes then the job&rsquo;s priority is raised
+(numerically lowered) for each failed attempt to transmit so
+that retransmit attempts are done ahead of newly submitted
+jobs. In the case of bulk faxes (numerically higher than
+190), then the job&rsquo;s priority is lowered (numerically
+raised) for each failed attempt to transmit so that the
+whole of the bulk-queued jobs will be attempted before any
+are retried. The priority may also be specified as
+one of the following symbolic names: default or
+normal (127), bulk or junk (191),
+low (190), or high (63).
+
+-R
+
+Enable notification by electronic mail when the
+facsimile has been delivered and when it is requeued for
+retransmission. By default Hyla FAX
+will notify the submitter only if there is a problem with a
+job. 
+
+-r regarding
+
+Pass regarding to the
+faxcover(1) program as the value of the
+&rsquo;&rsquo;Re:&rsquo;&rsquo; field of any generated cover
+page.
+
+-s size
+
+Set the page size to use for the transmitted facsimile.
+Facsimile are normally imaged with a system-default page
+size (usually letter-size pages, 8.5" by 11", for
+sites in North America). Alternate page sizes are specified
+symbolically using either the name or abbreviation of an
+entry in the pagesizes(5) database; e.g. a3
+(ISO A3), a4 (ISO A4), a5 (ISO A5), a6
+(ISO A6), b4 (ISO B4), na-let (North American
+Letter), us-leg (American Legal), us-led
+(American Ledger), us-exe (American Executive),
+jp-let (Japanese Letter), and jp-leg (Japanese
+Legal). Comparisons are case-insensitive and any match of a
+substring of the full page-size name is sufficient; e.g.
+&rsquo;&rsquo;legal&rsquo;&rsquo; would match
+&rsquo;&rsquo;American Legal&rsquo;&rsquo;.
+
+Note that it
+may not be permissible to image into the full page area; the
+guaranteed reproducible area for a page is typically inset.
+Also, note that while arbitrary page sizes can be specified
+through the page size database, only a limited set of page
+dimensions are supported by the Group 3 facsimile protocol.
+Thus if an odd-size facsimile is submitted for transmission
+it may not be possible to determine if it can be sent until
+the fax server establishes communication with the remote
+facsimile machine.
+
+-S tsi
+
+Pass tsi to the server as the
+suggested sender identification to be used, for example, in
+tagline imaging and fax protocol.
+
+-t tries
+
+Make no more than tries attempts to send the
+facsimile. By default, Hyla FAX will
+terminate a job if 3 consecutive attempts to send a
+particular page fail, or it appears the receiver is not a
+facsimile machine. Otherwise Hyla FAX
+places no limit on the number of attempts to send a
+facsimile, instead terminating a job if it is not completed
+within a kill time timeout interval. Note that a try
+is a call in which carrier is established and the facsimile
+protocol is commenced; this is contrasted with a call
+attempt that might have failed because the line was busy.
+Use &rsquo;&rsquo;-1&rsquo;&rsquo; to indicate that no
+tries value should be specified to the server.
+
+-T maxdials
+
+Make no more than maxdials calls in attempting to
+send the facsimile. By default, HylaFAX will redial 12 times
+before killing a job. Use &rsquo;&rsquo;-1&rsquo;&rsquo; to
+indicate that no maxdials value should be specified
+to the server.
+
+-U voice-no
+
+Pass voice-no to the faxcover(1) program
+as the sender&rsquo;s voice number.
+
+-V voice-no
+
+Pass voice-no to the faxcover(1) program
+as the destination person&rsquo;s voice number.
+
+-w
+
+Wait for the job to complete before ending the sendfax
+session. If this option is used, the sendfax process will
+not terminate until the job is completed.
+
+-W fax-no
+
+Pass fax-no to the faxcover(1) program as
+the sender&rsquo;s fax number.
+
+-x company
+
+Pass company to the faxcover(1) program as
+the destination company name.
+
+-X company
+
+Pass company to the faxcover(1) program as
+the sender&rsquo;s company name.
+
+-y location
+
+Pass location to the faxcover(1) program
+as the destination company&rsquo;s location.
+
+-Y location
+
+Pass location to the faxcover(1) program
+as the sender&rsquo;s company location.
+
+-z filename
+
+Read destinations from filename which contains a
+list of the destinations formatted identically as
+destinations for the -d option, one per line. Usage
+of this option is similar to the -d option and may be
+done in conjunction with other -d and -z
+options. 
+
+-v
+
+Print information on the standard output about each
+conversion and cover sheet generation operation it does. If
+-v is specified twice, the protocol between
+sendfax and the hfaxd server process that does
+the submission work on the remote machine is also
+displayed. 
+
+-Z range
+
+Specify that only certain pages of the fax should
+actually be transmitted. The range is in a comma-seperated
+list of ranges in the form of A[-B][,....]. The range is
+specified against the resulting document to be faxed,
+excluding any cover pages. So if you have more than one
+document, make sure to account for them, and exclude the
+cover pages in the range specification. Cover pages will
+always be faxed, so a fax with a coverpage and 2 5 page
+documents with a range specified of of 1,3,10 will fax the
+cover page, and pages 1, 3, and 10 of the combined documents
+(page 1 and 3 from the first document, and page 5 of the
+second document).
+
+CONFIGURATION PARAMETERS
+
+sendfax
+reads configuration information from the files
+/etc/hylafax/hfaxd.conf,
+/etc/hylafax/hyla.conf,
+/etc/hylafax/sendfax.conf, and ~/.hylarc; in
+that order, with later-read settings superseding any that
+may have been previously read. Configuration files follow
+the conventions described in hylafax-client(1). The
+following configuration parameters are recognized.
+Parameters marked with &sup1; are not available in
+/etc/hylafax/hfaxd.conf : 
+Tag Type Default Description
+
+AutoCoverPage
+
+boolean
+
+Yes
+
+automatically generate cover page
+
+ChopThreshold
+
+float
+
+3.0
+
+page chopping threshold
+
+CoverCmd
+
+string
+
+see below
+
+pathname of cover sheet program
+
+Cover-Comments
+
+string
+
+-
+
+cover page comments string
+
+Cover-Company&sup1;
+
+string
+
+-
+
+cover page to-company name string
+
+Cover-Location&sup1;
+
+string
+
+-
+
+cover page to-company location string
+
+Cover-Regarding
+
+string
+
+-
+
+cover page regarding string
+
+Cover-Template
+
+string
+
+-
+
+cover page template filename
+
+Cover-Voice&sup1;
+
+string
+
+-
+
+cover page to-voice number string
+
+Cover-From-Company&sup1;
+
+string
+
+-cover page from-company string
+
+Cover-From-Location&sup1;
+
+string
+
+-cover page from-location string
+
+Cover-From-Voice&sup1;
+
+string
+
+-cover page from-voice number string
+
+Cover-From-Fax&sup1;
+
+string
+
+-
+
+cover page from-fax number string
+
+DateFormat
+
+string
+
+-
+
+cover page date format string
+
+DesiredEC
+
+integer
+
+2
+
+desired type of ECM
+
+DesiredMST
+
+string
+
+-
+
+desired minimum scanling time to use
+
+DesiredSpeed
+
+integer
+
+-
+
+desired signalling rate to use
+
+DialRules
+
+string
+
+see below
+
+file containing dialstring rules
+
+From
+
+string
+
+-
+
+sender&rsquo;s identity
+
+HRes
+
+float
+
+204.
+
+horizontal resolution
+
+Host
+
+string
+
+localhost
+
+host to contact for service
+
+KillTime
+
+string
+
+-
+
+time to expire job
+
+MailAddr
+
+string
+
+-
+
+mail address for notification messages
+
+MaxDials
+
+integer
+
+12
+
+times to retry dialing
+
+MaxTries
+
+integer
+
+3
+
+times to retry transmission
+
+MinSpeed
+
+integer
+
+-
+
+minimum acceptable signalling rate
+
+Modem
+
+string
+
+-
+
+modem to use on server
+
+Notify
+
+string
+
+none
+
+control email notification
+
+PageChop
+
+string
+
+default
+
+control page chop handling
+
+PageLength
+
+float
+
+-
+
+page length in millimeters
+
+PageSize
+
+string
+
+default
+
+page size by name
+
+PageWidth
+
+float
+
+-
+
+page width in millimeters
+
+PassiveMode
+
+boolean
+
+false
+
+whether or not to use passive mode
+
+Port
+
+integer
+
+4559
+
+port to use in contacting server
+
+Priority
+
+string
+
+default
+
+job scheduling priority
+
+Protocol
+
+string
+
+tcp
+
+protocol to use in contacting server
+
+RetryTime
+
+string
+
+-
+
+delay between failed attempts to send
+
+SendTime
+
+string
+
+-
+
+time to send job
+
+TagLine
+
+string
+
+-
+
+tagline format string
+
+TypeRules
+
+string
+
+see below
+
+file containing file typing rules
+
+VRes
+
+float
+
+98.
+
+vertical resolution
+
+Verbose
+
+boolean
+
+No
+
+whether or not to enable protocol tracing
+
+The
+configuration parameters are explained below. Certain
+configuration parameters, notably those for setting strings
+on automatically generated cover pages, are defined mainly
+for use by other Hyla FAX programs
+that share common code used by sendfax.
+
+AutoCoverPage
+
+Control whether or not a cover
+page is automatically generated for each job. (Equivalent to
+the -n option.)
+
+ChopThreshold
+
+The amount of white space, in inches, that must be
+present at the bottom of a page before Hyla
+FAX will attempt to truncate the page
+transmission. 
+
+CoverCmd
+
+The absolute pathname of the program to use to generate
+cover pages. The default cover sheet program is
+/usr/bin/faxcover. 
+
+Cover-Comments
+
+The comments string to pass to the cover sheet program
+when auto-generating cover pages.
+
+Cover-Company
+
+The to-company name string to pass to the cover sheet
+program when auto-generating cover pages.
+
+Cover-Location
+
+The to-company location string to pass to the cover
+sheet program when auto-generating cover pages.
+
+Cover-Regarding
+
+The regarding string to pass to the cover sheet program
+when auto-generating cover pages.
+
+Cover-Template
+
+The absolute pathname of a cover sheet template file to
+use in auto-generating cover pages.
+
+Cover-Voice
+
+The to-voice number string to pass to the cover sheet
+program when auto-generating cover pages.
+
+Cover-From-Company
+
+The from-company name string to
+pass to the cover sheet program when auto-generating cover
+pages.
+
+Cover-From-Location
+
+The from-location string to
+pass to the cover sheet program when auto-generating cover
+pages.
+
+Cover-From-Voice
+
+The from-voice number string to
+pass to the cover sheet program when auto-generating cover
+pages.
+
+Cover-From-Fax
+
+The from-fax number string to pass to the cover sheet
+program when auto-generating cover pages.
+
+DateFormat
+
+The strftime(3) format string to pass to the
+cover page command when auto-generating cover pages.
+
+DesiredEC
+
+Which type of the optional Error Correct Mode (
+ECM ) to use when transmitting facsimile. 0
+to disable, 1 for 64-byte ECM, and 2 for 256-byte ECM
+(default). 
+
+DesiredMST
+
+The desired minimum scanline time to use when
+transmitting facsimile. (Equivalent to the -M
+option.) 
+
+DesiredSpeed
+
+The desired signalling rate to the use when transmitting
+facsimile. (Equivalent to the -B option.)
+
+DialRules
+
+The name of the file containing the dialstring
+processing rules to when preparing an externally visible
+representation of the dialstring (e.g. to strip credit card
+numbers). By default this is /etc/hylafax/dialrules.
+
+From
+
+The sender&rsquo;s identity. (Equivalent to the
+-f option.)
+
+Host
+
+The host to contact for service. (Equivalent to the
+-h option.)
+
+HRes
+
+The horizontal resolution to use when transmitting
+facsimile. (NB: this currently has no effect.)
+
+KillTime
+
+The expiration time to assign to each job. (Equivalent
+to the -k option.)
+
+MailAddr
+
+The electronic mail address to direct notification
+messages from the server. If this string is specified
+without an &rsquo;&rsquo;@hostname&rsquo;&rsquo; part then
+the local hostname will automatically be appended.
+(Equivalent to the -f option.)
+
+MaxDials
+
+The maximum number of times to dial the phone for each
+job. (Equivalent to the -T option.)
+
+MaxTries
+
+The maximum number of times to retry sending a job.
+(Equivalent to the -t option.)
+
+MinSpeed
+
+The minimum acceptable signalling rate to use when
+transmitting facsimile. (Equivalent to the -b
+option.) 
+
+Modem
+
+The modem to use on the server. (Equivalent to the
+-h option.)
+
+Notify
+
+Control the email notification messages from the server.
+This string may be one of &rsquo;&rsquo;done&rsquo;&rsquo;,
+&rsquo;&rsquo;none&rsquo;&rsquo;,
+&rsquo;&rsquo;requeued&rsquo;&rsquo; or
+&rsquo;&rsquo;default&rsquo;&rsquo; with an optionally
+preceding &rsquo;&rsquo;when &rsquo;&rsquo; (e.g.
+&rsquo;&rsquo;when done&rsquo;&rsquo;). Note that
+&rsquo;&rsquo;when requeued&rsquo;&rsquo; implies
+&rsquo;&rsquo;when done&rsquo;&rsquo;. (Equivalent to the
+-D, -R, and -N options.)
+
+PageChop
+
+Control page chop handling when transmitting facsimile.
+This string may be one of &rsquo;&rsquo;none&rsquo;&rsquo;,
+&rsquo;&rsquo;all&rsquo;&rsquo;, or
+&rsquo;&rsquo;last&rsquo; to have no pages chopped, all
+pages chopped, or only the last page chopped; respectively.
+Page chopping is controlled by the ChopThreshold
+parameter. 
+
+PageLength
+
+Set the transmitted page length in millimeters.
+
+PageSize
+
+Set the page dimensions according to an entry in the
+pagesizes(5) database. (Equivalent to the -s
+option.) 
+
+PageWidth
+
+Set the transmitted page width in millimeters.
+
+PassiveMode
+
+Whether or not to use passive mode in communication with
+the server.
+
+Port
+
+The network port to contact for service. (Equivalent to
+the -h option.)
+
+Priority
+
+The scheduling priority to assign to each job.
+(Equivalent to the -P option.)
+
+Protocol
+
+The name of the communication protocol to use when
+contacting a server. (Equivalent to the FAXSERVICE
+environment variable.)
+
+RetryTime
+
+The time to delay between job retries due to a
+communication failure. (Equivalent to the -I
+option.) 
+
+SendTime
+
+The time to send jobs. (Equivalent to the -a
+option.) 
+
+TagLine
+
+The tagline format string to use when transmitting
+facsimile. (Equivalent to the -F option.)
+
+TypeRules
+
+The name of the file containing file type conversion
+rules. By default this is /etc/hylafax/typerules.
+
+Verbose
+
+Control protocol tracing. (Equivalent to the -vv
+option.) 
+
+VRes
+
+Set the vertical resolution in lines/inch to use when
+transmitting facsimile. (Equivalent to the -m and
+-l options.)
+
+DIAGNOSTICS
+
+The following
+messages are generated because of problems encountered on
+the local machine.
+
+Could not
+call server. The facsimile server on the remote machine
+did not respond.
+
+No input
+data; transmission aborted. No data was supplied
+(typically on the standard input). No facsimile will be
+sent.
+
+Error
+converting data; command was %s." A data conversion
+operation failed; the shell command that was used is
+printed.
+
+Can not
+convert %s. Data needed to be converted for
+transmission, but the required conversion rule was not
+located. This may indicate that the Hyla
+FAX software was incorrectly installed;
+or perhaps that an NFS-mounted directory is
+temporarily unavailable.
+
+%s: Can not
+determine file type. sendfax was unable to deduce
+the type of the file.
+
+%s: Not a
+regular file. The file is something other than a regular
+file; for example, a directory.
+
+The following
+messages may be printed by sendfax. These messages
+describe problems encountered by the server process on the
+remote machine. This list is incomplete; other messages may
+be generated by the server under unusual circumstances.
+
+FILES
+
+~/.hylarc
+per-user configuration file
+
+/etc/hylafax/hyla.conf
+
+system-wide configuration file
+
+/etc/hylafax/sendfax.conf
+
+system-wide configuration file
+
+/etc/hylafax/typerules
+
+file type and conversion rules
+
+/etc/hylafax/pagesizes
+
+page size database
+
+/etc/hylafax/dialrules
+
+optional client dialstring rules
+
+/usr/bin/faxcover
+
+for generating cover sheets
+
+/usr/sbin/textfmt
+
+for converting text to PostScript
+
+/usr/sbin/sgi2fax
+
+for converting SGI RGB images
+
+/var/spool/hylafax/tmp/sndfaxXXXXXXtemporary
+files
+
+SEE ALSO
+
+at(1),
+hylafax-client(1), faxalter(1),
+faxcover(1), faxmail(1), faxrm(1),
+faxstat(1), sgi2fax(1), textfmt(1),
+hfaxd(8), hylafax-server(5),
+typerules(5)

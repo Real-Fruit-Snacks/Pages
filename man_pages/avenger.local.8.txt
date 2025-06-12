@@ -1,0 +1,606 @@
+NAME
+
+avenger.local
+&minus; deliver mail for a local user
+
+SYNOPSIS
+
+avenger.local
+[&minus;f sender] [&minus;D recip] [&minus;a
+extra] [&minus;d] user
+
+DESCRIPTION
+
+avenger.local
+is a local mail delivery agent that enables users to set up
+multiple "extension" email addresses and process
+mail differently for each addresses. The popular qmail
+MTA (http://www.qmail.org/&gt;) has a
+mechanism for processing such extension addresses.
+avenger.local provides a similar facility for users of other
+MTAs, such as sendmail.
+
+To use
+avenger.local, you should configure your MTA
+so that it delivers mail to
+user+extra@host by
+executing avenger.local &minus;D
+user+extra@host
+&minus;d user+extra.
+Alternatively, you can execute avenger.local &minus;a
+extra &minus;d user, but then you lose
+information about the host. However, the latter syntax has
+the advantage of being command-line compatible with
+procmail; thus, if your MTA has support for
+procmail as a local delivery agent, you should be able to
+use that by simply substituting avenger.local&rsquo;s path
+for procmail&rsquo;s.
+
+Note that
+either way you invoke it, avenger.local rejects recipients
+containing the string ".." in the local
+part. Such mailbox names are not allowed by
+RFC822, and could potentially lead to
+security problems if parts of mailbox names are used as file
+names. Out of paranoia, avenger.local additionally rejects
+mailbox names containing the "/"
+character in the extra portion after the local username.
+
+avenger.local
+is designed to be unobtrusive for users who do not want to
+take advantage of its functionality. When delivering mail
+for user, if user&rsquo;s home directory does
+not contain a subdirectory .avenger, avenger.local
+simply executes the default mail delivery agent (usually
+called mail.local).
+
+For users who
+do have .avenger directories, mail is delivered
+according to rule files called .avenger/local*. Mail
+to user@host is delivered according to
+rules in .avenger/local. Mail to
+user+ext1@host is
+delivered according to rules in .avenger/local+ext1
+if such a file exists, or else .avenger/local+default
+if such a file exists; if neither file exists, the mail is
+bounced. Addresses containing multiple
+"+" characters are handled as expected.
+Mail to
+user+ext1+ext2@host
+is governed by, in order of decreasing precedence,
+.avenger/local+ext1+ext2,
+.avenger/local+ext1+default, or
+.avenger/local+default; it is bounced if none of
+those files exist.
+
+Local rule
+files can be in one of two formats. If the first two
+characters of the file are "#!", then the
+file is simply executed as a script, with the message on
+standard input. The script&rsquo;s standard input will be
+read-only, but seekable, so, for example, the message can be
+delivered to multiple mailboxes using the deliver
+utility.
+
+Otherwise, if
+the first two characters of a file are not
+"#!", avenger.local uses a syntax similar
+to (but not identical to) qmail&rsquo;s, where each line is
+one of the following types, depending on the first
+character: 
+# comment
+
+Lines starting with
+"#" are treated as comments and ignored.
+The exception is that if the first line begins
+"#!", the file is executed as a script.
+Note that if the first two characters of a file are
+"#!" but the file&rsquo;s execute
+permission bits are not set, then mail sent to that address
+will be deferred. (This mechanism can be used for
+intentionally deferring mail while performing
+maintenance.)
+
+./maildir/ 
+/path/to/maildir/
+
+A line starting
+"." or "/" and ending
+with a "/" character is treated as a mail
+directory. Mail is delivered there using the qmail maildir
+format.
+
+./file 
+/path/to/file
+
+A line starting
+"." or "/" and
+NOT ending with a "/"
+character specifies an ordinary Unix mbox file into which
+the message should be delivered.
+
+&address
+
+"&"
+indicates that a copy of the message should be forwarded to
+address. You may not place a space between
+& and address, nor can address contain
+angle brackets, comments, or anything other than an email
+address with a fully-qualified domain name.
+
+(Note that in
+qmail, the & character is optional for certain
+email addresses, while avenger.local always requires the
+& character.)
+
+Forwarding
+happens after all other lines in the file are processed. If
+any other configuration line fails, for instance because a
+command executed on behalf of a | line exits
+non-zero, the mail is not forwarded to any of the addresses.
+(The exception is if a command exits with status 99, in
+which case mail is forwarded to addresses in all preceding
+& lines, but subsequent lines are ignored.)
+
+| command
+
+Specifies that command
+should be run as a shell command, with the mail message as
+its standard input. If command exits with a status
+other than 0, processing of the local rule file terminates
+immediately, with avenger.local&rsquo;s exit status
+determined by command&rsquo;s.
+
+If
+command&rsquo;s status is 99, avenger.local exits
+with status 0, effectively pretending the command just
+executed was the last line in the .avenger/local*
+file. If command&rsquo;s exit status is between 64
+and 78, inclusive, avenger.local exits with the same status
+as command. If command exits with status 100
+or 112, avenger.local exits with status 70. For all other
+exit values, or if command terminates because of a
+signal, avenger.local exits with status 75. Note that the
+&minus;&minus;qmailexit flag changes this behavior,
+as described below.
+
+See the file
+/usr/include/sysexits.h for more information on the
+meaning of various exit statuses to sendmail.
+
+address
+
+command
+
+This sets the envelope sender
+(i.e., bounce address) for copies of the message forwarded
+to users with & lines. Note that one sender
+address applies to all recipients, regardless of where in
+the .avenger/local* file the bounce address is set.
+It is not possible to forward from different bounce
+addresses for different recipients.
+
+The first form
+of this line simply sets the envelope sender to
+address. No spaces are allowed between 
+and the address. No angle brackets or comments are allowed
+either.
+
+The second form
+of this line executes command with the shell, giving
+it the message body as standard input. If command
+exits with status 0 and outputs exactly one line of text,
+this line will be interpreted as the new envelope sender for
+forwarded copies the message. If command exits with
+any of statuses 64&minus;78, 99&minus;100, or 111&minus;112,
+processing of the avenger/.local* halts exactly as
+for the | command. For other exit statuses, or if
+command outputs no lines or more than one line, the
+command&rsquo;s result is ignored and processing continues
+with the envelope sender unchanged.
+
+! command
+
+Runs command with the
+shell, giving it the mail message on standard input. If the
+command exits 0 and outputs exactly one line of text
+beginning "." or "/",
+the output is interpreted as either a maildir (if the line
+ends "/") or a mailbox (if it
+doesn&rsquo;t) to which the message should be delivered. In
+other cases, either the ! line is ignored, or
+processing halts, as described for the 
+command.
+
+A completely
+empty file (not even containing a comment or blank line), or
+a missing .avenger/local (with no extension file), is
+treated as equivalent to a file with the line
+"./Mailbox".
+
+OPTIONS
+
+&minus;a extra
+
+Specifies the extra portion of
+the local part of the email address after the user name. In
+other words, if avenger.local is invoked with arguments
+&minus;a extra &minus;d user, it
+is equivalent to invoking it with the arguments
+&minus;d user+extra. The
+&minus;a option allows command-line compatibility
+with sendmail&rsquo;s procmail interface, which separates
+out the user name from the extension portion of the
+address.
+
+&minus;d user
+
+Specifies the local user to
+deliver mail to. Note that for compatibility with other
+local mailers, the &minus;d is optional, you can
+simply specify user as the final command-line
+argument.
+
+&minus;f sender
+
+&minus;r sender
+
+The &minus;f option
+specifies the envelope sender of the message. For historical
+reasons, &minus;r is synonymous with
+&minus;f.
+
+&minus;t
+
+This option is silently ignored, for command-line
+compatibility with procmail.
+
+&minus;B
+
+Ordinarily, when forwarding a bounce message,
+avenger.local will invoke sendmail with the argument
+&minus;f followed by an empty string argument (i.e.,
+specifying an empty from address). This does not work with
+some older versions of sendmail. The &minus;B option
+says that bounce messages should be forwarded with arguments
+&minus;f @ instead, which appears to produce the
+desired (MAILER-DAEMON) result with older versions of
+sendmail. 
+
+&minus;Y
+
+This option is silently ignored, for command-line
+compatibility with procmail.
+
+&minus;&minus;fallback
+program
+
+If the user specified on
+the command line does not exist or have a
+$HOME/.avenger/ directory, or else has UID
+0 (root), or has an invalid shell or an expired
+account, then avenger.local will not attempt to deliver mail
+to the user. Instead, it will attempt to run the
+system&rsquo;s normal mail delivery agent as a fallback.
+This program is usually called mail.local, but you
+can specify an alternative with the
+&minus;&minus;falback option. Note that this should
+be the full path of the program, and should not contain any
+arguments. avenger.local will supply the arguments
+&minus;f from &minus;d user.
+
+&minus;&minus;fcntl
+
+This option enables fcntl
+(a.k.a. POSIX ) file locking of mail spools,
+in addition to flock and dotfile locking. The advantage of
+fcntl locking is that it may do the right thing over
+NFS. However, if either the
+NFS client or server does not properly
+support fcntl locking, or the file system is not mounted
+with the appropriate options, fcntl locking can fail in one
+of several ways. It can allow different processes to lock
+the same file concurrently--even on the same machine. It can
+simply hang when trying to acquire a lock, even if no other
+process holds a lock on the file. Also, on some OSes it can
+interact badly with flock locking, because those OSes
+actually implement flock in terms of fcntl. For these
+reasons, avenger.local performs dotfile and flock locking by
+default, but not fcntl locking.
+
+&minus;&minus;qmailexit
+
+When programs from |,
+!, and  exit with non-zero exit status,
+the &minus;&minus;qmailexit flag causes avenger.local
+to translate the exit codes to ones more suitable for qmail.
+Any code that would cause a hard error in sendmail causes
+avenger.local to exit with 100, any soft error causes exit
+code 111, and exit code 99 is passed through.
+
+&minus;&minus;sendmail
+program
+
+Specifies the program to run to
+send mail, when users have lines beginning
+"&" in their .avenger/local*
+files. If program contains spaces, it is broken into
+multiple arguments. The default value for program is
+"sendmail &minus;oi &minus;os
+&minus;oee".
+
+&minus;&minus;separator
+char
+
+Specifies a separator character
+to place between portions of the address extension. The
+default value is "+". Thus, the argument
+&minus;a a+b would cause avenger.local to search for
+files $HOME/.avenger/local+a+b,
+$HOME/.avenger/local+a+default, and
+$HOME/.avenger/local+default. Specifying a different
+char, say "&minus;", would change
+the "+" to "&minus;"
+in both the email address and file names.
+
+&minus;&minus;smuser
+user
+
+By default, sendmail is run as
+the user under which avenger.local is invoked, which will
+ordinarily be root. To drop privileges before running
+sendmail, you can specify this argument and avenger.local
+will run sendmail as user. Note that avenger
+doesn&rsquo;t run sendmail as the recipient user, because
+this often results in undesirable
+"X&minus;Authentication&minus;Warning"
+fields in the header. If you wish the header to reflect a
+trail of how a message has been forwarded, see the
+&minus;&minus;to option below.
+
+&minus;&minus;tmpfile
+template
+
+avenger.local creates a copy of
+the message in a local file. template is a template
+for the name of the file, which must end with a number of
+"X" characters, which will be replaced by
+a unique identifier. (This is for use with the
+mkstemp(3) library call.) The default value is
+"/tmp/msg.XXXXXXXXXX".
+
+&minus;&minus;to
+address (&minus;D address)
+
+Specifies the full envelope
+recipient address to which this message is being delivered.
+With this option, avenger.local adds a line
+"Delivered&minus;To:
+address" to the header of the mail
+message. It also checks that the header did not previously
+contain the same line--if the message has already been
+delivered to the same address, this indicates a loop, and
+avenger.local exits with status 70.
+
+ENVIRONMENT
+
+The following
+environment variables are set when running commands
+specified in lines starting |.
+
+EXT
+
+The local portion of the email address following the
+first separator character (which is the
+"+" character, unless set otherwise by
+&minus;&minus;separator). This variable is not set if
+there is no extension in the email address.
+
+EXT1 ,
+EXT2 , ...
+
+When EXT
+itself contains a the separator character,
+EXT1 contains the part of
+EXT after the first separator,
+EXT2 the part after the second
+separator, and so on for each separator character in
+EXT .
+
+HOST
+
+If a recipient has been
+specified with the &minus;D recip flag, this
+variable will contain the host portion of recip.
+
+LOCAL
+
+If a recipient has been
+specified with the &minus;D recip flag, this
+variable will contain the local portion of recip.
+
+PREFIX 
+SUFFIX , SUFFIX1 ,
+SUFFIX2 , ...
+
+Assuming the separator is
+"+", when processing a file
+local+base+default, PREFIX is
+set to base, while SUFFIX is
+set to the portion of the name for which default was
+substituted. When the file does not end with default,
+SUFFIX is not set. When the file is
+just local with no extension, neither
+PREFIX nor
+SUFFIX is set. When
+SUFFIX itself contains a
+"+" character,
+SUFFIX1 contains to the part of
+SUFFIX after the first
+"+" character,
+SUFFIX2 contains the part after the
+second "+", and so on for each
+"+" character in suffix.
+
+RECIPIENT
+
+If the &minus;&minus;to
+option was specified, the RECIPIENT
+environment variable is set to the address specified in that
+option. Otherwise, RECIPIENT is not
+set.
+
+RECIPIENT_HOST 
+RECIPIENT_LOCAL
+
+These are the same as
+HOST and LOCAL ,
+but with all characters folded to lower-case.
+
+RPLINE
+
+A
+"Return&minus;Path:" line suitable for
+prepending to the message header.
+
+SENDER
+
+The envelope sender of the
+message.
+
+SENDMAIL
+
+The value of the
+&minus;&minus;sendmail option, or "sendmail
+&minus;oi &minus;os &minus;oee" by default.
+
+SENDFROM
+
+This is the same as
+$SENDER, unless envelope sender is empty (for a
+bounce message) and the &minus;B option has been
+specified, in which case SENDFROM is
+"@". You can forward a message on from
+the same sender with a line like this:
+
+     | $SENDMAIL &minus;f "$SENDFROM" &minus;&minus; recpient1 [AT] host1.com ...
+
+SEPARATOR
+
+The separator character
+specified by &minus;&minus;separator, or the default
+"+" if none has been explicitly
+specified.
+
+UFLINE
+
+An mbox "From
+" line suitable for prepending to the message
+before appending it to a mailbox or passing it to a filter
+that expects such a line.
+
+USER
+
+The user to whom the message is
+being delivered.
+
+EXAMPLES
+
+To use
+avenger.local with sendmail, you might put the following in
+your sendmail m4 configuration file (this is the file ending
+.mc that produces your sendmail.cf file):
+
+        FEATURE(`local_procmail',
+                `/usr/local/libexec/avenger.local',
+                `avenger.local &minus;a $h &minus;d $u')
+
+To deliver mail
+to a maildir directory called inbox in your home
+directory, you would place the following line in the file
+$HOME/.avenger/local:
+
+        ./inbox/
+
+If you are
+subscribed to several mailing lists, you might wish to spool
+them in separate files, so as to read them separately. (For
+example, the emacs editor has a newsreader,
+GNUS, that lets you read multiple mailboxes
+more like newsgroups.) To do this, you should subscribe to
+each mailing list under a different address. If your address
+is user@host, you might subscribe to
+the Mail Avenger mailing list as
+user+avenger@host. To spool mail in
+file $HOME/Mail/incoming/avenger&minus;list.spool,
+create a file $HOME/Mail/.avenger/local+avenger with
+the following line:
+
+        ./Mail/incoming/avenger&minus;list.spool
+
+To create a
+mailing list user+friends@host for
+yourself and your friends, create a file
+$HOME/Mail/.avenger/local+friends with your inbox and
+their addresses, for example:
+
+      ./inbox/
+      &friend1 [AT] host1.com
+      &friend2 [AT] host2.com
+
+FILES
+
+/usr/local/libexec/avenger.local,
+$HOME/.avenger/local, $HOME/.avenger/local*,
+/etc/mail/sendmail.cf,
+/usr/local/share/avenger/avsendmail.m4
+
+SEE ALSO
+
+avenger(1),
+deliver(1), dotlock(1),
+mail.local(8)
+
+The Mail
+Avenger home page: http://www.mailavenger.org/&gt;.
+
+BUGS
+
+avenger.local
+doesn&rsquo;t necessarily report problems in a the most
+useful place when it encounters errors in a
+.avenger/local* file. It does send some diagnostics
+to standard error, but these will typically end up in the
+mail log or in bounce messages returned to the sender.
+
+avenger.local
+should always provide the exact envelope recipient in the
+RECIPIENT environment variable.
+Unfortunately, this information is not available unless it
+has been supplied with the &minus;D flag. Often the
+envelope recipient is just "${ USER
+}${ SEPARATOR }${ EXT
+}@your.host.name", but it might not be if there are
+aliases or virtual domains. On servers with virtual hosts,
+the actual hostname used will be unavailable in the general
+case (though you may be able to deduce it from $USER
+and $EXT if you know your particular setup). Note
+that it is possible to configure sendmail to supply the full
+recipient address. Mail avenger comes with example sendmail
+configuration directives that can be included in your
+sendmail.mc m4 configuration file; see
+/usr/local/share/avenger/avsendmail.m4.
+
+To protect
+against concurrent accesses to mbox format files,
+avenger.local uses both flock and dotfiles to lock
+mailboxes. However, it does not use
+fcntl/lockf&minus;style locking by default.
+Thus, if your mail reader exclusively uses fcntl for
+locking, there will be race conditions unless you specify
+the &minus;&minus;fcntl option.
+
+AUTHOR
+
+David
+Mazieres

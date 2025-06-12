@@ -1,0 +1,303 @@
+ATA(4) BSD Kernel Interfaces Manual ATA(4)
+
+NAME
+
+ata &mdash; generic
+ATA/SATA controller driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, place the following lines in your kernel
+configuration file:
+
+device scbus
+
+device ata
+
+Alternatively,
+to load the driver as set of modules at boot time, place
+some of the following lines in loader.conf(5):
+
+ata_load="YES"
+
+atacard_load="YES"
+
+ataisa_load="YES" 
+atapci_load="YES"
+
+ataacard_load="YES"
+
+ataacerlabs_load="YES" 
+ataamd_load="YES" 
+ataati_load="YES" 
+atacenatek_load="YES" 
+atacypress_load="YES" 
+atacyrix_load="YES" 
+atahighpoint_load="YES" 
+ataintel_load="YES" 
+ataite_load="YES" 
+atajmicron_load="YES" 
+atamarvell_load="YES" 
+atamicron_load="YES" 
+atanational_load="YES" 
+atanetcell_load="YES" 
+atanvidia_load="YES" 
+atapromise_load="YES" 
+ataserverworks_load="YES" 
+atasiliconimage_load="YES" 
+atasis_load="YES" 
+atavia_load="YES"
+
+The first line
+is for the common hardware independent code, and is a
+prerequisite for the other modules. The next three lines are
+generic bus-specific drivers. The rest are vendor-specific
+PCI drivers.
+
+The following
+tunables are settable from the loader(8):
+
+hw.ata.ata_dma_check_80pin
+
+set to 0 to disable the 80pin
+cable check (the default is 1, check the cable).
+
+hint.atapci.X.msi
+
+set to 1 to allow Message
+Signalled Interrupts (MSI) to be used by the specified PCI
+ATA controller, if supported.
+
+hint.ata.X.devX.mode
+
+limits the initial ATA mode for
+the specified device on the specified channel.
+
+hint.ata.X.mode
+
+limits the initial ATA mode for
+every device on the specified channel.
+
+hint.ata.X.pm_level
+
+controls SATA interface Power
+Management for the specified channel, allowing some power
+savings at the cost of additional command latency. Possible
+values:
+
+0
+
+Interface Power
+Management is disabled. This is the default value.
+
+1
+
+The device is
+allowed to initiate a PM state change; the host is
+passive.
+
+hint.ata.X.devX.sata_rev
+
+limits the initial SATA revision
+(speed) for the specified device on the specified channel.
+Values 1, 2 and 3 are respectively 1.5, 3 and 6Gbps.
+
+hint.ata.X.sata_rev
+
+Same, but for every device on
+the specified channel.
+
+DESCRIPTION
+
+The ata driver gives the
+CAM(4) subsystem access to the ATA (IDE) and SATA ports of
+many generic controllers. Depending on the controller, each
+PATA (IDE) port or each one or two SATA ports are
+represented to CAM as a separate bus with one or two
+targets. Most of the bus-management details are handled by
+the ATA/SATA-specific transport of CAM. Connected ATA disks
+are handled by the ATA protocol disk peripheral driver
+ada(4). ATAPI devices are handled by the SCSI protocol
+peripheral drivers cd(4), da(4), sa(4), etc.
+
+This driver
+supports ATA, and for the most of controllers, ATAPI
+devices. Command queuing and SATA port multipliers are not
+supported. Device hot-plug and SATA interface power
+management is supported only on some controllers.
+
+The ata
+driver can change the transfer mode when the system is up
+and running. See the negotiate subcommand of
+camcontrol(8).
+
+The ata
+driver sets the maximum transfer mode supported by the
+hardware as default. However, the ata driver
+sometimes warns: &rsquo;&rsquo;DMA limited to UDMA33,
+non-ATA66 cable or device&rsquo;&rsquo;. This means that
+the ata driver has detected that the required 80
+conductor cable is not present or could not be detected
+properly, or that one of the devices on the channel only
+accepts up to UDMA2/ATA33. The
+hw.ata.ata_dma_check_80pin tunable can be set to 0 to
+disable this check.
+
+HARDWARE
+
+The currently supported ATA/SATA
+controller chips are:
+
+Acard:
+
+ATP850P,
+ATP860A, ATP860R, ATP865A, ATP865R.
+
+ALI:
+
+M5228, M5229,
+M5281, M5283, M5287, M5288, M5289.
+
+AMD:
+
+AMD756, AMD766,
+AMD768, AMD8111, CS5536.
+
+ATI:
+
+IXP200, IXP300,
+IXP400, IXP600, IXP700, IXP800.
+
+CMD:
+
+CMD646,
+CMD646U2, CMD648, CMD649.
+
+Cypress:
+
+Cypress
+82C693.
+
+Cyrix:
+
+Cyrix 5530.
+
+HighPoint:
+
+HPT302, HPT366,
+HPT368, HPT370, HPT371, HPT372, HPT372N, HPT374.
+
+Intel:
+
+6300ESB, 31244,
+PIIX, PIIX3, PIIX4, ESB2, ICH, ICH0, ICH2, ICH3, ICH4, ICH5,
+ICH6, ICH7, ICH8, ICH9, ICH10, SCH, PCH.
+
+ITE:
+
+IT8211F,
+IT8212F, IT8213F.
+
+JMicron:
+
+JMB360, JMB361,
+JMB363, JMB365, JMB366, JMB368.
+
+Marvell
+
+88SE6101,
+88SE6102, 88SE6111, 88SE6121, 88SE6141, 88SE6145.
+
+National:
+
+SC1100.
+
+NetCell:
+
+NC3000,
+NC5000.
+
+nVidia:
+
+nForce,
+nForce2, nForce2 MCP, nForce3, nForce3 MCP, nForce3 Pro,
+nForce4, MCP51, MCP55, MCP61, MCP65, MCP67, MCP73, MCP77,
+MCP79, MCP89.
+
+Promise:
+
+PDC20246,
+PDC20262, PDC20263, PDC20265, PDC20267, PDC20268, PDC20269,
+PDC20270, PDC20271, PDC20275, PDC20276, PDC20277, PDC20318,
+PDC20319, PDC20371, PDC20375, PDC20376, PDC20377, PDC20378,
+PDC20379, PDC20571, PDC20575, PDC20579, PDC20580, PDC20617,
+PDC20618, PDC20619, PDC20620, PDC20621, PDC20622, PDC40518,
+PDC40519, PDC40718, PDC40719.
+
+ServerWorks:
+
+HT1000, ROSB4,
+CSB5, CSB6, K2, Frodo4, Frodo8.
+
+Silicon Image:
+
+SiI0680,
+SiI3112, SiI3114, SiI3512.
+
+SiS:
+
+SIS180, SIS181,
+SIS182, SIS5513, SIS530, SIS540, SIS550, SIS620, SIS630,
+SIS630S, SIS633, SIS635, SIS730, SIS733, SIS735, SIS745,
+SIS961, SIS962, SIS963, SIS964, SIS965.
+
+VIA:
+
+VT6410, VT6420,
+VT6421, VT82C586, VT82C586B, VT82C596, VT82C596B, VT82C686,
+VT82C686A, VT82C686B, VT8231, VT8233, VT8233A, VT8233C,
+VT8235, VT8237, VT8237A, VT8237S, VT8251, CX700, VX800,
+VX855, VX900.
+
+Some of above
+chips can be configured for AHCI mode. In such case they are
+supported by ahci(4) driver instead.
+
+Unknown ATA
+chipsets are supported in PIO modes, and if the standard
+busmaster DMA registers are present and contain valid setup,
+DMA is also enabled, although the max mode is limited to
+UDMA33, as it is not known what the chipset can do and how
+to program it.
+
+NOTES
+
+Please remember that in order to
+use UDMA4/ATA66 and above modes you must use 80
+conductor cables. Please assure that ribbon cables are no
+longer than 45cm. In case of rounded ATA cables, the length
+depends on the quality of the cables. SATA cables can be up
+to 1m long according to the specification. External SATA
+cables can be 2m long and more, but not all controllers work
+well on long cables, especially at high speeds.
+
+SEE ALSO
+
+ada(4), ahci(4), cam(4), cd(4),
+mvs(4), siis(4), camcontrol(8)
+
+HISTORY
+
+The ata driver first
+appeared in FreeBSD 4.0. It was turned into a CAM(4)
+interface module in FreeBSD 9.0.
+
+AUTHORS
+
+Alexander Motin
+mav [AT] FreeBSD.org> 
+S&oslash;ren Schmidt sos [AT] FreeBSD.org>
+
+BSD
+March 23, 2015 BSD

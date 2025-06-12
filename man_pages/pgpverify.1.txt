@@ -1,0 +1,256 @@
+NAME
+
+pgpverify -
+Cryptographically verify Usenet control messages
+
+SYNOPSIS
+
+pgpverify
+[--findid=string] [--test] message
+
+DESCRIPTION
+
+The
+pgpverify program reads (on standard input) a Usenet
+control message that has been cryptographically signed using
+the signcontrol program (or some other program that
+produces a compatible format). pgpverify then uses a
+PGP implementation to determine who signed the control
+message. If the control message has a valid signature,
+pgpverify prints (to stdout) the user ID of the key
+that signed the message. Otherwise, it exits with a non-zero
+exit status.
+
+If
+pgpverify is installed as part of INN, it uses
+INN&rsquo;s configuration to determine what signature
+verification program to use, how to log errors, what
+temporary directory to use, and what keyring to use.
+Otherwise, all of those parameters can be set by editing the
+beginning of this script.
+
+By default,
+when running as part of INN, pgpverify expects the
+PGP key ring to be found in pathetc/pgp (as either
+pubring.pgp or pubring.gpg depending on
+whether PGP or GnuPG is used to verify signatures). If that
+directory doesn&rsquo;t exist, it will fall back on using
+the default key ring, which is in a .pgp or
+.gnupg subdirectory of the running user&rsquo;s home
+directory.
+
+INN, when using
+GnuPG, configures pgpverify to use gpg or
+gpgv, which by default expects keys to be in a
+keyring named trustedkeys.gpg, since it doesn&rsquo;t
+implement trust checking directly. pgpverify uses
+that file if present but falls back to pubring.gpg if
+it&rsquo;s not found. This bypasses the trust model for
+checking keys, but is compatible with the way that
+pgpverify used to behave. Of course, if a keyring is
+found in pathetc/pgp or configured at the top of the
+script, that overrides all of this behavior.
+
+Note that a few
+Usenet hierarchies still send control articles signed with
+old PGP keys using a weak hash algorithm (MD5). Modern
+versions of GnuPG (2.1.0+) no longer validate such
+signatures, so you should use GnuPG 1.x or 2.0.x if you
+need verifying such control articles.
+
+OPTIONS
+
+--findid=string
+
+The --findid flag causes
+pgpverify to explicitly search for string in
+the output from PGP&rsquo;s analysis of the message. This
+option is useful when several UIDs are defined on a single
+PGP key, and the caller to pgpverify needs checking
+whether a given one is defined on this key. In case the
+signature is valid but does not contain string,
+pgpverify exits with exit status 4.
+
+--test
+
+The --test flag causes
+pgpverify to print out the input that it is passing
+to PGP (which is a reconstructed version of the input that
+supposedly created the control message) as well as the
+output from PGP&rsquo;s analysis of the message.
+
+EXIT STATUS
+
+pgpverify
+may exit with the following statuses:
+
+0
+
+The control message had a good PGP signature.
+
+1
+
+The control message had no PGP signature.
+
+2
+
+The control message had an unknown PGP signature.
+
+3
+
+The control message had a bad PGP signature.
+
+4
+
+The control message had a good PGP signature but the
+argument given to the --findid flag had non been
+found in the output from PGP&rsquo;s analysis of the
+message. 
+
+255
+
+A problem occurred not directly related to PGP analysis
+of signature.
+
+ENVIRONMENT
+
+pgpverify
+does not modify or otherwise alter the environment before
+invoking the pgp, gpgv or gpg program.
+It is the responsibility of the person who installs
+pgpverify to ensure that when pgp, gpgv
+or gpg runs, it has the ability to locate and read a
+PGP key file that contains the PGP public keys for the
+appropriate Usenet hierarchy administrators.
+pgpverify can be pointed to an appropriate key ring
+by editing variables at the beginning of this script.
+
+NOTES
+
+Historically,
+Usenet news server administrators have configured their news
+servers to automatically honor Usenet control messages based
+on the originator of the control messages and the
+hierarchies for which the control messages applied. For
+example, in the past, David Lawrence always issued control
+messages for the "Big 8" hierarchies (comp,
+humanities, misc, news, rec, sci, soc, talk). Usenet news
+administrators would configure their news server software to
+automatically honor newgroup and rmgroup control messages
+that originated from David Lawrence and applied to any of
+the Big 8 hierarchies.
+
+Unfortunately,
+Usenet news articles (including control messages) are
+notoriously easy to forge. Soon, malicious users realized
+they could create or remove (at least temporarily) any
+Big 8 newsgroup they wanted by simply forging an
+appropriate control message in David Lawrence&rsquo;s name.
+As Usenet became more widely used, forgeries became more
+common.
+
+The
+pgpverify program was designed to allow Usenet news
+administrators to configure their servers to
+cryptographically verify control messages before
+automatically acting on them. Under the pgpverify
+system, a Usenet hierarchy maintainer creates a PGP
+public/private key pair and disseminates the public key.
+Whenever the hierarchy maintainer issues a control message,
+he uses the signcontrol program to sign the control
+message with the PGP private key. Usenet news administrators
+configure their news servers to run the pgpverify
+program on the appropriate control messages, and take action
+based on the PGP key User ID that signed the control
+message, not the name and address that appear in the control
+message&rsquo;s From: or Sender: headers.
+
+Thus,
+appropriate use of the signcontrol and
+pgpverify programs essentially eliminates the
+possibility of malicious users forging Usenet control
+messages that sites will act upon, as such users would have
+to obtain the PGP private key in order to forge a control
+message that would pass the cryptographic verification step.
+If the hierarchy administrators properly protect their PGP
+private keys, the only way a malicious user could forge a
+validly-signed control message would be by breaking the
+public key encryption algorithm, which (at least at this
+time) is believed to be prohibitively difficult for PGP keys
+of a sufficient bit length.
+
+HISTORY
+
+pgpverify
+was written by David C Lawrence tale [AT] isc.org>. Manual
+page provided by James Ralston. It is currently maintained
+by Russ Allbery eagle [AT] eyrie.org>.
+
+COPYRIGHT AND LICENSE
+
+David Lawrence
+wrote: "Our lawyer told me to include the following.
+The upshot of it is that you can use the software for free
+as much as you like."
+
+Copyright (c)
+1996 UUNET Technologies, Inc. All rights reserved.
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+1.
+
+Redistributions of source code
+must retain the above copyright notice, this list of
+conditions and the following disclaimer.
+
+2.
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+3.
+
+All advertising materials mentioning features or use of
+this software must display the following
+acknowledgement: 
+
+This product
+includes software developed by UUNET Technologies, Inc.
+
+4.
+
+The name of UUNET Technologies
+("UUNET") may not be used to endorse or promote
+products derived from this software without specific prior
+written permission.
+
+THIS SOFTWARE
+IS PROVIDED BY UUNET "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL UUNET
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+
+SEE ALSO
+
+gpg(1),
+gpgv(1), pgp(1).
+
+https://ftp.isc.org/pub/pgpcontrol/&gt;
+is where the most recent versions of signcontrol and
+pgpverify live, along with PGP public keys used for
+hierarchy administration.

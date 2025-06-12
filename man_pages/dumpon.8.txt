@@ -1,0 +1,92 @@
+DUMPON(8) BSD System Manager&rsquo;s Manual
+DUMPON(8)
+
+NAME
+
+dumpon &mdash; specify a
+device for crash dumps
+
+SYNOPSIS
+
+dumpon [&minus;v]
+special_file 
+dumpon [&minus;v] off
+
+DESCRIPTION
+
+The dumpon utility is
+used to specify a device where the kernel can save a crash
+dump in the case of a panic.
+
+Calls to
+dumpon normally occur from the system multi-user
+initialization file /etc/rc, controlled by the
+&rsquo;&rsquo;dumpdev&rsquo;&rsquo; variable in the boot
+time configuration file /etc/rc.conf.
+
+For most systems
+the size of the specified dump device must be at least the
+size of physical memory. Even though an additional header is
+added to the dump, the BIOS for a platform typically holds
+back some memory, so it is not usually necessary to size the
+dump device larger than the actual amount of RAM available
+in the machine.
+
+The
+&minus;v flag causes dumpon to be verbose
+about its activity.
+
+IMPLEMENTATION NOTES
+
+Since a panic(9) condition may
+occur in a situation where the kernel cannot trust its
+internal representation of the state of any given file
+system, one of the system swap devices, and not a
+device containing a file system, should be used as the dump
+device.
+
+The
+dumpon utility operates by opening
+special_file and making a DIOCSKERNELDUMP ioctl(2)
+request on it to save kernel crash dumps. If
+special_file is the text string:
+&rsquo;&rsquo;off&rsquo;&rsquo;, dumpon performs a
+DIOCSKERNELDUMP ioctl(2) on /dev/null and thus
+instructs the kernel not to save crash dumps.
+
+Since
+dumpon cannot be used during kernel initialization,
+the dumpdev variable of loader(8) must be used to
+enable dumps for system panics which occur during kernel
+initialization.
+
+SEE ALSO
+
+fstab(5), rc.conf(5), config(8),
+init(8), loader(8), rc(8), savecore(8), swapon(8),
+panic(9)
+
+FILES 
+/dev/{ad,da}?s?b
+
+standard swap
+areas
+
+/etc/rc.conf
+
+boot-time
+system configuration
+
+BUGS
+
+Because the file system layer is
+already dead by the time a crash dump is taken, it is not
+possible to send crash dumps directly to a file.
+
+HISTORY
+
+The dumpon utility
+appeared in FreeBSD 2.1.
+
+BSD May 12,
+1995 BSD

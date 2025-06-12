@@ -1,0 +1,154 @@
+NAME
+
+dpatch.make -
+simplistic wrapper around dpatch(1) for
+make(1).
+
+SYNOPSIS
+
+include
+/usr/share/dpatch/dpatch.make
+
+DESCRIPTION
+
+For backwards
+compatibility and ease of use, dpatch.make is
+provided along with dpatch(1). Its purpose is to
+implement generic patch and unpatch rules that
+can be reused in debian/rules scripts.
+
+WARNING
+
+dpatch
+is deprecated, please switch to the &rsquo;3.0
+(quilt)&rsquo; Debian source package format instead. See
+http://wiki.debian.org/Projects/DebSrc3.0#FAQ for a
+short guide on how to do it.
+
+USAGE
+
+Using
+dpatch.make is rather straightforward: one has to
+include the file in debian/rules, change the
+appropriate targets to depend on patch and
+unpatch, and that is all it takes.
+
+Figuring out
+what the appropriate target is, requires some thought.
+Generally, one has a build target, or
+config.status, or configure (or any of these
+with a -stamp suffix). Most of the time these are
+called first during the build, so one of these (the one that
+exists, and is not depended upon by another one) has to be
+modified to depend on the patch target in
+dpatch.make.
+
+Doing the same
+for the clean target is easier. One only has to
+rename the old rule to, say, clean-patched, then make
+a new one that has clean-patched and unpatch
+in its list of prerequisites.
+
+CUSTOMISATION
+
+There are a few
+variables which are used by dpatch.make, which can be
+set before including it, in order to change the systems
+behaviour a little.
+
+These variables
+are:
+
+DEB_SOURCE_PACKAGE
+
+This is the name of the source
+package, used when creating the stamp file. By default, it
+is empty.
+
+DPATCH_STAMPDIR
+
+This is the directory where
+stamp files will be put. Default is
+debian/patched.
+
+DPATCH_STAMPFN
+
+The name of the stamp file,
+which contains the patch descriptions and other possible
+meta-data. Default value is patch-stamp.
+
+DPATCH_PREDEPS
+
+A list of make targets to call
+before applying the dpatch.
+
+DPATCH_WORKDIR
+
+The target directory to apply
+patches to. By default, it is the current directory.
+
+PATCHLIST
+
+The list of patches to apply.
+This is an alternative to debian/patches/00list -
+that is, if this variable is not empty, the contents of
+00list will be ignored, and this variable will be
+used instead.
+
+EXAMPLE
+
+include
+/usr/share/dpatch/dpatch.make
+
+build:
+build-stamp 
+build-stamp: patch-stamp
+
+${MAKE}
+
+touch build-stamp
+
+clean: clean1
+unpatch 
+clean1:
+
+${MAKE} clean
+
+rm -rf debian/files debian/substvars
+debian/imaginary-package 
+
+.PHONY: patch
+unpatch ...
+
+.
+
+.
+
+.
+
+SIDE EFFECTS
+
+Using
+dpatch.make instead of calling dpatch directly has
+one side effect: it will create a file called
+patch-stamp containing some meta-information
+extracted from the scriptlets.
+
+Depending on a
+phony patch target directly from build target
+may cause build target to be reevaluated even when
+there is no change to be done. Instead, try making
+build-stamp depend on patch-stamp as specified
+in this example.
+
+AUTHOR
+
+Originally by
+Gergely Nagy. Modified by Junichi Uekawa.
+
+SEE ALSO
+
+dpatch(1),
+dpatch(7), dpatch-edit-patch(1),
+dpatch-list-patch(1),
+dpatch-convert-diffgz(1)

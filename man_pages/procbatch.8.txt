@@ -1,0 +1,177 @@
+NAME
+
+procbatch -
+Process an INN funnel file or innfeed-dropped file
+
+SYNOPSIS
+
+procbatch
+[-hquv] [-c [-s spooldir]]
+[-d outdir] [-e peer] [-m
+[-t backlogdir]] batchfile
+
+DESCRIPTION
+
+procbatch
+will take an INN funnel or innfeed-dropped file and
+split it up by host for direct processing with
+innfeed or innxmit.
+
+While funnel
+files will normally only be of interest after a crash,
+innfeed may drop articles for a variety of reasons,
+not all of which indicate a fundamental problem. For
+example, innfeed may drop articles when started and
+stopped in quick succession while INN processes a large
+number of control messages (a temporary indisposition), or
+when INN feeds it articles for a site that isn&rsquo;t in
+innfeed.conf (a misconfiguration).
+
+Every running
+innfeed opens a file named
+innfeed-dropped., which should normally
+always be zero length and deleted on exit. If there are
+non-zero length files, innfeed has dropped some
+articles, and those dropped article files have to be
+processed or those articles will never be sent to peers.
+Though news.daily automatically process these files
+(invoking procbatch), it is also possible to do that
+manually. First make sure that the file doesn&rsquo;t
+correspond to a currently running innfeed, for
+example by calling "ctlinnd flush innfeed!".
+
+An INN funnel
+file, or an innfeed-dropped file, will usually be of
+the format:
+
+pathname
+message-id peer1 peer2 peer3 ...
+
+where
+pathname can alternatively be a storage API
+token.
+
+procbatch
+will break this file up into files named peer1.tmp,
+peer2.tmp, peer3.tmp, etc. of the format:
+
+pathname
+message-id
+
+These tape
+files will be sorted and stripped of duplicate entries.
+Simply renaming them to peer1, peer2,
+peer3, etc. in a running innfeed&rsquo;s
+backlog directory will cause them to be picked up
+automatically by innfeed every
+backlog-newfile-period seconds (as set in
+innfeed.conf). Use the -m flag to have
+procbatch rename and move them into place
+automatically.
+
+After running
+procbatch, you may want to make sure that every
+generated backlog file has a corresponding ".lock"
+file. Otherwise, innfeed doesn&rsquo;t have that site
+configured as a peer, meaning your innfeed.conf may
+need fixing.
+
+OPTIONS
+
+-c
+
+Check for the existence of an
+article before writing references to it to the tape files.
+Currently, this option can only be used with a tradspool
+article store. Using it with any other spool format will
+lead to all articles being dropped.
+
+-d outdir
+
+Put the output file(s) into the
+directory outdir (defaults to pathtmp as set
+in inn.conf). When also specifying -m, the
+temporary output files will still be put here before being
+moved into their final location.
+
+-e peer
+
+Only process entries for
+peer.
+
+-h
+
+Display a short help screen.
+
+-m
+
+Directly append to tape files in innfeed&rsquo;s
+backlog directory.
+
+-q
+
+Quiet mode: only display error messages.
+
+-s spooldir
+
+Use spooldir as the
+location of the article spool (defaults to
+patharticles as set in inn.conf). This option
+has an effect only on a tradspool storage system when also
+specifying -c.
+
+-t backlogdir
+
+Use backlogdir as the
+location of the innfeed backlog directory (the
+directory where the created tape files will be put).
+Defaults to pathspool/innfeed. This option has an
+effect only when also specifying -m.
+
+-u
+
+Unlink the input batchfile after processing.
+
+-v
+
+Add verbosity.
+
+EXAMPLES
+
+Take the file
+innfeed-dropped.B012345, process its lines appending
+to tapefiles in innfeed&rsquo;s backlog directory,
+and remove it when done. Be verbose while doing so:
+
+procbatch -umv
+innfeed-dropped.B012345
+
+Go through
+innfeed-dropped.B012345 saving entries for
+"peer1" in /tmp/peer1.tmp, but only if the
+articles are still available in the local tradspool:
+
+procbatch -e
+peer1 -d /tmp -c innfeed-dropped.B012345
+
+BUGS
+
+procbatch
+should be able to check for the existence of articles with
+any kind of article store, possibly using
+grephistory.
+
+HISTORY
+
+procbatch
+was written by James Brister and improved for speed by
+Clayton O&rsquo;Neill.
+
+This manual
+page was written by Florian Schlichting, with the help of a
+memo by Russ Allbery.
+
+SEE ALSO
+
+innfeed(8),
+innxmit(8), news.daily(8).

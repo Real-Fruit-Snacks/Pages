@@ -1,0 +1,84 @@
+NAME
+
+get_hugepage_region,
+free_hugepage_region - Allocate and free regions of memory
+that use hugepages where possible
+
+SYNOPSIS
+
+#include
+
+void
+*get_hugepage_region(size_t len, ghr_t flags); 
+void free_hugepage_region(void *ptr);
+
+DESCRIPTION
+
+get_hugepage_region()
+allocates a memory region len bytes in size backed by
+hugepages. Hugepages may be of benefit to applications that
+use large amounts of address space and suffer a performance
+hit due to TLB misses. Wall-clock time or oprofile can be
+used to determine if there is a performance benefit from
+using hugepages or not.
+
+Unlike
+get_huge_pages(), len does not have to be
+hugepage-aligned although memory may be wasted due to
+alignment. The caller may also specify that base pages be
+used in the event there are no hugepages available.
+
+The
+flags argument changes the behaviour of the function.
+Flags may be or&rsquo;d together. 
+GHR_FALLBACK
+
+Use base pages if there are an
+insufficient number of huge pages.
+
+GHR_STRICT
+
+Use hugepages or return
+NULL.
+
+GHR_COLOR
+
+When specified, bytes that
+would be wasted due to alignment are used to color the
+buffer by offsetting it by a random cacheline within the
+hugepage. This avoids a performance problem whereby multiple
+buffers use the same cache lines at the same offsets. If it
+is not important that the start of the buffer be
+page-aligned, specify this flag.
+
+GHR_DEFAULT
+
+The library chooses a sensible combination of flags for
+allocating a region of memory. The current default is:
+
+GHR_FALLBACK | GHR_COLOR
+
+free_hugepage_region()
+frees a region of memory allocated by
+get_hugepage_region(). The behaviour of the function
+if another pointer is used, valid or otherwise, is
+undefined.
+
+RETURN VALUE
+
+On success, a
+pointer is returned for to the allocated memory. On error,
+NULL is returned. errno will be set based on what the
+failure of mmap() was due to.
+
+SEE ALSO
+
+oprofile(1)
+, gethugepagesize(3) , get_huge_pages(3) ,
+libhugetlbfs(7)
+
+AUTHORS
+
+libhugetlbfs
+was written by various people on the libhugetlbfs-devel
+mailing list.

@@ -1,0 +1,445 @@
+NAME
+
+repl - reply to
+an nmh message
+
+SYNOPSIS
+
+repl
+
+[-help] [-version]
+[+folder] [msg] [-annotate |
+-noannotate] [-group | -nogroup]
+[-cc all/to/cc/me] [-nocc all/to/cc/me]
+[-query | -noquery] [-form
+formfile] [-format | -noformat]
+[-filter filterfile] [-inplace |
+-noinplace] [-mime | -nomime]
+[-fcc +folder] [-width columns]
+[-draftfolder +folder] [-draftmessage
+msg] [-nodraftfolder] [-editor
+editor] [-noedit] [-convertargs type
+argstring] [-whatnowproc program]
+[-nowhatnowproc] [-atfile] [-noatfile]
+[-fmtproc program] [-nofmtproc]
+[-build] [-file msgfile]
+
+DESCRIPTION
+
+repl may
+be used to reply to a message.
+
+In its simplest
+form (with no arguments), repl will set up a
+message-form skeleton in reply to the current message in the
+current folder, and invoke the whatnow shell.
+
+repl
+uses a reply template to construct the draft of the reply. A
+reply template is simply an mhl format file (see
+mh-format(5) for details).
+
+If the switch
+-nogroup is given (it is on by default), then
+repl will use the standard forms file
+&ldquo;replcomps&rdquo;. This will construct a draft message
+that is intended to be sent only to the author of the
+message to which you are replying. If a file named
+&ldquo;replcomps&rdquo; exists in the user&rsquo;s
+nmh directory, it will be used instead of this
+default forms file.
+
+The default
+reply template &ldquo;replcomps&rdquo; will direct
+repl to construct the reply message draft as
+follows:
+
+To:
+ or  or 
+
+cc:  and  and 
+
+Fcc: {fcc switch} or +outbox 
+Subject: Re:  
+In-Reply-To:  
+References:  
+Comments: In-Reply-To  or  or  
+message dated  
+--------
+
+where field
+names enclosed in angle brackets () indicate
+the contents of the named field from the message to which
+the reply is being made.
+
+By default, the
+&ldquo;cc:&rdquo; field is empty. You may selectively add
+addresses to this default with the -cc type
+switch. This switch takes an argument
+(all/to/cc/me) which specifies
+who gets added to the default &ldquo;cc:&rdquo; list of the
+reply. You may give this switch multiple times (with
+different arguments) if you wish to add multiple types of
+address.
+
+If the switch
+-group is given, then repl will use the
+standard forms file &ldquo;replgroupcomps&rdquo;. This will
+construct a draft message that is intended as a group or
+followup reply. If a file named &ldquo;replgroupcomps&rdquo;
+exists in the user&rsquo;s nmh directory, it will be used
+instead of this default forms file, unless you specify
+another forms file on the command line or in your
+profile.
+
+The default
+group reply template &ldquo;replgroupcomps&rdquo; will
+direct repl to construct the reply message draft as
+follows:
+
+To:
+
+Subject: Re:  
+In-Reply-To: Message from  of . 
+
+--------
+
+or if the field
+ is not available:
+
+To:
+ or  or 
+
+cc:  and  and 
+
+Subject: Re:  
+In-Reply-To: Message from  of . 
+
+--------
+
+By default, the
+&ldquo;cc:&rdquo; contains all the addresses shown. You may
+selectively remove addresses from this default with the
+-nocc type switch. This switch takes an
+argument ( all/to/cc/me) which
+specifies who gets removed from the default
+&ldquo;cc:&rdquo; list of the reply. You may give this
+switch multiple times (with different arguments) if you wish
+to remove multiple types of address.
+
+In any case,
+you may specify an alternative forms file with the switch
+-form formfile.
+
+The
+-query switch modifies the action of -nocc
+type switch by interactively asking you if each
+address that normally would be placed in the
+&ldquo;To:&rdquo; and &ldquo;cc:&rdquo; list should actually
+be sent a copy. This is useful for special-purpose replies.
+Note that the position of the -cc and -nocc
+switches, like all other switches which take a positive and
+negative form, is important.
+
+Lines beginning
+with the fields &ldquo;To:&rdquo;, &ldquo;cc:&rdquo;, and
+&rdquo;Bcc:&rdquo; will be standardized and have duplicate
+addresses removed. In addition, the -width
+columns switch will guide repl&rsquo;s
+formatting of these fields.
+
+If the draft
+already exists, repl will ask you as to the
+disposition of the draft. A reply of quit will abort
+repl, leaving the draft intact; replace will
+replace the existing draft with a blank skeleton; and
+list will display the draft.
+
+See
+comp(1) for a description of the -editor and
+-noedit switches. Note that while in the editor, with
+-atfile and if the current directory is writable, the
+message being replied to is available through a link named
+&ldquo;@&rdquo; (assuming the default whatnowproc).
+In addition, the actual pathname of the message is stored in
+the environment variable $editalt, and the pathname
+of the folder containing the message is stored in the
+environment variable $mhfolder. The creation of the
+&ldquo;@&rdquo; file is controlled via the -atfile
+and -noatfile options.
+
+The
+-convertargs switch directs repl to pass the
+arguments for type to mhbuild. Both arguments
+are required; type must be non-empty while
+argstring can be empty, e.g., &rsquo;&rsquo; in a
+shell command line. The -convertargs switch can be
+used multiple times. See the Convert Interface section of
+mhbuild(1) for a description of the convert
+mechanism, and /usr/share/doc/nmh/contrib/replaliases
+for examples of its use.
+
+Although
+repl uses a forms file to direct it how to construct
+the beginning of the draft, it uses a message filter file to
+direct it as to how the message to which you are replying
+should be filtered (re-formatted) in the body of the draft.
+The filter file for repl should be a standard form
+file for mhl, as repl will invoke mhl
+to format the message to which you are replying.
+
+The switches
+-noformat, -format, and -filter
+filterfile specify which message filter file to
+use.
+
+If the switch
+-noformat is given (it is the default) and the
+-filter switch is not used, then the message to which
+you are replying is not included in the body of the
+draft.
+
+If the switch
+-format is given, then a default message filter file
+is used. This default message filter should be adequate for
+most users. This default filter
+&ldquo;mhl.reply&rdquo; is:
+
+; mhl.reply
+
+; 
+; default message filter for &rsquo;repl&rsquo; (repl
+-format) 
+; 
+
+from:nocomponent,formatfield="%(unquote(decode(friendly{text})))
+writes:" 
+body:component="> ",overflowtext=">
+",overflowoffset=0
+
+which outputs
+each line of the body of the message prefaced with the
+&ldquo;>&rdquo; character and a space.
+
+If a file named
+&ldquo;mhl.reply&rdquo; exists in the user&rsquo;s
+nmh directory, it will be used instead of this form.
+You may specify an alternate message filter file with the
+switch -filter filterfile.
+
+Other reply
+filters are commonly used, such as:
+
+: 
+body:nocomponent,compwidth=9,offset=9
+
+which says to
+output a blank line, and then the body of the message being
+replied to, indented by one tab stop. Another popular format
+is:
+
+message-id:nocomponent,nonewline,\
+
+formatfield=&ldquo;In message %{text}, &rdquo; 
+
+from:nocomponent,formatfield=&ldquo;%(decode(friendly{text}))
+writes:&rdquo; 
+
+body:component=&ldquo;>&rdquo;,overflowtext=&ldquo;>&rdquo;,overflowoffset=0
+
+This message
+filter file cites the Message-ID and author of the message
+being replied to, and then outputs each line of the body
+prefaced with the &ldquo;>&rdquo; character.
+
+You can also
+use an external format program to format the message body.
+The format program is specified by the formatproc
+profile entry, and is enabled by the &ldquo;format&rdquo;
+flag. A message filter using an external format program
+would look like this:
+
+body:component=&ldquo;>&rdquo;,nowrap,format
+
+See the
+mhl(1) documentation for more information. The format
+program can be changed by the -fmtproc program
+and -nofmtproc switches.
+
+To use the MIME
+rules for encapsulation, specify the -mime switch.
+This directs repl to generate an mhbuild
+composition file. Note that nmh will not invoke
+mhbuild automatically; you must specifically give the
+command
+
+What now?
+mime
+
+prior to
+sending the draft.
+
+If the
+-annotate switch is given, the message being replied
+to will be annotated with the lines
+
+Replied: date
+Replied: addrs
+
+where the
+address list contains one line for each addressee. The
+annotation will be done only if the message is sent directly
+from repl. If the message is not sent immediately
+from repl, &ldquo;comp -use&rdquo; may be
+used to re-edit and send the constructed message, but the
+annotations won&rsquo;t take place. Normally annotations are
+done inplace in order to preserve any links to the message.
+You may use the -noinplace switch to change this.
+
+Although the
+default template specifies that a copy of the reply will be
+put in the folder &rsquo;outbox&rsquo;, if the -fcc
++folder switch is given it will override the default
+value. More than one folder, each preceded by -fcc
+can be named.
+
+In addition to
+the standard mh-format(5) escapes, repl also
+recognizes the following additional component
+escape:
+
+Escape
+Returns Description
+
+fcc
+
+string
+
+Any folders specified with
+&rsquo;-fcc folder&rsquo; 
+
+To avoid
+reiteration, repl strips any leading &rsquo;Re:
+&rsquo; strings from the subject component.
+
+The
+-draftfolder +folder and -draftmessage
+msg switches invoke the nmh draft folder
+facility. This is an advanced (and highly useful) feature.
+Consult mh-draft(5) for more information.
+
+Upon exiting
+from the editor, repl will invoke the whatnow
+program. See whatnow(1) for a discussion of available
+options. The invocation of this program can be inhibited by
+using the -nowhatnowproc switch. (In fact, it is the
+whatnow program which starts the initial edit. Hence,
+-nowhatnowproc will prevent any edit from
+occurring.)
+
+The
+-build switch is intended to be used by the Emacs
+mh-e interface to nmh. It implies
+-nowhatnowproc. It causes a file
+/reply to be created, containing the
+draft message that would normally be presented to the user
+for editing. No mail is actually sent.
+
+The
+-file msgfile switch specifies the message to
+be replied to as an exact filename rather than as an
+nmh folder and message number. The same caveats apply
+to this option as to the -build switch.
+
+FILES
+
+repl
+looks for all format, filter and template files in multiple
+locations: absolute pathnames are accessed directly, tilde
+expansion is done on usernames, and files are searched for
+in the user&rsquo;s Mail directory as specified in
+their profile. If not found there, the directory
+&ldquo;/etc/nmh&rdquo; is checked.
+
+/etc/nmh/replcomps
+The standard reply template 
+or /replcomps Rather than the standard
+template 
+/etc/nmh/replgroupcomps The standard &rsquo;reply
+-group&rsquo; template 
+or /replgroupcomps Rather than the standard
+template 
+/etc/nmh/mhl.reply The standard message filter 
+or /mhl.reply Rather than the standard filter
+
+$HOME/.mh_profile The user profile 
+/draft The draft file
+
+PROFILE COMPONENTS
+
+Path: To
+determine the user&rsquo;s nmh directory 
+Alternate-Mailboxes: To determine the user&rsquo;s mailboxes
+
+Current-Folder: To find the default current folder 
+Draft-Folder: To specify the default draftfolder 
+Editor: To override the default editor 
+Msg-Protect: To set mode when creating a new message (draft)
+
+fileproc: Program to refile the message 
+mhlproc: Program to filter message being replied-to 
+whatnowproc: Program to ask the &ldquo;What now?&rdquo;
+questions
+
+SEE ALSO
+
+comp(1),
+forw(1), mh-draft(5), mh-format(5),
+mhbuild(1), send(1), whatnow(1)
+
+/usr/share/doc/nmh/contrib/replaliases
+
+DEFAULTS
+
+&rsquo;+folder&rsquo;
+defaults to the current folder 
+&rsquo;msg&rsquo; defaults to cur 
+&rsquo;-nogroup&rsquo; 
+&rsquo;-nocc all&rsquo; with
+&rsquo;-nogroup&rsquo;, &rsquo;-cc all&rsquo; with
+&rsquo;-group&rsquo; 
+&rsquo;-noannotate&rsquo; 
+&rsquo;-nodraftfolder&rsquo; 
+&rsquo;-noformat&rsquo; 
+&rsquo;-inplace&rsquo; 
+&rsquo;-nomime&rsquo; 
+&rsquo;-noquery&rsquo; 
+&rsquo;-noatfile&rsquo; 
+&rsquo;-width 72&rsquo;
+
+CONTEXT
+
+If a folder is
+given, it will become the current folder. The message
+replied to will become the current message.
+
+BUGS
+
+If any
+addresses occur in the reply template, addresses in the
+template that do not contain hosts are defaulted
+incorrectly. Instead of using the localhost for the default,
+repl uses the sender&rsquo;s host. Moral of the
+story: if you&rsquo;re going to include addresses in a reply
+template, include the host portion of the address.
+
+The
+-width columns switch is only used to do
+address-folding; other headers are not line-wrapped.
+
+If
+whatnowproc is whatnow, then repl uses
+a built-in whatnow, it does not actually run the
+whatnow program. Hence, if you define your own
+whatnowproc, don&rsquo;t call it whatnow since
+repl won&rsquo;t run it.

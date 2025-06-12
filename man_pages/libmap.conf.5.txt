@@ -1,0 +1,167 @@
+LIBMAP.CONF(5) BSD File Formats Manual
+LIBMAP.CONF(5)
+
+NAME
+
+libmap.conf &mdash;
+configuration file for dynamic object dependency mapping
+
+DESCRIPTION
+
+The libmap functionality
+of ld-elf.so.1(1) allows dynamic object dependencies to be
+mapped to arbitrary names.
+
+The
+configuration file consists of two whitespace separated
+columns; the left hand side containing the mapping candidate
+and the right hand side containing the mapping. Dependencies
+are matched against candidates and replaced with the
+mappings.
+
+Constrained
+mappings may be specified by enclosing the name of the
+executable or library in brackets. All mappings following a
+constraint will only be evaluated for that constraint.
+Constraints can be one of three types:
+
+Exact
+
+The constraint
+is matched literally so that only an executable with an
+identical fully qualified pathname will match the
+constraint. This means that the executable
+/usr/bin/foo will not match a constraint for
+/usr/bin/./foo and vice-versa. This is the default
+constraint type.
+
+Basename
+
+A constraint with no path is
+matched against the basename of the executable. foo
+will match /bin/foo, /usr/local/sbin/foo, or
+any other executable named foo, no matter what its
+path is.
+
+Directory
+
+A constraint with a trailing
+slash is prefix-matched against the full pathname of the
+executable. /usr/bin/ will match any executable with
+a path starting with /usr/bin.
+
+Note that the
+executable path matched against is the path parameter
+in an exec*() function call. The Directory or Exact
+constraints can only match when the executable is called
+with a full pathname. Most programs executed from a shell
+are run without a full path, via exec*p(), so the
+Basename constraint type is the most useful.
+
+WARNING!
+Constrained mappings must never appear first in the
+configuration file. While there is a way to specify the
+&rsquo;&rsquo;default&rsquo;&rsquo; constraint, its use is
+not recommended.
+
+The most common
+use at the date of writing is for allowing multiple POSIX
+threading libraries to be used on a system without relinking
+or changing symlinks.
+
+EXAMPLES
+
+# /etc/libmap.conf 
+#
+
+# candidate
+
+mapping
+
+#
+
+libpthread.so.1
+
+libpthread.so.1
+
+# Everything uses &rsquo;libpthread&rsquo;
+
+libpthread.so
+
+libpthread.so
+
+libc_r.so.5
+
+libpthread.so.1
+
+# Everything that uses &rsquo;libc_r&rsquo;
+
+libc_r.so
+
+libpthread.so
+
+# now uses &rsquo;libpthread&rsquo;
+
+[/tmp/mplayer]
+
+# Test version of mplayer uses libc_r
+
+libpthread.so.1
+
+libc_r.so.5
+
+libpthread.so
+
+libc_r.so
+
+[mplayer]
+
+# All other mplayers use libpthread
+
+libpthread.so.1
+
+libpthread.so.1
+
+libpthread.so
+
+libpthread.so
+
+[/usr/local/jdk1.4.1/]
+
+# All Java 1.4.1 programs use libthr
+
+# This works because "javavms" executes
+
+# programs with the full pathname
+
+libpthread.so.1
+
+libthr.so.1
+
+libpthread.so
+
+libthr.so
+
+FILES 
+/etc/libmap.conf
+
+The libmap
+configuration file.
+
+SEE ALSO
+
+ldd(1), rtld(1)
+
+HISTORY
+
+The libmap.conf manual
+page and libmap functionality first appeared in
+FreeBSD 5.1.
+
+AUTHORS
+
+This manual page was written by
+Matthew N. Dodd winter [AT] jurai.net>.
+
+BSD
+January 31, 2004 BSD

@@ -1,0 +1,179 @@
+NAME
+
+mhmail - send
+or read mail non-interactively with nmh
+
+SYNOPSIS
+
+mhmail
+
+[-help] [-version]
+[-to] addrs ... [-attach file]
+[-body text]
+
+[-cc addrs ...]
+[-from addr] [-headerfield
+name:value] [-subject subject]
+[-resent] [switches for post ... |
+-profile [switches for send ...]]
+[-send | -nosend]
+
+mhmail
+
+with no arguments is equivalent
+to inc
+
+DESCRIPTION
+
+mhmail
+is intended as a replacement, compatible with nmh,
+for the standard Berkeley mail program (mail or
+mailx). nmh is intended for the use of
+programs such as cron, which expect to send mail
+automatically. It is also used by some nmh commands
+to mail error notifications. Although mhmail can be
+used interactively, it is recommended that comp and
+send be used instead, to send messages.
+
+When invoked
+without arguments, mhmail simply invokes inc
+to incorporate new messages from the user&rsquo;s mail
+drop.
+
+When one or
+more addresses are specified, a message is read from the
+standard input and spooled to a temporary file.
+mhmail then invokes by default, with the name of the
+temporary file as its argument, to by default, with the name
+of the temporary file as its argument to deliver the message
+to the specified address.
+
+The
+-subject switch can be used to specify the
+&ldquo;Subject:&rdquo; field of the message.
+&ldquo;Subject:&rdquo; field of the message.
+
+The
+-resent switch indicates that the message body is a
+fully formed message that will be resent, as dist
+would do. For example:
+
+mhmail
+u2 [AT] example.com -resent 
+
+By default,
+mhmail will read the message to be sent from the
+standard input. You can specify the text of the message at
+the command line with the -body text switch.
+If the standard input has zero length, mhmail will
+not send the message and return with status 1. You can use
+the switch -body &ldquo;&rdquo; to force an empty
+message.
+
+Normally,
+addresses appearing as arguments are put in the
+&ldquo;To:&rdquo; field. At least one such address is
+required when sending a message, i.e., if any other switches
+are supplied. If the -cc switch is used, all
+addresses following it, even if there are intervening
+switches other than -to, are placed in the
+&ldquo;cc:&rdquo; field. The optional -to switch can
+appear in front of any addresses to signify their placement
+in the &ldquo;To:&rdquo; field. The -to and
+-cc switches may be given multiple times.
+
+By using
+-from addr, you can specify the
+&ldquo;From:&rdquo; header of the draft. If no -from
+switch is used when sending, mhmail will supply a
+&ldquo;From:&rdquo; header field using the sender&rsquo;s
+local mailbox, see localmbox in mh-format(5).
+Naturally, post will fill in the
+&ldquo;Sender:&rdquo; header correctly.
+
+The
+-headerfield name:value switch adds a header
+field with the specified name and value to the message. (The
+value is called the field body in RFC 2822,
+but that&rsquo;s too easily confused with the message body.)
+There need not be a space after the colon that separates the
+name and value in the argument to this switch. It is usually
+best to enclose the argument in quotes to protect it from
+the shell. The -headerfield switch may be given
+multiple times to add multiple header fields, for
+example,
+
+mhmail -from
+sender [AT] example.com \ 
+-headerfield &rsquo;MIME-Version:1.0&rsquo; \ 
+-headerfield &rsquo;Content-Type:text/plain;
+charset=utf-8&rsquo; \ 
+-headerfield &rsquo;Content-Transfer-Encoding:8bit&rsquo; \
+
+recipient [AT] example.com
+
+Note about this
+example: the -attach switch causes
+MIME-Version and Content-Type headers to be
+added to the message.
+
+The
+-profile switch instructs mhmail to use
+send instead of post to send the message. This
+allows use of the user&rsquo;s context and aliases.
+
+The
+-attach file switch attaches the specified
+file to the message. Use of -attach enables
+-profile because mhmail uses send to
+handle the attachment. It is usually best to enclose the
+argument in quotes to protect it from the shell. The
+-attach switch may be given multiple times to add
+multiple attachments.
+
+The
+-nosend option shows the draft file that would be
+posted/sent on the command&rsquo;s standard output but does
+not post or send it. -send provides the default
+behavior of posting or sending the message. It can be used
+to disable -nosend, for example, when using a shell
+alias.
+
+All other
+switches are passed to post if -profile is not
+used, or send if -profile is used.
+
+FILES
+
+/usr/bin/mh/inc
+Program to incorporate mail drop into folder 
+/usr/lib/mh/post Program to deliver a message 
+/tmp/mhmail* Temporary copy of message
+
+PROFILE COMPONENTS
+
+mhmail
+does not consult the user&rsquo;s
+.mh_profile
+
+SEE ALSO
+
+dist(1),
+send(1), mh-format(5), send(1),
+post(8)
+
+DEFAULTS
+
+&rsquo;-from
+localmbox&rsquo; 
+&rsquo;-profile&rsquo; is enabled by default only
+with -attach 
+&rsquo;-send&rsquo;
+
+CONTEXT
+
+If inc
+is invoked, then inc&rsquo;s context changes occur.
+With the -profile switch, the context of send
+is used. mhmail does not read the context file
+itself.

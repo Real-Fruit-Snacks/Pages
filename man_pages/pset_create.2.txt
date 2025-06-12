@@ -1,0 +1,145 @@
+NAME
+
+pset_create,
+pset_destroy, pset_assign &minus; manage sets of
+processors
+
+SYNOPSIS
+
+#include
+
+int
+pset_create(psetid_t *newpset);
+
+int
+pset_destroy(psetid_t pset);
+
+int
+pset_assign(psetid_t pset,
+processorid_t cpu, psetid_t
+*opset);
+
+DESCRIPTION
+
+These functions
+control the creation and management of sets of processors.
+Processor sets allow a subset of the system&rsquo;s
+processors to be set aside for exclusive use by specified
+LWPs and processes. The binding of LWPs and
+processes to processor sets is controlled by
+pset_bind(2).
+
+The
+pset_create() function creates an empty processor set
+that contains no processors. On successful return,
+newpset will contain the ID of the new
+processor set.
+
+The
+pset_destroy() function destroys the processor set
+pset, releasing its constituent processors and
+processes. If pset is PS_MYID, the processor
+set to which the caller is bound is destroyed.
+
+The
+pset_assign() function assigns the processor
+cpu to the processor set pset. A processor
+that has been assigned to a processor set will run only
+LWPs and processes that have been explicitly bound to
+that processor set, unless another LWP requires a
+resource that is only available on that processor.
+
+On successful
+return, if opset is non-null, opset will
+contain the processor set ID of the former processor
+set of the processor.
+
+If pset
+is PS_NONE, pset_assign() releases processor
+cpu from its current processor set.
+
+If pset
+is PS_QUERY, pset_assign() makes no change to
+processor sets, but returns the current processor set
+ID of processor cpu in opset.
+
+If pset
+is PS_MYID, processor cpu is assigned to the
+processor set to which the caller belongs. If the caller
+does not belong to a processor set, processor cpu is
+released from its current processor set.
+
+These functions
+are restricted to super-user use, except for
+pset_assign() when pset is
+PS_QUERY.
+
+RETURN VALUES
+
+Upon successful
+completion, these functions return 0. Otherwise,
+&minus;1 is returned and errno is set to
+indicate the error.
+
+ERRORS
+
+These functions
+will fail if:
+
+EBUSY
+
+The processor could not be moved to the specified
+processor set.
+
+EFAULT
+
+The location pointed to by
+newpset was not writable by the user, or the location
+pointed to by opset was not NULL and not
+writable by the user.
+
+EINVAL
+
+The specified processor does
+not exist, the specified processor is not on-line, or an
+invalid processor set was specified.
+
+ENOMEM
+
+There was insufficient space
+for pset_create to create a new processor set.
+
+EPERM
+
+The effective user of the calling process is not
+super-user. 
+
+ATTRIBUTES
+
+See
+attributes(5) for descriptions of the following
+attributes:
+
+SEE ALSO
+
+psradm(1M),
+psrinfo(1M), psrset(1M), p_online(2),
+processor_bind(2), pset_bind (2),
+pset_info(2), pset_getloadavg(3C),
+attributes(5)
+
+NOTES
+
+Processors
+belonging to different processor sets of type
+PS_SYSTEM (see pset_info(2)) cannot be
+assigned to the same processor set of type
+PS_PRIVATE. If this is attempted,
+pset_assign() will fail and set errno to
+EINVAL.
+
+Processors with
+LWPs bound to them using processor_bind(2)
+cannot be assigned to a new processor set. If this is
+attempted, pset_assign() will fail and set
+errno to EBUSY.

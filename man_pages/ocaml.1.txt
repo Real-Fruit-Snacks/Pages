@@ -1,0 +1,359 @@
+NAME
+
+ocaml - The
+OCaml interactive toplevel
+
+SYNOPSIS
+
+ocaml [
+options ] [ object-files ] [
+script-file ]
+
+DESCRIPTION
+
+The
+ocaml(1) command is the toplevel system for OCaml,
+that permits interactive use of the OCaml system through a
+read-eval-print loop. In this mode, the system repeatedly
+reads OCaml phrases from the input, then typechecks,
+compiles and evaluates them, then prints the inferred type
+and result value, if any. The system prints a # (hash)
+prompt before reading each phrase.
+
+A toplevel
+phrase can span several lines. It is terminated by ;; (a
+double-semicolon). The syntax of toplevel phrases is as
+follows.
+
+The toplevel
+system is started by the command ocaml(1). Phrases
+are read on standard input, results are printed on standard
+output, errors on standard error. End-of-file on standard
+input terminates ocaml(1).
+
+If one or more
+object-files (ending in .cmo or .cma) are given, they
+are loaded silently before starting the toplevel.
+
+If a
+script-file is given, phrases are read silently from
+the file, errors printed on standard error. ocaml(1)
+exits after the execution of the last phrase.
+
+OPTIONS
+
+The following
+command-line options are recognized by ocaml(1).
+
+-absname
+
+Show absolute filenames in
+error messages.
+
+-I directory
+
+Add the given directory to the
+list of directories searched for source and compiled files.
+By default, the current directory is searched first, then
+the standard library directory. Directories added with
+-I are searched after the current directory, in the
+order in which they were given on the command line, but
+before the standard library directory.
+
+If the given
+directory starts with +, it is taken relative to the
+standard library directory. For instance,
+-I +compiler-libs adds the subdirectory
+compiler-libs of the standard library to the search
+path.
+
+Directories can
+also be added to the search path once the toplevel is
+running with the #directory directive.
+
+-init file
+
+Load the given file instead of
+the default initialization file. See the
+"Initialization file" section below.
+
+-labels
+
+Labels are not ignored in
+types, labels may be used in applications, and labelled
+parameters can be given in any order. This is the
+default.
+
+-no-app-funct
+
+Deactivates the applicative
+behaviour of functors. With this option, each functor
+application generates new types in its result and applying
+the same functor twice to the same argument yields two
+incompatible structures.
+
+-noassert
+
+Do not compile assertion
+checks. Note that the special form assert false
+is always compiled because it is typed specially.
+
+-noinit
+
+Do not load any initialization
+file. See the "Initialization file" section
+below.
+
+-nolabels
+
+Ignore non-optional labels in
+types. Labels cannot be used in applications, and parameter
+order becomes strict.
+
+-noprompt
+
+Do not display any prompt when
+waiting for input.
+
+-nopromptcont
+
+Do not display the secondary
+prompt when waiting for continuation lines in multi-line
+inputs. This should be used e.g. when running
+ocaml(1) in an emacs(1) window.
+
+-nostdlib
+
+Do not include the standard
+library directory in the list of directories searched for
+source and compiled files.
+
+-open module
+
+Opens the given module before
+starting the toplevel. If several -open options are
+given, they are processed in order, just as if the
+statements open! module1;; ... open! moduleN;; were
+input.
+
+-ppx command
+
+After parsing, pipe the
+abstract syntax tree through the preprocessor
+command. The module Ast_mapper(3) implements
+the external interface of a preprocessor.
+
+-principal
+
+Check information path during
+type-checking, to make sure that all types are derived in a
+principal way. When using labelled arguments and/or
+polymorphic methods, this flag is required to ensure future
+versions of the compiler will be able to infer types
+correctly, even if internal algorithms change. All programs
+accepted in -principal mode are also accepted in the
+default mode with equivalent types, but different binary
+signatures, and this may slow down type checking; yet it is
+a good idea to use it once before publishing source
+code.
+
+-rectypes
+
+Allow arbitrary recursive types
+during type-checking. By default, only recursive types where
+the recursion goes through an object type are supported.
+
+-safe-string
+
+Enforce the separation between
+types string and bytes, thereby
+making strings read-only. This is the default.
+
+-short-paths
+
+When a type is visible under
+several module-paths, use the shortest one when printing the
+type&rsquo;s name in inferred interfaces and error and
+warning messages.
+
+-stdin
+
+Read the standard input as a script file rather than
+starting an interactive session.
+
+-strict-sequence
+
+Force the left-hand part of
+each sequence to have type unit.
+
+-unboxed-types
+
+When a type is unboxable (i.e.
+a record with a single argument or a concrete datatype with
+a single constructor of one argument) it will be unboxed
+unless annotated with [@@ocaml.boxed].
+
+-no-unboxed-types
+
+When a type is unboxable it
+will be boxed unless annotated with
+[@@ocaml.unboxed]. This is the default.
+
+-unsafe
+
+Turn bound checking off on
+array and string accesses (the v.(i)ands.[i]
+constructs). Programs compiled with -unsafe are
+therefore slightly faster, but unsafe: anything can happen
+if the program accesses an array or string outside of its
+bounds.
+
+-unsafe-string
+
+Identify the types
+string and bytes, thereby making
+strings writable. This is intended for compatibility with
+old source code and should not be used with new
+software.
+
+-version
+
+Print version string and
+exit.
+
+-vnum
+
+Print short version number and exit.
+
+-no-version
+
+Do not print the version banner
+at startup.
+
+-w warning-list
+
+Enable or disable warnings
+according to the argument warning-list. See
+ocamlc(1) for the syntax of the warning-list
+argument.
+
+-warn-error warning-list
+
+Mark as fatal the warnings
+described by the argument warning-list. Note that a
+warning is not triggered (and does not trigger an error) if
+it is disabled by the -w option. See ocamlc(1)
+for the syntax of the warning-list argument.
+
+-color mode
+
+Enable or disable colors in
+compiler messages (especially warnings and errors). The
+following modes are supported:
+
+auto use
+heuristics to enable colors only if the output supports them
+(an ANSI-compatible tty terminal);
+
+always
+enable colors unconditionally;
+
+never
+disable color output.
+
+The environment
+variable "OCAML_COLOR" is considered if -color is
+not provided. Its values are auto/always/never as above.
+
+If -color is
+not provided, "OCAML_COLOR" is not set and the
+environment variable "NO_COLOR" is set, then color
+output is disabled. Otherwise, the default setting is
+auto, and the current heuristic checks that the
+"TERM" environment variable exists and is not
+empty or "dumb", and that isatty(stderr)
+holds.
+
+-error-style mode
+
+Control the way error messages
+and warnings are printed. The following modes are
+supported:
+
+short
+only print the error and its location;
+
+contextual
+like "short", but also display the source code
+snippet corresponding to the location of the error.
+
+The default
+setting is contextual.
+
+The environment
+variable "OCAML_ERROR_STYLE" is considered if
+-error-style is not provided. Its values are
+short/contextual as above.
+
+-warn-help
+
+Show the description of all
+available warning numbers.
+
+- file
+
+Use file as a script file name, even when it
+starts with a hyphen (-).
+
+-help or --help
+
+Display a short usage summary
+and exit.
+
+INITIALIZATION FILE
+
+When
+ocaml(1) is invoked, it will read phrases from an
+initialization file before giving control to the user. The
+default file is .ocamlinit in the current directory
+if it exists, otherwise XDG_CONFIG_HOME/ocaml/init.ml
+according to the XDG base directory specification lookup if
+it exists (on Windows this is skipped), otherwise
+.ocamlinit in the user&rsquo;s home directory (
+HOME variable). You can specify a different
+initialization file by using the
+-init file option, and disable
+initialization files by using the -noinit option.
+
+Note that you
+can also use the #use directive to read phrases from
+a file.
+
+ENVIRONMENT VARIABLES
+
+OCAMLTOP_UTF_8
+
+When printing string values,
+non-ascii bytes (>0x7E) are printed as decimal escape
+sequence if OCAMLTOP_UTF_8 is set to false. Otherwise
+they are printed unescaped.
+
+TERM
+
+When printing error messages, the toplevel system
+attempts to underline visually the location of the error. It
+consults the TERM variable to determines the type of output
+terminal and look up its capabilities in the terminal
+database. 
+
+XDG_CONFIG_HOME HOME
+
+.ocamlinit lookup
+procedure (see above).
+
+SEE ALSO
+
+ocamlc(1), ocamlopt(1), ocamlrun(1).
+
+The OCaml user&rsquo;s manual, chapter
+"The toplevel system".

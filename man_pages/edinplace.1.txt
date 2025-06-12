@@ -1,0 +1,144 @@
+NAME
+
+edinplace
+&minus; edit a file in place
+
+SYNOPSIS
+
+edinplace
+[&minus;&minus;error=code]
+[[&minus;&minus;file=file] command [arg
+...]]
+
+DESCRIPTION
+
+edinplace runs
+command with its input from file (or standard
+input by default), and then replaces the contents of
+file with the output of command. To the extent
+possible, edinplace attempts to exit with the same status as
+command.
+
+If edinplace is
+run on standard input (no &minus;&minus;file option),
+it must inherit a file descriptor 0 that is open for both
+reading and writing. When processing standard input, if
+edinplace does not encounter a fatal error, it rewinds its
+standard input to offset 0 before exiting. Thus, a script
+can first run edinplace command, then run
+another filter command such as grep, and the
+resulting output will be the output of grep on
+command&rsquo;s output.
+
+If no
+command is specified, edinplace just rewinds its
+standard input to file offset 0. In this case, it is an
+error to supply the &minus;&minus;file option. Of
+course, rewinding only works when standard input is a real
+file (as opposed to a pipe or device).
+
+There are two
+options: 
+&minus;&minus;error=code (&minus;x
+code)
+
+Ordinarily, edinplace attempts
+to exit with the same status as command. However, if
+edinplace encounters some fatal error (such as being unable
+to execute command), it will exit with status
+code. The default value is 1. The range of valid exit
+codes is 1&minus;255, inclusive.
+
+&minus;&minus;file=file
+(&minus;f file)
+
+Specifies that file
+should be edited. Otherwise, edinplace will edit its
+standard input (which must be opened for both reading and
+writing).
+
+&minus;&minus;skipfrom
+
+Skip the first line of the file
+if it starts "From ". If edinplace is run without
+a command, positions the file offset at the start of the
+second line of the file. If edinplace is run with a command,
+then the first line of the file is neither fed to the
+command, nor overwritten. This option is useful for running
+edinplace over mail files, which sometimes start with a
+"From " line specifying the envelope sender of the
+message. Since "From " is not part of the message
+header, just a Unix convention, some programs are confused
+by the presence of that line. Note that if you specify a
+command, then edinplace resets the file offset to 0 upon
+exiting, even if the &minus;&minus;skipfrom option
+was present.
+
+EXAMPLES
+
+The following
+command prepends the string "ORIGINAL: "
+to the beginning of each line in text file
+message:
+
+edinplace
+&minus;f message sed &minus;e &rsquo;s/^/ORIGINAL:
+/&rsquo;
+
+The following
+command runs the spamassassin mail filter program on
+a mail message stored in file message, replacing the
+contents of message with spamassassin&rsquo;s
+annotated output, and exiting with code 100 if
+spamassassin thinks the message is spam. If edinplace
+encounters any fatal errors, it will exit with code 111.
+
+edinplace
+&minus;x 111 &minus;f message spamassassin &minus;e
+100
+
+(spamassassin
+reads a mail message on standard input and outputs an
+annotated copy of the message including information about
+whether or not the message is likely to be spam and why. The
+&minus;e option to spamassassin specifies what
+exit status spamassassin should use if the message
+appears to be spam; edinplace will use the same exit code as
+the program it has run.)
+
+To run
+spamassassin on incoming mail before accepting the mail from
+the remote client, place the following line in an
+appropriate Mail Avenger rcpt file as the last
+command executed:
+
+    bodytest edinplace &minus;x 111 spamassassin &minus;e 100
+
+SEE ALSO
+
+avenger(1)
+
+The Mail
+Avenger home page: http://www.mailavenger.org/&gt;.
+
+BUGS
+
+edinplace does
+not make a copy of the file being edited, but rather
+overwrites the file as it is being processed. At any point
+where command has produced more output than it has
+consumed input from the file, edinplace buffers the
+difference in memory. Thus, a command that outputs
+large amounts of data before reading the input file can run
+edinplace out of memory. (A program that outputs data as it
+reads even a very large file should be fine, however.)
+
+If
+command crashes or malfunctions for any reason, you
+will likely lose the input file, since edinplace will view
+this as a program that simply outputs the empty file.
+
+AUTHOR
+
+David
+Mazieres

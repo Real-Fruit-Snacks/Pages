@@ -1,0 +1,175 @@
+NAME
+
+nbddump -
+hexdump the content of a disk over NBD
+
+SYNOPSIS
+
+nbddump NBD
+
+"NBD"
+is an NBD URI or subprocess:
+
+NBD :=
+nbd://... | nbd+unix:// (or other URI formats) 
+| [ CMD ARGS ... ]
+
+nbddump
+--help
+
+nbddump
+--version
+
+DESCRIPTION
+
+nbddump prints
+the content of a disk from an NBD server using the usual
+hexdump format:
+
+$ nbddump
+nbd://localhost 
+0000: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+&#9474;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&#9474;
+
+0010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+&#9474;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&#9474;
+
+&#9734; 
+0100: 68 65 6c 6c 6f 2c 20 77 6f 72 6c 64 21 00 00 00
+&#9474;hello, world!&middot;&middot;&middot;&#9474; 
+0110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+&#9474;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&#9474;
+
+&#9734; 
+1000: 00 00 00 21 &#9474;&middot;&middot;&middot;!
+&#9474;
+
+Output
+format 
+The first field (before the ":") is the offset
+within the file, in hexadecimal.
+
+The second
+field shows the hex codes of bytes read from the file.
+
+The third field
+shows the ASCII equivalent characters (if printable).
+
+A splat
+character ("&#9734;") indicates lines of repeated
+output which have been squashed. (Note this is not just for
+lines of zero bytes, but any case where the next line shown
+would be the same as the previous line.)
+
+Subprocess
+
+nbddump can also run an NBD server as a subprocess. This
+requires an NBD server which understands systemd socket
+activation, such as qemu-nbd(8) or
+nbdkit(1).
+
+For example, to
+dump out a qcow2 file as raw data:
+
+$ nbddump -- [
+qemu-nbd -r -f qcow2 file.qcow2 ]
+
+To dump out an
+empty floppy disk created by
+nbdkit-floppy-plugin(1):
+
+$ mkdir
+/var/tmp/empty 
+$ nbddump -- [ nbdkit floppy /var/tmp/empty ] 
+0000: 00 00 00 4d 53 57 49 4e 34 2e 31 00 00 00 00 00
+|...MSWIN4.1.....| 
+0010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+|................| 
+&#9734; 
+01b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 fe
+|................| 
+01c0: ff ff 0c fe ff ff 00 08 00 00 80 00 00 00 00 00
+|................|
+
+To dump out
+some test data using nbdkit-data-plugin(1):
+
+$ nbddump -- [
+nbdkit data ' @0x1000 "hello!" ' ] 
+0000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+&#9474;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&middot;&#9474;
+
+&#9734; 
+1000: 68 65 6c 6c 6f 21 &#9474;hello! &#9474;
+
+Note that
+"[ ... ]" are separate parameters, and
+must be surrounded by spaces. "--" separates
+nbddump parameters from subprocess parameters.
+
+OPTIONS
+
+--help
+
+Display brief command line help
+and exit.
+
+--color 
+--colour 
+--no-color 
+--no-colour
+
+Enable or disable ANSI colours
+in output. By default we use colours if the output seems to
+be a terminal, and disable them if not.
+
+--length=N 
+-n N
+
+Dump up to N bytes and
+then stop.
+
+-V
+
+--version
+
+Display the package name and
+version and exit.
+
+SEE ALSO
+
+libnbd(3),
+nbdcopy(1), nbdfuse(1), nbdinfo(1),
+nbdsh(1), hexdump(1), file(1),
+qemu-img(1), nbdkit(1),
+qemu-nbd(8).
+
+AUTHORS
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+This library is
+free software; you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This library is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have
+received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301 USA

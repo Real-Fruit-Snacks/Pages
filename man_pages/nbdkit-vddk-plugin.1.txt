@@ -1,0 +1,595 @@
+NAME
+
+nbdkit-vddk-plugin
+- nbdkit VMware VDDK plugin
+
+SYNOPSIS
+
+ nbdkit vddk file=FILENAME [config=FILENAME] [libdir=LIBRARY]
+             [vm=moref=ID] [server=HOSTNAME] [user=USERNAME]
+             [password=PASSWORD | password=- | password=+FILENAME]
+             [cookie=COOKIE] [thumbprint=THUMBPRINT]
+             [port=PORT] [nfchostport=PORT] [single-link=true]
+             [snapshot=MOREF] [transports=MODE:MODE:...]
+             [unbuffered=true]
+ nbdkit vddk --dump-plugin
+
+DESCRIPTION
+
+"nbdkit-vddk-plugin"
+is an nbdkit(1) plugin that serves files from local
+VMware VMDK files, VMware ESXi servers,
+VMware VCenter servers, and other sources. It requires
+VMware&rsquo;s proprietary VDDK library that
+you must download yourself separately.
+
+The plugin can
+serve read-only (if the -r option is used) or
+read/write.
+
+LIBRARY AND CONFIG FILE LOCATIONS
+
+If the
+VDDK library (libvixDiskLib.so.N) is
+located on a non-standard path, you may need to set
+"LD_LIBRARY_PATH" or modify
+/etc/ld.so.conf before this plugin will work. In
+addition you may want to set the "libdir"
+parameter so that the VDDK library can load
+plugins like Advanced Transport.
+
+For 64 bit
+platforms pass the lib64 subdirectory:
+
+ export LD_LIBRARY_PATH=/path/to/vmware-vix-disklib-distrib/lib64
+
+For 32 bit
+platforms pass the lib32 subdirectory:
+
+ export LD_LIBRARY_PATH=/path/to/vmware-vix-disklib-distrib/lib32
+
+Then pass the
+VDDK distribution directory as
+"libdir" along with other parameters as
+required:
+
+ nbdkit vddk \
+     libdir=/path/to/vmware-vix-disklib-distrib \
+     file=file.vmdk
+
+VDDK
+itself looks in a few default locations for the optional
+configuration file, usually including
+/etc/vmware/config and $HOME/.vmware/config,
+but you can override this using the
+"config" parameter.
+
+PARAMETERS
+
+All parameters
+are optional except: 
+"file"
+
+is required for opening a local
+VMDK file.
+
+"server" 
+"thumbprint" 
+"user" 
+"password" 
+"vm" 
+"file"
+
+When making a remote connection
+you must supply all 6 of these parameters.
+
+See the "
+EXAMPLES" section below for local and
+remote command lines. 
+config= FILENAME
+
+The name of the
+VDDK configuration file.
+
+cookie=
+COOKIE
+
+Cookie from existing
+authenticated session on the host.
+
+file=
+FILENAME
+
+Set the name of the
+VMDK file to serve.
+
+For local files
+you must supply an absolute path.
+
+For remote
+files this is usually a path on the VMware server with the
+format "[datastore] path/to/file.vmdk".
+You can find the path using virsh(1). For ESXi:
+
+ virsh -c 'esx://esxi.example.com?no_verify=1' dumpxml guestname
+
+For
+vCenter:
+
+ virsh -c 'vpx://vcenter.example.com/Datacenter/esxi.example.com?no_verify=1' \
+       dumpxml guestname
+
+If a
+VM has multiple disks, nbdkit can only serve
+one at a time. To serve more than one you must run multiple
+copies of nbdkit. (See " NOTES"
+below).
+
+libdir=
+PATHNAME
+
+This sets the path of the
+VMware VDDK distribution.
+
+VDDK
+uses this to load its own plugins, if this path is
+unspecified or wrong then VDDK will work with
+reduced functionality.
+
+If the
+parameter is not given, then a hard-coded path determined at
+compile time is used, see "DUMP-PLUGIN
+OUTPUT" below.
+
+nfchostport=
+PORT
+
+Port used to establish an
+NFC connection to ESXi. Defaults to 902.
+
+(Only supported
+in VDDK &ge; 5.5.5 and &ge; 6.0.1)
+
+password=
+PASSWORD
+
+Set the password to use when
+connecting to the remote server.
+
+Note that
+passing this on the command line is not secure on shared
+machines.
+
+password=-
+
+Ask for the password
+(interactively) when nbdkit starts up.
+
+password=+
+FILENAME
+
+Read the password from the
+named file. This is the most secure method to supply a
+password, as long as you set the permissions on the file
+appropriately.
+
+port=
+PORT
+
+The port on the VCenter/ESXi
+host. Defaults to 443.
+
+server=
+HOSTNAME
+
+The hostname or
+IP address of VCenter or ESXi host.
+
+single-link=true
+
+Open the current link, not the
+entire chain. This corresponds to the
+"VIXDISKLIB_FLAG_OPEN_SINGLE_LINK"
+flag.
+
+snapshot=
+MOREF
+
+The Managed Object Reference of
+the snapshot.
+
+thumbprint=
+THUMBPRINT
+
+The SSL (
+SHA1 ) thumbprint for validating the
+SSL certificate.
+
+The format is
+"xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
+(20 hex digit pairs).
+
+See "
+THUMBPRINTS" below for how to get
+this.
+
+transports=
+MODE : MODE
+:...
+
+List of one or more transport
+modes to use. Possible values include &rsquo;nbd&rsquo;,
+&rsquo;nbdssl&rsquo;, &rsquo;san&rsquo;,
+&rsquo;hotadd&rsquo;, &rsquo;file&rsquo; (there may be
+others). If not given, VDDK will try to
+choose the best transport mode.
+
+unbuffered=true
+
+Disable host caching. This
+corresponds to the
+"VIXDISKLIB_FLAG_OPEN_UNBUFFERED"
+flag.
+
+user=
+USERNAME
+
+The username to connect to the
+remote server as.
+
+vm=moref=
+ID
+
+The Managed Object Reference
+("moref") of the virtual machine.
+
+For VMware ESXi
+hypervisors, this is a number (eg.
+"vm=moref=2"). For VMware VCenter, this
+is a string beginning with "vm-") (eg.
+"vm=moref=vm-16"). Across ESXi and
+vCenter the numbers are different even for the same virtual
+machine.
+
+If you have
+libvirt &ge; 3.7, the moref is available in the
+virsh(1) "dumpxml" output:
+
+ $ virsh -c 'esx://esxi.example.com?no_verify=1' dumpxml guestname
+ ...
+ 2
+ ...
+
+or:
+
+ $ virsh -c 'vpx://vcenter.example.com/Datacenter/esxi.example.com?no_verify=1' \
+       dumpxml guestname
+ ...
+ vm-16
+ ...
+
+An alternative
+way to find the moref of a VM is using the
+"moRefFinder.pl" script written by
+William Lam
+(http://www.virtuallyghetto.com/2011/11/vsphere-moref-managed-object-reference.html
+https://blogs.vmware.com/vsphere/2012/02/uniquely-identifying-virtual-machines-in-vsphere-and-vcloud-part-2-technical.html).
+
+vimapiver=
+APIVER
+
+This parameter is ignored for
+backwards compatibility.
+
+EXAMPLES
+
+Open a local
+VMDK file
+
+ nbdkit vddk file=/absolute/path/to/file.vmdk
+
+Note that when
+opening local files the "file=" parameter
+must be an absolute path.
+
+Because
+VDDK needs to take a lock on this file, the
+file must be on a writable filesystem (unless you use the
+-r option).
+
+Open a file
+on a remote VMware ESXi hypervisor 
+Connect directly to a VMware ESXi hypervisor and export a
+particular file:
+
+ nbdkit vddk user=root password=+/tmp/rootpw \
+             server=esxi.example.com thumbprint=xx:xx:xx:... \
+             vm=moref=2 \
+             file="[datastore1] Fedora/Fedora.vmdk"
+
+"user"
+and "password" must be specified. Use
+"password=+FILENAME" to provide the
+password securely in a file.
+
+"server"
+is the hostname of the ESXi server.
+"thumbprint" is the thumb print for
+validating the SSL certificate. How to find
+the thumb print of a server is described in "
+THUMBPRINTS" below.
+
+"vm"
+is the Managed Object Reference ("moref") of the
+virtual machine. To find this using virsh(1) or the
+"moRefFinder.pl" script, see "
+PARAMETERS" above. Note that it is
+different from the moref used by vCenter, and is just a
+single number.
+
+"file"
+is the actual file you want to open, usually in the form
+"[datastore] vmname/vmname.vmdk". You can
+find this from virsh(1) as described in "
+PARAMETERS" above.
+
+Open a file
+on a remote VMware vCenter server 
+Connect via VMware vCenter and export a particular file:
+
+ nbdkit vddk user=root password=vmware \
+             server=vcenter.example.com thumbprint=xx:xx:xx:... \
+             vm=moref=vm-16 \
+             file="[datastore1] Fedora/Fedora.vmdk"
+
+"user"
+and "password" must be specified. Use
+"password=+FILENAME" to provide the
+password securely in a file.
+
+"server"
+is the hostname of the vCenter server.
+"thumbprint" is the thumb print for
+validating the SSL certificate. How to find
+the thumb print of a server is described in "
+THUMBPRINTS" below.
+
+"vm"
+is the Managed Object Reference ("moref") of the
+virtual machine. To find this using virsh(1) or the
+"moRefFinder.pl" script, see "
+PARAMETERS" above. Note that it is
+different from the moref used by ESXi, and always begins
+with the prefix "vm-".
+
+"file"
+is the actual file you want to open, usually in the form
+"[datastore] vmname/vmname.vmdk". You can
+find this from virsh(1) as described in "
+PARAMETERS" above.
+
+THUMBPRINTS
+
+The thumbprint
+is a 20 byte string containing the SSL (
+SHA1 ) fingerprint of the remote VMware
+server and it is required when making a remote connection.
+There are two ways to obtain this.
+
+Extracting
+thumbprint from ESXi or vCenter server 
+To extract the thumbprint, log in to the ESXi hypervisor
+shell and run this command:
+
+ # openssl x509 -in /etc/vmware/ssl/rui.crt -fingerprint -sha1 -noout
+
+For VMware
+vCenter servers the thumbprint is printed on the text
+console of the server or is available by logging in to the
+server and using this command:
+
+ # openssl x509 -in /etc/vmware-vpx/ssl/rui.crt -fingerprint -sha1 -noout
+
+Trick: Get
+VDDK to tell you the thumbprint 
+Another (easier) way to get the thumbprint of a server is to
+connect to the server using a bogus thumbprint with
+debugging enabled:
+
+ nbdkit -f -v vddk server=esxi.example.com [...] thumbprint=12
+ qemu-img info nbd:localhost:10809
+
+The nbdkit
+process will try to connect (and fail because the thumbprint
+is wrong). However in the debug output will be a message
+such as this:
+
+ nbdkit: debug: VixDiskLibVim: Failed to verify SSL certificate: actual thumbprint=B2:31:BD:DE:9F:DB:9D:E0:78:EF:30:42:8A:41:B0:28:92:93:C8:DD expected=12
+
+This gives you
+the server&rsquo;s real thumbprint. Of course this method is
+not secure since it allows a Man-in-the-Middle (
+MITM ) attack.
+
+DUMP-PLUGIN OUTPUT
+
+To query more
+information about the plugin (and whether it is working),
+use:
+
+ nbdkit vddk --dump-plugin
+
+If the plugin
+is not present, not working or the library path is wrong you
+will get an error.
+
+If it works the
+output will include: 
+"vddk_default_libdir=..."
+
+The compiled-in library path.
+Use "libdir=PATHNAME" to override this at
+runtime.
+
+"vddk_has_nfchostport=1"
+
+If this is printed then the
+"nfchostport=PORT" parameter is supported
+by this build.
+
+"vddk_dll=..."
+
+Prints the full path to the
+VDDK shared library. Since this requires a
+glibc extension it may not be available in all builds of the
+plugin.
+
+DEBUGGING VDDK
+
+Debugging
+messages can be very helpful if you have problems connecting
+to VMware servers, or to find the list of available
+transport modes, or to diagnose SAN
+problems.
+
+Run nbdkit like
+this to see all debugging messages:
+
+ nbdkit -f -v vddk file=FILENAME [...]
+
+NOTES
+
+Sector size
+limitation 
+The VDDK plugin can only answer read/write
+requests on whole 512 byte sector boundaries. This is
+because the VDDK Read and Write APIs only
+take sector numbers.
+
+The plugin
+could be extended in future to support byte granularity, but
+common NBD clients don&rsquo;t need it so
+it&rsquo;s not a priority.
+
+Threads
+
+Handling threads in the VDDK API is complex
+and does not map well to any of the thread models offered by
+nbdkit (see " THREADS" in
+nbdkit-plugin(3)). The plugin uses the nbdkit
+"SERIALIZE_ALL_REQUESTS" model, but
+technically even this is not completely safe. This is a
+subject of future work.
+
+Export
+names 
+For VMs with multiple disks, it would be nice to map the
+disk names to NBD export names. However
+nbdkit core will need to be extended to support this.
+
+Out of
+memory errors 
+In the verbose log you may see errors like:
+
+ nbdkit: vddk[3]: error: [NFC ERROR] NfcFssrvrProcessErrorMsg:
+ received NFC error 5 from server: Failed to allocate the
+ requested 2097176 bytes
+
+This seems
+especially common when there are multiple parallel
+connections open to the VMware server.
+
+These can be
+caused by resource limits set on the VMware server. You can
+increase the limit for the NFC service by
+editing /etc/vmware/hostd/config.xml and adjusting
+the "" setting:
+
+   libnfcsvc.so
+   true
+   50331648
+   10485760
+
+and restarting
+the "hostd" service:
+
+ # /etc/init.d/hostd restart
+
+For more
+information see https://bugzilla.redhat.com/1614276.
+
+SUPPORTED VERSIONS OF VDDK
+
+This plugin
+requires VDDK &ge; 5.1.1.
+
+It has been
+tested with all versions up to 6.7 (but should work with
+future versions).
+
+VDDK
+&ge; 6.0 should be used if possible. This is the first
+version which added Flush support which is crucial for data
+integrity when writing.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-plugin(3), virsh(1),
+https://www.vmware.com/support/developer/vddk/
+
+AUTHORS
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright (C)
+2013-2018 Red Hat Inc.
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS
+SOFTWARE IS PROVIDED BY RED HAT AND CONTRIBUTORS
+&rsquo;&rsquo; AS IS &rsquo;&rsquo;
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT
+NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL RED HAT OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES ( INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES ; LOSS OF USE, DATA, OR
+PROFITS ; OR BUSINESS INTERRUPTION )
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (
+INCLUDING NEGLIGENCE OR OTHERWISE )
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

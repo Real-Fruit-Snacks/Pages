@@ -1,0 +1,281 @@
+CHIO(1) BSD General Commands Manual CHIO(1)
+
+NAME
+
+chio &mdash; medium
+changer control utility
+
+SYNOPSIS
+
+chio
+[&minus;f changer] command
+[&minus;] arg1 arg2
+[arg3 [...]]
+
+DESCRIPTION
+
+The chio utility is used
+to control the operation of medium changers, such as those
+found in tape and optical disk jukeboxes.
+
+The options are
+as follows:
+
+&minus;f
+changer
+
+Use the device changer
+rather than the default device /dev/ch0.
+
+The default
+changer may be overridden by setting the environment
+variable CHANGER to the desired changer device.
+
+A medium changer
+apparatus is made up of elements. There are five
+element types: picker (medium transport), slot
+(storage), portal (import/export), drive (data
+transfer), and voltag (select by volume identifier).
+The voltag pseudo-element type allows the selection
+of tapes by their volume tag (typically a barcode on the
+tape).
+
+In this command
+description, the shorthand ET will be used to
+represent an element type, and EU will be used to
+represent an element unit. For example, to represent the
+first robotic arm in the changer, the ET would be
+&rsquo;&rsquo;picker&rsquo;&rsquo; and the EU would
+be &rsquo;&rsquo;0&rsquo;&rsquo;.
+
+SUPPORTED COMMANDS 
+move 
+    [inv]
+
+Move the media unit from
+ to . If the
+optional modifier inv is specified, the media unit
+will be inverted before insertion.
+
+exchange 
+    [ ]
+[inv1] [inv2]
+
+Perform a media unit exchange
+operation. The media unit in  is
+moved to  and the media unit
+previously in  is moved to
+. In the case of a simple exchange,
+ is omitted and the values
+ are used in their place. The
+optional modifiers inv1 and inv2 specify
+whether the media units are to be inverted before insertion
+into  and 
+respectively.
+
+Note that not
+all medium changers support the exchange operation;
+the changer must have multiple free pickers or emulate
+multiple free pickers with transient storage.
+
+return 
+
+Return the media unit to its
+source element. This command will query the status of the
+specified media unit, and will move it to the element
+specified in its source attribute. This is a convenient way
+to return media from a drive or portal to its previous
+element in the changer.
+
+position 
+  [inv]
+
+Position the picker in front of
+the element described by . If the
+optional modifier inv is specified, the media unit
+will be inverted before insertion.
+
+Note that not
+all changers behave as expected when issued this
+command.
+
+params
+
+Report the
+number of slots, drives, pickers, and portals in the
+changer, and which picker unit the changer is currently
+configured to use.
+
+getpicker
+
+Report which picker unit the
+changer is currently configured to use.
+
+setpicker 
+
+Configure the changer to use
+picker .
+
+ielem 
+[]
+
+Perform an INITIALIZE
+ELEMENT STATUS operation on the changer. The optional
+ parameter may be given to specify a
+timeout in seconds for the operations. This may be used if
+the operation takes unusually long because of buggy firmware
+or the like.
+
+voltag 
+[&minus;fca]  
+[] []
+
+Change volume tag for an
+element in the media changer. This command is only supported
+by few media changers. If it is not supported by a device,
+using this command will usually result in an "Invalid
+Field in CDB" error message on the console.
+
+If the
+&minus;c flag is specified, the volume tag of the
+specified element is cleared. If the &minus;f flag is
+specified, the volume tag is superseded with the specified
+volume tag even if a volume tag is already defined for the
+element. It is an error to not specify the &minus;f
+flag when trying to set a label for an element which already
+has volume tag information defined.
+
+The command
+works with the primary volume tag or, if the &minus;a
+flag is given, with the alternate volume tag.
+
+status 
+[&minus;vVsSbIa] []
+
+Report the status of all
+elements in the changer. If  is
+specified, report the status of all elements of type
+.
+
+&minus;v
+
+Print the
+primary volume tag for each loaded medium, if any. The
+volume tag is printed as
+&rsquo;&rsquo;&rsquo;&rsquo;.
+
+&minus;V
+
+Print the
+alternate volume tag for each loaded medium, if any.
+
+&minus;s
+
+Print the
+additional sense code and additional sense code qualifier
+for each element.
+
+&minus;S
+
+Print the
+element source address for each element.
+
+&minus;b
+
+Print SCSI bus
+information for each element. Note that this information is
+valid only for drives.
+
+&minus;I
+
+Print the
+internal element addresses for each element. The internal
+element address is not normally used with this driver. It is
+reported for diagnostic purposes only.
+
+&minus;a
+
+Print all
+additional information (as in &minus;vVsSba).
+
+The status bits
+are defined as follows:
+
+FULL
+
+Element
+contains a media unit.
+
+IMPEXP
+
+Media was
+deposited into element by an outside human operator.
+
+EXCEPT
+
+Element is in
+an abnormal state.
+
+ACCESS
+
+Media in this
+element is accessible by a picker.
+
+EXENAB
+
+Element
+supports passing media (exporting) to an outside human
+operator.
+
+INENAB
+
+Element
+supports receiving media (importing) from an outside human
+operator.
+
+EXAMPLES 
+chio move slot 3 drive 0
+
+Move the media in slot 3
+(fourth slot) to drive 0 (first drive).
+
+chio move voltag VOLUME01 drive
+0
+
+Move the media with the barcode
+VOLUME01 to drive 0 (first drive).
+
+chio return drive 0
+
+Remove the tape from drive 0
+(first drive) and return it to its original location in the
+rack.
+
+chio setpicker 2
+
+Configure the changer to use
+picker 2 (third picker) for operations.
+
+FILES 
+/dev/ch0
+
+default changer
+device
+
+SEE ALSO
+
+mt(1), mount(8)
+
+AUTHORS
+
+The chio program and SCSI
+changer driver were written by Jason R. Thorpe
+thorpej [AT] and.com> for And Communications,
+http://www.and.com/.
+
+Additional work
+by Hans Huebner &lang; hans [AT] artcom.de&rang; and Steve Gunn
+&lang; csg [AT] waterspout.com&rang; .
+
+BSD May 14,
+1998 BSD

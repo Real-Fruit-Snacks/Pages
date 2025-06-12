@@ -1,0 +1,240 @@
+NAME
+
+mh-tailor,
+mts.conf - mail transport configuration for nmh message
+handler
+
+DESCRIPTION
+
+The file
+/etc/nmh/mts.conf defines run-time options for those
+nmh programs which interact (in some form) with the
+message transport system. At present, these (user) programs
+are: ap, inc, msgchk, post,
+rcvdist, and rcvpack.
+
+Each option
+should be given on a single line. Blank lines and lines
+which begin with &rsquo;#&rsquo; are ignored. The options
+available along with default values and a description of
+their meanings are listed below:
+
+mts:
+
+The mail transport method to
+use. The three acceptable options are smtp (which is
+the default), sendmail/smtp, and
+sendmail/pipe.
+
+If you use
+smtp, this will enable a direct SMTP interface in
+nmh. When sending mail, instead of passing the
+message to the mail transport agent, post will open a
+socket connection to the mail port on the machine specified
+in the servers entry.
+
+If you use
+sendmail/smtp, then post will send messages by
+forking a local copy of sendmail. It will still speak
+SMTP with this local copy of sendmail. For backward
+compatibility, sendmail/smtp can be abbreviated to
+sendmail.
+
+The third
+alternative, sendmail/pipe, also forks a local copy
+of sendmail but feeds the message directly to it,
+using sendmail -t. This replaces the old,
+undocumented spost mechanism and retains some of its
+limitations, such as lack of support for the
+&ldquo;Dcc:&rdquo; header field, as described in the
+send and post manual pages.
+
+localname:
+
+The hostname nmh
+considers local. It should typically be a fully qualified
+hostname. If this is not set, depending on the version of
+Unix you&rsquo;re running, nmh will query the system
+for this value (e.g. uname, gethostname, etc.), and attempt
+to fully qualify this value.
+
+If you are
+using POP to retrieve new messages, you may want to set this
+value to the name of the POP server, so that outgoing
+messages appear to have originated on the POP server.
+
+localdomain:
+
+If this is set, a
+&rsquo;.&rsquo; followed by this string will be appended to
+your hostname.
+
+This should
+only be needed, if for some reason nmh is not able to
+fully qualify the hostname returned by the system (e.g.
+uname, gethostname, etc.).
+
+clientname:
+
+This option specifies the host
+name that nmh will give in the SMTP HELO (and
+EHLO) command, when posting mail. If not set, the
+default is to use the host name that nmh considers
+local (see localname above). If this option is set,
+but empty, no HELO command will be given.
+
+Although the
+HELO command is required by RFC 821, many SMTP
+servers do not require it. Early versions of SendMail
+will fail if the hostname given in the HELO command
+is the local host. Later versions of SendMail will
+complain if you omit the HELO command. If you run
+SendMail, find out what your system expects and set
+this field if needed.
+
+systemname:
+
+This option is only used for
+UUCP mail. It specifies the name of the local host in the
+UUCP &ldquo;domain&rdquo;. If not set, depending on the
+version of Unix you&rsquo;re running, nmh will query
+the system for this value. This has no equivalent in the
+nmh configuration file.
+
+mmdfldir:
+/var/mail
+
+The directory where mail drops
+are kept. If this option is set, but empty, the user&rsquo;s
+home directory is used. This overrides the default value
+chosen at the time of compilation.
+
+mmdflfil:
+
+The name of the mail drop file
+in the directory where mail drops are kept. If this is
+empty, the user&rsquo;s login name is used. This overrides
+the default value (which is empty).
+
+spoollocking:
+fcntl
+
+The locking algorithm to use
+when opening the mail drop. Can be any one of the
+following:
+
+fcntl dot flock
+lockf
+
+maildelivery:
+/usr/lib/mh/maildelivery
+
+The name of the system-wide
+default maildelivery file. See slocal(1) for
+the details.
+
+SMTP
+support 
+This option is only available if you set mts to
+smtp.
+
+servers:
+localhost
+
+A single hostname to be used
+when performing mail submission via SMTP. Previous versions
+of nmh supported multiple hostnames for
+servers, but the current version of nmh only
+supports a single entry (the name is kept for backwards
+compatibility reasons). This can be overridden via the
+-server switch to send(1). It is not possible
+to change the mail submission port number in the
+servers entry; see the -port switch to
+send(1) for this functionality.
+
+SendMail
+
+This option is only available if you set mts to
+sendmail/smtp or sendmail/pipe.
+
+sendmail:
+/usr/sbin/sendmail
+
+The pathname to the
+sendmail program.
+
+Post Office
+Protocol 
+pophost:
+
+The name of the default POP
+service host. If this is not set, then nmh looks in
+the standard mail drop areas for waiting mail, otherwise the
+named POP service host is consulted.
+
+File
+Locking 
+A few words on locking: nmh has two main uses for
+locking: locking the mail spool during mail incorporation,
+and locking metadata files (sequence files, the context)
+during updates. These locking methods can be configured
+separately from each other.
+
+For locking the
+mail spool, the spoollocking entry in
+mh-tailor(5) will control the locking algorithm to
+use when inc incorporates mail from the spool file.
+If no entry is given, a default based on the operating
+system type will be chosen.
+
+For locking all
+other files, the datalocking entry in
+mh-profile(5) controls the locking algorithm used for
+all other file access. If no entry is given, the
+fcntl lock method will be chosen.
+
+If you do not
+wish to use kernel-based locking, dot locking is an
+option available. If
+&ldquo;--enable-lockdir=directory&rdquo; is not specified at
+build time, lock files will be created in the directory
+where the file being locked resides. Otherwise, lock files
+will be created in the directory specified by
+&ldquo;--enable-lockdir&rdquo;.
+
+Prior to
+installing nmh, you should see how locking is done at
+your site, and set the appropriate values.
+
+FILES
+
+/etc/nmh/mts.conf
+
+nmh mts configuration file
+
+PROFILE COMPONENTS
+
+None
+
+SEE ALSO
+
+mh-mts(8),
+post(8) send(8)
+
+DEFAULTS
+
+As listed
+above. The path of the mail transport configuration file can
+be changed with the MHMTSCONF environment variable and
+augmented with the MHMTSUSERCONF environment variable, see
+mh-profile(5).
+
+BUGS
+
+Failure to open
+any mail transport configuration file is silently ignored.
+Therefore, it&rsquo;s best to avoid dynamic creation of such
+a file with the intent of use via the MHMTSCONF or
+MHMTSUSERCONF environment variables. If such use is
+necessary, the ability to successfully open the file should
+first be verified.

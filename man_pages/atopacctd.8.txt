@@ -1,0 +1,132 @@
+NAME
+
+atopacctd
+- process accounting daemon
+
+SYNOPSIS
+
+atopacctd
+[-v | topdirectory]
+
+DESCRIPTION
+
+The
+atopacctd daemon switches on the process accounting
+feature in the kernel and let the process accounting records
+be written to a file, called the source file from now. After
+process accounting is activated, the atopacctd daemon
+transfers every process accounting record that is available
+in the source file to a shadow file. Client processes (like
+atop processes) will read the shadow files instead of
+the process accounting source file. 
+In this way, the atopacctd daemon operates as a
+&rsquo;layer&rsquo; between the process accounting file that
+is written by the kernel and the shadow accounting files
+that are read by atop processes.
+
+This approach
+has the following advantages:
+
+o
+
+The atopacctd daemon takes care that the source
+file is kept to a limited size. As soon as its maximum size
+is reached, it is truncated to a size of zero again (this is
+not noticed by the atop processes).
+
+o
+
+The atopacct daemon takes care that a shadow file
+is kept to a limited size. As soon as the current shadow
+file reaches this maximum size, the atopacctd daemon
+creates a new (subsequent) shadow file. While client
+processes still have the possibility to read the previous
+shadow file(s), the atopacctd daemon continues
+writing accounting records to the newest (current) shadow
+file. For this reason, the name of a shadow file consists of
+a 10-digit sequence number followed by the extension
+&rsquo;.paf&rsquo; (process acounting file). Old shadow
+files that are not used by client processes any more, are
+automatically removed by the garbage collector in the
+atopacctd daemon.
+
+o
+
+When no client processes are active (any more), all
+shadow files will be deleted and no records will be
+transferred to a shadow file any more. As soon as at least
+one client is activate again, the atopacctd daemon
+continues writing shadow files.
+
+The directory
+/run is used as the default topdirectory. Below this
+top-directory, the source file pacct_source is
+created to which the kernel writes the process accounting
+records. 
+Furthermore, the subdirectory pacct_shadow.d is
+created as a &rsquo;container&rsquo; for the shadow files.
+Apart from the shadow files, also the file current is
+maintained in this subdirectory, containing the sequence
+number of the current (newest) shadow file and the maximum
+number of records that will be written in each shadow
+file.
+
+An alternative
+topdirectory can be specified as command line argument. When
+an alternative topdirectory is defined, also modify the
+configuration file /etc/atoprc to inform atop
+clients about this alternative location (see the
+atoprc man page). Such alternative topdirectory
+should be owned by root and may not be writable for the
+group or others (security reasons).
+
+Notice that the
+kernel suspends writing process accounting records when the
+free space of the filesystem on which the process accounting
+file resides drops below 2%. Writing is resumed when the
+free space is 4% or more. These lowwater and highwater
+percentages can be configured via the
+/proc/sys/kernel/acct pseudo-file. 
+The atopacctd daemon suspends transferring process
+accounting records to shadow files when the free space of
+the filesystem on which the process accounting file resides
+drops below 5%. Transfer is resumed when the free space is
+5% or more. Log messages are generated via syslog when
+writing to the current shadow file is suspended or
+resumed.
+
+The -v
+flag can be used to verify the version of the
+atopacctd daemon.
+
+FILES
+
+/run/pacct_source
+
+Regular file to which the
+kernel writes the process accounting records. This file will
+be regularly truncated.
+
+/run/pacct_shadow.d/current
+
+Regular file containing the
+sequence number of the current shadow file and the maximum
+number of records per shadow file.
+
+/run/pacct_shadow.d/N.paf
+
+Regular files containing the
+process accounting records that have been copied
+transparently from the source file (N represents a 10-digit
+sequence number).
+
+SEE ALSO
+
+atop(1),
+atopsar(1), atoprc(5), netatop(4), netatopd(8) 
+https://www.atoptool.nl
+
+AUTHOR
+
+Gerlof
+Langeveld (gerlof.langeveld [AT] atoptool.nl)

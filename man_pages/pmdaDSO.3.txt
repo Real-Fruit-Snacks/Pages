@@ -1,0 +1,94 @@
+NAME
+
+pmdaDSO
+- initialize the PMDA to run as a DSO
+
+C SYNOPSIS
+
+#include
+
+#include 
+
+int
+pmdaDSO(pmdaInterface *dispatch, int
+interface, char *name,
+char *helptext);
+
+cc ...
+-lpcp_pmda -lpcp
+
+DESCRIPTION
+
+pmdaDSO
+initializes the pmdaInterface structure to use the
+interface extensions, assuming the PMDA(3) is
+to be run as a DSO. The pmdaInterface structure is
+initialized with:
+
+name
+
+The name of the agent.
+
+helptext
+
+The default path to the help text (see
+pmdaText(3)). If no help text is installed, or you
+are not using pmdaText(3), then this should be set to
+NULL, otherwise helptext will be copied, so the
+storage associated with helptext may be released
+after the call to pmdaDSO.
+
+The callbacks
+are initialized to pmdaProfile(3),
+pmdaFetch(3), pmdaDesc(3), pmdaText(3),
+pmdaInstance(3) and pmdaStore(3).
+
+The
+interface structure also contains the domain
+of the PMDA(3), which is defined in the
+pmcd(1) configuration file. The domain is used
+to initialize the metric and instance descriptors (see
+pmdaInit(3)).
+
+CAVEAT
+
+The PMDA must
+be using PMDA_INTERFACE_2 or later.
+
+Once
+pmdaDSO has been called, it is expected that the
+pmdaInterface structure pointed to by dispatch
+will remain accessible to the routines in libpcp_pmda
+(not reclaimed off the stack, not freed or oherwise
+released, etc.). If the caller needs to move or relocate the
+pmdaInterface structure for any reason, then after
+the move pmdaInterfaceMoved(3) must be called to
+resestablish the internal integrity of the
+pmdaInterface structure at the new location before
+any other routine in libpcp_pmda is called.
+
+DIAGNOSTICS
+
+Incompatible
+version of pmcd detected
+
+When pmcd(1) creates the
+pmdaInterface structure, the
+dispatch.comm.version field is set to the highest
+protocol that pmcd(1) understands. This message
+indicates that the pmcd(1) process does not
+understand the protocol used by pmdaDSO.
+
+Unable to allocate memory
+for pmdaExt structure
+
+In addition,
+dispatch->status is set to a value less than
+zero.
+
+SEE ALSO
+
+pmcd(1),
+PMAPI(3), PMDA(3), pmdaDaemon(3),
+pmdaInit(3), pmdaInterfaceMoved(3) and
+pmdaText(3).

@@ -1,0 +1,695 @@
+NAME
+
+tlsproxy -
+Postfix TLS proxy
+
+SYNOPSIS
+
+tlsproxy
+[generic Postfix daemon options]
+
+DESCRIPTION
+
+The
+tlsproxy(8) server implements a two-way TLS proxy. It
+is used by the postscreen(8) server to talk
+SMTP-over-TLS with remote SMTP clients that are not
+allowlisted (including clients whose allowlist status has
+expired), and by the smtp(8) client to support TLS
+connection reuse, but it should also work for non-SMTP
+protocols.
+
+Although one
+tlsproxy(8) process can serve multiple sessions at
+the same time, it is a good idea to allow the number of
+processes to increase with load, so that the service remains
+responsive.
+
+PROTOCOL EXAMPLE
+
+The example
+below concerns postscreen(8). However, the
+tlsproxy(8) server is agnostic of the application
+protocol, and the example is easily adapted to other
+applications.
+
+After receiving
+a valid remote SMTP client STARTTLS command, the
+postscreen(8) server sends the remote SMTP client
+endpoint string, the requested role (server), and the
+requested timeout to tlsproxy(8).
+postscreen(8) then receives a "TLS
+available" indication from tlsproxy(8). If the
+TLS service is available, postscreen(8) sends the
+remote SMTP client file descriptor to tlsproxy(8),
+and sends the plaintext 220 greeting to the remote SMTP
+client. This triggers TLS negotiations between the remote
+SMTP client and tlsproxy(8). Upon completion of the
+TLS-level handshake, tlsproxy(8) translates between
+plaintext from/to postscreen(8) and ciphertext
+to/from the remote SMTP client.
+
+SECURITY
+
+The
+tlsproxy(8) server is moderately security-sensitive.
+It talks to untrusted clients on the network. The process
+can be run chrooted at fixed low privilege.
+
+DIAGNOSTICS
+
+Problems and
+transactions are logged to syslogd(8) or
+postlogd(8).
+
+CONFIGURATION PARAMETERS
+
+Changes to
+main.cf are not picked up automatically, as
+tlsproxy(8) processes may run for a long time
+depending on mail server load. Use the command
+"postfix reload" to speed up a change.
+
+The text below
+provides only a parameter summary. See postconf(5)
+for more details including examples.
+
+STARTTLS GLOBAL CONTROLS
+
+The following
+settings are global and therefore cannot be overruled by
+information specified in a tlsproxy(8) client
+request. 
+tls_append_default_CA (no)
+
+Append the system-supplied
+default Certification Authority certificates to the ones
+specified with *_tls_CApath or *_tls_CAfile.
+
+tls_daemon_random_bytes
+(32)
+
+The number of pseudo-random
+bytes that an smtp(8) or smtpd(8) process
+requests from the tlsmgr(8) server in order to seed
+its internal pseudo random number generator (PRNG).
+
+tls_high_cipherlist (see
+&rsquo;postconf -d&rsquo; output)
+
+The OpenSSL cipherlist for
+"high" grade ciphers.
+
+tls_medium_cipherlist (see
+&rsquo;postconf -d&rsquo; output)
+
+The OpenSSL cipherlist for
+"medium" or higher grade ciphers.
+
+tls_null_cipherlist
+(eNULL:!aNULL)
+
+The OpenSSL cipherlist for
+"NULL" grade ciphers that provide authentication
+without encryption.
+
+tls_eecdh_strong_curve
+(prime256v1)
+
+The elliptic curve used by the
+Postfix SMTP server for sensibly strong ephemeral ECDH key
+exchange.
+
+tls_eecdh_ultra_curve
+(secp384r1)
+
+The elliptic curve used by the
+Postfix SMTP server for maximally strong ephemeral ECDH key
+exchange.
+
+tls_disable_workarounds (see
+&rsquo;postconf -d&rsquo; output)
+
+List or bit-mask of OpenSSL bug
+work-arounds to disable.
+
+tls_preempt_cipherlist
+(no)
+
+With SSLv3 and later, use the
+Postfix SMTP server&rsquo;s cipher preference order instead
+of the remote client&rsquo;s cipher preference order.
+
+Available in
+Postfix version 2.8..3.7: 
+tls_low_cipherlist (see &rsquo;postconf -d&rsquo;
+output)
+
+The OpenSSL cipherlist for
+"low" or higher grade ciphers.
+
+tls_export_cipherlist (see
+&rsquo;postconf -d&rsquo; output)
+
+The OpenSSL cipherlist for
+"export" or higher grade ciphers.
+
+Available in
+Postfix version 2.9 and later: 
+tls_legacy_public_key_fingerprints (no)
+
+A temporary migration aid for
+sites that use certificate public-key fingerprints
+with Postfix 2.9.0..2.9.5, which use an incorrect
+algorithm.
+
+Available in
+Postfix version 2.11-3.1: 
+tls_dane_digest_agility (on)
+
+Configure RFC7671 DANE TLSA
+digest algorithm agility.
+
+tls_dane_trust_anchor_digest_enable
+(yes)
+
+Enable support for RFC 6698
+(DANE TLSA) DNS records that contain digests of
+trust-anchors with certificate usage "2".
+
+Available in
+Postfix version 2.11 and later: 
+tlsmgr_service_name (tlsmgr)
+
+The name of the
+tlsmgr(8) service entry in master.cf.
+
+Available in
+Postfix version 3.0 and later: 
+tls_session_ticket_cipher (Postfix >= 3.0: aes-256-cbc,
+Postfix 
+aes-128-cbc)
+
+Algorithm used to encrypt
+RFC5077 TLS session tickets.
+
+openssl_path
+(openssl)
+
+The location of the OpenSSL
+command line program openssl(1).
+
+Available in
+Postfix version 3.2 and later: 
+tls_eecdh_auto_curves (see &rsquo;postconf -d&rsquo;
+output)
+
+The prioritized list of
+elliptic curves supported by the Postfix SMTP client and
+server.
+
+Available in
+Postfix version 3.4 and later: 
+tls_server_sni_maps (empty)
+
+Optional lookup tables that map
+names received from remote SMTP clients via the TLS Server
+Name Indication (SNI) extension to the appropriate keys and
+certificate chains.
+
+Available in
+Postfix 3.5, 3.4.6, 3.3.5, 3.2.10, 3.1.13 and later: 
+tls_fast_shutdown_enable (yes)
+
+A workaround for
+implementations that hang Postfix while shutting down a TLS
+session, until Postfix times out.
+
+Available in
+Postfix version 3.8 and later: 
+tls_ffdhe_auto_groups (see &rsquo;postconf -d&rsquo;
+output)
+
+The prioritized list of
+finite-field Diffie-Hellman ephemeral (FFDHE) key exchange
+groups supported by the Postfix SMTP client and server.
+
+Available in
+Postfix 3.9, 3.8.1, 3.7.6, 3.6.10, 3.5.20 and later: 
+tls_config_file (default)
+
+Optional configuration file
+with baseline OpenSSL settings.
+
+tls_config_name
+(empty)
+
+The application name passed by
+Postfix to OpenSSL library initialization functions.
+
+STARTTLS SERVER CONTROLS
+
+These settings
+are clones of Postfix SMTP server settings. They allow
+tlsproxy(8) to load the same certificate and private
+key information as the Postfix SMTP server, before dropping
+privileges, so that the key files can be kept read-only for
+root. These settings can currently not be overruled by
+information in a tlsproxy(8) client request, but that
+limitation may be removed in a future version. 
+tlsproxy_tls_CAfile ($smtpd_tls_CAfile)
+
+A file containing (PEM format)
+CA certificates of root CAs trusted to sign either remote
+SMTP client certificates or intermediate CA
+certificates.
+
+tlsproxy_tls_CApath
+($smtpd_tls_CApath)
+
+A directory containing (PEM
+format) CA certificates of root CAs trusted to sign either
+remote SMTP client certificates or intermediate CA
+certificates.
+
+tlsproxy_tls_always_issue_session_ids
+
+($smtpd_tls_always_issue_session_ids)
+
+Force the Postfix
+tlsproxy(8) server to issue a TLS session id, even
+when TLS session caching is turned off.
+
+tlsproxy_tls_ask_ccert
+($smtpd_tls_ask_ccert)
+
+Ask a remote SMTP client for a
+client certificate.
+
+tlsproxy_tls_ccert_verifydepth
+($smtpd_tls_ccert_verifydepth)
+
+The verification depth for
+remote SMTP client certificates.
+
+tlsproxy_tls_cert_file
+($smtpd_tls_cert_file)
+
+File with the Postfix
+tlsproxy(8) server RSA certificate in PEM format.
+
+tlsproxy_tls_ciphers
+($smtpd_tls_ciphers)
+
+The minimum TLS cipher grade
+that the Postfix tlsproxy(8) server will use with
+opportunistic TLS encryption.
+
+tlsproxy_tls_dcert_file
+($smtpd_tls_dcert_file)
+
+File with the Postfix
+tlsproxy(8) server DSA certificate in PEM format.
+
+tlsproxy_tls_dh1024_param_file
+($smtpd_tls_dh1024_param_file)
+
+File with DH parameters that
+the Postfix tlsproxy(8) server should use with
+non-export EDH ciphers.
+
+tlsproxy_tls_dh512_param_file
+($smtpd_tls_dh512_param_file)
+
+File with DH parameters that
+the Postfix tlsproxy(8) server should use with
+export-grade EDH ciphers.
+
+tlsproxy_tls_dkey_file
+($smtpd_tls_dkey_file)
+
+File with the Postfix
+tlsproxy(8) server DSA private key in PEM format.
+
+tlsproxy_tls_eccert_file
+($smtpd_tls_eccert_file)
+
+File with the Postfix
+tlsproxy(8) server ECDSA certificate in PEM
+format.
+
+tlsproxy_tls_eckey_file
+($smtpd_tls_eckey_file)
+
+File with the Postfix
+tlsproxy(8) server ECDSA private key in PEM
+format.
+
+tlsproxy_tls_eecdh_grade
+($smtpd_tls_eecdh_grade)
+
+The Postfix tlsproxy(8)
+server security grade for ephemeral elliptic-curve
+Diffie-Hellman (EECDH) key exchange.
+
+tlsproxy_tls_exclude_ciphers
+($smtpd_tls_exclude_ciphers)
+
+List of ciphers or cipher types
+to exclude from the tlsproxy(8) server cipher list at
+all TLS security levels.
+
+tlsproxy_tls_fingerprint_digest
+($smtpd_tls_fingerprint_digest)
+
+The message digest algorithm to
+construct remote SMTP client-certificate fingerprints.
+
+tlsproxy_tls_key_file
+($smtpd_tls_key_file)
+
+File with the Postfix
+tlsproxy(8) server RSA private key in PEM format.
+
+tlsproxy_tls_loglevel
+($smtpd_tls_loglevel)
+
+Enable additional Postfix
+tlsproxy(8) server logging of TLS activity.
+
+tlsproxy_tls_mandatory_ciphers
+($smtpd_tls_mandatory_ciphers)
+
+The minimum TLS cipher grade
+that the Postfix tlsproxy(8) server will use with
+mandatory TLS encryption.
+
+tlsproxy_tls_mandatory_exclude_ciphers
+
+($smtpd_tls_mandatory_exclude_ciphers)
+
+Additional list of ciphers or
+cipher types to exclude from the tlsproxy(8) server
+cipher list at mandatory TLS security levels.
+
+tlsproxy_tls_mandatory_protocols
+($smtpd_tls_mandatory_protocols)
+
+The SSL/TLS protocols accepted
+by the Postfix tlsproxy(8) server with mandatory TLS
+encryption.
+
+tlsproxy_tls_protocols
+($smtpd_tls_protocols)
+
+List of TLS protocols that the
+Postfix tlsproxy(8) server will exclude or include
+with opportunistic TLS encryption.
+
+tlsproxy_tls_req_ccert
+($smtpd_tls_req_ccert)
+
+With mandatory TLS encryption,
+require a trusted remote SMTP client certificate in order to
+allow TLS connections to proceed.
+
+tlsproxy_tls_security_level
+($smtpd_tls_security_level)
+
+The SMTP TLS security level for
+the Postfix tlsproxy(8) server; when a non-empty
+value is specified, this overrides the obsolete parameters
+smtpd_use_tls and smtpd_enforce_tls.
+
+tlsproxy_tls_chain_files
+($smtpd_tls_chain_files)
+
+Files with the Postfix
+tlsproxy(8) server keys and certificate chains in PEM
+format.
+
+Available in
+Postfix version 3.9 and later: 
+tlsproxy_tls_enable_rpk ($smtpd_tls_enable_rpk)
+
+Request that remote SMTP
+clients send an RFC7250 raw public key instead of an X.509
+certificate, when asking or requiring client
+authentication.
+
+STARTTLS CLIENT CONTROLS
+
+These settings
+are clones of Postfix SMTP client settings. They allow
+tlsproxy(8) to load the same certificate and private
+key information as the Postfix SMTP client, before dropping
+privileges, so that the key files can be kept read-only for
+root. Some settings may be overruled by information in a
+tlsproxy(8) client request.
+
+Available in
+Postfix version 3.4 and later: 
+tlsproxy_client_CAfile ($smtp_tls_CAfile)
+
+A file containing CA
+certificates of root CAs trusted to sign either remote TLS
+server certificates or intermediate CA certificates.
+
+tlsproxy_client_CApath
+($smtp_tls_CApath)
+
+Directory with PEM format
+Certification Authority certificates that the Postfix
+tlsproxy(8) client uses to verify a remote TLS server
+certificate.
+
+tlsproxy_client_chain_files
+($smtp_tls_chain_files)
+
+Files with the Postfix
+tlsproxy(8) client keys and certificate chains in PEM
+format.
+
+tlsproxy_client_cert_file
+($smtp_tls_cert_file)
+
+File with the Postfix
+tlsproxy(8) client RSA certificate in PEM format.
+
+tlsproxy_client_key_file
+($smtp_tls_key_file)
+
+File with the Postfix
+tlsproxy(8) client RSA private key in PEM format.
+
+tlsproxy_client_dcert_file
+($smtp_tls_dcert_file)
+
+File with the Postfix
+tlsproxy(8) client DSA certificate in PEM format.
+
+tlsproxy_client_dkey_file
+($smtp_tls_dkey_file)
+
+File with the Postfix
+tlsproxy(8) client DSA private key in PEM format.
+
+tlsproxy_client_eccert_file
+($smtp_tls_eccert_file)
+
+File with the Postfix
+tlsproxy(8) client ECDSA certificate in PEM
+format.
+
+tlsproxy_client_eckey_file
+($smtp_tls_eckey_file)
+
+File with the Postfix
+tlsproxy(8) client ECDSA private key in PEM
+format.
+
+tlsproxy_client_fingerprint_digest
+($smtp_tls_fingerprint_digest)
+
+The message digest algorithm
+used to construct remote TLS server certificate
+fingerprints.
+
+tlsproxy_client_loglevel
+($smtp_tls_loglevel)
+
+Enable additional Postfix
+tlsproxy(8) client logging of TLS activity.
+
+tlsproxy_client_loglevel_parameter
+(smtp_tls_loglevel)
+
+The name of the parameter that
+provides the tlsproxy_client_loglevel value.
+
+tlsproxy_client_scert_verifydepth
+($smtp_tls_scert_verifydepth)
+
+The verification depth for
+remote TLS server certificates.
+
+tlsproxy_client_use_tls
+($smtp_use_tls)
+
+Opportunistic mode: use TLS
+when a remote server announces TLS support.
+
+tlsproxy_client_enforce_tls
+($smtp_enforce_tls)
+
+Enforcement mode: require that
+SMTP servers use TLS encryption.
+
+tlsproxy_client_per_site
+($smtp_tls_per_site)
+
+Optional lookup tables with the
+Postfix tlsproxy(8) client TLS usage policy by
+next-hop destination and by remote TLS server hostname.
+
+Available in
+Postfix version 3.4-3.6: 
+tlsproxy_client_level ($smtp_tls_security_level)
+
+The default TLS security level
+for the Postfix tlsproxy(8) client.
+
+tlsproxy_client_policy
+($smtp_tls_policy_maps)
+
+Optional lookup tables with the
+Postfix tlsproxy(8) client TLS security policy by
+next-hop destination.
+
+Available in
+Postfix version 3.7 and later: 
+tlsproxy_client_security_level
+($smtp_tls_security_level)
+
+The default TLS security level
+for the Postfix tlsproxy(8) client.
+
+tlsproxy_client_policy_maps
+($smtp_tls_policy_maps)
+
+Optional lookup tables with the
+Postfix tlsproxy(8) client TLS security policy by
+next-hop destination.
+
+OBSOLETE STARTTLS SUPPORT CONTROLS
+
+These
+parameters are supported for compatibility with
+smtpd(8) legacy parameters. 
+tlsproxy_use_tls ($smtpd_use_tls)
+
+Opportunistic TLS: announce
+STARTTLS support to remote SMTP clients, but do not require
+that clients use TLS encryption.
+
+tlsproxy_enforce_tls
+($smtpd_enforce_tls)
+
+Mandatory TLS: announce
+STARTTLS support to remote SMTP clients, and require that
+clients use TLS encryption.
+
+tlsproxy_client_use_tls
+($smtp_use_tls)
+
+Opportunistic mode: use TLS
+when a remote server announces TLS support.
+
+tlsproxy_client_enforce_tls
+($smtp_enforce_tls)
+
+Enforcement mode: require that
+SMTP servers use TLS encryption.
+
+RESOURCE CONTROLS
+
+tlsproxy_watchdog_timeout
+(10s)
+
+How much time a
+tlsproxy(8) process may take to process local or
+remote I/O before it is terminated by a built-in watchdog
+timer.
+
+MISCELLANEOUS CONTROLS
+
+config_directory
+(see &rsquo;postconf -d&rsquo; output)
+
+The default location of the
+Postfix main.cf and master.cf configuration files.
+
+process_id
+(read-only)
+
+The process ID of a Postfix
+command or daemon process.
+
+process_name
+(read-only)
+
+The process name of a Postfix
+command or daemon process.
+
+syslog_facility
+(mail)
+
+The syslog facility of Postfix
+logging.
+
+syslog_name (see
+&rsquo;postconf -d&rsquo; output)
+
+A prefix that is prepended to
+the process name in syslog records, so that, for example,
+"smtpd" becomes "prefix/smtpd".
+
+Available in
+Postfix 3.3 and later: 
+service_name (read-only)
+
+The master.cf service name of a
+Postfix daemon process.
+
+SEE ALSO
+
+postscreen(8),
+Postfix zombie blocker 
+smtpd(8), Postfix SMTP server 
+postconf(5), configuration parameters 
+postlogd(8), Postfix logging 
+syslogd(8), system logging
+
+LICENSE
+
+The Secure
+Mailer license must be distributed with this software.
+
+HISTORY
+
+This service
+was introduced with Postfix version 2.8.
+
+AUTHOR(S)
+
+Wietse Venema
+
+IBM T.J. Watson Research 
+P.O. Box 704 
+Yorktown Heights, NY 10598, USA
+
+Wietse Venema
+
+Google, Inc. 
+111 8th Avenue 
+New York, NY 10011, USA

@@ -1,0 +1,104 @@
+NATM(4) BSD Kernel Interfaces Manual NATM(4)
+
+NAME
+
+natm &mdash; Native Mode
+ATM protocol layer
+
+DESCRIPTION
+
+The BSD ATM software comes with
+a native mode ATM protocol layer which provides
+socket level access to AAL0 and AAL5 virtual circuits. To
+enable this protocol layer, add
+
+options NATM 
+device atm
+
+to your kernel configuration
+file and re-make the kernel (do not forget to do
+&rsquo;&rsquo;make clean&rsquo;&rsquo;).
+
+NATM API
+
+The NATM layer uses a struct
+sockaddr_natm to specify a virtual circuit:
+
+struct
+sockaddr_natm { 
+uint8_t snatm_len; /* length */ 
+uint8_t snatm_family; /* AF_NATM */ 
+char snatm_if[IFNAMSIZ]; /* interface name */ 
+uint16_t snatm_vci; /* vci */ 
+uint8_t snatm_vpi; /* vpi */ 
+};
+
+To create an
+AAL5 connection to a virtual circuit with VPI 0, VCI 201 one
+would use the following:
+
+struct
+sockaddr_natm snatm; 
+int s, r; 
+s = socket(AF_NATM, SOCK_STREAM, PROTO_NATMAAL5); 
+/* note: PROTO_NATMAAL0 is AAL0 */ 
+if (s exit(1); } 
+bzero(&snatm, sizeof(snatm)); 
+snatm.snatm_len = sizeof(snatm); 
+snatm.snatm_family = AF_NATM; 
+sprintf(snatm.snatm_if, "en0"); 
+snatm.snatm_vci = 201; 
+snatm.snatm_vpi = 0; 
+r = connect(s, (struct sockaddr *)&snatm,
+sizeof(snatm)); 
+if (r exit(1); } 
+/* s now connected to ATM! */
+
+The
+socket() call simply creates an unconnected NATM
+socket. The connect() call associates an unconnected
+NATM socket with a virtual circuit and tells the driver to
+enable that virtual circuit for receiving data. After the
+connect() call one can read() or
+write() to the socket to perform ATM I/O.
+
+Internal NATM
+operation
+
+Internally, the NATM protocol
+layer keeps a list of all active virtual circuits on the
+system in natm_pcbs. This includes circuits currently being
+used for IP to prevent NATM and IP from clashing over
+virtual circuit usage.
+
+When a virtual
+circuit is enabled for receiving data, the NATM protocol
+layer passes the address of the protocol control block down
+to the driver as a receive
+&rsquo;&rsquo;handle&rsquo;&rsquo;. When inbound data
+arrives, the driver passes the data back with the
+appropriate receive handle. The NATM layer uses this to
+avoid the overhead of a protocol control block lookup. This
+allows us to take advantage of the fact that ATM has already
+demultiplexed the data for us.
+
+SEE ALSO
+
+en(4), fatm(4), hatm(4),
+natmip(4), patm(4)
+
+AUTHORS
+
+Chuck Cranor of Washington
+University implemented the NATM protocol layer along with
+the EN ATM driver in 1996 for NetBSD.
+
+CAVEATS
+
+The NATM protocol support is
+subject to change as the ATM protocols develop. Users should
+not depend on details of the current implementation, but
+rather the services exported.
+
+BSD
+December 29, 1997 BSD

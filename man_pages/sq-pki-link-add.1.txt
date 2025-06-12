@@ -1,0 +1,240 @@
+NAME
+
+sq pki link add
+- Link a certificate and a User ID
+
+SYNOPSIS
+
+sq pki link
+add [OPTIONS] FINGERPRINT|KEYID
+USERID|EMAIL
+
+DESCRIPTION
+
+Link a
+certificate and a User ID.
+
+This cause
+&rsquo;sq&rsquo; to considers the certificate and User ID
+binding to be authentic.
+
+A certificate
+can also be accepted as a certification authority, which is
+also known as a trusted introducer, by using the
+&rsquo;--ca&rsquo; or &rsquo;--depth&rsquo; option.
+
+A link can be
+retracted using &rsquo;sq pki link retract&rsquo;.
+
+This command is
+similar to &rsquo;sq pki certify&rsquo;, but the
+certifications it makes are done using the certificate
+directory&rsquo;s trust root, not an arbitrary key. Further,
+the certificates are marked as non-exportable. The former
+makes it easier to manage certifications, especially when
+the user&rsquo;s certification key is offline. And the
+latter improves the user&rsquo;s privacy, by reducing the
+chance that parts of the user&rsquo;s social graph is leaked
+when a certificate is shared.
+
+By default a
+link never expires. Using the &rsquo;--expiry&rsquo;
+argument specific validity periods may be defined. It allows
+for providing a point in time for validity to end or a
+validity duration.
+
+&rsquo;sq pki
+link&rsquo; respects the reference time set by the top-level
+&rsquo;--time&rsquo; argument. It sets the link&rsquo;s
+creation time to the reference time.
+
+OPTIONS
+
+Subcommand
+options 
+-a, --amount=AMOUNT
+
+Set the amount of trust. Values
+between 1 and 120 are meaningful. 120 means fully trusted.
+Values less than 120 indicate the degree of trust. 60 is
+usually used for partially trusted.
+
+--all
+
+Link all valid self-signed User ID to the
+certificate. 
+
+--ca=*|DOMAIN
+
+Mark the certificate as a
+certification authority for a domain. Use &rsquo;*&rsquo; to
+make the certificate a certification 
+authority for any User ID.
+
+A certification
+authority is also referred to as a trusted introducer. This
+command is equivalent to making the trust depth
+unconstrained, i.e., setting the depth to 255. See
+&rsquo;--depth&rsquo; for more information.
+
+-d,
+--depth=TRUST_DEPTH
+
+Set the trust depth (sometimes
+referred to as the trust level). 0 means a normal
+certification of . 1 means
+CERTIFICATE is also a trusted introducer, 2 means
+CERTIFICATE is a meta-trusted introducer, etc.
+
+--email=EMAIL
+
+An email address to link to the
+certificate. The email address must match the email address
+of a self-signed User ID. To link an email address to the
+certificate that does not appear in a self-signed User ID,
+use &rsquo;--petname&rsquo;. If the specified email appears
+in multiple self-signed User IDs, then all of them are
+linked.
+
+--expiry=EXPIRY
+
+Define EXPIRY for the
+acceptance as ISO 8601 formatted string or custom duration.
+If an ISO 8601 formatted string is provided, the validity
+period reaches from the reference time (may be set using
+&rsquo;--time&rsquo;) to the provided time. Custom durations
+starting from the reference time may be set using
+&rsquo;N[ymwds]&rsquo;, for N years, months, weeks, days, or
+seconds. The special keyword &rsquo;never&rsquo; sets an
+unlimited expiry.
+
+--notation NAME
+VALUE
+
+Add a notation to the
+certification. A user-defined notation&rsquo;s name must be
+of the form &rsquo;name [AT] a.org&rsquo;. If
+the notation&rsquo;s name starts with a &rsquo;!&rsquo;,
+then the notation is marked as being critical. If a consumer
+of a signature doesn&rsquo;t understand a critical notation,
+then it will ignore the signature. The notation is marked as
+being human readable.
+
+--petname=PETNAME
+
+A User ID to link to the
+certificate. Unlike &rsquo;--userid&rsquo;, this does not
+need to match a self-signed User ID. Bare email address are
+automatically wrapped in angle brackets. That is if
+&rsquo;alice [AT] example.org&rsquo; is provided, it is silently
+converted to &rsquo;alice [AT] example.org>&rsquo;.
+
+-r,
+--regex=REGEX
+
+Add a regular expression to
+constrain what a trusted introducer can certify. The regular
+expression must match the certified User ID in all
+intermediate introducers, and the certified certificate.
+Multiple regular expressions may be specified. In that case,
+at least one must match.
+
+--temporary
+
+Temporarily accepts the
+binding. Creates a fully 
+trust link between a certificate and one or more 
+User IDs for a week. After that, the link is 
+automatically downgraded to a partially trusted link 
+(trust = 40).
+
+--userid=USERID
+
+A User ID to link to the
+certificate. This must match a self-signed User ID. To link
+a User ID to the certificate that does not have a
+self-signature, use &rsquo;--petname&rsquo;.
+
+FINGERPRINT|KEYID
+
+The certificate to accept.
+
+USERID|EMAIL
+
+A User ID or email address to
+link to the certificate. This must match a self-signed User
+ID. To link a User ID to the certificate that does not have
+a self-signature, use &rsquo;--petname&rsquo;. Scripts
+should prefer to use &rsquo;--email&rsquo; or
+&rsquo;--userid&rsquo;, as &rsquo;sq&rsquo; does not need to
+guess if a value is a User ID or an email address.
+
+Global
+options 
+See sq(1) for a description of the global
+options.
+
+EXAMPLES
+
+The user links
+0123456789ABCDEF and the User ID
+&rsquo;romeo [AT] example.org>&rsquo;.
+
+sq pki link add
+0123456789ABCDEF &rsquo;romeo [AT] example.org>&rsquo;
+
+The user
+examines 0123456789ABCDEF and then accepts the certificate
+0123456789ABCDEF with its current set of self-signed User
+IDs.
+
+sq cert export
+--cert 0123456789ABCDEF | sq inspect
+
+...
+
+sq pki link add
+0123456789ABCDEF --all
+
+The user links
+the certificate and its current self-signed User IDs for a
+week.
+
+sq pki link add
+--expires-in 1w 0123456789ABCDEF --all
+
+The user
+accepts the certificate, and its current self-signed User
+IDs as a certification authority. That is, the certificate
+is considered a trust root.
+
+sq pki link add
+--ca &rsquo;*&rsquo; 0123456789ABCDEF --all
+
+The user
+accepts the certificate and its current self-signed User IDs
+as a partially trusted certification authority.
+
+sq pki link add
+--ca &rsquo;*&rsquo; --amount 60 0123456789ABCDEF --all
+
+The user
+retracts their acceptance of 0123456789ABCDEF and any
+associated User IDs. This effectively invalidates any
+links.
+
+sq pki link
+retract 0123456789ABCDEF
+
+SEE ALSO
+
+sq(1),
+sq-pki(1), sq-pki-link(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org&gt;.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

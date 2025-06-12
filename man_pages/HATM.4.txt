@@ -1,0 +1,288 @@
+HATM(4) BSD Kernel Interfaces Manual HATM(4)
+
+NAME
+
+hatm &mdash; device
+driver for Fore/Marconi HE155 and HE622 ATM interfaces
+
+SYNOPSIS
+
+device hatm 
+device utopia 
+device atm
+
+options
+NATM
+
+DESCRIPTION
+
+The hatm device driver
+supports the FORE (now Marconi) HE155 and HE622 ATM
+interface cards. The driver interfaces with the natm(4)
+framework, netgraph(4) and the HARP ATM stack. It provides
+only PVC services. Signalling, ATMARP, ILMI and other higher
+layer protocols are implemented using netgraph(4) or
+HARP.
+
+For configuring
+the card for IP see natmip(4).
+
+The following
+sysctls are recognized by the driver additionally to those
+handled by utopia(4):
+
+hw.atm.hatm.natm_traffic
+
+This is the traffic type to be
+used for NATM pvc connections. The type of this variable is
+integer and it must have one of the values 0 (UBR) or 1
+(CBR).
+
+hw.atm.hatm.natm_pcr
+
+This is the peak cell rate to
+be used for NATM CBR connections.
+
+hw.atm.hatmN.stats
+
+Contains an array of
+uint32_t with device specific statistics.
+
+hw.atm.hatmN.istats
+
+Contains an array of
+uint32_t with internal driver statistics.
+
+hw.atm.hatmN.debug
+
+(Only if debugging
+enabled.) These are the debugging flags. See
+src/sys/dev/hatm/if_hatmvar.h for the possible
+flags.
+
+hw.atm.hatmN.tsr
+
+(Only if debugging
+enabled.) This is an array containing all transmission
+status registers. For each of the 4096 possible VCCs there
+are 15 32-bit registers.
+
+hw.atm.hatmN.tpd
+
+(Only if debugging
+enabled.) This is an array containing all on card
+current transmission packet descriptors. For each of the
+4096 possible VCCs there are 16 32-bit registers.
+
+hw.atm.hatmN.mbox
+
+(Only if debugging
+enabled.) This is an array containing the mbox
+registers.
+
+hw.atm.hatmN.cm
+
+(Only if debugging
+enabled.) This is an array containing all connection
+memory registers. The first 32-bit integer of this array is
+the ABR base address.
+
+hw.atm.hatmN.heregs
+
+(Only if debugging
+enabled.) This is an array containing all card registers
+including SUNI and the FLASH ROM.
+
+hw.atm.hatmN.lbmem
+
+(Only if debugging
+enabled.) Returns the contents of the local memory.
+
+The driver
+supports the media options sdh, noscramb and
+unassigned (see utopia(4)).
+
+ENVIRONMENT
+
+When attaching to a device the
+driver checks the kernel environment (see kenv(1)) to see if
+the default queues sizes should be overwritten or not. The
+following variables are checked and interpreted as unsigned
+integer values (in either radix):
+
+hw.hatmN.rbps0_size
+
+Size of the small receive
+buffer pool 0. This pool is used for all except raw AAL
+connections. The pool size must be a power of two between 4
+and 8192 inclusive. When attaching the driver allocates this
+number of mbufs.
+
+hw.hatmN.rbps0_thresh
+
+Interrupt threshold for small
+receive buffer pool 0. When the number of free buffers in
+the pool falls below this threshold it generates an
+interrupt so that the driver can refill the pool.
+
+hw.hatmN.rbpl0_thresh
+
+Size of the large receive
+buffer pool 0. This pool is used for all except raw AAL
+connections. The pool size must be a power of two between 4
+and 8192 inclusive. When attaching the driver allocates this
+number of mbufs with clusters.
+
+hw.hatmN.rbpl0_thresh
+
+Interrupt threshold for large
+receive buffer pool 0. When the number of free buffers in
+the pool falls below this threshold it generates an
+interrupt so that the driver can refill the pool.
+
+hw.hatmN.rbrq0_size
+
+Size of receive buffer return
+queue 0. This queue is used to return buffers filled with
+received frames to the driver. The size must be a power of 2
+between 1 and 16384 inclusive.
+
+hw.hatmN.rbrq0_thresh
+
+Interrupt threshold for receive
+buffer return queue 0. This threshold should only be
+triggered in exceptional cases.
+
+hw.hatmN.rbrq0_tout
+
+Interrupt timeout for receive
+buffer return queue 0. An interrupt is generated after this
+time if the queue is not empty. The number is in internal
+card ticks.
+
+hw.hatmN.rbrq0_pcnt
+
+Packet count threshold for
+receive buffer return queue 0. An interrupt is generated if
+this number of packets is in the queue.
+
+hw.hatmN.rbps1_size
+
+Size of the small receive
+buffer pool 1. This pool is used for all raw AAL
+connections. The pool size must be a power of two between 4
+and 8192 inclusive. When attaching the driver allocates this
+number of mbufs.
+
+hw.hatmN.rbps1_thresh
+
+Interrupt threshold for small
+receive buffer pool 1. When the number of free buffers in
+the pool falls below this threshold it generates an
+interrupt so that the driver can refill the pool.
+
+hw.hatmN.rbrq1_size
+
+Size of receive buffer return
+queue 1. This queue is used to return buffers filled with
+received cells to the driver. The size must be a power of 2
+between 1 and 16384 inclusive.
+
+hw.hatmN.rbrq1_thresh
+
+Interrupt threshold for receive
+buffer return queue 1. This threshold should only be
+triggered in exceptional cases.
+
+hw.hatmN.rbrq1_tout
+
+Interrupt timeout for receive
+buffer return queue 1. An interrupt is generated after this
+time if the queue is not empty. The number is in internal
+card ticks.
+
+hw.hatmN.rbrq1_pcnt
+
+Packet count threshold for
+receive buffer return queue 0. An interrupt is generated if
+this number of cells is in the queue.
+
+hw.hatmN.irq0_size
+
+Size of interrupt queue 0. This
+must be a number between 1 and 1023 inclusive.
+
+hw.hatmN.irq0_thresh
+
+Interrupt retrigger threshold
+of interrupt queue 0. A new interrupt is trigger if the
+queue fill state reaches this threshold and the interrupt
+was no served.
+
+hw.hatmN.tbrq0_size
+
+Transmit buffer return queue 0
+size. This queue is used to feed back empty buffers of
+transmitted frames back to the driver. It must be a power of
+2 between 1 and 4096 inclusive.
+
+hw.hatmN.tbrq0_thresh
+
+Transmit buffer return queue 0
+threshold. An interrupt is generated if the queue fill state
+reaches this point.
+
+hw.hatmN.tpdrq_size
+
+Transmit descriptor ready queue
+size. This queue is used by the driver to feed transmit
+descriptors into the card. The size must be a power of 2
+between 1 and 16384 inclusive.
+
+hw.hatmN.tpdmax
+
+Maximum number of active TPDs
+per connection. This controls the maximum number of
+outstanding packet chunks per connection and thus the
+maximum delay packets can have because of queueing on the
+adapter. If set to 0, a connection can eat up all available
+TPDs.
+
+hw.hatmN.mbuf_max_pages
+
+Maximum number of memory pages
+allocated to small external mbufs. This must not be zero and
+not larger than 65536.
+
+DIAGNOSTICS
+
+hatm0:  mem
+0xd2600000-0xd26fffff irq 9 at device 15.0 on pci2 
+hatm0: ForeRunnerHE 622, Rev. D, S/N 2949834,
+MAC=00:20:48:2d:02:ca
+
+SEE ALSO
+
+natm(4), natmip(4), utopia(4),
+ifconfig(8), route(8)
+
+AUTHORS
+
+Harti Brandt
+harti [AT] FreeBSD.org>
+
+CAVEATS
+
+When putting a HE155 into a
+64-bit 66MHz PCI slot the machine may hang. This occurs very
+early in the POST so that even the display does not turn on.
+The HE155 runs only in 33MHz slots (either 32 or 64-bit).
+HE622 cards work just fine in 64-bit slots.
+
+The driver may
+not work with bounce buffer, because of bus_dmamap_sync(9)
+missing the offset and len arguments the
+NetBSD function has.
+
+BSD May 15,
+2003 BSD

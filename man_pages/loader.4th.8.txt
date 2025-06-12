@@ -1,0 +1,199 @@
+LOADER.4TH(8) BSD System Manager&rsquo;s Manual
+LOADER.4TH(8)
+
+NAME
+
+loader.4th &mdash;
+loader.conf processing tools
+
+DESCRIPTION
+
+The file that goes by the name
+of loader.4th is a set of commands designed to
+manipulate loader.conf(5) files. The default
+/boot/loader.rc includes loader.4th and uses
+one of its commands to automatically read and process the
+standard loader.conf(5) files. Other commands exists to help
+the user specify alternate configurations.
+
+The commands of
+loader.4th by themselves are not enough for most
+uses. Please refer to the examples below for the most common
+situations, and to loader(8) for additional commands.
+
+Before using any
+of the commands provided in loader.4th, it must be
+included through the command:
+
+include
+loader.4th
+
+This line is
+present in the default /boot/loader.rc file, so it
+isn&rsquo;t needed (and should not be re-issued) in a normal
+setup.
+
+The commands
+provided by it are:
+
+boot 
+boot kernelname [...] 
+boot directory [...] 
+boot &minus;flag ...
+
+Boot as
+specified by the loader.conf(5) files read.
+
+Depending on
+the arguments passed, it can override boot flags and either
+the kernel name or the search path for kernel and
+modules.
+
+boot-conf 
+boot-conf kernelname [...] 
+boot-conf directory [...] 
+boot-conf &minus;flag ...
+
+Works like
+boot described above, but instead of booting
+immediately, uses autoboot, so it can be stopped.
+
+start
+
+Reads
+/boot/defaults/loader.conf, all other loader.conf(5)
+files specified in it, and then proceeds to boot as
+specified in them. This is the command used in the default
+/boot/loader.rc file, and it uses the autoboot
+command (see loader(8)), so it can be stopped for further
+interaction with loader(8).
+
+initialize
+
+Initialize the
+supporting library so commands can be used without executing
+start first. Like start, reads
+/boot/defaults/loader.conf and all other
+loader.conf(5) files specified in it. Returns a flag on the
+stack to indicate if any configuration file was successfully
+loaded.
+
+read-conf
+filename
+
+Reads and
+processes a loader.conf(5) file. Does not proceed to
+boot.
+
+enable-module
+module
+
+Enables the
+loading of module.
+
+disable-module
+module
+
+Disables the
+loading of module.
+
+toggle-module
+module
+
+Toggles the
+loading of module on and off.
+
+show-module
+module
+
+Shows the
+information gathered in the loader.conf(5) files about the
+module module.
+
+retry
+
+Used inside
+loader.conf(5) files to specify the action after a module
+loading fails.
+
+ignore
+
+Used inside
+loader.conf(5) files to specify the action after a module
+loading fails.
+
+FILES 
+/boot/loader
+
+The
+loader(8).
+
+/boot/loader.4th
+
+loader.4th
+itself.
+
+/boot/loader.rc
+
+loader(8)
+bootstrapping script.
+
+/boot/defaults/loader.conf
+
+File loaded by the start
+command.
+
+EXAMPLES
+
+Standard
+/boot/loader.rc:
+
+include
+/boot/loader.4th 
+start
+
+Load a different
+kernel with the standard configuration:
+
+set
+kernel="/boot/kernel.old/kernel" 
+unload 
+boot-conf
+
+Read an
+additional configuration file and then proceed to boot:
+
+unload 
+read-conf /boot/special.conf 
+boot-conf
+
+Disable the
+loading of the splash screen module and bitmap and then
+proceed to boot:
+
+unload 
+disable-module splash_bmp 
+disable-module bitmap 
+boot-conf
+
+SEE ALSO
+
+loader.conf(5), loader(8)
+
+HISTORY
+
+The loader.4th set of
+commands first appeared in FreeBSD 3.2.
+
+AUTHORS
+
+The loader.4th set of
+commands was written by Daniel C. Sobral
+dcs [AT] FreeBSD.org>.
+
+BUGS
+
+A British espionage series.
+
+BSD
+April 25, 1999 BSD

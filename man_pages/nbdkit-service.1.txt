@@ -1,0 +1,259 @@
+NAME
+
+nbdkit-service
+- running nbdkit as a service, and systemd socket
+activation
+
+DESCRIPTION
+
+Most people
+start nbdkit from the command line or run it from another
+program (see nbdkit-captive(1). It is also possible
+to run nbdkit as a standalone service, which is what this
+page describes.
+
+SOCKET ACTIVATION
+
+nbdkit supports
+socket activation (sometimes called systemd socket
+activation). This is a simple protocol where instead of
+nbdkit itself opening the listening socket(s), the parent
+process (typically systemd) passes in pre-opened file
+descriptors. Socket activation lets you serve infrequent NBD
+requests using a superserver without needing nbdkit to be
+running the whole time.
+
+Socket
+activation is triggered when both the "LISTEN_FDS"
+and "LISTEN_PID" environment variables are set. In
+this mode using -i, -p, --run,
+-s or -U flags on the command line is illegal
+and will cause an error. Also in this mode nbdkit does not
+fork into the background (ie. -f is implied).
+
+Using socket
+activation with systemd 
+To use nbdkit with socket activation from systemd, create a
+unit file ending in ".socket" (eg.
+/etc/systemd/system/nbdkit.socket) containing:
+
+[Unit] 
+Description=NBDKit Network Block Device server 
+[Socket] 
+ListenStream=10809 
+[Install] 
+WantedBy=sockets.target
+
+There are
+various formats for the "ListenStream" key. See
+systemd.socket(5) for more information.
+
+Also create a
+service unit (eg. /etc/systemd/system/nbdkit.service)
+containing:
+
+[Service] 
+ExecStart=/usr/sbin/nbdkit file /path/to/serve
+
+For more
+information on systemd and socket activation, see
+http://0pointer.de/blog/projects/socket-activation.html
+
+INETD AND XINETD
+
+You can run
+nbdkit from inetd(8) or xinetd(8). For inetd
+use:
+
+nbd stream tcp
+nowait root /usr/sbin/nbdkit nbdkit -s file
+/tmp/disk.img
+
+For xinetd
+create a file /etc/xinetd.d/nbdkit containing:
+
+service nbd
+
+{ 
+socket_type = stream 
+wait = no 
+user = root 
+server = /usr/sbin/nbdkit 
+server_args = -s file /tmp/disk.img 
+}
+
+LOGGING
+
+Error messages
+from nbdkit can be sent to standard error
+(--log=stderr), or to the system log
+(--log=syslog), or can be discarded completely
+(--log=null, not recommended for normal use).
+
+The default, if
+--log is not specified on the command line, is to
+send error messages to stderr, unless nbdkit forks into the
+background in which case they are sent to syslog.
+
+In detail: 
+Messages go to standard error (stderr):
+
+When running from the command
+line in the foreground.
+
+When using
+systemd socket activation.
+
+Using
+--log=stderr forces all messages to go to standard
+error.
+
+Messages go to the system log
+(syslog):
+
+When running from the command
+line, forked into the background.
+
+Using
+--log=syslog forces all messages to go to the system
+log.
+
+Debug messages
+(-v/--verbose) always go to standard error and
+are never sent to the system log.
+
+AF_VSOCK
+
+On Linux nbdkit
+supports the "AF_VSOCK" address family / protocol.
+This allows you to serve NBD devices into virtual machines
+without using a regular network connection.
+
+Note
+that this is different from the usual case where you present
+NBD as a virtual block device to a guest (which the guest
+sees as something like a SATA or virtio-scsi disk). With
+"AF_VSOCK" the virtual machine sees a raw NBD
+socket which it can connect to by opening an
+"AF_VSOCK" connection. Only libnbd supports
+"AF_VSOCK" NBD client connections at the time of
+writing (2019). For more about this protocol, see
+https://wiki.qemu.org/Features/VirtioVsock
+
+AF_VSOCK
+example 
+To set up an "AF_VSOCK" server, use for
+example:
+
+nbdkit --vsock
+[--port PORT] memory 1G
+
+The optional
+-p/--port argument is used to change the
+"AF_VSOCK" port number. These port numbers exist
+in a different namespace from TCP/IP port numbers. Also
+unlike TCP, the port numbers are 32 bit. The default port is
+10809.
+
+The guest that
+wishes to access nbdkit must be configured for virtio-vsock.
+On the qemu command line use:
+
+qemu ...
+-device vhost-vsock-pci,id=vhost-vsock-pci0
+
+For libvirt add
+this element to the "" section:
+
+If you see the
+error "unable to open vhost-vsock device" then you
+may have to unload the VMCI transport on the host:
+
+modprobe -r
+vmw_vsock_vmci_transport
+
+Once nbdkit and
+the guest are running, from inside the guest you can connect
+to nbdkit on the host using libnbd:
+
+nbdsh -c
+'h.connect_vsock(2, 10809)' -c 'print(h.get_size())'
+
+ENVIRONMENT VARIABLES
+
+"LISTEN_FDS"
+
+"LISTEN_PID"
+
+If present in the environment
+when nbdkit starts up, these trigger "SOCKET
+ACTIVATION".
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-client(1), nbdkit-exitlast-filter(1),
+nbdkit-exitwhen-filter(1),
+nbdkit-ip-filter(1), nbdkit-limit-filter(1),
+systemd(1), systemd.socket(5),
+inetd(8), xinetd(8), syslog(3),
+rsyslogd(8), journalctl(1),
+nbdsh(1).
+
+AUTHORS
+
+Eric Blake
+
+Richard W.M.
+Jones
+
+Pino
+Toscano
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

@@ -1,0 +1,714 @@
+NAME
+
+bamg -
+bidimensional anisotropic mesh generator (rheolef-7.2)
+
+SYNOPSIS
+
+bamg [options]
+-g file[.bamgcad] -o ouput.bamg
+
+EXAMPLE
+
+bamg -g
+toto.bamgcad -o toto.bamg
+
+This command
+generates the mesh of a square ]1,1[^2 with a mesh size
+h=0.666 at all vertices. The geometry in defined in the
+following square.bamgcad file:
+
+MeshVersionFormatted
+0 
+Dimension 2 
+Vertices 4 
+-1 -1 1 
+1 -1 2 
+1 1 3 
+-1 1 4 
+Edges 4 
+1 2 1 
+2 3 2 
+3 4 3 
+4 1 4 
+hVertices 
+0.666 0.666 0.666 0.666
+
+The file starts
+with vertices, coordinates and identifier. Then come the
+boundary edges, using vertices identifiers and defining a
+boundary edge identifier.
+
+OUTLINE
+
+This software
+present five modes of action:
+
+1.
+
+create a mesh from a geometry
+
+2.
+
+adapt a mesh from an existing background mesh
+using a metric or a solution file.
+
+3.
+
+build a metric file, e.g. if you have another
+mesh generator.
+
+4.
+
+improve the quality of an existing mesh, by
+generating a new mesh.
+
+5.
+
+interpolate a field defined on one mesh to
+another one.
+
+1) CREATE
+
+Create a mesh
+from a geometry. For instance:
+
+bamg -g
+toto.bamgcad -o toto.bamg
+
+The create mode
+supports the following options:
+
+-g
+filename
+
+The input file,
+specifying the geometry boundaries of the domain to mesh
+(bamg file format DB mesh).
+
+-o
+filename
+
+The output mesh
+file (bamg file format DB mesh). Some
+alternatives output file formats are supported with some
+-oXY options where XY is one of the
+supported output file formats (see below).
+
+In addition,
+optional parameter can be added to specify a metric or the
+quality improvement. All these options are described
+below.
+
+2) ADAPT
+
+Adapt a mesh
+from a background mesh using a metric or solution file. For
+instance:
+
+bamg -b
+toto_bgd.bamg -Mbb toto_bgd_sol.bb -o toto_new.bamg
+
+The adapt mode
+supports the following options:
+
+-b
+filename
+
+The input
+background mesh, where the file suffixe defines the format
+of the file: .amdba, .am_fmt,
+.am, .ftq, .nopo. Otherwise the
+file is the bamg default BD mesh file format.
+
+-Mbb
+filename 
+-MBB filename 
+-M filename
+
+The input
+metric file. The -Mbb or -MBB specifies
+the solution file from which the metric is automatically
+computed, where the file is of type bb or
+BB (see file format below). An alternative is to
+specify directly the metric with the -M option
+(file format Metric).
+
+-o
+filename
+
+The output mesh
+file (bamg file format DB mesh). Some alternatives
+output file formats are supported with some -oXY
+options where XY is one of the supported output
+file formats (see below).
+
+In addition,
+optional parameter can be added to control the metric
+generation and the quality improvement. All these options
+are described below.
+
+3) METRIC BUILD
+
+Construct a
+metric file for an existing mesh and with a provided
+solution. This option can be used without generating a new
+mesh, e.g. if you have another mesh generator. For
+instance:
+
+bamg -r
+toto_bgd.bamg -Mbb toto_bgd_sol.bb -oM toto_bgd.metric
+
+The metric
+build mode supports the following options:
+
+-r
+filename
+
+The input mesh
+file (bamg format DB mesh).
+
+--Mbb
+filename 
+--MBB *filename
+
+The input
+provided solution, where the file is of type .bb or
+.BB (see file format below).
+
+-oM
+filename
+
+The output
+metric file, in file format Metric (see file format
+below).
+
+In addition,
+optional parameter can be added to control the metric
+generation. All these options are described below.
+
+4) IMPROVE QUALITY
+
+Improve quality
+for an existing mesh and generate a new mesh. For
+instance:
+
+bamg -r
+toto_bgd.bamg -M toto_bgd.metric -o toto_new.bamg
+
+The quality
+improvement mode supports the following options:
+
+-r
+filename
+
+The input mesh
+file (bamg format DB mesh).
+
+-M
+filename
+
+The input
+metric file, in file format Metric (see file format
+below).
+
+-o
+filename
+
+The output mesh
+file (bamg file format DB mesh). Some alternatives
+output file formats are supported with some -oXY
+options where XY is one of the supported output
+file formats (see below).
+
+5) INTERPOLATE
+
+In the adaption
+process, a solution has been computed with the background
+mesh. In order to transfer the solution of the problem under
+consideration on the new generated mesh, an interpolation of
+old solution is necessary. This transferred solution may be
+a good initial guess for the solution on the new mesh. This
+interpolation is carried out in a P1 Lagrange context.
+
+bamg -b
+toto_old.bamg -rbb toto_old.bb -r toto_new.bamg -obb
+toto_new.bb
+
+The
+interpolation mode supports the following options:
+
+-b
+filename
+
+The destination
+input mesh file (bamg format DB mesh).
+
+-rbb
+filename 
+-rBB *filename
+
+The origin
+input solution, where the file is of type .bb or
+.BB (see file format below).
+
+-r
+filename
+
+The origin
+input mesh file (bamg format DB mesh).
+
+-wbb
+filename 
+-wBB filename
+
+The output
+solution, as reinterpolated on the destination mesh.
+
+CREATION OPTIONS
+
+-hmax
+float
+
+Set the value
+of the maximal edge size. Default value is the diameter of
+the domain to be meshed.
+
+-hmin
+float
+
+Set the value
+of the minimal edge size. Default value is related to the
+size of the domain to be meshed and the grid resolution used
+by the mesh generator (machine dependent).
+
+-errg
+float
+
+Set the value
+of the relative error on geometry of the boundary. Default
+value is 0.1. In any case this value is greater than
+1/sqrt(2). Remark that mesh size created by this option can
+be smaller than the hmin argument due to
+geometrical constraint.
+
+-nbv
+int
+
+Set the maximal
+number of vertices of the generated mesh. Default value is
+50000.
+
+ADAPTATION OPTIONS
+
+These options
+are relevant when computing a metric from a scalar field
+provided in a .bb file. Notice that, when providing a tensor
+metric in the .bb file, the metric computation is not
+performed and these options are not relevant.
+
+-RelError
+
+Compute the
+metric with a relative error. This is the default. In this
+case, the metric field is defined by
+
+1 |H(x)| 
+M(x) = ---------- -------------------- 
+err*coef^2 max(CutOff,|eta(x)|)
+
+where
+err, coef, CutOff are adjustable
+parameters defined below, eta is the solution field
+read in the input file and H is its Hessian. Here
+|eta| denotes the absolute value of the field
+eta and |H| is the tensor field composed
+of the absolute values of the Hessian eigenvalues and with
+the same eigenbasis as H.
+
+-AbsError
+
+Compute the
+metric with an absolute error. In this case, the metric is
+defined by
+
+1 |H(x)| 
+M(x) = ---------- --------------------- 
+err*coef^2 (sup(eta) - inf(eta))
+
+where
+sup(eta) and inf(eta) denotes the two
+extremal values of the input solution field
+eta.
+
+-coef
+float
+
+The
+multiplicative coefficient on the mesh size. Default value
+is 1.0.
+
+-err
+float
+
+The level of
+the P1 interpolation error. Default value is 0.01.
+Recall that this error behaves as O(h^2) locally,
+where h is the local mesh size. Remark on the two
+previous formulae that a change by a factor 1/4 is
+equivalent to a change by a factor 1/2 on the mesh size. So,
+either coef} or err are specified in order
+to generate a convergent mesh family.
+
+-CutOff
+float
+
+The cut-off
+value used for the relative error criteria. Default value is
+1e-5.
+
+-power
+float
+
+Set the power
+parameter of hessian to construct the metric. Default value
+is 1.
+
+-NbJacobi
+int
+
+Set the number
+of iterations in a smoothing procedure during the metric
+construction. The 0 value implies no smoothing. Default
+value is 1.
+
+-ratio
+float
+
+Set the ratio
+for a prescribed smoothing on the metric. If ratio is 0
+(default value) or less than 1.1, no smoothing on the metric
+is done. If ratio > 1.1 the speed of mesh size variation
+is bounded by log(ratio). Remark tht, as val is closer to 1,
+the number of vertices generated increases. This may be
+useful to control the thickness of refined regions near
+shocks or boundary layers.
+
+-aniso 
+-iso The -anio enforces the metric to be
+anisotropic. This is the default. Conversely, the metric may
+be of isotropic type with the -iso flag.
+
+-anisomax
+float
+
+Set the bound
+of mesh anisotropy with respect to minimal mesh size in all
+direction so the maximal mesh size in all direction is
+bounded by the ratio anisomax. The default value is
+1e6. Remark that when anisomax=1, the generated
+mesh is isotropic.
+
+-hminaniso
+float
+
+Set the value
+of hmin the minimal edge size and set the aniso
+mode.
+
+-maxsubdiv
+float
+
+Change the
+metric such that the maximal subdivision of a
+background&rsquo;s edge is bound by the maxsubdiv
+number. The maxsubdiv number is alway limited by 10
+and this is the default value.
+
+-KeepBackVertices
+
+-noKeepBackVertices
+
+Try to Keep old
+vertices (default). Otherwise, all vertices are created from
+scratch.
+
+-NoRescaling
+
+-Rescaling
+
+Don&rsquo;t
+rescale the solution between [0,1] before metric computation
+Default is to rescale.
+
+QUALITY IMPROVEMENT OPTIONS
+
+-NbSmooth
+int
+
+Set the number
+of iterations of the mesh smoothing procedure. Default value
+is 3.
+
+-omega
+float
+
+Set the
+relaxation parameter of the smoothing procedure, Default
+value is 1.8.
+
+-splitpbedge
+
+-nosplitpbedge
+
+Sometimes, an
+internal edge can have its two vertices on the boundary.
+This causes a triangle to have all its vertices on the
+boundary. With the -splitpbedge option, this edge
+is splited in two, and this situation is avoided. By
+default, don&rsquo;t split.
+
+-thetaquad
+float
+
+To create quad
+with 2 triangles Merge two triangles into a quadrilateral
+when the four angles of the quadrilateral are in the range
+[thetaquad, 180-thetaquad].
+
+-2
+
+To create the
+mesh with a mesh size divided by two.
+
+-2q
+
+To split all
+triangles in three quadrilaterals, and to split all
+quadrilaterals in four.
+
+OUTPUT MESH FORMAT OPTIONS
+
+-o
+filename
+
+bamg DB mesh
+file format (default).
+
+-oamdba
+*filename
+
+amdba
+format.
+
+-oftq
+*filename
+
+ftq format.
+
+-omsh
+*filename
+
+msh format
+(freefem3 format).
+
+-oam_fmt
+*filename
+
+am_fmt
+format.
+
+-oam
+*filename
+
+am format.
+
+-onopo
+*filename
+
+nopo
+format.
+
+OTHERS OPTIONS
+
+-thetamax
+float
+
+Set the angular
+limit for a corner in degre to be curved. The angle is
+defined from two normals of two consecutives edges. The
+default is 180 degree, i.e. no corners are curved. This
+option is useful when no geometry are provided, e.g.
+remeshing from an other mesh file format (am_fmt,
+amdba, nopo, etc). This parameter is
+normally specified in the geometry boundaries file (in BD
+file format) by the AngleOfCornerBound optional
+section: when this file format is used, this option has no
+effet.
+
+-v
+int
+
+Set the level
+of printing (verbosity), which can be chosen between 0 and
+10. Default value is 1.
+
+GEOMETRY FILE FORMAT (BAMGCAD)
+
+The general
+structure allows one to specify a mesh describing the
+geometry of the given domain. The identification of the
+boundaries are used to define boundary conditions for a
+partial derivative equation problem. In this case, some of
+the above sections are not relevant. First the required
+sections are:
+
+MeshVersionFormatted
+0 
+Dimension 2 
+Vertices nv 
+{x_k y_k i_k} k=1:nv 
+Edges ne 
+{i_l j_l k_l} l=1:ne
+
+Next, the
+optional sections:
+
+SubDomain nd
+
+{2 ie_k orient id_k} k=1:nd
+
+A sub-domain,
+i.e. a bounded connex components of the plan is defined
+using one edge identifier ie along with an
+orientation information orient, indicating on which
+side of this entity the sub-domain lies. This feature is
+useful, e.g. when dealing with a domain with holes. The
+sub-domain number is id. If no sub-domain are
+defined, then we suppose to mesh all the bounded connex
+component of the plan. Remark: SubDomainFromGeom is
+equivalent to SubDomain.
+
+AngleOfCornerBound
+angle
+
+The
+AngleOfCornerBound specifies the angular limit for
+a corner in degree to be curved. The angle is defined from
+two normals of two consecutives edges. The default is 180
+degree, i.e. no corners are curved. When this angle is
+defined, some corners could be specified not to be curved by
+the following list:
+
+Corners nc 
+{i_k} k=1:nc
+
+The curved
+geometric representation of a boundary in two dimensions
+uses the edges provided in the data structure so as to
+define some curves of order three in the following way:
+
+&bull;
+
+an edge whose endpoints are
+corners and if no additional information are provided will
+be represented by a straight segment,
+
+&bull;
+
+an edge whose endpoints are corners but whose tangent is
+provided at one endpoint will be represented by a curve of
+degree two,
+
+&bull;
+
+an edge whose endpoints are corners but whose tangents
+are provided at these corners will be represented by a curve
+of degree three,
+
+&bull;
+
+an edge whose endpoints are not corners and with no
+additional information will be represented by a curve of
+degree three. Indeed, we use in this case the adjacent edges
+so as to evaluate the tangents at the edge endpoints.
+
+In short, an
+edge defined by two information will be approached by a
+straight line, three information allow one to obtain a curve
+of degree two and four data, a curve of degree three. The
+tangents are optionally specified by:
+
+TangentAtEdges
+nt 
+{ie_k ive_k xt yt} k=1:nt
+
+For the edge
+identifier ie, the tangent at its ive
+vertex (ive takes value 1 or 2) is specified by its
+components xt and yt. Giving the tangent
+vector of an edge by means of the tangent vector at a point
+enables us to deal with the case where several edges
+(boundary lines) are emanating from a point.
+
+The required
+vertices, are the vertices of the support that must be
+present in the mesh as element vertices. Similarly, some
+edges can be required:
+
+RequiredVertices
+nrv 
+{iv_k} k=1:nrv 
+RequiredEdges nre 
+{ie_k} k=1:nre
+
+FUTURE OPTIONS
+
+The following
+features are planed for future work. For periodic boundary
+conditions, the section EquivalencedEdges indicates
+that two edges must be meshed the same way:
+
+EquivalencedEdges
+nee 
+{ie1_k ie2_k} k=1:nee
+
+Crack
+definition is the purpose of the CrackedEdges
+section. We specify then that an edge is identical in terms
+of geometry to another edge:
+
+CrackedEdges
+nce 
+{ie1_k ie2_k} k=1:nce
+
+MORE READING
+
+The original
+site of the bamg mesh generator is
+http://www.ann.jussieu.fr/hecht/ftp/bamg . Please read
+http://www.ann.jussieu.fr/hecht/ftp/bamg/bamg.pdf for the
+detailed file formats and more advanced examples, e.g. a
+mesh adaptation loop to minimize the P1 Lagrange
+interpolation error.
+
+AUTHORS
+
+Frederic Hecht
+Frederic.Hecht [AT] inria.fr is the author of bamg. 
+Pierre Saramito Pierre.Saramito [AT] imag.fr writes this unix man
+page.
+
+COPYRIGHT
+
+Copyright (C)
+1998-2018 Frederic Hecht Frederic.Hecht [AT] inria.fr>
+LGPLv3+: GNU LGPL version 3 or later
+http://gnu.org/licenses/lgpl.html. This is free software:
+you are free to change and redistribute it. There is NO
+WARRANTY, to the extent permitted by law.
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>

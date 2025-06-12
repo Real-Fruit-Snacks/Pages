@@ -1,0 +1,136 @@
+TARG(4) BSD Kernel Interfaces Manual TARG(4)
+
+NAME
+
+targ &mdash; SCSI target
+emulator driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, place the following line in your kernel
+configuration file:
+
+device
+targ
+
+DESCRIPTION
+
+The targ driver provides
+an interface for usermode programs to emulate SCSI target
+devices. A sample program that emulates a disk drive
+(similar to da(4)) can be found in
+/usr/share/examples/scsi_target.
+
+The targ
+driver supplies the control device /dev/targ. After
+opening the device, the file descriptor must be bound to a
+specific bus/target/LUN and enabled to process CCBs using
+the TARGIOCENABLE ioctl. The process then uses write(2) to
+send CCBs to the SIM and poll(2) or kqueue(2) to see if
+responses are ready. Pointers to completed CCBs are returned
+via read(2). Any data transfers requested by the user CCBs
+are done via zero-copy IO.
+
+IOCTLS
+
+The following ioctl(2) calls are
+defined in the header file
+cam/scsi/scsi_targetio.h>.
+
+TARGIOCENABLE
+
+(struct
+ioc_enable_lun) Enable target mode on the LUN specified
+by the following structure:
+
+struct
+ioc_enable_lun {
+
+path_id_t
+
+path_id;
+
+target_id_t
+
+target_id;
+
+lun_id_t
+
+lun_id;
+
+int
+
+grp6_len;
+
+int
+
+grp7_len;
+
+};
+
+The selected
+path (bus), target, and LUN must not already be in use or
+EADDRINUSE is returned. If grp6_len or
+grp7_len are non-zero, reception of vendor-specific
+commands is enabled.
+
+TARGIOCDISABLE
+
+Disable target
+mode and abort all pending CCBs. The CCBs may optionally be
+read as they complete. TARGIOCENABLE can then be called to
+activate a different LUN. Multiple disable calls have no
+effect. The close(2) system call automatically disables
+target mode if enabled.
+
+TARGIOCDEBUG
+
+(int)
+Enables CAM_PERIPH debugging if the argument is non-zero,
+otherwise disables it.
+
+FILES 
+
+describes the
+usermode interface.
+
+/sys/cam/scsi/scsi_target.c
+
+is the driver
+source file.
+
+/dev/targ
+
+is the control
+device.
+
+SEE ALSO
+
+/usr/share/examples/scsi_target,
+ahc(4), isp(4), scsi(4)
+
+FreeBSD Target
+Information
+
+,
+
+http://www.root.org/~nate/freebsd/ .
+
+AUTHORS
+
+The targ driver first
+appeared in FreeBSD 3.0 and was written by Justin T.
+Gibbs. It was rewritten for FreeBSD 5.0 by Nate Lawson
+nate [AT] root.org>.
+
+BUGS
+
+Currently, only the ahc(4) and
+isp(4) drivers fully support target mode.
+
+The ahc(4)
+driver does not support tagged queuing in target mode.
+
+BSD
+December 13, 2011 BSD

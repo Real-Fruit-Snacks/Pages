@@ -1,0 +1,814 @@
+NAME
+
+lcov - a
+graphical GCOV front-end
+
+SYNOPSIS
+
+lcov
+-c|--capture
+
+[-d|--directory
+directory] [-k|--kernel-directory
+directory] 
+[-o|--output-file tracefile]
+[-t|--test-name testname] 
+[-b|--base-directory directory]
+[-i|--initial] [--gcov-tool
+tool] 
+[--checksum] [--no-checksum]
+[--no-recursion] [-f|--follow] 
+[--compat-libtool] [--no-compat-libtool]
+[--ignore-errors errors] 
+[--to-package package] [--from-package
+package] [-q|--quiet] 
+[--no-markers] [--external]
+[--no-external] 
+[--config-file config-file] [--rc
+keyword=value] 
+[--compat mode=on|off|auto] 
+[--include pattern] [--exclude
+pattern]
+
+lcov
+-z|--zerocounters
+
+[-d|--directory
+directory] [--no-recursion]
+[-f|--follow] 
+[-q|--quiet]
+
+lcov
+-l|--list tracefile
+
+[-q|--quiet]
+[--list-full-path] [--no-list-full-path] 
+[--config-file config-file] [--rc
+keyword=value]
+
+lcov
+-a|--add-tracefile tracefile
+
+[-o|--output-file
+tracefile] [--checksum] [--no-checksum]
+
+[-q|--quiet] [--config-file
+config-file] [--rc
+keyword=value]
+
+lcov
+-e|--extract tracefile pattern
+
+[-o|--output-file
+tracefile] [--checksum] [--no-checksum]
+
+[-q|--quiet] [--config-file
+config-file] [--rc
+keyword=value]
+
+lcov
+-r|--remove tracefile pattern
+
+[-o|--output-file
+tracefile] [--checksum] [--no-checksum]
+
+[-q|--quiet] [--config-file
+config-file] [--rc
+keyword=value]
+
+lcov
+--diff tracefile diff
+
+[-o|--output-file
+tracefile] [--checksum] [--no-checksum]
+
+[--convert-filenames] [--strip depth]
+[--path path] [-q|--quiet] 
+[--config-file config-file] [--rc
+keyword=value]
+
+lcov
+--summary tracefile
+
+[-q|--quiet]
+
+lcov
+[-h|--help] [-v|--version]
+
+DESCRIPTION
+
+lcov is
+a graphical front-end for GCC&rsquo;s coverage testing tool
+gcov. It collects line, function and branch coverage data
+for multiple source files and creates HTML pages containing
+the source code annotated with coverage information. It also
+adds overview pages for easy navigation within the file
+structure.
+
+Use lcov
+to collect coverage data and genhtml to create HTML
+pages. Coverage data can either be collected from the
+currently running Linux kernel or from a user space
+application. To do this, you have to complete the following
+preparation steps:
+
+For Linux
+kernel coverage:
+
+Follow the setup instructions
+for the gcov-kernel infrastructure:
+http://ltp.sourceforge.net/coverage/gcov.php
+
+For user space
+application coverage:
+
+Compile the application with
+GCC using the options "-fprofile-arcs" and
+"-ftest-coverage".
+
+Please note
+that this man page refers to the output format of
+lcov as ".info file" or
+"tracefile" and that the output of GCOV is called
+".da file".
+
+Also note that
+when printing percentages, 0% and 100% are only printed when
+the values are exactly 0% and 100% respectively. Other
+values which would conventionally be rounded to 0% or 100%
+are instead printed as nearest non-boundary value. This
+behavior is in accordance with that of the gcov(1)
+tool.
+
+OPTIONS
+
+-a
+tracefile 
+--add-tracefile tracefile
+
+Add contents of
+tracefile.
+
+Specify several
+tracefiles using the -a switch to combine the coverage data
+contained in these files by adding up execution counts for
+matching test and filename combinations.
+
+The result of
+the add operation will be written to stdout or the tracefile
+specified with -o.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+-b
+directory 
+--base-directory directory
+
+Use directory as base
+directory for relative paths.
+
+Use this option
+to specify the base directory of a build-environment when
+lcov produces error messages like:
+
+ERROR: could
+not read source file
+/home/user/project/subdir1/subdir2/subdir1/subdir2/file.c
+
+In this
+example, use /home/user/project as base directory.
+
+This option is
+required when using lcov on projects built with libtool or
+similar build environments that work with a base directory,
+i.e. environments, where the current working directory when
+invoking the compiler is not the same directory in which the
+source code file is located.
+
+Note that this
+option will not work in environments where multiple base
+directories are used. In that case use configuration file
+setting geninfo_auto_base=1 (see
+lcovrc(5)).
+
+-c 
+--capture
+
+Capture coverage data.
+
+By default
+captures the current kernel execution counts and writes the
+resulting coverage data to the standard output. Use the
+--directory option to capture counts for a user space
+program.
+
+The result of
+the capture operation will be written to stdout or the
+tracefile specified with -o.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+--checksum
+
+--no-checksum
+
+Specify whether to generate
+checksum data when writing tracefiles.
+
+Use --checksum
+to enable checksum generation or --no-checksum to disable
+it. Checksum generation is disabled by default.
+
+When checksum
+generation is enabled, a checksum will be generated for each
+source code line and stored along with the coverage data.
+This checksum will be used to prevent attempts to combine
+coverage data from different source code versions.
+
+If you
+don&rsquo;t work with different source code versions,
+disable this option to speed up coverage data processing and
+to reduce the size of tracefiles.
+
+--compat
+mode=value[,mode=value,...]
+
+Set compatibility mode.
+
+Use --compat to
+specify that lcov should enable one or more compatibility
+modes when capturing coverage data. You can provide a
+comma-separated list of mode=value pairs to specify the
+values for multiple modes.
+
+Valid
+values are:
+
+on
+
+Enable compatibility mode.
+
+off
+
+Disable compatibility mode.
+
+auto
+
+Apply auto-detection to
+determine if compatibility mode is required. Note that
+auto-detection is not available for all compatibility
+modes.
+
+If no value is
+specified, &rsquo;on&rsquo; is assumed as default value.
+
+Valid
+modes are:
+
+libtool
+
+Enable this mode if you are
+capturing coverage data for a project that was built using
+the libtool mechanism. See also --compat-libtool.
+
+The default
+value for this setting is &rsquo;on&rsquo;.
+
+hammer
+
+Enable this mode if you are
+capturing coverage data for a project that was built using a
+version of GCC 3.3 that contains a modification (hammer
+patch) of later GCC versions. You can identify a modified
+GCC 3.3 by checking the build directory of your project for
+files ending in the extension &rsquo;.bbg&rsquo;. Unmodified
+versions of GCC 3.3 name these files &rsquo;.bb&rsquo;.
+
+The default
+value for this setting is &rsquo;auto&rsquo;.
+
+split_crc
+
+Enable this mode if you are
+capturing coverage data for a project that was built using a
+version of GCC 4.6 that contains a modification (split
+function checksums) of later GCC versions. Typical error
+messages when running lcov on coverage data produced by such
+GCC versions are &acute;out of memory&rsquo; and
+&rsquo;reached unexpected end of file&rsquo;.
+
+The default
+value for this setting is &rsquo;auto&rsquo;
+
+--compat-libtool
+
+--no-compat-libtool
+
+Specify whether to enable
+libtool compatibility mode.
+
+Use
+--compat-libtool to enable libtool compatibility mode or
+--no-compat-libtool to disable it. The libtool compatibility
+mode is enabled by default.
+
+When libtool
+compatibility mode is enabled, lcov will assume that the
+source code relating to a .da file located in a directory
+named ".libs" can be found in its parent
+directory.
+
+If you have
+directories named ".libs" in your build
+environment but don&rsquo;t use libtool, disable this option
+to prevent problems when capturing coverage data.
+
+--config-file
+config-file
+
+Specify a configuration file to
+use.
+
+When this
+option is specified, neither the system-wide configuration
+file /etc/lcovrc, nor the per-user configuration file
+~/.lcovrc is read.
+
+This option may
+be useful when there is a need to run several instances of
+lcov with different configuration file options in
+parallel.
+
+--convert-filenames
+
+Convert filenames when applying
+diff.
+
+Use this option
+together with --diff to rename the file names of processed
+data sets according to the data provided by the diff.
+
+--diff
+tracefile difffile
+
+Convert coverage data in
+tracefile using source code diff file
+difffile.
+
+Use this option
+if you want to merge coverage data from different source
+code levels of a program, e.g. when you have data taken from
+an older version and want to combine it with data from a
+more current version. lcov will try to map source
+code lines between those versions and adjust the coverage
+data respectively. difffile needs to be in unified
+format, i.e. it has to be created using the "-u"
+option of the diff tool.
+
+Note that lines
+which are not present in the old version will not be counted
+as instrumented, therefore tracefiles resulting from this
+operation should not be interpreted individually but
+together with other tracefiles taken from the newer version.
+Also keep in mind that converted coverage data should only
+be used for overview purposes as the process itself
+introduces a loss of accuracy.
+
+The result of
+the diff operation will be written to stdout or the
+tracefile specified with -o.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+-d
+directory 
+--directory directory
+
+Use .da files in
+directory instead of kernel.
+
+If you want to
+work on coverage data for a user space program, use this
+option to specify the location where the program was
+compiled (that&rsquo;s where the counter files ending with
+.da will be stored).
+
+Note that you
+may specify this option more than once.
+
+--exclude
+pattern
+
+Exclude source files matching
+pattern.
+
+Use this switch
+if you want to exclude coverage data for a particular set of
+source files matching any of the given patterns. Multiple
+patterns can be specified by using multiple --exclude
+command line switches. The patterns will be
+interpreted as shell wildcard patterns (note that they may
+need to be escaped accordingly to prevent the shell from
+expanding them first).
+
+Can be combined
+with the --include command line switch. If a given
+file matches both the include pattern and the exclude
+pattern, the exclude pattern will take precedence.
+
+--external
+
+--no-external
+
+Specify whether to capture
+coverage data for external source files.
+
+External source
+files are files which are not located in one of the
+directories specified by --directory or --base-directory.
+Use --external to include external source files while
+capturing coverage data or --no-external to ignore this
+data.
+
+Data for
+external source files is included by default.
+
+-e
+tracefile pattern 
+--extract tracefile pattern
+
+Extract data from
+tracefile.
+
+Use this switch
+if you want to extract coverage data for only a particular
+set of files from a tracefile. Additional command line
+parameters will be interpreted as shell wildcard patterns
+(note that they may need to be escaped accordingly to
+prevent the shell from expanding them first). Every file
+entry in tracefile which matches at least one of
+those patterns will be extracted.
+
+The result of
+the extract operation will be written to stdout or the
+tracefile specified with -o.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+-f 
+--follow
+
+Follow links when searching for
+.da files.
+
+--from-package
+package
+
+Use .da files in package
+instead of kernel or directory.
+
+Use this option
+if you have separate machines for build and test and want to
+perform the .info file creation on the build machine. See
+--to-package for more information.
+
+--gcov-tool
+tool
+
+Specify the location of the
+gcov tool.
+
+-h 
+--help
+
+Print a short help text, then
+exit.
+
+--include
+pattern
+
+Include source files matching
+pattern.
+
+Use this switch
+if you want to include coverage data for only a particular
+set of source files matching any of the given patterns.
+Multiple patterns can be specified by using multiple
+--include command line switches. The patterns
+will be interpreted as shell wildcard patterns (note that
+they may need to be escaped accordingly to prevent the shell
+from expanding them first).
+
+--ignore-errors
+errors
+
+Specify a list of errors after
+which to continue processing.
+
+Use this option
+to specify a list of one or more classes of errors after
+which lcov should continue processing instead of
+aborting.
+
+errors
+can be a comma-separated list of the following keywords:
+
+gcov:
+the gcov tool returned with a non-zero return code.
+
+source:
+the source code file for a data set could not be found.
+
+graph:
+the graph file could not be found or is corrupted.
+
+-i 
+--initial
+
+Capture initial zero coverage
+data.
+
+Run lcov with
+-c and this option on the directories containing .bb, .bbg
+or .gcno files before running any test case. The result is a
+"baseline" coverage data file that contains zero
+coverage for every instrumented line. Combine this data file
+(using lcov -a) with coverage data files captured after a
+test run to ensure that the percentage of total lines
+covered is correct even when not all source code files were
+loaded during the test.
+
+Recommended
+procedure when capturing data for a test case:
+
+1. create
+baseline coverage data file
+
+# lcov -c -i -d appdir -o
+app_base.info
+
+2. perform
+test
+
+# appdir/test
+
+3. create test
+coverage data file
+
+# lcov -c -d appdir -o
+app_test.info
+
+4. combine
+baseline and test coverage data
+
+# lcov -a app_base.info -a
+app_test.info -o app_total.info
+
+-k
+subdirectory 
+--kernel-directory subdirectory
+
+Capture kernel coverage data
+only from subdirectory.
+
+Use this option
+if you don&rsquo;t want to get coverage data for all of the
+kernel, but only for specific subdirectories. This option
+may be specified more than once.
+
+Note that you
+may need to specify the full path to the kernel subdirectory
+depending on the version of the kernel gcov support.
+
+-l
+tracefile 
+--list tracefile
+
+List the contents of the
+tracefile.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+--list-full-path
+
+--no-list-full-path
+
+Specify whether to show full
+paths during list operation.
+
+Use
+--list-full-path to show full paths during list operation or
+--no-list-full-path to show shortened paths. Paths are
+shortened by default.
+
+--no-markers
+
+Use this option if you want to
+get coverage data without regard to exclusion markers in the
+source code file. See geninfo (1) for details on
+exclusion markers.
+
+--no-recursion
+
+Use this option if you want to
+get coverage data for the specified directory only without
+processing subdirectories.
+
+-o
+tracefile 
+--output-file tracefile
+
+Write data to tracefile
+instead of stdout.
+
+Specify
+"-" as a filename to use the standard output.
+
+By convention,
+lcov-generated coverage data files are called
+"tracefiles" and should have the filename
+extension ".info".
+
+--path
+path
+
+Strip path from filenames when
+applying diff.
+
+Use this option
+together with --diff to tell lcov to disregard the specified
+initial path component when matching between tracefile and
+diff filenames.
+
+-q 
+--quiet
+
+Do not print progress
+messages.
+
+This option is
+implied when no output filename is specified to prevent
+progress messages to mess with coverage data which is also
+printed to the standard output.
+
+--rc
+keyword=value
+
+Override a configuration
+directive.
+
+Use this option
+to specify a keyword=value statement which
+overrides the corresponding configuration statement in the
+lcovrc configuration file. You can specify this option more
+than once to override multiple configuration statements. See
+lcovrc(5) for a list of available keywords and their
+meaning.
+
+-r
+tracefile pattern 
+--remove tracefile pattern
+
+Remove data from
+tracefile.
+
+Use this switch
+if you want to remove coverage data for a particular set of
+files from a tracefile. Additional command line parameters
+will be interpreted as shell wildcard patterns (note that
+they may need to be escaped accordingly to prevent the shell
+from expanding them first). Every file entry in
+tracefile which matches at least one of those
+patterns will be removed.
+
+The result of
+the remove operation will be written to stdout or the
+tracefile specified with -o.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+--strip
+depth
+
+Strip path components when
+applying diff.
+
+Use this option
+together with --diff to tell lcov to disregard the specified
+number of initial directories when matching tracefile and
+diff filenames.
+
+--summary
+tracefile
+
+Show summary coverage
+information for the specified tracefile.
+
+Note that you
+may specify this option more than once.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+-t
+testname 
+--test-name testname
+
+Specify test name to be stored
+in the tracefile.
+
+This name
+identifies a coverage data set when more than one data set
+is merged into a combined tracefile (see option -a).
+
+Valid test
+names can consist of letters, decimal digits and the
+underscore character ("_").
+
+--to-package
+package
+
+Store .da files for later
+processing.
+
+Use this option
+if you have separate machines for build and test and want to
+perform the .info file creation on the build machine. To do
+this, follow these steps:
+
+On the test
+machine:
+
+- run the test 
+- run lcov -c [-d directory] --to-package file 
+- copy file to the build machine
+
+On the build
+machine:
+
+- run lcov -c --from-package
+file [-o and other options]
+
+This works for
+both kernel and user space coverage data. Note that you
+might have to specify the path to the build directory using
+-b with either --to-package or --from-package. Note also
+that the package data must be converted to a .info file
+before recompiling the program or it will become
+invalid.
+
+-v 
+--version
+
+Print version number, then
+exit.
+
+-z 
+--zerocounters
+
+Reset all execution counts to
+zero.
+
+By default
+tries to reset kernel execution counts. Use the --directory
+option to reset all counters of a user space program.
+
+Only one of -z,
+-c, -a, -e, -r, -l, --diff or --summary may be specified at
+a time.
+
+FILES
+
+/etc/lcovrc
+
+The system-wide configuration
+file.
+
+~/.lcovrc
+
+The per-user configuration
+file.
+
+AUTHOR
+
+Peter
+Oberparleiter Peter.Oberparleiter [AT] de.com>
+
+SEE ALSO
+
+lcovrc(5),
+genhtml(1), geninfo(1), genpng(1),
+gendesc(1), gcov(1)

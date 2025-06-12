@@ -1,0 +1,273 @@
+NAME
+
+dwz - DWARF
+optimization and duplicate removal tool
+
+SYNOPSIS
+
+dwz
+[OPTION...] [FILES]
+
+DESCRIPTION
+
+dwz is a
+program that attempts to optimize DWARF debugging
+information contained in ELF shared libraries and ELF
+executables for size, by replacing DWARF information
+representation with equivalent smaller representation where
+possible and by reducing the amount of duplication using
+techniques from DWARF standard appendix E - creating
+DW_TAG_partial_unit compilation units (CUs) for
+duplicated information and using DW_TAG_imported_unit
+to import it into each CU that needs it.
+
+The tool
+handles DWARF 32-bit format debugging sections of versions
+2, 3, 4, most of version 5 and GNU extensions on top of
+those. It is strongly recommended to use at least DWARF 3,
+but using DWARF 4 or higher will work much better.
+
+While most of
+DWARF 5 is supported dwz doesn&rsquo;t yet generate spec
+compliant DWARF Supplementary Object Files (DWARF 5, section
+7.3.6) unless the --dwarf-5 option is used. Instead
+of a .debug_sup section it will generate by default a
+.gnu_debugaltlink section. And it will use the
+DW_FORM_GNU_strp_alt and DW_FORM_GNU_reg_alt,
+instead of DW_FORM_strp_sup and
+DW_FORM_ref_sup to keep compatibility with existing
+DWARF consumers.
+
+DWARF 4
+.debug_types are supported, but DWARF 5
+DW_UT_type units are not. Likewise .gdb_index
+is supported, but the DWARF 5 .debug_names is not.
+Also some forms and sections that are only emitted by GCC
+when generating Split DWARF, DW_FORM_strx and
+.debug_str_offsets, DW_FORM_addrx and
+.debug_addr, DW_FORM_rnglistx and
+DW_FORM_loclistsx, are not supported yet.
+
+The tool has
+two main modes of operation, without the -m option it
+attempts to optimize DWARF debugging information in each
+given object (executable or shared library) individually,
+with the -m option it afterwards attempts to optimize
+even more by moving DWARF debugging information entries
+(DIEs), strings and macro descriptions duplicated in more
+than one object into a newly created ELF ET_REL object whose
+filename is given as -m option argument. The debug
+sections in the executables and shared libraries specified
+on the command line are then modified again, referring to
+the entities in the newly created object.
+
+OPTIONS
+
+-m FILE
+--multifile FILE
+
+Multifile mode. After
+processing all named executables and shared libraries,
+attempt to create ELF object FILE and put debugging
+information duplicated in more than one object there,
+afterwards optimize each named executable or shared library
+even further if possible.
+
+-h --hardlink
+
+Look for executables or shared
+libraries hardlinked together, instead of rewriting them
+individually rewrite just one of them and hardlink the rest
+to the first one again.
+
+-M NAME --multifile-name
+NAME
+
+Specify the name of the common
+file that should be put into the .gnu_debugaltlink
+section alongside with its build ID. By default dwz
+puts there the argument of the -m option.
+
+-r --relative
+
+Specify that the name of the
+common file to be put into the .gnu_debugaltlink
+section is supposed to be relative path from the directory
+containing the executable or shared library to the file
+named in the argument of the -m option. Either
+-M or -r option can be specified, but not
+both.
+
+-p N
+--multifile-pointer-size 
+
+Specify the pointer size of the
+multifile, in bytes. If auto, use the pointer size of the
+files, provided they match. If native, use native pointer
+size, as specified in the help message.
+
+-p 
+--multifile-endian 
+
+Specify the endianity of the
+multifile. If auto, use the endianity of the files, provided
+they match. If native, use native endianity, as specified in
+the help message.
+
+-q --quiet
+
+Silence up some of the most
+common messages.
+
+-o FILE --output
+FILE
+
+This option instructs
+dwz not to overwrite the specified file, but instead
+store the new content into FILE. Nothing is written
+if dwz exits with non-zero exit code. Can be used
+only with a single executable or shared library (if there
+are no arguments at all, a.out is assumed).
+
+-l 
+--low-mem-die-limit 
+
+Handle executables or shared
+libraries containing more than COUNT debugging
+information entries in their .debug_info section
+using a slower and more memory usage friendly mode and
+don&rsquo;t attempt to optimize that object in multifile
+mode. The default is 10 million DIEs. There is a risk that
+for very large amounts of debugging information in a single
+shared library or executable there might not be enough
+memory (especially when dwz tool is 32-bit binary, it
+might run out of available virtual address space even
+sooner). Specifying none as argument disables the limit.
+
+-L 
+--max-die-limit 
+
+Don&rsquo;t attempt to optimize
+executables or shared libraries containing more than
+COUNT DIEs at all. The default is 50 million DIEs.
+Specifying none as argument disables the limit.
+
+-5 --dwarf-5
+
+Emit standard DWARF 5
+Supplementary Object Files with .debug_sup and
+corresponding forms, instead of the GNU extension
+.gnu_debugaltlink and corresponding forms.
+
+-j  --jobs
+
+Process N files in
+parallel. The default is processors / 2. Disabled when
+multifile is used.
+
+--odr / --no-odr
+
+Experimental.
+Enable/disable One-Definition-Rule optimization for C++
+compilation units. This optimization causes
+struct/union/class DIEs with the same name to be considered
+equal. This has the effect that DIEs referring to distinct
+DIEs representing the same type (like f.i. pointer type
+DIEs) are considered equal, and may be deduplicated. The
+status of this optimization is experimental. It&rsquo;s
+disabled in low-mem mode. Disabled by default.
+
+--odr-mode=
+
+Set the One-Definition-Rule
+optimization aggressiveness: basic or link. When using the
+link setting, the optimization will attempt to replace
+declarations of a struct/union/class with a corresponding
+definition. When using the basic setting, that part of the
+optimization is disabled. In normal operation, the link
+setting should be used. The basic setting is provided only
+as fallback in case of problems with the link setting. Set
+to link by default.
+
+--import-optimize /
+--no-import-optimize
+
+Enable/disable optimization
+that reduces the number of DW_TAG_imported_unit DIEs
+generated to import the partial units created by dwz.
+Disabling the optimization can be used to work around
+problems in the optimization, or to make it easier to
+observe which CU imports which PU. Enabled by default.
+
+-? --help
+
+Print short help and exit.
+
+-v --version
+
+Print version number and short
+licensing notice and exit.
+
+ARGUMENTS
+
+Command-line
+arguments should be the executables, shared libraries or
+their stripped to file separate debug information
+objects.
+
+EXAMPLES
+
+$ dwz -m
+.dwz/foobar-1.2.debug -rh \ 
+bin/foo.debug bin/foo2.debug foo/lib/libbar.so.debug
+
+will attempt to optimize
+debugging information in bin/foo.debug,
+bin/foo2.debug and lib/libbar.so.debug (by
+modifying the files in place) and when beneficial also will
+create .dwz/foobar-1.2.debug file.
+.gnu_debugaltlink section in the first two files will
+refer to ../.dwz/foobar-1.2.debug and in the last
+file to ../../.dwz/foobar-1.2.debug. If e.g.
+bin/foo.debug and bin/foo2.debug were
+hardlinked together initially, they will be hardlinked again
+and for multifile optimizations considered just as a single
+file rather than two.
+
+$ dwz -o foo.dwz foo
+
+will not modify foo but
+instead store the ELF object with optimized debugging
+information if successful into foo.dwz file it
+creates.
+
+$ dwz *.debug foo/*.debug
+
+will attempt to optimize
+debugging information in *.debug and foo/*.debug files,
+optimizing each file individually in place.
+
+$ dwz
+
+is equivalent to dwz
+a.out command.
+
+SEE ALSO
+
+http://dwarfstd.org/doc/DWARF4.pdf
+, http://dwarfstd.org/doc/DWARF5.pdf ,
+gdb(1).
+
+AUTHORS
+
+Jakub Jelinek
+jakub [AT] redhat.com>, Tom de Vries
+tdevries [AT] suse.de>, Mark Wielaard
+mark [AT] klomp.org>
+
+BUGS
+
+Use the
+Bugzilla link of the project web page or our mailing list.
+https://sourceware.org/dwz/,
+dwz [AT] sourceware.org>.

@@ -1,0 +1,206 @@
+NAME
+
+ffindcmd, ffind
+&minus; find files by name or by other characteristics in
+FSP database
+
+SYNOPSIS
+
+ffindcmd
+pathname-list expression 
+ffind pathname-list expression
+
+DESCRIPTION
+
+ffindcmd
+recursively descends the directory hierarchy for each
+pathname in the pathname-list, seeking files that
+match a logical expression written using the
+operators listed below.
+
+USAGE
+
+Operators
+
+In the descriptions, the argument n is used as a
+decimal integer where +n means more than
+n, &minus;n means less than n,
+and n means exactly n. All three maybe used if
+an integer argument is needed.
+
+&minus;name filename
+
+True if the filename argument matches the current
+file name. Shell argument syntax can be used if escaped
+(watch out for [, ? and *).
+
+&minus;prune
+
+Always yields true. Has the side effect of pruning the
+search tree at the file. That is, if the current path name
+is a directory, ffindcmd will not descend into that
+directory. 
+
+&minus;type c
+
+True if the type of the file is c, where c
+is one of:
+
+d
+
+for directory
+
+f
+
+for plain file
+
+&minus;size n
+
+True if the
+file is n blocks long (512 bytes per block). If
+n is followed by a c, the size is in
+characters.
+
+&minus;time n
+
+True if the file has been
+accessed/modified/changed in n days.
+
+&minus;exec command
+
+True if the executed command returns a zero value
+as exit status. The end of command must be punctuated
+by an escaped semicolon. A command argument {} is
+replaced by the current pathname.
+
+&minus;ok command
+
+Like &minus;exec except that the generated
+command is written on the standard output, then the standard
+input is read and the command executed only upon response
+y. 
+
+&minus;print
+
+Always true; the current pathname is printed.
+
+&minus;ls
+
+Always true; prints current pathname together with its
+associated statistics. These include size in blocks (512
+bytes), protection mode, number of hard links, user, group,
+size in bytes, and modification time.
+
+Note: formatting is done
+internally, without executing the fls program.
+
+&minus;newer
+file 
+
+True if the current file has
+been modified more recently than the argument
+filename. 
+
+(expression)
+
+True if the parenthesized expression is true.
+
+Note: Parentheses are special
+to the shell and must be escaped.
+
+!primary
+
+True if the primary is
+false (! is the unary not operator).
+
+primary1
+
+[ &minus;a ]
+primary2 
+
+True if both primary1
+and primary2 are true. The &minus;a is not
+required. It is implied by the juxtaposition of two
+primaries.
+
+primary1 &minus;o
+primary2 
+
+True if either primary1
+
+or primary2 is true (&minus;o is the
+or operator).
+
+ffindcmd
+will perform csh file name globbing based on file and
+directory information obtained from the FSP database.
+
+Since
+user&rsquo;s command shells generally cannot do the proper
+globbing for this program, it is recommended that user
+defines a shell alias or function to turn off command shell
+globbing before running this program. csh
+example:
+
+alias ffind
+\(set noglob\; exec ffindcmd \!\*\)
+
+EXAMPLE
+
+To find all the
+files called intro.ms starting from the current
+directory:
+
+example% ffind
+. &minus;name intro.ms &minus;print 
+./manuals/assembler/intro.ms 
+./manuals/sun.core/intro.ms 
+./manuals/driver.tut/intro.ms 
+./manuals/sys.manager/uucp.impl/intro.ms 
+./supplements/general.works/unix.introduction/intro.ms 
+./supplements/programming.tools/sccs/intro.ms 
+example%
+
+To recursively
+print all files names in the current directory and below,
+but skipping SCCS directories:
+
+example% ffind
+. &minus;name SCCS &minus;prune &minus;o
+&minus;print 
+example%
+
+To recursively
+print all files names in the current directory and below,
+skipping the contents of SCCS directories,
+but printing out the SCCS directory name:
+
+example% ffind . &minus;print &minus;name
+SCCS &minus;prune 
+example%
+
+To remove files
+named a.out or *.o that have not been accessed
+for a week or more 
+example% ffind . \( &minus;name a.out &minus;o &minus;name
+*.o \) &minus;time +7 &minus;exec frm {} \;
+
+ENVIRONMENT
+
+See fsp_env(7)
+for list of used environment variables.
+
+SEE ALSO
+
+fcatcmd(1),
+fcdcmd(1), fgetcmd(1), fgrabcmd(1), flscmd(1), fmkdir(1),
+fprocmd(1), fput(1), frmcmd(1), frmdircmd(1), fver(1),
+fducmd(1), fhostcmd(1), ffindcmd(1), fspd(1),
+fsp_prof(5)
+
+BUGS
+
+There seems to
+be a problem using an alias as command to execute. But since
+there is no globbing performed on the pathname the original
+FSP commands may be used instead.

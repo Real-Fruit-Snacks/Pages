@@ -1,0 +1,297 @@
+NAME
+
+ckpasswd -
+nnrpd password authenticator
+
+SYNOPSIS
+
+ckpasswd
+[-gs] [-d database] [-f
+filename] [-u username -p
+password]
+
+DESCRIPTION
+
+ckpasswd
+is the basic password authenticator for nnrpd,
+suitable for being run from an auth stanza in
+readers.conf. See readers.conf(5) for more
+information on how to configure an nnrpd
+authenticator.
+
+ckpasswd
+accepts a username and password from nnrpd and tells
+nnrpd(8) whether that&rsquo;s the correct password for that
+username. By default, when given no arguments, it tries to
+check the password using PAM if support for PAM was found
+when INN was built. Failing that, it tries to check the
+password against the password field returned by getpwnam(3).
+Note that these days most systems no longer make real
+passwords available via getpwnam(3) (some still do if and
+only if the program calling getpwnam(3) is running as
+root).
+
+When using PAM,
+ckpasswd identifies itself as "nnrpd", not
+as "ckpasswd", and the PAM configuration must be
+set up accordingly. The details of PAM configuration are
+different on different operating systems (and even different
+Linux distributions); see "EXAMPLES" below for
+help getting started, and look for a pam(7) or pam.conf(4)
+manual page on your system.
+
+When using any
+method other than PAM, ckpasswd expects all passwords
+to be stored encrypted by the system crypt(3) function and
+calls crypt(3) on the supplied password before comparing it
+to the expected password. Any password hashing algorithm
+supported by your libc or libcrypt can be used.
+
+OPTIONS
+
+-d
+database
+
+Read passwords from a database
+(ndbm, gdbm or dbm format depending on what your system has)
+rather than by using getpwnam(3). ckpasswd expects
+database.dir and database.pag to exist and to
+be a database keyed by username with the encrypted passwords
+as the values.
+
+While INN
+doesn&rsquo;t come with a program intended specifically to
+create such databases, on most systems it&rsquo;s fairly
+easy to write a Perl script to do so. Something like:
+
+#!/usr/bin/perl
+
+use NDBM_File; 
+use Fcntl; 
+tie (%db, 'NDBM_File', '/path/to/database', O_RDWR|O_CREAT,
+0640) 
+or die "Cannot open /path/to/database: $!\n"; 
+$| = 1; 
+print "Username: "; 
+my $user = ; 
+chomp $user; 
+print "Password: "; 
+my $passwd = ; 
+chomp $passwd; 
+my @alphabet = ('.', '/', 0..9, 'A'..'Z', 'a'..'z'); 
+my $salt = join '', @alphabet[rand 64, rand 64]; 
+$db{$user} = crypt ($passwd, $salt); 
+untie %db;
+
+Note that this
+will echo back the password when typed; there are obvious
+improvements that could be made to this, but it should be a
+reasonable start. Sometimes a program like this will be
+available with the name dbmpasswd.
+
+This option
+will not be available on systems without ndbm, gdbm or dbm
+libraries.
+
+-f filename
+
+Read passwords from the given
+file rather than using getpwnam(3). Each line of the file
+should look something like:
+
+username:$5$Hlb2yXPd$2nOO/QR9P1mnRFr/i6L9ybxbgSDXd4UlatKqbcY4eoB
+
+joe:FCjOJnpOo50IE:Old weak hash algorithm used for Joe
+
+Each line has
+at least two fields separated by a colon. The first field
+contains the username; the second field contains a password
+hashed with the crypt(3) function. Additional colons and
+data may appear after the encrypted password; that data will
+be ignored by ckpasswd. Lines starting with a number
+sign ("#") are ignored.
+
+INN does not
+come with a utility to create the encrypted passwords, but
+OpenSSL can do so and it&rsquo;s also a quick job with Perl
+(see the one-line example script below).
+
+A line in
+filename for the user "user" with the
+password "pass" would be "user:"
+followed with the output of the following command using
+SHA-256 as hashing scheme:
+
+% openssl
+passwd -5 pass 
+
+$5$UIhtJSBOaC0Ap3Vk$nbKgmykshoQ2HmvA3s/nI.X4uhhNHBKTYhBS3pYLjJ6
+
+See the
+openssl-passwd(1) man page for the list of hashing schemes
+it can generate. You must take one that your system crypt(3)
+function handles (type "man 3 crypt" or "man
+5 crypt" to find the supported hashing schemes).
+
+In case OpenSSL
+is not installed on your server, you can also use the
+following Perl command which does the same job with SHA-256
+(see details below to set "YourSalt" to an
+appropriate value; "5" is the prefix for SHA-256,
+which does not expect any parameters):
+
+% perl -le
+'print crypt("pass", q{$5$YourSalt$})' 
+$5$YourSalt$V5hqwFg1nhKb5as6md9KTe5b2NyavsMS6dBYVKfp5W7
+
+As Perl makes
+use of crypt(3), you have access to all available hashing
+schemes on your systems. For instance, if yescript is
+supported, you can generate an encrypted password with an
+argument like "$y$j9T$YourSalt$" to Perl crypt
+function, where "y" is the prefix for yescript,
+"j9T" the parameters passed to crypt_gensalt(3) to
+generate the hashed password (these parameters control the
+yescript configuration, and correspond in this example to
+the "YESCRYPT_DEFAULTS" flag, the recommended
+flavor which has "j" value in 2023, with cost
+factor of 4096 as block count and 32 as block size) and
+"YourSalt" a string which should be chosen at
+random and different for each user. The syntax and optimal
+length of the salt depend on the hashing scheme (e.g. a
+length multiple of 4 for yescript) and cryptographic
+recommendations (e.g. at least 32 random bits in length,
+following NIST SP 800-63B recommendations in 2023).
+
+To put it in a
+nutshell, in the following command, you only have to change
+the password "pass" and the "YourSalt"
+random string, different for each user, and leave the
+rest of the command as-is:
+
+% perl -le
+'print crypt("pass", q{$y$j9T$YourSalt$})' 
+
+$y$j9T$YourSalt$X4tB48vKNDT6mK0vNOc7ppKPWvEsyMg5LwoQfO50r2A
+
+A random salt
+of 12 characters can be obtained with the following command
+(the result corresponds to 72 random bits as each character
+is selected in a 6-bit range of 64 possible characters):
+
+% perl -le
+'print join("", 
+(".", "/", 0..9, A..Z, a..z)[map {rand
+64} (1..12)])' 
+k2W/17eJu58r
+
+-g
+
+Attempt to look up system group corresponding to
+username and return a string like "user@group" to
+be matched against in readers.conf. This option is
+incompatible with the -d and -f options.
+
+-p password
+
+Use password as the
+password for authentication rather than reading a password
+using the nnrpd authenticator protocol. This option
+is useful only for testing your authentication system
+(particularly since it involves putting a password on the
+command line), and does not work when ckpasswd is run
+by nnrpd. If this option is given, -u must
+also be given.
+
+-s
+
+Check passwords against the result of getspnam(3)
+instead of getpwnam(3). This function, on those systems that
+supports it, reads from /etc/shadow or similar more
+restricted files. If you want to check passwords supplied to
+nnrpd(8) against system account passwords, you will probably
+have to use this option on most systems.
+
+Most systems
+require special privileges to call getspnam(3), so in order
+to use this option you may need to make ckpasswd
+setgid to some group (like group "shadow") or even
+setuid root. ckpasswd has not been specifically
+audited for such uses! It is, however, a very small program
+that you should be able to check by hand for security.
+
+This
+configuration is not recommended if it can be avoided, for
+serious security reasons. See "SECURITY
+CONSIDERATIONS" in readers.conf(5) for discussion.
+
+-u username
+
+Authenticate as
+username. This option is useful only for testing (so
+that you can test your authentication system easily) and
+does not work when ckpasswd is run by nnrpd.
+If this option is given, -p must also be given.
+
+EXAMPLES
+
+See
+readers.conf(5) for examples of nnrpd(8) authentication
+configuration that uses ckpasswd to check
+passwords.
+
+An example PAM
+configuration for /etc/pam.conf that tells
+ckpasswd to check usernames and passwords against
+system accounts is:
+
+nnrpd auth
+required pam_unix.so 
+nnrpd account required pam_unix.so
+
+Your system may
+want you to instead create a file named nnrpd in
+/etc/pam.d with lines like:
+
+auth required
+pam_unix.so 
+account required pam_unix.so
+
+This is only
+the simplest configuration. You may be able to include
+common shared files, and you may want to stack other
+modules, either to allow different authentication methods or
+to apply restrictions like lists of users who can&rsquo;t
+authenticate using ckpasswd. The best guide is the
+documentation for your system and the other PAM
+configurations you&rsquo;re already using.
+
+To test to make
+sure that ckpasswd is working correctly, you can run
+it manually and then give it the username (prefixed with
+"ClientAuthname:") and password (prefixed with
+"ClientPassword:") on standard input. For
+example:
+
+(echo
+'ClientAuthname: test' ; echo 'ClientPassword: testing') \
+
+| ckpasswd -f /path/to/passwd/file
+
+will check a
+username of "test" and a password of
+"testing" against the username and passwords
+stored in /path/to/passwd/file. On success,
+ckpasswd will print "User:test" and exit
+with status "0". On failure, it will print some
+sort of error message and exit a non-zero status.
+
+HISTORY
+
+Written by Russ
+Allbery eagle [AT] eyrie.org> for InterNetNews.
+
+SEE ALSO
+
+crypt(3),
+nnrpd(8), pam(7), readers.conf(5).

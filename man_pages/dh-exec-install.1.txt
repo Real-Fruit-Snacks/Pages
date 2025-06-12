@@ -1,0 +1,122 @@
+NAME
+
+dh-exec-install
+- Install (and possibly rename) files.
+
+SYNOPSIS
+
+#!
+/usr/bin/dh-exec 
+debian/default.conf => /etc/my-package/start.conf 
+=> /usr/bin/runme 
+usr/bin/* 
+[linux-any kfreebsd-any] some-arch-specific-file
+/usr/lib/foo/
+
+DESCRIPTION
+
+Being a
+sub-command of dh-exec(1), this program must not be
+ran directly, but through dh-exec, which
+automatically runs all available sub-commands if run bare;
+or explicitly with dh-exec --with=install.
+
+It is meant to
+be used for the dh_install(1) family of files, and
+those alone. If it finds that its input is not such a file,
+it will do nothing, but echo back the contents. For a full
+list of recognised files, see the FILE TYPES section
+of this manual.
+
+The purpose of
+the program is to extend dh_install(1)&rsquo;s
+functionality, by allowing to specify a destination
+filename, and a way to move (instead of copy) a file to a
+single package.
+
+The first can
+be accomplished by a special syntax: the " =>
+" mark between a source and a destination means
+that the source file should be installed with the specified
+destination name.
+
+For obvious
+reasons, the source must not be a wildcard, and the
+destination in this case must be a file, and not a
+directory.
+
+The second
+extension follows a simpler syntax: any filename prefixed
+with "=>" will be moved instead of
+copied to the package. This allows one to move a file out of
+a directory to a package, and install the rest of the files
+in the same dir into another package.
+
+See the
+FILTERING section of dh-exec(1) for more
+information about how lines are filtered. Any non-comment
+lines without a filter will be left alone.
+
+RESTRICTIONS
+
+Due to the way
+executable scripts are called from dh(1), there is no
+way to know what options were used for the original
+dh_install(1). This means, that the
+--sourcedir option of dh_install(1) will not
+work correctly when dh-exec-install is in use.
+
+FILE TYPES
+
+The program
+supports dh_install(1) and
+dh_installmanpages(1) files only.
+
+IMPLEMENTATION
+
+Internally, the
+renaming happens by creating a temporary directory under
+debian/tmp/, and copying (or moving, if the source
+was under debian/tmp/ to begin with) the file there,
+with the new name.
+
+This is done
+this way to allow dh_install(1) to do the real
+copying, and allow its options to continue working, even
+when renaming is involved.
+
+The temporary
+directory is put under debian/tmp so that it will be
+cleaned by dh_prep(1) when the clean target
+gets to run. Thus, no extra code is needed anywhere to clean
+up the renamed files.
+
+ENVIRONMENT
+
+DH_EXEC_SCRIPTDIR
+
+Indicates which directory the
+command-specific scripts should be sought for. If not
+specified, scripts will be searched for in
+/usr/share/dh-exec/.
+
+FILES
+
+$DH_EXEC_SCRIPTDIR/dh-exec-install-*
+
+The various scripts for the
+higher-level program.
+
+VERSIONS
+
+The sub-command
+was introduced in dh-exec version 0.1. Support for
+dh_installmanpages(1) files were added in version
+0.13.
+
+SEE ALSO
+
+dh(1),
+dh-exec(1), dh_install(1),
+dh_installmanpages(1), dh_prep(1),
+debhelper(7)

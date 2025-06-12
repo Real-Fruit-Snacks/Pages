@@ -1,0 +1,250 @@
+NAME
+
+comp - compose
+an nmh message
+
+SYNOPSIS
+
+comp
+
+[-help] [-version]
+[+folder] [msg] [-form formfile]
+[-use | -nouse] [-file file]
+[-draftfolder +folder] [-draftmessage
+msg] [-nodraftfolder] [-editor
+editor] [-noedit] [-width
+columns] [-from address] [-to
+address] [-cc address] [-fcc
++folder] [-subject text]
+[-whatnowproc program] [-nowhatnowproc]
+[-build] 
+
+DESCRIPTION
+
+comp is
+used to create a new message to be mailed. It copies a
+message form to the draft being composed and then invokes an
+editor on the draft (unless -noedit is given, in
+which case the initial edit is suppressed).
+
+The default
+message template &ldquo;components&rdquo; will direct
+comp to construct the message draft as follows:
+
+From: {from
+switch} or  or
+
+To: {to switch} or blank 
+cc: {cc switch} or blank 
+Fcc: {fcc switch} or +outbox 
+Subject: {subject switch} or blank 
+--------
+
+If a file named
+&ldquo;components&rdquo; exists in the user&rsquo;s
+nmh directory, it will be used instead of this form. You may
+specify an alternate forms file with the switch -form
+formfile.
+
+You may also
+start comp using the contents of an existing message
+as the form. If you supply either a +folder or
+msg argument, that message will be used as the
+message form. You may not supply both a -form
+formfile and a +folder or msg argument.
+The line of dashes or a blank line must be left between the
+header and the body of the message for the message to be
+identified properly when it is sent (see
+send(1)).
+
+The switch
+-use directs comp to continue editing an
+already started message. That is, if a comp (or
+dist, repl, or forw) is terminated
+without sending the draft, the draft can be edited again via
+&ldquo;comp -use&rdquo;.
+
+The
+-file file switch says to use the named file
+as the message draft.
+
+Forms that are
+selected via the -form switch are processed via the
+nmh template system; see mh-format(5) for
+details. Drafts constructed from another message or with the
+-use or -file switches will not be
+processed with mh-format(5).
+
+In addition to
+the standard mh-format(5) escapes, the following
+component escapes are either new or have an alternate
+meaning:
+
+Escape
+Returns Description
+
+fcc
+
+string
+
+Any folders specified with
+&rsquo;-fcc folder&rsquo; 
+
+from
+
+string
+
+Any addresses specified with
+&rsquo;-from address&rsquo; 
+
+to
+
+string
+
+Any addresses specified with
+&rsquo;-to address&rsquo; 
+
+cc
+
+string
+
+Any addresses specified with
+&rsquo;-cc address&rsquo; 
+
+subject
+
+string
+
+Any text specified with
+&rsquo;-subject text&rsquo; 
+
+By default the
+&ldquo;To:&rdquo; and &ldquo;cc:&rdquo; fields are empty.
+You may add addresses to these fields with the -to
+address and -cc address switches. You
+may give these switches multiple times to add multiple
+addresses.
+
+By default the
+&ldquo;From:&rdquo; field has either the value of the
+Local-Mailbox profile entry or a system default email
+address. This default can be overridden by using the
+-from address switch. The default mailbox in
+the &ldquo;Fcc:&rdquo; field is +outbox. This can be
+overridden by the -fcc switch.
+
+Any text you
+give to the -subject switch will be placed in the
+&ldquo;Subject:&rdquo; field in the draft.
+
+If the draft
+already exists, comp will ask you as to the
+disposition of the draft. A reply of quit will abort
+comp, leaving the draft intact; replace will
+replace the existing draft with the appropriate form;
+list will display the draft; use will use the
+draft for further composition; and refile
++folder will file the draft in the given folder, and
+give you a new draft with the appropriate form. (The
++folder argument to refile is required.)
+
+The
+-draftfolder +folder and -draftmessage
+msg switches invoke the nmh draft folder
+facility. This is an advanced (and highly useful) feature.
+Consult mh-draft(5) for more information.
+
+The
+-editor editor switch indicates the editor to
+use for the initial edit. Upon exiting from the editor,
+comp will invoke the whatnow program (see
+whatnow(1) for a discussion of available options).
+The invocation of this program can be inhibited by using the
+-nowhatnowproc switch. (In fact, it is the
+whatnow program which starts the initial edit. Hence,
+-nowhatnowproc will prevent any edit from
+occurring.)
+
+The
+-build switch is intended to be used by the Emacs
+mh-e interface to nmh. It implies
+-nowhatnowproc. It causes a file /draft
+to be created, containing the draft message that would
+normally be presented to the user for editing. No mail is
+actually sent.
+
+FILES
+
+/etc/nmh/components
+
+The default message
+skeleton. 
+
+/components
+
+The user&rsquo;s message skeleton.
+
+$HOME/.mh_profile
+
+The user&rsquo;s profile.
+
+PROFILE COMPONENTS
+
+Path:
+
+To determine the user&rsquo;s
+nmh directory.
+
+Draft-Folder:
+
+To specify the default draftfolder.
+
+Editor:
+
+To override the default editor.
+
+Msg-Protect:
+
+To set mode when creating a new message (draft).
+
+fileproc:
+
+Program to refile the message.
+
+whatnowproc:
+
+Program to ask the &ldquo;What now?&rdquo; questions
+
+SEE ALSO
+
+dist(1),
+forw(1), repl(1), send(1),
+whatnow(1), mh-draft(5),
+mh-profile(5)
+
+DEFAULTS
+
++folder
+
+The current folder.
+
+msg
+
+The current message.
+
+-nodraftfolder
+
+-nouse
+
+CONTEXT
+
+None
+
+BUGS
+
+If
+whatnowproc is whatnow, then comp uses
+a built-in whatnow, it does not actually run the
+whatnow program. Hence, if you define your own
+whatnowproc, don&rsquo;t call it whatnow since
+comp won&rsquo;t run it.

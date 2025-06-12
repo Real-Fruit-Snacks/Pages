@@ -1,0 +1,103 @@
+NAME
+
+pmGetChildrenStatus
+- return the descendent nodes of a PMNS node and their
+respective status
+
+C SYNOPSIS
+
+#include
+
+int
+pmGetChildrenStatus(const char *name, char
+***offspring,
+int **status);
+
+cc ...
+-lpcp
+
+DESCRIPTION
+
+Given a fully
+qualified pathname to a node in the current Performance
+Metrics Name Space (PMNS), as identified by name,
+pmGetChildrenStatus returns via offspring a
+list of the relative names of all of the immediate
+descendent nodes of name in the current PMNS.
+
+As a special
+case, if name is an empty string
+(i.e.""), the immediate descendants of the
+root node in the PMNS will be returned.
+
+If
+status is not NULL, then pmGetChildrenStatus
+will also return the status of each child via status.
+The status will refer to either a leaf node (with value
+PMNS_LEAF_STATUS) or a non-leaf node (with value
+PMNS_NONLEAF_STATUS).
+
+Normally,
+pmGetChildrenStatus will return the number of
+descendent names discovered, else a value less than zero for
+an error. The value zero indicates that name is a
+valid metric name, i.e. is associated with a leaf node in
+the PMNS.
+
+The resulting
+list of pointers offspring and the values (the
+relative names) that the pointers reference will have been
+allocated by pmGetChildrenStatus with a single call
+to malloc(3), and it is the responsibility of the
+pmGetChildrenStatus caller to
+free(offspring) to release the space when it
+is no longer required. The same holds true for the
+status array.
+
+When an error
+occurs, or name is a leaf node (i.e. the result of
+pmGetChildrenStatus is less than one), both
+offspring and status are undefined (no space
+will have been allocated and so calling free(3) is a
+singularly bad idea).
+
+DIAGNOSTICS
+
+PM_ERR_NOPMNS
+
+Failed to access a PMNS for
+operation. Note that if the application hasn&rsquo;t a
+priori called pmLoadNameSpace(3) and wants to use the
+distributed PMNS, then a call to pmGetChildrenStatus
+must be made inside a current context.
+
+PM_ERR_NAME
+
+The pathname name is not
+valid in the current PMNS
+
+PM_ERR_*
+
+Other diagnostics are for
+protocol failures when accessing the distributed PMNS.
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5). Values for these
+variables may be obtained programmatically using the
+pmGetConfig(3) function.
+
+SEE ALSO
+
+PMAPI(3),
+pmGetChildren(3), pmGetConfig(3),
+pmLoadASCIINameSpace(3), pmLoadNameSpace(3),
+pmLookupName(3), pmNameID(3),
+pcp.conf(5), pcp.env(5) and
+PMNS(5).

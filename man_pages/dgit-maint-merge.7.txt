@@ -1,0 +1,504 @@
+NAME
+
+dgit - tutorial
+for package maintainers, using a workflow centered around
+git-merge(1)
+
+INTRODUCTION
+
+This document
+describes elements of a workflow for maintaining a
+non-native Debian package using dgit. The workflow
+makes the following opinionated assumptions:
+
+&bull;
+
+Git histories should be the non-linear histories
+produced by git-merge(1), preserving all information
+about divergent development that was later brought
+together. 
+
+&bull;
+
+Maintaining convenient and powerful git workflows takes
+priority over the usefulness of the raw Debian source
+package. The Debian archive is thought of as an output
+format. 
+
+For example, we
+don&rsquo;t spend time curating a series of quilt patches.
+However, in straightforward cases, the information such a
+series would contain is readily available from
+dgit-repos.
+
+&bull;
+
+It is more important to have the
+Debian package&rsquo;s git history be a descendent of
+upstream&rsquo;s git history than to use exactly the
+orig.tar that upstream makes available for download.
+
+This workflow
+is less suitable for some packages. When the Debian delta
+contains multiple pieces which interact, or which you
+aren&rsquo;t going to be able to upstream soon, it might be
+preferable to maintain the delta as a rebasing patch series.
+For such a workflow see for example
+dgit-maint-debrebase(7) and
+dgit-maint-gbp(7).
+
+INITIAL DEBIANISATION
+
+This section
+explains how to start using this workflow with a new
+package. It should be skipped when converting an existing
+package to this workflow.
+
+When
+upstream tags releases in git 
+Suppose that the latest stable upstream release is 1.2.2,
+and this has been tagged &rsquo;1.2.2&rsquo; by
+upstream.
+
+    % git clone -oupstream https://some.upstream/foo.git
+    % cd foo
+    % git verify-tag 1.2.2
+    % git reset --hard 1.2.2
+    % git branch --unset-upstream
+
+The final
+command detaches your master branch from the upstream
+remote, so that git doesn&rsquo;t try to push anything
+there, or merge unreleased upstream commits. If you want to
+maintain a copy of your packaging branch on
+salsa.debian.org in addition to dgit-repos,
+you can do something like this:
+
+    % git remote add -f origin salsa.debian.org:Debian/foo.git
+    % git push --follow-tags -u origin master
+
+Now go ahead
+and Debianise your package. Just make commits on the master
+branch, adding things in the debian/ directory. If
+you need to patch the upstream source, just make commits
+that change files outside of the debian/ directory.
+It is best to separate commits that touch debian/
+from commits that touch upstream source, so that the latter
+can be cherry-picked by upstream.
+
+Note that there
+is no need to maintain a separate &rsquo;upstream&rsquo;
+branch, unless you also happen to be involved in upstream
+development. We work with upstream tags rather than any
+branches, except when forwarding patches (see
+FORWARDING PATCHES UPSTREAM, below).
+
+Finally, you
+need an orig tarball:
+
+    % git deborig
+
+See
+git-deborig(1) if this fails.
+
+This tarball is
+ephemeral and easily regenerated, so we don&rsquo;t commit
+it anywhere (e.g. with tools like
+pristine-tar(1)).
+
+Verifying
+upstream&rsquo;s tarball releases
+
+It can be a
+good idea to compare upstream&rsquo;s released tarballs with
+the release tags, at least for the first upload of the
+package. If they are different, you might need to add some
+additional steps to your debian/rules, such as
+running autotools.
+
+A convenient
+way to perform this check is to import the tarball as
+described in the following section, using a different value
+for &rsquo;upstream-tag&rsquo;, and then use
+git-diff(1) to compare the imported tarball to the
+release tag. If they are the same, you can use
+upstream&rsquo;s tarball instead of running
+git-deborig(1).
+
+Using
+untagged upstream commits
+
+Sometimes
+upstream does not tag their releases, or you want to package
+an unreleased git snapshot. In such a case you can create
+your own upstream release tag, of the form
+upstream/ver, where ver is the upstream
+version you plan to put in debian/changelog. The
+upstream/ prefix ensures that your tag will not clash
+with any tags upstream later creates.
+
+For example,
+suppose that the latest upstream release is 1.2.2 and you
+want to package git commit ab34c21 which was made on
+2013-12-11. A common convention is to use the upstream
+version number 1.2.2+git20131211.ab34c21 and so you could
+use
+
+    % git tag -s upstream/1.2.2+git20131211.ab34c21 ab34c21
+
+to obtain a
+release tag, and then proceed as above.
+
+When
+upstream releases only tarballs 
+We need a virtual upstream branch with virtual release tags.
+gbp-import-orig(1) can manage this for us. To
+begin
+
+    % mkdir foo
+    % cd foo
+    % git init
+
+Now create
+debian/gbp.conf:
+
+    [DEFAULT]
+    upstream-branch = upstream
+    debian-branch = master
+    upstream-tag = upstream/%(version)s
+    sign-tags = True
+    pristine-tar = False
+    pristine-tar-commit = False
+    [import-orig]
+    merge-mode = merge
+    merge = False
+
+gbp-import-orig(1)
+requires a pre-existing upstream branch:
+
+    % git add debian/gbp.conf && git commit -m "create gbp.conf"
+    % git checkout --orphan upstream
+    % git rm -rf .
+    % git commit --allow-empty -m "initial, empty branch for upstream source"
+    % git checkout -f master
+
+Then we can
+import the upstream version:
+
+    % gbp import-orig --merge --merge-mode=replace ../foo_1.2.2.orig.tar.xz
+
+Our upstream
+branch cannot be pushed to dgit-repos, but since we
+will need it whenever we import a new upstream version, we
+must push it somewhere. The usual choice is
+salsa.debian.org:
+
+    % git remote add -f origin salsa.debian.org:Debian/foo.git
+    % git push --follow-tags -u origin master upstream
+
+You are now
+ready to proceed as above, making commits to both the
+upstream source and the debian/ directory.
+
+CONVERTING AN EXISTING PACKAGE
+
+This section
+explains how to convert an existing Debian package to this
+workflow. It should be skipped when debianising a new
+package.
+
+No existing
+git history
+
+    % dgit clone foo
+    % cd foo
+    % git remote add -f upstream https://some.upstream/foo.git
+
+Existing git
+history using another workflow 
+First, if you don&rsquo;t already have the git history
+locally, clone it, and obtain the corresponding orig.tar
+from the archive:
+
+    % git clone git.debian.org:collab-maint/foo
+    % cd foo
+    % origtargz
+
+Now dump any
+existing patch queue:
+
+    % git rm -rf debian/patches
+    % git commit -m "drop existing quilt patch queue"
+
+Then make new
+upstream tags available:
+
+    % git remote add -f upstream https://some.upstream/foo.git
+
+Now you simply
+need to ensure that your git HEAD is
+dgit-compatible, i.e., it is exactly what you would get if
+you ran dpkg-buildpackage
+-i&rsquo;(?:^|/)\.git(?:/|$)&rsquo; -I.git -S and then
+unpacked the resultant source package.
+
+To achieve
+this, you might need to delete
+debian/source/local-options. One way to have dgit
+check your progress is to run dgit build-source.
+
+The first dgit
+push will require --overwrite. If this is the first
+ever dgit push of the package, consider passing
+--deliberately-not-fast-forward instead of
+--overwrite. This avoids introducing a new origin
+commit into your git history. (This origin commit would
+represent the most recent non-dgit upload of the package,
+but this should already be represented in your git
+history.)
+
+SOURCE PACKAGE CONFIGURATION
+
+debian/source/options
+
+We set some source package options such that dgit can
+transparently handle the "dropping" and
+"refreshing" of changes to the upstream
+source:
+
+    single-debian-patch
+    auto-commit
+
+You don&rsquo;t
+need to create this file if you are using the version 1.0
+source package format.
+
+Sample text
+for debian/source/patch-header 
+It is a good idea to explain how a user can obtain a
+breakdown of the changes to the upstream source:
+
+The Debian
+packaging of foo is maintained in git, using the merging
+workflow described in dgit-maint-merge(7). There
+isn&rsquo;t a patch queue that can be represented as a quilt
+series.
+
+A detailed
+breakdown of the changes is available from their canonical
+representation - git commits in the packaging repository.
+For example, to see the changes made by the Debian
+maintainer in the first upload of upstream version 1.2.3,
+you could use:
+
+    % git clone https://git.dgit.debian.org/foo
+    % cd foo
+    % git log --oneline 1.2.3..debian/1.2.3-1 -- . ':!debian'
+
+(If you have
+dgit, use &rsquo;dgit clone foo&rsquo;, rather than plain
+&rsquo;git clone&rsquo;.)
+
+A single
+combined diff, containing all the changes, follows.
+
+If you are
+using the version 1.0 source package format, this text
+should be added to README .source instead.
+The version 1.0 source package format ignores
+debian/source/patch-header.
+
+If you&rsquo;re
+using the version 3.0 (quilt) source package format, you
+could add this text to README .source instead
+of debian/source/patch-header, but this might distract from
+more important information present in README
+.source.
+
+BUILDING AND UPLOADING
+
+Use dgit
+build, dgit sbuild, dgit pbuilder, dgit
+cowbuilder, dgit push-source, and dgit
+push as detailed in dgit(1). If any command
+fails, dgit will provide a carefully-worded error message
+explaining what you should do. If it&rsquo;s not clear, file
+a bug against dgit. Remember to pass --new for the
+first upload.
+
+As an
+alternative to dgit build and friends, you can use a
+tool like gitpkg(1). This works because like dgit,
+gitpkg(1) enforces that HEAD has
+exactly the contents of the source package. gitpkg(1)
+is highly configurable, and one dgit user reports using it
+to produce and test multiple source packages, from different
+branches corresponding to each of the current Debian
+suites.
+
+If you want to
+skip dgit&rsquo;s checks while iterating on a problem with
+the package build (for example, you don&rsquo;t want to
+commit your changes to git), you can just run
+dpkg-buildpackage(1) or debuild(1)
+instead.
+
+NEW UPSTREAM RELEASES
+
+Obtaining
+the release 
+When upstream tags releases in git
+
+    % git fetch --tags upstream
+
+If you want to
+package an untagged upstream commit (because upstream does
+not tag releases or because you want to package an upstream
+development snapshot), see "Using untagged upstream
+commits" above.
+
+When
+upstream releases only tarballs
+
+You will need
+the debian/gbp.conf from "When upstream releases
+only tarballs", above. You will also need your upstream
+branch. Above, we pushed this to salsa.debian.org.
+You will need to clone or fetch from there, instead of
+relying on dgit clone/dgit fetch alone.
+
+Then,
+either
+
+    % gbp import-orig ../foo_1.2.3.orig.tar.xz
+
+or if you have
+a working watch file
+
+    % gbp import-orig --uscan
+
+In the
+following, replace 1.2.3 with
+upstream/1.2.3.
+
+Reviewing
+& merging the release 
+It&rsquo;s a good idea to preview the merge of the new
+upstream release. First, just check for any new or deleted
+files that may need accounting for in your copyright
+file:
+
+    % git diff --name-status --diff-filter=ADR master..1.2.3 -- . ':!debian'
+
+You can then
+review the full merge diff:
+
+    % git merge-tree `git merge-base master 1.2.3` master 1.2.3 | $PAGER
+
+Once
+you&rsquo;re satisfied with what will be merged, update your
+package:
+
+    % git merge 1.2.3
+    % dch -v1.2.3-1 New upstream release.
+    % git add debian/changelog && git commit -m changelog
+
+If you obtained
+a tarball from upstream, you are ready to try a build. If
+you merged a git tag from upstream, you will first need to
+generate a tarball:
+
+    % git deborig
+
+HANDLING DFSG-NON-FREE MATERIAL
+
+When
+upstream tags releases in git 
+We create a DFSG-clean tag to merge to master:
+
+    % git checkout -b pre-dfsg 1.2.3
+    % git rm evil.bin
+    % git commit -m "upstream version 1.2.3 DFSG-cleaned"
+    % git tag -s 1.2.3+dfsg
+    % git checkout master
+    % git branch -D pre-dfsg
+
+Before merging
+the new 1.2.3+dfsg tag to master, you should first determine
+whether it would be legally dangerous for the non-free
+material to be publicly accessible in the git history on
+dgit-repos.
+
+If it would be
+dangerous, there is a big problem; in this case please
+consult your archive administrators (for Debian this is the
+dgit administrator dgit-owner [AT] debian.org and the ftpmasters
+ftpmaster [AT] ftp-master.org).
+
+When
+upstream releases only tarballs 
+The easiest way to handle this is to add a
+Files-Excluded field to debian/copyright, and
+a uversionmangle setting in debian/watch. See
+uscan(1). Alternatively, see the --filter
+option detailed in gbp-import-orig(1).
+
+FORWARDING PATCHES UPSTREAM
+
+The basic steps
+are:
+
+1.
+
+Create a new branch based off
+upstream&rsquo;s master branch.
+
+2.
+
+git-cherry-pick(1) commits from your master
+branch onto your new branch.
+
+3.
+
+Push the branch somewhere and ask upstream to merge it,
+or use git-format-patch(1) or
+git-request-pull(1). 
+
+For example
+(and it is only an example):
+
+    % # fork foo.git on GitHub
+    % git remote add -f fork git [AT] github.com:spwhitton/foo.git
+    % git checkout -b fix-error upstream/master
+    % git config branch.fix-error.pushRemote fork
+    % git cherry-pick master^2
+    % git push
+    % # submit pull request on GitHub
+
+Note that when
+you merge an upstream release containing your forwarded
+patches, git and dgit will transparently handle
+"dropping" the patches that have been forwarded,
+"retaining" the ones that haven&rsquo;t.
+
+INCORPORATING NMUS
+
+    % dgit pull
+
+Alternatively,
+you can apply the NMU diff to your
+repository. The next push will then require
+--overwrite.
+
+SEE ALSO
+
+dgit(1),
+dgit(7)
+
+AUTHOR
+
+This tutorial
+was written and is maintained by Sean Whitton
+spwhitton [AT] spwhitton.name>. It contains contributions
+from other dgit contributors too - see the dgit copyright
+file.

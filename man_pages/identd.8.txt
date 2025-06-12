@@ -1,0 +1,404 @@
+NAME
+
+identd &minus;
+TCP/IP IDENT protocol server
+
+SYNOPSIS
+
+identd
+[options]
+
+DESCRIPTION
+
+Identd
+is a server which implements the TCP/IP
+proposed standard IDENT user identification
+protocol as specified in the RFC 1413
+document.
+
+identd
+operates by looking up specific TCP/IP
+connections and returning the user name of the process
+owning the connection. It can optionally return other
+information instead of a user name.
+
+OPTIONS
+
+&minus;h
+
+Display the available command
+line options.
+
+&minus;V
+
+Displays the version and OS version it was compiled for,
+and then exit.
+
+&minus;d
+
+Enables extra debugging messages.
+
+&minus;C
+
+Directs identd to parse additional configuration
+options from the file specified.
+
+&minus;i
+
+May be used when starting the daemon by inetd
+with the "nowait" option (see below).
+
+&minus;w
+
+May be used when starting the daemon by inetd
+with the "wait" option (see below).
+
+&minus;I
+
+May be used when the daemon is started by init
+(see below).
+
+&minus;b
+
+flag may be used to make the daemon run in standalone
+mode (see below).
+
+&minus;u
+
+Used to specify a user number or name to which the
+server should switch to after binding itself to the
+TCP/IP port and opening the kernel
+devices. 
+
+&minus;g
+
+Used to specify a group number or name which the server
+should switch to after binding itself to the
+TCP/IP port and opening the kernel
+devices. 
+
+&minus;p
+
+Used to specify an alternative TCP port to bind to, if
+running as a standalone daemon or started by init Can
+be specified by name or by number. Defaults to the
+IDENT port (113).
+
+&minus;t
+
+Used to specify the request timeout limit. This is the
+maximum number of seconds a server will allow a client
+connection to be active before terminating it. It defaults
+to 120 seconds.
+
+&minus;P
+
+Specify the location of a file
+to store the process number of the Identd daemon.
+
+&minus;K
+
+Control the number of threads
+to use for kernel lookups
+
+&minus;L
+
+Set the syslog facility to use
+instead of &rsquo;daemon&rsquo;.
+
+&minus;o
+
+Directs identd to return OTHER instead of UNIX as
+the "operating system".
+
+&minus;E
+
+Enables DES encryption of the returned data (see below
+for more information).
+
+&minus;n
+
+Directs identd to always return user numbers
+instead of user names (for example if you wish to keep the
+user names a secret).
+
+&minus;N
+
+Directs identd to check for a file
+".noident" in each home directory for the user
+which the daemon is about to return the user name for. If
+that file exists then the daemon will give the error
+HIDDEN-USER instead of the normal USERID
+response. 
+
+&minus;e
+
+Enables certain non-standard protocol extensions.
+Currently defined extensions include the requests
+VERSION to return the Ident daemon version and
+QUIT to terminate a session (useful in conjunction
+with the &minus;m option).
+
+&minus;m
+
+Enables identd to use a mode of operation that
+will allow multiple requests to be processed per session.
+Each request is specified one per line and the responses
+will be returned one per line. The connection will not be
+closed until the connecting part closes it&rsquo;s end of
+the line.
+
+INSTALLATION
+
+The preferred
+way to start identd depends on how it was built.
+
+If it was built
+with support for multithreading then it should be started
+either from init , as a standalone daemon or from
+inetd using the "wait" mode (if your
+inetd supports it!)
+
+If it was built
+without support for multithreading then it should be started
+from inetd using the normal "nowait" mode
+for "stream tcp" services. (The main reason being
+that it will be single-threaded, so it will only serve
+one client connection at a time).
+
+identd
+normally will autodetect how it was invoked so there
+normally is no need to use the four command line switches
+(&minus;i, &minus;w, &minus;I, &minus;b).
+
+ENCRYPTION
+
+DES encryption
+is only available if the daemon was built with support for
+it enabled.
+
+An encryption
+key (1024 bytes long) should be stored in the key file (
+/etc/identd.key ) and it should be generated using a
+cryptographically safe random generator in order to be
+really safe. It should not contain any NUL (0x00) characters
+since this is used as a string to generate the real binary
+DES key.
+
+This file may
+contain multiple 1024 byte long keys, and the server will
+use the last key stored in that file.
+
+The returned
+token will contain the local and remote IP addresses and TCP
+port numbers, the local user&rsquo;s uid number, a
+timestamp, a random number, and a checksum - all encrypted
+using DES. The encrypted binary information is then encoded
+in a BASE64 string (32 characters long) and enclosed in
+square brackets to produce a token that is transmitted to
+the remote client.
+
+The encrypted
+token can later be decrypted by the idecrypt command.
+This program will attempt to decrypt a token with all the
+keys stored in the key file until it succeeds (or have tried
+all the keys).
+
+CONFIGURATION FILE
+
+The
+configuration file contains a list of option=value
+pairs. 
+syslog:facility = FACILITY
+
+Set which facility to use when
+sending syslog messages. See syslog.conf(5) for more
+information.
+
+server:user = USER
+
+Set what user (and group, from
+the passwd database) the daemon should run as after it has
+opened all the kernel handles. (Default: nobody)
+
+server:group = GROUP
+
+Override the group id (as set
+by the server:user option).
+
+server:port = PORT
+
+Set what TCP/IP port the daemon
+should listen to. (Default: 113)
+
+server:backlog =
+LIMIT
+
+Set the size of the server
+listen() backlog limit.
+
+server:pid-file =
+PATH
+
+Set the path to the file where
+the server will store it&rsquo;s process id.
+
+server:max-request =
+LIMIT
+
+Max number of concurrent
+requests allowed. Default is 0 (zero) which means "no
+limit".
+
+protocol:extensions =
+ON/OFF
+
+Enable/disable the nonstandard
+protocol extensions ( VERSION and QUIT
+currently). Default: off
+
+protocol:multiquery =
+ON/OFF
+
+Enable/disable the multiple
+queries per connection feature. Default: off
+
+protocol:timeout =
+SECONDS
+
+Max number of seconds since
+connection or last request. If set to 0 (zero), no timeout
+will be used. Default: 120 seconds.
+
+kernel:threads =
+LIMIT
+
+Max number of threads doing
+kernel lookups concurrently. Default: 8
+
+kernel:buffers =
+LIMIT
+
+Max number of queued kernel
+lookup requests. Default: 32
+
+kernel:attempts =
+LIMIT
+
+Max number of times to retry a
+kernel lookup in case of failure. Default: 5
+
+result:uid-only =
+YES/NO
+
+Disable uid->username
+lookups (only return uid numbers). Default: no
+
+result:noident =
+ON/OFF
+
+Enable/disable checking for the
+".noident" file in users home directories.
+
+result:charset =
+CHARSET
+
+Define the character set
+returned in replies. Default: "US-ASCII"
+
+result:opsys = OPSYS
+
+Define the operating system
+returned in replies. Default: "UNIX"
+
+result:syslog-level =
+LEVEL
+
+If set to anything other than
+"none", all requested replies will be sent to the
+syslog service with the specified severity level. See
+syslog.conf(5) for more information. Default:
+none
+
+result:encrypt =
+YES/NO
+
+Enable encryption of replies.
+Only available if Identd was built with a DES encryption
+library.
+
+encrypt:key-file =
+PATH
+
+Path to the file containing the
+encryption keys.
+
+include = PATH
+
+Include (and parse) the
+contents of another configuration file.
+
+NOTES
+
+The username
+(or UID) returned ought to be the login name. However it
+(probably, for most architecture implementations) is the
+"real user ID" as stored with the process. Thus
+the UID returned may be different from the login name for
+setuid programs (or those running as root) which has done a
+setuid(3) call and their children. For example, it
+may (should?) be wrong for an incoming ftpd ; and we
+are probably interested in the running shell, not the
+telnetd for an incoming telnet session. (But of
+course identd returns info for outgoing connections,
+not incoming ones.)
+
+FILES
+
+/etc/identd.conf
+
+Contains the default
+configuration options for identd.
+
+/etc/identd.key
+
+If compiled with DES
+encryption enabled, the 1024 first bytes of this file is
+used to specify the secret key for encrypting replies.
+
+/var/run/identd/identd.pid
+
+Contains (if enabled) the
+process number of the identd daemon.
+
+AVAILABILITY
+
+The daemon is
+free software. You can redistribute it and/or modify it as
+you wish - as long as you don&rsquo;t claim that you wrote
+it.
+
+The source code
+for the latest version of the daemon can always be
+FTP&rsquo;d from one of the following addresses:
+
+Main site:
+
+ftp://ftp.lysator.liu.se/pub/ident/servers/
+
+Mirror:
+
+ftp://ftp.uu.net/networking/ident/servers/
+
+The author can
+be contacted at:
+
+Email:
+
+Peter Eriksson
+pen [AT] lysator.se> 
+
+SEE ALSO
+
+idecrypt(8)
+, ikeygen(8) , inetd.conf(5) ,

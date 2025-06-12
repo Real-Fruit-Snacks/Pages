@@ -1,0 +1,151 @@
+CDCE(4) BSD Kernel Interfaces Manual CDCE(4)
+
+NAME
+
+cdce &mdash; USB
+Communication Device Class Ethernet (CDC ECM/NCM) driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, place the following lines in your kernel
+configuration file:
+
+device uhci
+
+device ohci 
+device usb 
+device miibus 
+device uether 
+device cdce
+
+Alternatively,
+to load the driver as a module at boot time, place the
+following line in loader.conf(5):
+
+if_cdce_load="YES"
+
+DESCRIPTION
+
+The cdce driver provides
+support for USB Host-to-Host (aka USB-to-USB) and
+USB-to-Ethernet bridges based on the USB Communication
+Device Class Ethernet Control Model (CDC ECM) and Network
+Control Model (CDC NCM) specifications. It also provides
+device-side CDC ECM support.
+
+The USB bridge
+appears as a regular network interface on both sides,
+transporting Ethernet frames.
+
+For more
+information on configuring this device, see ifconfig(8).
+
+USB 1.x bridges
+support speeds of up to 12Mbps, and USB 2.0 speeds of up to
+480Mbps.
+
+Packets are
+received and transmitted over separate USB bulk transfer
+endpoints.
+
+The cdce
+driver does not support different media types or
+options.
+
+HARDWARE
+
+The following devices are
+supported by the cdce driver:
+
+&bull;
+
+Prolific PL-2501 Host-to-Host
+Bridge Controller
+
+&bull;
+
+Sharp Zaurus PDA
+
+&bull;
+
+Terayon TJ-715 DOCSIS Cable
+Modem
+
+DIAGNOSTICS
+
+cdce%d: no union
+descriptor  The driver could not fetch an interface
+descriptor from the USB device. For a manually added USB
+vendor/product, the CDCE_NO_UNION flag can be tried to work
+around the missing descriptor.
+
+cdce%d: no
+data interface  
+cdce%d: could not read endpoint descriptor  
+cdce%d: unexpected endpoint  
+cdce%d: could not find data bulk in/out  For a
+manually added USB vendor/product, these errors indicate
+that the bridge is not compatible with the driver.
+
+cdce%d:
+watchdog timeout  A packet was queued for
+transmission and a transmit command was issued, however the
+device failed to acknowledge the transmission before a
+timeout expired.
+
+cdce%d: no
+memory for rx list -- packet dropped!  Memory
+allocation through MGETHDR or MCLGET failed, the system is
+running low on mbufs.
+
+cdce%d:
+abort/close rx/tx pipe failed  
+cdce%d: rx/tx list init failed  
+cdce%d: open rx/tx pipe failed  
+cdce%d: usb error on rx/tx 
+
+SEE ALSO
+
+arp(4), intro(4), ipheth(4),
+netintro(4), urndis(4), usb(4), ifconfig(8)
+
+Universal Serial Bus Class
+Definitions for Communication Devices
+
+,
+
+http://www.usb.org/developers/devclass_docs/usbcdc11.pdf
+.
+
+Data sheet Prolific PL-2501
+Host-to-Host Bridge/Network Controller
+
+,
+
+http://tech.prolific.com.tw/visitor/fcabdl.asp?fid=20679530
+.
+
+HISTORY
+
+The cdce device driver
+first appeared in OpenBSD 3.6, NetBSD 3.0 and
+FreeBSD 6.0.
+
+AUTHORS
+
+The cdce driver was
+written by Craig Boston craig [AT] tobuj.org>
+based on the aue(4) driver written by Bill Paul
+wpaul [AT] windriver.com> and ported to OpenBSD by
+Daniel Hartmeier dhartmei [AT] openbsd.org>.
+
+CAVEATS
+
+Many USB devices notoriously
+fail to report their class and interfaces correctly.
+Undetected products might work flawlessly when their vendor
+and product IDs are added to the driver manually.
+
+BSD May 21,
+2018 BSD

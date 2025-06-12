@@ -1,0 +1,83 @@
+NAME
+
+git-annex-benchmark
+- benchmark git-annex commands
+
+SYNOPSIS
+
+git annex
+benchmark [criterionopts] ( -- commmand [; command] |
+--databases=N )
+
+DESCRIPTION
+
+When git-annex
+is built with benchmarking support, this command can be used
+to benchmark any other git-annex command. For example
+"git annex benchmark -- get ." will benchmark
+"git annex get".
+
+The command
+being benchmarked is run in the current git-annex
+repository. It does not run just once; the benchmarking
+process will run it several times to get a statistically
+meaningful result.
+
+When
+benchmarking an action like "git annex get", the
+first run will often do much more than subseqent runs. To
+make the benchmark repeat an action like getting a file each
+time, additional commands can be listed, separated by
+&rsquo;;&rsquo;. (Note that &rsquo;;&rsquo; needs to be
+escaped from the shell.) The combined script will be run
+repeatedly by the benchmark. An example of using this:
+
+git annex
+benchmark -- get . &rsquo;;&rsquo; drop .
+
+Note that
+git-annex benchmark does not fork new git-annex processes
+when benchmarking; it calls the command to benchmark
+internally, and so avoids git-annex&rsquo;s startup
+overhead. (So don&rsquo;t try to use it to optimise
+git-annex startup.)
+
+OPTIONS
+
+Before the
+"--" any of the criterion library&rsquo;s
+command-line options can be used.
+
+Any options
+that git-annex usually accepts can be included after the
+command to benchmark.
+
+The
+--databases=N option benchmark&rsquo;s git-annex&rsquo;s use
+of sqlite databases, instead of a command. N is the number
+of items to benchmark.
+
+OUTPUT
+
+The output of
+the commands being benchmarked goes to standard output and
+standard error as usual. It&rsquo;s often a good idea to use
+--quiet to avoid unnecessary output, unless the generation
+of that output is part of what you want to benchmark.
+
+The benchmark
+report is output to standard output by default, although
+criterion options can be used to redirect it to a file. For
+example:
+
+git annex
+benchmark -o bench -- find >/dev/null
+
+SEE ALSO
+
+git-annex(1)
+
+AUTHOR
+
+Joey Hess
+id [AT] joeyh.name>

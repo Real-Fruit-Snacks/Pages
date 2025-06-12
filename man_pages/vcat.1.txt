@@ -1,0 +1,264 @@
+NAME
+
+retrv -
+retrieve a revision of a file
+
+SYNOPSIS
+
+retrv [
+version binding options ] [ options ] files
+..
+
+Options:
+
+[ -?cfilq ] [ -help ]
+[ -copy ]
+[ -dest path ]
+[ -fix ] [ -force ]
+[ -intent message ]
+[ -lock ] [ -quiet ]
+[ -stdin ] [ -version ]
+[ -xpoff ] 
+
+vcat [ version
+binding options ] [ options ] files ..
+
+Options:
+
+[ -?q ] [ -help ]
+[ -quiet ] [ -version ]
+[ -xpoff ] 
+
+DESCRIPTION
+
+Retrv
+retrieves a specified, previously saved version of a file
+from the version object base. The version archive is
+expected to reside in the AtFS subdirectory. A selected
+version will by default be retrieved into a file in the
+directory where it was originally saved. If just a copy of a
+file version shall be retrieved, this behavior can be
+overridden with the -dest option. If a busy version
+is created with the -lock option, it must be created
+in the directory from where it was saved. This is necessary
+to maintain the spatial relationship between the busy
+version and the corresponding history archive, residing in
+the AtFS subdirectory.
+
+Retrieve tries
+to be careful if an attempt is made to overwrite an existing
+busy-version: unless -f (-force) is specified,
+retrv will ask the caller for permission. If no busy
+version exists, one is created with the same modes as the
+formerly saved version. If a busy version exists, its modes
+are preserved.
+
+If the program
+is invoked as vcat, the specified version(s) will be
+printed on standard output. No status change of the object
+base will occur in this case. vcat behaves similar to
+the cat(1) command: if just a filename is given,
+vcat displays the most recent status of the
+referenced object. If a busy version does exist it
+will be selected as most recent status. If no busy version
+exists, vcat displays the most recently saved
+version.
+
+ATTRIBUTE CITATIONS
+
+It is possible
+to cite any of a file-version&rsquo;s attributes within the
+the body of the version. This can be done by using
+attribute citation expressions. These expressions
+have the form "$__attributename$".
+Version attributes that are cited within the text of a
+stored revision are expanded by default. In this case, the
+citation expression will be substituted by the cited
+attribute&rsquo;s value. For a list of predefined attribute
+names, check the vadm(1) manual page.
+
+There are three
+basic kinds of attribute values: genuine values,
+reference values, and execution values.
+Genuine values are simply strings that are assigned
+to an attribute. Reference values are pointers to
+files or AtFS-versions whose contents will be substituted in
+place of an attribute-citation. Reference values are strings
+that begin with a circumflex-character, typically followed
+by pathname, e.g. ^/usr/local/lib/std-header[2.4].
+Execution values are names of executable programs,
+whose standard output is substituted in place of an
+attribute-citation. Execution values are strings that begin
+with an exclamation-mark character, typically followed by
+the name of the program, e.g. !/bin/date. Execution
+values can be used to generate highly dynamic attributes or
+a primitive form of event-triggers.
+
+When expanding
+an attribute citation, retrv first looks for an
+attribute of the mentioned name within the version&rsquo;s
+set of associated attributes. If no attribute of that name
+can be found, the environment is searched for a variable of
+that name. In case the cited attribute exists and has a
+value, the value is itself searched for attribute-citations
+that are expanded recursively. If neither an attribute nor
+an environment variable of the cited name can be found, no
+substitution takes place and the expression will be left
+unchanged. The same is true if a referenced object of a
+reference value does not exist, or an execution value
+happens to not be executable. Attribute citation expressions
+are also left unchanged if a revision is retrieved with the
+-lock option. Expansion of attribute citation within
+documents can be controlled by the pseudo-attribute
+citations "$__xpoff$" and
+"$__xpon$".
+
+OPTIONS
+
+For version
+selection, any version binding option, as described
+on the vbind(1) manual page, may be given, or a version
+bind directive may be given in brackets added to the
+file name.
+
+Additional
+options are: 
+-?, -help
+
+print brief instructions about
+using this program.
+
+-c, -copy
+
+Do not check for equality.
+Usually, retrv checks whether an existing destination file
+is identical to the version to be retrieved and suppresses
+copying in this case. This behaviour is mainly for
+efficiency reasons and may be disabled by the -c
+switch.
+
+-dest path
+
+retrieve the specified version
+from the object base and install a copy it in the
+directory denoted by path. As this directory may be a
+long way apart from the directory containing the AtFS
+archives, this copy of the retrieved version is separated
+from its history and subsequently unrelated to the
+object history it came from. Proper object histories require
+a constant spatial relationship of any busy versions and the
+corresponding archives. This relationship requires the
+archives to reside in a subdirectory named AtFS.
+
+-fix
+
+attempt to reserve the privilege to add a new version to
+an old generation (insert a new minor revision into
+an old major revision) within the object history. If
+successful, the user who issued the command holds a
+generation lock. There can be only one lock
+per generation, preventing simultaneous updates of the
+generation. The generation lock is, by convention, a
+revision lock (see vadm -lock) attached to the
+version with the highest version number within a
+generation. 
+
+The -fix
+switch is intended to support concurrency of the main
+development process and maintenance activities (such as bug
+fixing) for older releases. When a version is retrieved with
+the purpose to fix it, it is called the fixpoint
+version. The fixpoint version accumulates all fixes applied
+to a baseline version within a generation. One important
+advantage of this policy is the elimination of the need to
+create a branch for each fix that must later be merged with
+the &rsquo;&rsquo;mainline&rsquo;&rsquo; version, containing
+previous fixes. So, if retrv is invoked with
+&rsquo;&rsquo;-fix&rsquo;&rsquo; it will restore the
+fixpoint version (the most recent minor revision within the
+implied generation) rather than the explicitly referenced
+version. However, retrv issues a warning, if the
+baseline- and the fixpoint version are not identical.
+
+To insert a fix
+into an old generation, use the -fix option of the
+save command. When setting a lock on a generation,
+the requesting user is prompted for an optional description
+of the planned changes. The -fix switch is
+incompatible with -lock.
+
+-f, -force
+
+force the reinstallation of the
+specified version as busy version without asking the user,
+even if a writable (possibly unsaved) busy version
+exists.
+
+-i message
+
+set message as intent
+text describing the changes that are intended to be applied
+to a busy version that is installed by retrv.
+When message starts with an at sign (@), it is
+interpreted as filename and the text contained in the file
+is takes as intent text. If message is
+&rsquo;&rsquo;-&rsquo;&rsquo;, the change intent is
+read from standard input. The latter case is identical to
+specifying the command line switch -stdin. This
+option requires the -lock switch to be set in order
+to be effective.
+
+-l, -lock
+
+attempt to reserve the
+privilege to add a new version to the main development line
+of an object history, thus preventing multiple programmers
+working upon the same object base from interfering with each
+other by saving concurrent updates. When setting a new lock
+on an object history, prompt the requesting user for an
+optional description of the planned changes. The
+-lock switch is incompatible with -fix.
+
+-q, -quiet
+
+quiet operation. No messages
+are printed on standard output. If a current busy version
+exists, it will not be overwritten by the specified version
+unless -f is set. This option is useful for batch
+operation.
+
+-stdin
+
+force retrv to read the message describing the
+change intent from stdin rather than fork an editor.
+
+-version
+
+print version identification
+for this program.
+
+-xpoff
+
+Do not expand attribute citations in the restored
+file. 
+
+FILES
+
+All revisions
+of documents are retrieved from archive files located in the
+subdirectory AtFS.
+
+SEE ALSO
+
+vbind(1),
+save(1), vadm(1)
+
+BUGS
+
+Redirection of
+stdin in conjunction with option -stdin doesn&rsquo;t
+work.
+
+AUTHOR
+
+Axel.Mahler [AT] cs.de

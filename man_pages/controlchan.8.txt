@@ -1,0 +1,107 @@
+NAME
+
+controlchan -
+Channel-fed control message handler
+
+SYNOPSIS
+
+controlchan
+[-ch]
+
+DESCRIPTION
+
+controlchan
+removes the responsibility for handling control messages
+(except cancels) from innd and instead processes them
+from a channel or file feed.
+
+The two Perl
+modules "Encode" and "MIME::Parser" are
+required by controlchan.
+
+To reduce load,
+controlchan keeps a copy of control.ctl and
+control.ctl.local in memory and checks permissions
+(including any required PGP headers) before any scripts are
+called. These two configuration files are automatically
+reloaded when controlchan notices they have been
+modified. Also, the default case of an unrecognized control
+article is handled internally. The "drop" case is
+handled with far less fuss.
+
+Normally,
+controlchan is invoked by innd as configured
+in newsfeeds. An example entry is below. Make sure
+that the newsgroup "control.cancel" exists so that
+controlchan does not have to scan through cancels,
+which it will not be processing anyway.
+
+controlchan!\
+
+:!*,control,control.*,!control.cancel\ 
+:AC,Tc,Wnsm\ 
+:/controlchan
+
+controlchan
+can also be manually invoked with a mere path to a file
+(containing a complete control article with its headers and
+its body) or a token on its standard input:
+
+echo
+'/path/to/a/control/article' | controlchan 
+echo '@0303465234000000000000235AE000000002@' |
+controlchan
+
+Note that in
+the (very, very unlikely) event that you need to process
+ihave/sendme control messages, be sure that logipaddr
+is set to false in inn.conf, because in this case
+controlchan needs a site name, not an IP address.
+
+controlchan
+tries to report all log messages through syslog(3), unless
+connected to an interactive terminal. To enable
+syslog(3)&rsquo;ing for versions of Perl prior to 5.6.0, you
+will need to have run h2ph on your system include
+files at some point (this is required to make
+"Sys::Syslog" work). If you have not done so, do
+this:
+
+cd /usr/include
+
+h2ph * sys/*
+
+If you run
+FreeBSD, you will need to run the following in addition:
+
+h2ph
+machine/*
+
+OPTIONS
+
+-c
+
+By default, controlchan
+does not process articles whose Date or Injection-Date
+header fields are too far in the past (more than
+artcutoff days, as set in inn.conf) or one day
+in the future. It allows preventing a malicious replay of
+old control articles.
+
+Using the
+-c flag disables this check on the cutoff date.
+
+-h
+
+Gives usage information.
+
+HISTORY
+
+Written by
+Katsuhiro Kondou kondou [AT] nec.jp> for InterNetNews.
+Converted to POD by Julien Elie.
+
+SEE ALSO
+
+control.ctl(5),
+inn.conf(5).

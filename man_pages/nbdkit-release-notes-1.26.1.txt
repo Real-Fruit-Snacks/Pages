@@ -1,0 +1,260 @@
+NAME
+
+nbdkit-release-notes-1.26
+- release notes for nbdkit 1.26
+
+DESCRIPTION
+
+These are the
+release notes for nbdkit stable release 1.26. This describes
+the major changes since 1.24.
+
+nbdkit 1.26.0
+was released on 7 June 2021.
+
+nbdkit is now
+hosted on gitlab:
+https://listman.redhat.com/archives/libguestfs/2021-February/msg00021.html
+
+Security
+
+There were no security issues found. All past security
+issues and information about how to report new ones can be
+found in nbdkit-security(1).
+
+Plugins
+
+nbdkit-gzip-plugin and nbdkit-tar-plugin have been removed.
+They were deprecated in nbdkit 1.22. The functionality has
+been replaced by nbdkit-gzip-filter(1) and
+nbdkit-tar-filter(1) respectively.
+
+nbdkit-streaming-plugin(1)
+has been deprecated and will be removed in nbdkit 1.30.
+You can use nbdcopy(1) instead.
+
+nbdkit-curl-plugin(1)
+adds these features: "followlocation=false" to
+disable following redirects. "cookiefile" and
+"cookiejar" to control saving cookies.
+
+nbdkit-ssh-plugin(1)
+now advertises multi-conn if the server is OpenSSH,
+improving performance (Eric Blake).
+
+nbdkit-ondemand-plugin(1)
+has a new "wait=true" flag allowing you to choose
+between clients waiting for an export to become free or
+being immediately rejected.
+
+nbdkit-sparse-random-plugin(1)
+now does not generate fully random data within each block.
+Using perf we observed that the plugin was spending 34% of
+the total time during benchmarks just doing this. You can
+enable the old behaviour using
+"random-content=true".
+
+nbdkit-file-plugin(1)
+now checks if the file is read-only and exports a read-only
+NBD connection in this case (Eric Blake).
+
+nbdkit-vddk-plugin(1)
+has been tested with VDDK 7.0.2.
+
+Filters
+
+There is a new API for use by filters to manage
+"contexts". Instead of the previous 1-1
+relationship between filter connections and plugin
+connections, filters can now open more than one context into
+the backend from a single connection, or share contexts
+between connections (Eric Blake).
+
+New
+nbdkit-multi-conn-filter(1) which allows you to add
+multi-conn support to plugins which don&rsquo;t support it
+(although the emulation is expensive), or change whether
+multi-conn is advertised to clients (Eric Blake).
+
+nbdkit-cow-filter(1)
+now ignores flush/FUA requests (which are not useful for a
+temporary overlay). The filter now implements extents and
+efficient trimming. Fine-grained locking is used around
+shared structures, greatly improving parallel performance.
+Added support for multi-conn.
+
+nbdkit-cache-filter(1)
+advertises multi-conn when possible (Eric Blake).
+
+nbdkit-cache-filter
+and nbdkit-cow-filter can now handle arbitrary sized disks,
+instead of rounding the disk size down.
+
+nbdkit-blocksize-filter(1)
+supports parallel requests (Eric Blake).
+
+nbdkit-checkwrite-filter(1)
+supports multi-conn (Eric Blake).
+
+nbdkit-ext2-filter(1)
+no longer supports multi-conn. The filter is single-threaded
+so it does not matter, but it was not safe. Fix trim, zero
+and flush support (Eric Blake).
+
+nbdkit-readahead-filter(1)
+fixes multi-conn support (Eric Blake).
+
+nbdkit-gzip-filter(1)
+and nbdkit-xz-filter(1) now both support multi-conn
+(Eric Blake).
+
+Language
+bindings 
+nbdkit-python-plugin(3) supports the following new
+features: "after_fork" and "preconnect"
+methods. "nbdkit.shutdown()" binding.
+
+nbdkit-rust-plugin(3)
+updated for newer Rust compiler versions (Alan Somers).
+
+nbdkit-golang-plugin(3)
+now uses and requires golang modules. Golang &ge; 1.13 must
+be used.
+
+API 
+New ".cleanup" callback for plugins and filters.
+This is called shortly before ".unload", but
+unlike ".unload" it is guaranteed that no plugin
+or filter code has been dlclosed (Eric Blake).
+
+New
+"nbdkit_extents_full" is a helper function for
+filters which can be used to read all extents from a plugin
+covering a region.
+
+Tests
+
+Old plugins that we use for testing were rebuilt so they no
+longer depend on libselinux (thanks Thomas
+Wei&szlig;schuh).
+
+nbdkit-ssh-plugin(1)
+can still be built even if ssh-keygen is unavailable for
+testing it (thanks Thomas Wei&szlig;schuh).
+
+Improve
+tests/test-captive.sh to avoid crashes during
+testing.
+
+Test coverage
+on FreeBSD has been improved, fewer tests should skip
+unnecessarily.
+
+Build
+
+nbdkit and plugins can now be built with
+-fvisibility=hidden, which allows the compiler to
+make some optimizations.
+
+Add a
+dependency so nbdkit is relinked if the linker script
+(nbdkit.syms) changes (Eric Blake).
+
+xorriso is now
+preferred over genisoimage or mkisofs (see
+https://wiki.debian.org/genisoimage).
+
+It is now
+possible to compile nbdkit with clang with warnings enabled.
+Several warnings have been suppressed or fixed.
+
+"MALLOC_CHECK_"
+and "MALLOC_PERTURB_" are only enabled when
+running the tests, not when running nbdkit from the build
+directory. This makes it easier to do benchmarks.
+
+"nbdkit_peer_*"
+implemented on OpenBSD.
+
+Internals
+
+When fuzzing nbdkit we now recommend using the
+-t 1 flag (which disables threads). This
+improves the fuzz-stability of nbdkit.
+
+SEE ALSO
+
+nbdkit(1).
+
+AUTHORS
+
+Authors of
+nbdkit 1.26:
+
+&bull;
+
+Alan Somers
+
+&bull;
+
+Eric Blake
+
+&bull;
+
+Michael Ablassmeier
+
+&bull;
+
+Richard W.M. Jones
+
+&bull;
+
+Timm B&auml;der
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code
+must retain the above copyright notice, this list of
+conditions and the following disclaimer.
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

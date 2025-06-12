@@ -1,0 +1,91 @@
+NAME
+
+mockchain -
+chain package builder.
+
+SYNOPSIS
+
+mockchain
+&minus;r chroot_config [options] [package...]
+
+DESCRIPTION
+
+mockchain
+builds a series of srpms in mock one at a time. After each
+successful build of a package it adds the resulting packages
+to a local repo which are available to the next package to
+satisfy buildreqs.
+
+USAGE NOTES
+
+This does not
+try to sort the packages by build order because that is too
+much effort and not obviously doable with the buildreq
+information we have.
+
+The build
+process when you use &minus;l is idempotent so a package
+which has already been successfully built will not be built
+again.
+
+If you want to
+force the rebuild of a package which has been built
+successfully simply remove the &rsquo;success&rsquo; file
+from the directory for the package in the localrepo
+path.
+
+OPTIONS
+
+&minus;a
+REPOS, &minus;&minus;addrepo=REPOS
+
+add this repo baseurl to the
+yumconfig for the chroot. This can be specified multiple
+times. Lets you point to multiple paths beyond the default
+to pull build deps from.
+
+&minus;c,
+&minus;&minus;continue
+
+if a package fails to build,
+continue to the next one, default is to stop.
+
+&minus;l LOCALREPO,
+&minus;&minus;localrepo=PATH
+
+set the path to put the
+results/repo in. This path needs to be somewhere accessible
+to users other than you for reading as the mock process
+doesn&rsquo;t run as you. Will make a tempdir if not
+set.
+
+&minus;&minus;log=LOGFILE
+
+log to the file named by this
+option, defaults to not logging.
+
+&minus;m OPTION,
+&minus;&minus;mock-option=OPTION
+
+pass the OPTION to mock. Can be
+used several times. For example:
+
+&minus;m
+&minus;&minus;define="packager Monkey"
+
+&minus;r CONFIG,
+&minus;&minus;root=CONFIG
+
+chroot config name to use in
+the mock build.
+
+&minus;&minus;recurse
+
+build all packages, record the
+failures and try to rebuild them again and again until
+everything gets built (or until the set of packages failing
+to build are the same over) sets &minus;&minus;continue
+
+AUTHORS
+
+Seth Vidal

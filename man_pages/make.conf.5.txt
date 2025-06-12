@@ -1,0 +1,799 @@
+MAKE.CONF(5) BSD File Formats Manual MAKE.CONF(5)
+
+NAME
+
+make.conf &mdash; system
+build information
+
+DESCRIPTION
+
+The file make.conf
+contains settings that control the compilation of the
+FreeBSD sources and ported applications. The file
+make.conf is generally created by the system
+administrator when the values need to be changed from their
+defaults.
+
+The purpose of
+make.conf is not to run commands or perform
+compilation actions directly. Instead, it is included by the
+various makefiles in /usr/src, /usr/ports and
+/usr/doc which conditionalize their internal actions
+according to the settings found there.
+
+The
+/etc/make.conf file is included from the appropriate
+Makefile which specifies the default settings for all
+the available options. Options need only be specified in
+/etc/make.conf when the system administrator wishes
+to override these defaults.
+
+The build
+procedures occur in four broad areas: the world, the kernel,
+documentations and ports. Variables set in make.conf
+may be applicable during builds in one, two, or all four of
+these areas. They may be specified for a particular build
+via the &minus;D option of make(1).
+
+The following
+lists provide a name and short description for each variable
+you can use during the indicated builds. The values of
+variables flagged as bool are ignored; the variable
+being set at all (even to &rsquo;&rsquo;FALSE&rsquo;&rsquo;
+or &rsquo;&rsquo;NO&rsquo;&rsquo;) causes it to be treated
+as if it were set.
+
+The following
+list provides a name and short description for variables
+that are used for all builds, or are used by the
+makefiles for things other than builds.
+
+ALWAYS_CHECK_MAKE
+
+(bool) Instructs the
+top-level makefile in the source tree (normally
+/usr/src) to always check if make(1) is up-to-date.
+Normally this is only done for the world and buildworld
+targets to handle upgrades from older versions of
+FreeBSD.
+
+CFLAGS
+
+(str)
+Controls the compiler setting when compiling C code.
+Optimization levels other than &minus;O and
+&minus;O2 are not supported. BDECFLAGS is
+provided as a set of gcc(1) settings suggested by Bruce
+Evans bde [AT] FreeBSD.org> for developing and testing
+changes. They can be used, if set, by:
+
+CFLAGS+=${BDECFLAGS}
+
+CPUTYPE
+
+(str)
+Controls which processor should be targeted for generated
+code. This controls processor-specific optimizations in
+certain code (currently only OpenSSL) as well as modifying
+the value of CFLAGS and COPTFLAGS to contain
+the appropriate optimization directive to gcc(1). The
+automatic setting of CFLAGS and COPTFLAGS may
+be overridden using the NO_CPU_CFLAGS and
+NO_CPU_COPTFLAGS variables, respectively. Refer to
+/usr/share/examples/etc/make.conf for a list of
+recognized CPUTYPE options.
+
+NO_CPU_CFLAGS
+
+(str) Setting this
+variable will prevent CPU specific compiler flags from being
+automatically added to CFLAGS during compile
+time.
+
+NO_CPU_COPTFLAGS
+
+(str) Setting this
+variable will prevent CPU specific compiler flags from being
+automatically added to COPTFLAGS during compile
+time.
+
+CVS_UPDATE
+
+(bool)
+Set this to use cvs(1) to update your ports with
+&rsquo;&rsquo;make update&rsquo;&rsquo;.
+
+CXXFLAGS
+
+(str)
+Controls the compiler settings when compiling C++ code.
+CXXFLAGS is initially set to the value of
+CFLAGS. If you want to add to the CXXFLAGS
+value, use &rsquo;&rsquo;+=&rsquo;&rsquo; instead of
+&rsquo;&rsquo;=&rsquo;&rsquo;.
+
+INSTALL
+
+(str)
+the default install command. To install only files for which
+the target differs or does not exist, use
+
+INSTALL="install
+-C"
+
+Note that some makefiles
+(including those in /usr/share/mk) may hardcode
+options for the supplied install command.
+
+LOCAL_DIRS
+
+(str)
+List any directories that should be entered when doing
+make&rsquo;s in /usr/src in this variable.
+
+MAKE_SHELL
+
+(str)
+Controls the shell used internally by make(1) to process the
+command scripts in makefiles. sh(1), ksh(1), and csh(1) all
+currently supported.
+
+MAKE_SHELL?=sh
+
+MTREE_FOLLOWS_SYMLINKS
+
+(str) Set this to
+&rsquo;&rsquo;&minus;L&rsquo;&rsquo; to cause
+mtree(8) to follow symlinks.
+
+NO_DOCUPDATE
+
+(bool)
+Set this to not update the doc tree during
+&rsquo;&rsquo;make update&rsquo;&rsquo;.
+
+NO_PORTSUPDATE
+
+(bool) Set this to not
+update the ports tree during &rsquo;&rsquo;make
+update&rsquo;&rsquo;.
+
+SUP_UPDATE
+
+(bool)
+Set this to use cvsup(1) to update your ports with
+&rsquo;&rsquo;make update&rsquo;&rsquo;.
+
+SUP
+
+(str)
+The location of the cvsup(1) command for &rsquo;&rsquo;make
+update&rsquo;&rsquo;.
+
+SUPFLAGS
+
+(str)
+The flag for the sup(1) command when doing
+&rsquo;&rsquo;make update&rsquo;&rsquo;. This defaults to
+[&minus;g &minus;L 2].
+
+SUPHOST
+
+(str)
+The hostname of the sup server to use when doing
+&rsquo;&rsquo;make update&rsquo;&rsquo;.
+
+SUPFILE
+
+(str)
+The first supfile to use when doing a
+&rsquo;&rsquo;make update&rsquo;&rsquo;. This defaults to
+/usr/share/examples/cvsup/standard&minus;supfile.
+
+SUPFILE1
+
+(str)
+The second supfile to use when doing a
+&rsquo;&rsquo;make update&rsquo;&rsquo;. This defaults to
+/usr/share/examples/cvsup/secure&minus;supfile.
+
+SUPFILE2
+
+(str)
+The third supfile to use when doing a
+&rsquo;&rsquo;make update&rsquo;&rsquo;. This defaults to
+/usr/share/examples/cvsup/secure&minus;supfile.
+
+PORTSSUPFILE
+
+(str)
+The ports supfile to use when doing a
+&rsquo;&rsquo;make update&rsquo;&rsquo;. This defaults to
+/usr/share/examples/cvsup/ports&minus;supfile.
+
+DOCSUPFILE
+
+(str)
+The documentation supfile to use when doing a
+&rsquo;&rsquo;make update&rsquo;&rsquo;. This defaults to
+/usr/share/examples/cvsup/doc&minus;supfile.
+
+The following
+list provides a name and short description for variables
+that are only used doing a kernel build:
+
+BOOT_COMCONSOLE_PORT
+
+(str) The port address
+to use for the console if the boot blocks have been
+configured to use a serial console instead of the
+keyboard/video card.
+
+BOOT_COMCONSOLE_SPEED
+
+(int) The baud rate to
+use for the console if the boot blocks have been configured
+to use a serial console instead of the keyboard/video
+card.
+
+BOOTWAIT
+
+(int)
+Controls the amount of time the kernel waits for a console
+keypress before booting the default kernel. The value is
+approximately milliseconds. Keypresses are accepted by the
+BIOS before booting from disk, making it possible to give
+custom boot parameters even when this is set to 0.
+
+COPTFLAGS
+
+(str)
+Controls the compiler settings when building the kernel.
+Optimization levels above [
+
+&minus;O (&minus;O2, ...) ] are not
+guaranteed to work.
+
+KERNCONF
+
+(str)
+Controls which kernel configurations will be built by
+&rsquo;&rsquo;${MAKE} buildkernel&rsquo;&rsquo; and
+installed by &rsquo;&rsquo;${MAKE}
+installkernel&rsquo;&rsquo;. For example,
+
+KERNCONF=MINE
+DEBUG GENERIC OTHERMACHINE
+
+will build the
+kernels specified by the config files MINE,
+DEBUG, GENERIC, and OTHERMACHINE, and
+install the kernel specified by the config file MINE.
+It defaults to GENERIC.
+
+LOADER_TFTP_SUPPORT
+
+(bool) While not a
+buildkernel-affected option, there is no better place for
+this. By default the pxeboot(8) loader retrieves the kernel
+via NFS. Defining this and recompiling
+/usr/src/sys/boot will cause it to retrieve the
+kernel via TFTP. This allows pxeboot(8) to load a custom
+BOOTP diskless kernel yet still mount the server&rsquo;s
+/ rather than load the server&rsquo;s kernel.
+
+MODULES_OVERRIDE
+
+(str) Set to a list of
+modules to build instead of all of them.
+
+NO_KERNELCONFIG
+
+(bool) Set this to skip
+running config(8) during &rsquo;&rsquo;${MAKE}
+buildkernel&rsquo;&rsquo;.
+
+NO_KERNELDEPEND
+
+(bool) Set this to skip
+running &rsquo;&rsquo;${MAKE} depend&rsquo;&rsquo; during
+&rsquo;&rsquo;${MAKE} buildkernel&rsquo;&rsquo;.
+
+NO_MODULES
+
+(bool)
+Set to not build modules with the kernel.
+
+The following
+list provides a name and short description for variables
+that are used during the world build:
+
+COMPAT1X
+
+(bool)
+Set to install the FreeBSD 1 compatibility libraries.
+
+COMPAT20
+
+(bool)
+Set to install the FreeBSD 2.0 compatibility
+libraries.
+
+COMPAT21
+
+(bool)
+Set to install the FreeBSD 2.1 compatibility
+libraries.
+
+COMPAT22
+
+(bool)
+Set to install the FreeBSD 2.2 compatibility
+libraries.
+
+COMPAT3X
+
+(bool)
+Set to install the FreeBSD 3 compatibility libraries.
+
+COMPAT4X
+
+(bool)
+Set to install the FreeBSD 4 compatibility libraries.
+
+MAKE_IDEA
+
+(bool)
+Set to build the IDEA encryption code. This code is patented
+in the USA and many European countries. It is YOUR
+RESPONSIBILITY to determine if you can legally use
+IDEA.
+
+NO_DYNAMICROOT
+
+(bool) Set this if you
+do not want to link /bin and /sbin
+dynamically.
+
+NO_KERBEROS
+
+(bool)
+Set this if you do not want to build Kerberos 5 (KTH
+Heimdal).
+
+ENABLE_SUID_K5SU
+
+(bool) Set this if you
+wish to use the ksu utility. Otherwise, it will be installed
+without the set-user-ID bit set.
+
+ENABLE_SUID_NEWGRP
+
+(bool) Set this to
+install newgrp(1) with the set-user-ID bit set. Otherwise,
+newgrp(1) will not be able to change users&rsquo;
+groups.
+
+ENABLE_SUID_SSH
+
+(bool) Set this to
+install ssh(1) with the set-user-ID bit turned on.
+
+MODULES_WITH_WORLD
+
+(bool) Set to build
+modules with the system instead of the kernel.
+
+NO_BLUETOOTH
+
+(bool)
+Set to not build Bluetooth related kernel modules, programs
+and libraries.
+
+NO_BOOT
+
+(bool)
+Set to not build the boot blocks and loader.
+
+NO_CVS
+
+(bool)
+Set to not build CVS.
+
+NO_CXX
+
+(bool)
+Set to not build g++(1) and related libraries.
+
+NO_FORTRAN
+
+(bool)
+Set to not build g77(1) and related libraries.
+
+NO_GDB
+
+(bool)
+Set to not build gdb(1).
+
+NO_I4B
+
+(bool)
+Set to not build isdn4bsd package.
+
+NO_IPFILTER
+
+(bool)
+Set to not build IP Filter package.
+
+NO_PF
+
+(bool)
+Set to not build PF firewall package.
+
+NO_AUTHPF
+
+(bool)
+Set to not build authpf(8).
+
+NO_TOOLCHAIN
+
+(bool)
+Set to not build programs used for program development,
+compilers, debuggers etc.
+
+NOINET6
+
+(bool)
+Set to not build programs and libraries related to IPv6
+networking.
+
+NOATM
+
+(bool)
+Set to not build programs and libraries related to ATM
+networking.
+
+NO_USB
+
+(bool)
+Set to not build usbd(8) and related programs.
+
+NO_LPR
+
+(bool)
+Set to not build lpr(1) and related programs.
+
+NO_ACPI
+
+(bool)
+Set to not build acpiconf(8), acpidump(8) and related
+programs.
+
+NO_VINUM
+
+(bool)
+Set to not build vinum(8) and related programs.
+
+NO_MAILWRAPPER
+
+(bool) Set to not build
+the mailwrapper(8) MTA selector.
+
+NOMAN
+
+(bool)
+Set to not build manual pages.
+
+NO_OBJC
+
+(bool)
+Set to not build Objective C support.
+
+NO_OPENSSH
+
+(bool)
+Set to not build OpenSSH.
+
+NO_OPENSSL
+
+(bool)
+Set to not build OpenSSL (implies NO_KERBEROS and
+NO_OPENSSH).
+
+NO_SENDMAIL
+
+(bool)
+Set to not build sendmail(8) and related programs.
+
+NO_SHAREDOCS
+
+(bool)
+Set to not build the 4.4BSD legacy docs.
+
+NO_TCSH
+
+(bool)
+Set to not build and install /bin/csh (which is
+tcsh(1)).
+
+NOCLEAN
+
+(bool)
+Set this to disable cleaning during &rsquo;&rsquo;make
+buildworld&rsquo;&rsquo;. This should not be set unless you
+know what you are doing.
+
+NOCLEANDIR
+
+(bool)
+Set this to run &rsquo;&rsquo;${MAKE} clean&rsquo;&rsquo;
+instead of &rsquo;&rsquo;${MAKE} cleandir&rsquo;&rsquo;.
+
+NOCRYPT
+
+(bool)
+Set to not build any crypto code.
+
+NOGAMES
+
+(bool)
+Set to not build games.
+
+NOINFO
+
+(bool)
+Set to not make or install info(5) files.
+
+NOLIBC_R
+
+(bool)
+Set to not build libc_r (reentrant version of
+libc).
+
+NOLIBPTHREAD
+
+(bool)
+Set to not build the libpthread (M:N threading)
+library.
+
+NOLIBTHR
+
+(bool)
+Set to not build the libthr (1:1 threading)
+library.
+
+NOMANCOMPRESS
+
+(bool) Set to install
+man pages uncompressed.
+
+NOPROFILE
+
+(bool)
+Set to avoid compiling profiled libraries.
+
+NOSHARE
+
+(bool)
+Set to not build in the share subdir.
+
+NO_BIND
+
+(bool)
+Setting this variable will prevent any part of BIND from
+being built, regardless of the presence of any of the other
+*_BIND_* variables below.
+
+NO_BIND_DNSSEC
+
+(bool) Set to avoid
+building or installing the DNSSEC related binaries,
+dnssec-keygen(8) and dnssec-signzone(8).
+
+NO_BIND_ETC
+
+(bool)
+Set to avoid installing the default files to
+/var/named/etc/namedb.
+
+NO_BIND_LIBS_LWRES
+
+(bool) Set to avoid
+installing the lightweight resolver library in
+/usr/lib. The library that is private to the build
+system may still be built as needed.
+
+NO_BIND_MTREE
+
+(bool) Set to avoid
+running mtree(8) to create the chroot directory structure
+under /var/named, and avoid creating an
+/etc/namedb symlink to the chroot directory. This
+option should typically be used together with
+NO_BIND_ETC.
+
+NO_BIND_NAMED
+
+(bool) Set to avoid
+building or installing named(8), named.reload(8),
+named-checkconf(8), named-checkzone(8), rndc(8), and
+rndc-confgen(8).
+
+NO_BIND_UTILS
+
+(bool) Set to avoid
+building or installing the BIND userland utilities, dig(1),
+host(1), nslookup(1), and nsupdate(8).
+
+WITH_BIND_LIBS
+
+(bool) Set to install
+BIND libraries and include files.
+
+PPP_NOSUID
+
+(bool)
+Set to disable the installation of ppp(8) as an suid root
+program.
+
+SENDMAIL_MC
+
+(str)
+The default m4(1) configuration file to use at install time.
+The value should include the full path to the .mc
+file, e.g., /etc/mail/myconfig.mc. Use with caution
+as a make install will overwrite any existing
+/etc/mail/sendmail.cf. Note that SENDMAIL_CF
+is now deprecated.
+
+SENDMAIL_SUBMIT_MC
+
+(str) The default m4(1)
+configuration file for mail submission to use at install
+time. The value should include the full path to the
+.mc file, e.g., /etc/mail/mysubmit.mc. Use
+with caution as a make install will overwrite any existing
+/etc/mail/submit.cf.
+
+SENDMAIL_ADDITIONAL_MC
+
+(str) Additional
+.mc files which should be built into .cf files
+at build time. The value should include the full path to the
+.mc file(s), e.g., /etc/mail/foo.mc
+/etc/mail/bar.mc.
+
+SENDMAIL_CF_DIR
+
+(str) Override the
+default location for the m4(1) configuration files used to
+build a .cf file from a .mc file.
+
+SENDMAIL_M4_FLAGS
+
+(str) Flags passed to
+m4(1) when building a .cf file from a .mc
+file.
+
+SENDMAIL_CFLAGS
+
+(str) Flags to pass to
+the compile command when building sendmail(8). The
+SENDMAIL_* flags can be used to provide SASL support
+with setting such as:
+
+SENDMAIL_CFLAGS=-I/usr/local/include
+-DSASL 
+SENDMAIL_LDFLAGS=-L/usr/local/lib 
+SENDMAIL_LDADD=-lsasl
+
+SENDMAIL_LDFLAGS
+
+(str) Flags to pass to
+the ld(1) command when building sendmail(8).
+
+SENDMAIL_LDADD
+
+(str) Flags to add to
+the end of the ld(1) command when building sendmail(8).
+
+SENDMAIL_DPADD
+
+(str) Extra dependencies
+to add when building sendmail(8).
+
+SENDMAIL_SET_USER_ID
+
+(bool) If set, install
+sendmail(8) as a set-user-ID root binary instead of a
+set-group-ID binary and do not install
+/etc/mail/submit.{cf,mc}. Use of this flag is not
+recommended and the alternative advice in
+/etc/mail/README should be followed instead if at all
+possible.
+
+SENDMAIL_MAP_PERMS
+
+(str) Mode to use when
+generating alias and map database files using
+/etc/mail/Makefile. The default value is 0640.
+
+TOP_TABLE_SIZE
+
+(int) top(1) uses a hash
+table for the user names. The size of this hash can be tuned
+to match the number of local users. The table size should be
+a prime number approximately twice as large as the number of
+lines in /etc/passwd. The default number is
+20011.
+
+WANT_FORCE_OPTIMIZATION_DOWNGRADE
+
+(int) Causes the system
+compiler to be built such that it forces high optimization
+levels to a lower one. gcc(1) &minus;O2 and above is
+known to trigger known optimizer bugs at various times
+&mdash; this is worse on the Alpha platform. The value
+assigned is the highest optimization value used.
+
+The following
+list provides a name and short description for variables
+that are used when building documentation.
+
+DISTDIR
+
+(str)
+Where distfiles are kept. Normally, this is distfiles
+in PORTSDIR.
+
+DOC_LANG
+
+(str)
+The list of languages and encodings to build and
+install.
+
+PRINTERDEVICE
+
+(str) The default format
+for system documentation, depends on your printer. This can
+be set to &rsquo;&rsquo;ascii&rsquo;&rsquo; for simple
+printers, or &rsquo;&rsquo;ps&rsquo;&rsquo; for postscript
+or graphics printers with a ghostscript filter, or both.
+
+FILES 
+/etc/make.conf 
+/usr/doc/Makefile 
+/usr/share/examples/etc/make.conf 
+/usr/src/Makefile 
+/usr/src/Makefile.inc1 
+SEE ALSO
+
+gcc(1), install(1), make(1),
+ports(7), lpd(8), sendmail(8)
+
+HISTORY
+
+The make.conf file
+appeared sometime before FreeBSD 4.0.
+
+AUTHORS
+
+This manual page was written by
+Mike W. Meyer mwm [AT] mired.org>.
+
+BUGS
+
+This manual page may
+occasionally be out of date with respect to the options
+currently available for use in make.conf. Please
+check the /usr/share/examples/etc/make.conf file for
+the latest options which are available.
+
+CAVEATS
+
+Note, that MAKEOBJDIRPREFIX and
+MAKEOBJDIR are environment variables and should not be set
+in make.conf but in make&rsquo;s environment.
+
+BSD
+October 5, 2004 BSD

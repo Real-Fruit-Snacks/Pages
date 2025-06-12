@@ -1,0 +1,152 @@
+NAME
+
+inews - send a
+Usenet article to the local news server for distribution
+
+SYNOPSIS
+
+inews [
+-h ] [ -D ] [ -O ] [ -R ] [
+-S ] [ header_flags ] [ input ]
+
+DESCRIPTION
+
+Inews
+reads a Usenet news article (perhaps with headers) from the
+named file or standard input if no file is given. It adds
+some headers and performs some consistency checks. If the
+article does not meet these checks (for example, too much
+quoting of old articles, or posting to non-existent
+newsgroups) then the article is rejected. If it passes the
+checks, inews sends the article to the local news
+server as specified in the inn.conf(5) file for
+distribution.
+
+OPTIONS
+
+-h
+
+In the standard mode of
+operation, the input consists of the article headers, a
+blank line, and the message body. For compatibility with
+older software, the &rsquo;&rsquo;-h&rsquo;&rsquo;
+flag must be used. If there are no headers in the message,
+then this flag may be omitted.
+
+-O
+
+The default Organization header will be provided if none
+is present in the article or if the
+&rsquo;&rsquo;-o&rsquo;&rsquo; flag is not used. To
+prevent adding the default, use the
+&rsquo;&rsquo;-O&rsquo;&rsquo; flag.
+
+-D
+
+As a debugging aide, if the
+&rsquo;&rsquo;-D&rsquo;&rsquo; flag is used, the
+consistency checks will be performed, and the article will
+be sent to the standard output, rather then sent to the
+server. 
+
+-A -V -W
+
+For compatibility with C News,
+inews accepts, but ignores, the
+&rsquo;&rsquo;-A&rsquo;&rsquo;,
+&rsquo;&rsquo;-V&rsquo;&rsquo; and
+&rsquo;&rsquo;-W&rsquo;&rsquo; flags.
+
+-N
+
+The C News &rsquo;&rsquo;-N&rsquo;&rsquo; flag is
+treated as the &rsquo;&rsquo;-D&rsquo;&rsquo;
+flag. 
+
+-S
+
+If a file named .signature exists in the
+user&rsquo;s home directory, inews will try to append
+it to the end of the article. If the file cannot be read, or
+if it is too long (for example, more than four lines or one
+standard I/O buffer), or if some other problem occurs, then
+the article will not be posted. To suppress this action use
+the &rsquo;&rsquo;-S&rsquo;&rsquo; flag.
+
+-R
+
+If the &rsquo;&rsquo;-R&rsquo;&rsquo; flag is
+used then inews will reject any attempts to post
+control messages.
+
+header_flags
+
+Several headers may be
+specified on the command line, shown in the synopsis above
+as header_flags. Each of these flags takes a single
+parameter; if the value is more than one word (for example,
+almost all Subject lines) then quotes must be used to
+prevent the shell from splitting it into multiple words. The
+options, and their equivalent header, are as follows:
+
+a Approved 
+c Control 
+d Distribution 
+e Expires 
+f From 
+w Followup-To 
+n Newsgroups 
+r Reply-To 
+t Subject 
+F References 
+o Organization 
+x Path prefix
+
+If the
+&rsquo;&rsquo;-x&rsquo;&rsquo; flag is used, then its
+value will be the start of the header. Any other host will
+see the site in the header, and therefore not offer the
+article to that site. The Path will always end
+not-for-mail.
+
+NOTES
+
+If an
+unapproved posting is made to a moderated newsgroup,
+inews will try to mail the article to the moderator
+for posting. It will query the remote news server for a
+moderators listing. If that doesn&rsquo;t succeed, it will
+fallback to using the local moderators(5) file to
+determine the mailing address. If no address is found, it
+will use the inn.conf file to determine a
+&rsquo;&rsquo;last-chance&rsquo;&rsquo; host to try.
+
+If the NNTP
+server needs to authenticate the client, inews will
+use the NNTPsendpassword(3) routine to authenticate
+itself. In order to do this, the program will need read
+access to the passwd.nntp(5) file. This is typically
+done by having the file group-readable and making
+inews run setgid to that group.
+
+Inews
+exits with a zero status if the article was succesfully
+posted or mailed, or with a non-zero status if the article
+could not be delivered.
+
+Since
+inews will spool its input if the server is
+unavailable, it is usually necessary to run rnews(1)
+with the &rsquo;&rsquo;-U&rsquo;&rsquo; flag on a regular
+basis, usually out of cron(8).
+
+HISTORY
+
+Written by Rich
+$alz rsalz [AT] uunet.net> for InterNetNews. This is
+revision 1.27, dated 1996/10/29.
+
+SEE ALSO
+
+moderators(5),
+inn.conf(5). rnews(1).

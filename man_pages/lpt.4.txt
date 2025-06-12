@@ -1,0 +1,80 @@
+LPT(4) BSD Kernel Interfaces Manual LPT(4)
+
+NAME
+
+lpt &mdash; generic
+printer device driver
+
+SYNOPSIS
+
+device ppc 
+device ppbus 
+device lpt
+
+DESCRIPTION
+
+The current lpt driver is
+the port of the original lpt driver to the ppbus(4)
+system.
+
+One purpose of
+this port was to allow parallel port sharing with other
+parallel devices. Secondly, inb()/outb() calls have been
+replaced by ppbus function calls. lpt is now
+arch-independent thanks to the ppbus interface. See ppbus(4)
+for more info about the ppbus system.
+
+The parallel
+port bus is allocated by lpt when the printer device is
+opened and released only when the transfer is completed:
+either when the device is closed or when the entire buffer
+is sent in interrupt driven mode.
+
+The driver can
+be configured to be either interrupt-driven, or to poll the
+printer. Ports that are configured to be interrupt-driven
+can be switched to polled mode by using the lptcontrol(8)
+command.
+
+Depending on
+your hardware, extended capabilities may be configured with
+the lptcontrol(8) command. With an ECP/ISA port, you can
+take advantage of FIFO and DMA.
+
+In order to
+retrieve printer info from /dev/lpt0, just apply the
+cat command to the device. If the printer supports
+IEEE1284 nibble mode and has data to send to the host, you
+will get it.
+
+FILES 
+/dev/lpt0
+
+first parallel
+port driver
+
+SEE ALSO
+
+ppbus(4), ppc(4),
+lptcontrol(8)
+
+HISTORY
+
+This driver replaces the
+functionality of the lpa driver, which is now defunct.
+
+BUGS
+
+There are lots of them,
+especially in cheap parallel port implementations.
+
+It is only
+possible to open a lpt port when a printer is connected and
+on-line, making it impossible to run lptcontrol(8) when
+there is no printer connected.
+
+This driver
+could still stand a rewrite.
+
+BSD
+February 14, 1999 BSD

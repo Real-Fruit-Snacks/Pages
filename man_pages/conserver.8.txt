@@ -1,0 +1,473 @@
+NAME
+
+conserver -
+console server daemon
+
+SYNOPSIS
+
+conserver
+[-7dDEFhinoRSuvV] [-a type] [-m
+max] [-M master] [-p
+port] [-b port] [-c cred]
+[-C config] [-P passwd]
+[-L logfile] [-O min] [-U
+logfile]
+
+DESCRIPTION
+
+Conserver
+is the daemon that manages remote access to system consoles
+by multiple users via the console(1) client program
+and (optionally) log the console output. It can connect to
+consoles via local serial ports, Unix domain sockets, TCP
+sockets (for terminal servers and the like), or any external
+program.
+
+When started,
+conserver reads the conserver.cf(5) file for
+details of each console. The console type, logging options,
+serial or network parameters, and user access levels are
+just a few of the things that can be specified. Command-line
+options are then applied, possibly overriding
+conserver.cf(5) settings. Conserver
+categorizes consoles into two types: those it should
+actively manage, and those it should just know about, so it
+can refer clients to other conserver instances. If
+the master value of a console matches the hostname or
+ip address of the local machine, conserver will
+actively manage the console. Otherwise, it&rsquo;s
+considered a &rsquo;&rsquo;remote&rsquo;&rsquo; console and
+managed by a different server. Conserver forks a
+child for each group of consoles it must manage and assigns
+each process a port number to listen on. The maximum number
+of consoles managed by each child process is set using the
+-m option. The console(1) client program
+communicates with the master console server process to find
+the port (and host, in a multi-server configuration) on
+which the appropriate child is listening. Conserver
+restricts connections from clients based on the host access
+section of its conserver.cf(5) file, restricts users
+based on the console access lists of the
+conserver.cf(5) file, and authenticates users against
+its conserver.passwd(5) file. Conserver can
+also restrict clients using the tcp-wrappers package
+(enabled using --with-libwrap). This authentication
+is done before consulting the conserver.cf(5) access
+list.
+
+When Unix
+domain sockets are used between the client and server
+(enabled using --with-uds), authentication checks are
+done on the hardcoded address
+&rsquo;&rsquo;127.0.0.1&rsquo;&rsquo;. Automatic client
+redirection is also disabled (as if the -R option was
+used) since the client cannot communicate with remote
+servers. The directory used to hold the sockets is checked
+to make sure it&rsquo;s empty when the server starts. The
+server will not remove any files in the directory
+itself, just in case the directory is accidentally specified
+as &rsquo;&rsquo;/etc&rsquo;&rsquo; or some other critical
+location. The server will do its best to remove all the
+sockets when it shuts down, but it could stop ungracefully
+(crash, &rsquo;&rsquo;kill -9&rsquo;&rsquo;, etc) and leave
+files behind. It would then be up to the admin (or a
+creative startup script) to clean up the directory before
+the server will start again.
+
+Conserver
+completely controls any connection to a console. All escape
+sequences given by the user to console are passed to
+the server without interpretation. The server recognizes and
+processes all escape sequences.
+
+The
+conserver parent process will automatically respawn
+any child process that dies. The following signals are
+propagated by the parent process to its children.
+
+SIGTERM
+
+Close all connections and exit.
+
+SIGHUP
+
+Reread the configuration file. New consoles are managed
+by forking off new children, deleted consoles (and their
+clients) are dropped, and changes to consoles are done
+"in place", resetting the console port (bringing
+it down and up) only when necessary. The console name is
+used to determine when consoles have been
+added/removed/changed. All actions performed by SIGUSR2 are
+also performed.
+
+SIGUSR1
+
+Try to connect to any consoles marked as down. This can
+come in handy if you had a terminal server (or more) that
+wasn&rsquo;t accepting connections at startup and you want
+conserver to try to reconnect to all those downed
+ports. 
+
+SIGUSR2
+
+Close and reopen all console logfiles and, if in daemon
+mode (-d option), the error logfile (see the
+-L option). All actions performed by SIGUSR1 are also
+performed. 
+
+Consoles which
+have no current client connection might produce important
+error messages. With the -u option, these
+&rsquo;&rsquo;unloved&rsquo;&rsquo; errors are labeled with
+a machine name and output on stdout (or, in daemon mode, to
+the logfile). This allows a live operator or an automated
+log scanner to find otherwise unseen errors by watching in a
+single location.
+
+Conserver
+must be run as root if it is to bind to a port under 1024 or
+if it must read protected password files (like shadow
+passwords) for authentication (see
+conserver.passwd(5)). Otherwise, it may be run by any
+user, with -p used to specify a port above 1024.
+
+If encryption
+has been built into the code (--with-openssl),
+encrypted client connections (without certificate exchanges)
+happen by default. To add certificate exchanges, use the
+-c option with the client and server. For
+authentication of the certificates to work, the signing
+certificate must be properly trusted, which usually means
+the public portion is in
+OPENSSL_ROOT/ssl/certs (on both the client and
+server sides). See the sample self-signing certificate
+making script contrib/maketestcerts for further
+clues. To allow non-encrypted client connections (in
+addition to encrypted client connections), use the -E
+option.
+
+OPTIONS
+
+Options may be
+given as separate arguments (e.g., -n -d) or
+clustered (e.g., -nd). Options and their arguments
+may be separated by optional white space. Option arguments
+containing spaces or other characters special to the shell
+must be quoted.
+
+-7
+
+Strip the high bit off of all
+data received, whether from the console client or
+from the console device, before any processing occurs.
+
+-atype
+
+Set the default access type for incoming connections
+from console clients: &rsquo;r&rsquo; for
+refused (the default), &rsquo;a&rsquo; for allowed,
+or &rsquo;t&rsquo; for trusted. This applies to hosts
+for which no matching entry is found in the access section
+of conserver.cf(5).
+
+-bport
+
+Set the base port for children to listen on. Each child
+starts looking for free ports at port and working
+upward, trying a maximum number of ports equal to twice the
+maximum number of groups. If no free ports are available in
+that range, conserver exits. By default,
+conserver lets the operating system choose a free
+port. 
+
+-ccred
+
+Load an SSL certificate and key from the PEM encoded
+file cred.
+
+-Cconfig
+
+Read configuration information from the file
+config. The default config may be changed at
+compile time using the --with-cffile option.
+
+-d
+
+Become a daemon. Disconnects from the controlling
+terminal and sends all output (including any debug output)
+to the logfile (see -L).
+
+-D
+
+Enable debugging output, sent to stderr. Multiple
+-D options increases debug output.
+
+-E
+
+If encryption has been built into the code
+(--with-openssl), encrypted client connections are a
+requirement. This option allows non-encrypted clients (as
+well as encrypted clients) to connect to consoles.
+
+-F
+
+Do not automatically reinitialize failed (unexpectedly
+closed) consoles. If the console is a program
+(&rsquo;|&rsquo; syntax) and it closes with a zero exit
+status, the console is reinitialized regardless of this
+option. Without this option, a console is immediately
+reopened, and if that fails, retried every minute until
+successful. This option has no effect on the -o and
+-O options.
+
+-h
+
+Output a brief help message.
+
+-i
+
+Initiate console connections on demand (and close them
+when not used).
+
+-Llogfile
+
+Log errors and informational messages to logfile
+after startup in daemon mode (-d). This option does
+not apply when not running in daemon mode. The default
+logfile may be changed at compile time using the
+--with-logfile option.
+
+-mmax
+
+Set the maximum consoles managed per process. The
+default max may be changed at compile time using the
+--with-maxmemb option.
+
+-Mmaster
+
+Normally, this allows conserver to bind to a particular
+IP address (like &rsquo;127.0.0.1&rsquo;) instead of all
+interfaces. The default is to bind to all addresses.
+However, if --with-uds was used to enable Unix domain
+sockets for client/server communication, this points
+conserver to the directory where it should store the
+sockets. The default master directory
+(&rsquo;&rsquo;/tmp/conserver&rsquo;&rsquo;) may be
+changed at compile time using the --with-uds
+option. 
+
+-n
+
+Obsolete (now a no-op); see -u.
+
+-o
+
+Normally, a client connecting to a
+&rsquo;&rsquo;downed&rsquo;&rsquo; console does just that.
+Using this option, the server will automatically attempt to
+open (&rsquo;&rsquo;bring up&rsquo;&rsquo;) the console when
+the client connects.
+
+-Omin
+
+Enable periodic attempts (every min minutes) to
+open (&rsquo;&rsquo;bring up&rsquo;&rsquo;) all downed
+consoles (similar to sending a SIGUSR1). Without this
+option, or if min is zero, no periodic attempts
+occur. 
+
+-pport
+
+Set the TCP port for the master process to listen on.
+This may be either a port number or a service name. The
+default port, &rsquo;&rsquo;conserver&rsquo;&rsquo;
+(typically 782), may be changed at compile time using the
+--with-port option. If the --with-uds option
+was used, this option is ignored.
+
+-Ppasswd
+
+Read the table of authorized user data from the file
+passwd. The default passwd may be changed at
+compile time using the --with-pwdfile option.
+
+-R
+
+Disable automatic client redirection to other conserver
+hosts. This means informational commands like -w and
+-i will only show the status of the local conserver
+host and attempts to connect to remote consoles will result
+in an informative message to the user.
+
+-S
+
+Do not run the server, just perform a syntax check of
+configuration file and exit with a non-zero value if there
+is an error. Using more than one -S will cause
+conserver to output various information about each console
+in 5 colon-separated fields, enclosed in curly-braces. The
+philosophy behind the output is to provide information to
+allow external detection of multiple consoles access the
+same physical port. Since this is highly
+environment-specific, conserver cannot do the check
+internally. 
+
+name
+
+The name of the console.
+
+master
+
+The hostname of the master conserver host for the
+console. 
+
+aliases
+
+The console aliases in a comma-separated list.
+
+type
+
+The type of console. Values will be a &rsquo;/&rsquo;
+for a local device, &rsquo;|&rsquo; for a command,
+&rsquo;!&rsquo; for a remote port, &rsquo;%&rsquo; for a
+Unix domain socket, and &rsquo;#&rsquo; for a noop
+console. 
+
+details
+
+Multiple values are comma-separated and depend on the
+type of the console. Local devices will have the values of
+the device file and baud rate/parity. Commands will have
+string to invoke. Remote ports will have the values of the
+remote hostname and port number. Unix domain sockets will
+have the path to the socket. Noop consoles will have
+nothing. 
+
+-u
+
+Send unloved
+console output to conserver&rsquo;s stdout (which, in
+daemon mode, is redirected to the logfile). This applies to
+all consoles to which no user is attached, independent of
+whether logging of individual consoles is enabled via
+conserver.cf entries.
+
+-Ulogfile
+
+Copy all console data to the
+&rsquo;&rsquo;unified&rsquo;&rsquo; logfile. The
+output is the same as the -u output, but all
+consoles, not just those without a user, are logged. Each
+line of output is prefixed with the console name. If a user
+is attached read/write, a &rsquo;*&rsquo; is appended to the
+console name, to allow log watching utilities to ignore
+potential user-introduced alarms.
+
+-v
+
+Echo the configuration as it is being read (be
+verbose). 
+
+-V
+
+Output the version number and settings of the
+conserver program and then exit.
+
+PROTOCOL
+
+The protocol
+used to interact with the conserver daemon has two
+basic styles. The first style is the initial line-based
+mode, which occurs before connecting to a console. The
+second style is the character-based, escape-sequence mode,
+while connected to a console.
+
+The initial
+line-based mode begins the same for both the master process
+and its children. Upon a successful (non-rejected) client
+connection, an &rsquo;&rsquo;ok&rsquo;&rsquo; is sent. The
+client then issues a command and the server responds to it
+with a result string (&rsquo;&rsquo;ok&rsquo;&rsquo; being
+the sign of success for most commands). The commands
+available are &rsquo;&rsquo;help&rsquo;&rsquo;,
+&rsquo;&rsquo;ssl&rsquo;&rsquo; (if SSL was built into the
+code), &rsquo;&rsquo;login&rsquo;&rsquo;, and
+&rsquo;&rsquo;exit&rsquo;&rsquo;. Using the
+&rsquo;&rsquo;login&rsquo;&rsquo; command, the client
+authenticates and gains access to the extended command set.
+This is where the master process and its children differ.
+The master process gives the client access to global
+commands, and the child provides commands for interacting
+with the consoles it manages. The
+&rsquo;&rsquo;help&rsquo;&rsquo; command, in both cases,
+will provide a complete list of commands and a short
+description of what they do.
+
+The second,
+character-based, style of interaction occurs when the client
+issues the &rsquo;&rsquo;call&rsquo;&rsquo; command with a
+child process. This command connects the client to a console
+and, at that point, relays all traffic between the client
+and the console. There is no more command-based interaction
+between the client and the server, any interaction with the
+server is done with the default escape sequence.
+
+This is, by no
+means, a complete description of the entire client/server
+interaction. It is, however, a brief explanation in order to
+give a idea of what the program does. See the
+PROTOCOL file in the distribution for
+further details.
+
+FILES
+
+The following
+default file locations may be overridden at compile time or
+by the command-line options described above. Run
+conserver -V to see the defaults set at compile
+time.
+
+/etc/conserver.cf
+
+description of console terminal
+lines and client host access levels; see
+conserver.cf(5). 
+
+/etc/conserver.passwd
+
+users allowed to access consoles; see
+conserver.passwd(5). 
+
+/var/run/conserver.pid
+
+the master conserver process ID
+
+/var/log/conserver
+
+log of errors and informational messages
+
+/tmp/conserver
+
+directory to hold Unix domain sockets (if enabled)
+
+Additionally,
+output from individual consoles may be logged to separate
+files specified in conserver.cf(5).
+
+BUGS
+
+I&rsquo;m sure
+there are bugs, I just don&rsquo;t know where they are.
+Please let me know if you find any.
+
+AUTHORS
+
+Thomas A. Fine,
+Ohio State Computer Science 
+Kevin S Braunsdorf, Purdue University Computing Center 
+Bryan Stansell, conserver.com
+
+SEE ALSO
+
+console(1),
+conserver.cf(5), conserver.passwd(5)

@@ -1,0 +1,403 @@
+NAME
+
+pmval,
+pmevent - arbitrary performance metrics value
+dumper
+
+SYNOPSIS
+
+pmval
+[-dgLrvVXz?] [-a archive] [-A
+align] [--container=name]
+[--derived=file] [-f N]
+[-h host] [-i instances]
+[-K spec] [-n pmnsfile]
+[-O offset] [-p port] [-s
+samples] [-S starttime] [-t
+interval] [-T endtime] [-U
+archive] [-w width] [-x
+pattern] [-Z timezone]
+metricname
+
+pmevent
+...
+
+DESCRIPTION
+
+pmval
+prints current or archived values for the nominated
+performance metric. The metric of interest is named in the
+metricname argument, subject to instance
+qualification with the -i flag as described
+below.
+
+Unless directed
+to another host by the -h option, or to a set of
+archives by the -a or -U options, pmval
+will contact the Performance Metrics Collector Daemon (PMCD)
+on the local host to obtain the required information.
+
+The
+metricname argument may also be given in the metric
+specification syntax, as described in PCPIntro(1),
+where the source, metric and instance may all be included in
+the metricname, e.g. thathost:kernel.all.load["1
+minute"]. When this format is used, none of the
+-h or -a or -U options may be
+specified.
+
+When using the
+metric specification syntax, the
+&rsquo;&rsquo;hostname&rsquo;&rsquo; @ is treated
+specially and causes pmval to use a local context to
+collect metrics from PMDAs on the local host without PMCD.
+Only some metrics are available in this mode.
+
+When processing
+a set of archives, pmval may relinquish its own
+timing control, and operate under the control of a a
+pmtime(1) process that uses a GUI dialog to provide
+timing control. In this case, either the -g option
+should be used to start pmval as the sole client of a
+new pmtime(1) instance, or -p should be used
+to attach pmval to an existing pmtime(1)
+instance via the IPC channel identified by the port
+argument.
+
+The -S,
+-T, -O and -A options may be used to
+define a time window to restrict the samples retrieved, set
+an initial origin within the time window, or specify a
+&rsquo;&rsquo;natural&rsquo;&rsquo; alignment of the sample
+times; refer to PCPIntro(1) for a complete
+description of these options.
+
+The output from
+pmval is directed to standard output. The following
+symbols may occasionally appear, in place of a metric value,
+in pmval output: A question mark symbol (?) indicates
+that a value is no longer available for that metric
+instance. An exclamation mark (!) indicates that a 64-bit
+counter wrapped during the sample.
+
+pmevent
+is an alias for pmval.
+
+OPTIONS
+
+The available
+command line options are: 
+-a archive, --archive=archive
+
+Performance metric values are
+retrieved from the set of Performance Co-Pilot (PCP) archive
+files identified by the archive argument, which is a
+comma-separated list of names, each of which may be the base
+name of an archive or the name of a directory containing one
+or more archives. See also -U.
+
+-A align,
+--align=align
+
+Force the initial sample to be
+aligned on the boundary of a natural time unit align.
+Refer to PCPIntro(1) for a complete description of
+the syntax for align.
+
+--container=container
+
+Specify an individual
+container to be queried.
+
+-d, --delay
+
+When replaying from an archive,
+this option requests that the prevailing real-time delay be
+applied between samples (see -t) to effect a pause,
+rather than the default behaviour of replaying at full
+speed.
+
+--derived=file
+
+Load derived metric definitions
+from file.
+
+-f precision,
+--precision=precision
+
+Numbers are reported in
+&rsquo;&rsquo;fixed point&rsquo;&rsquo; notation, rather
+than the default scientific notation, using precision
+digits for precision. Each number will be up to the column
+width determined by the default heuristics, else the
+-w option if specified, and include precision
+digits after the decimal point. So, the options -f 3 -w
+8 would produce numbers of the form 9999.999. A value of
+zero for precision omits the decimal point and any
+fractional digits.
+
+-g, --guimode
+
+Start pmval as the sole
+client of a new pmtime(1) server process for replay
+of archived performance data using the pmtime(1)
+graphical user interface.
+
+-h host,
+--host=host
+
+Fetch performance metrics from
+pmcd(1) on host, rather than from the default
+localhost.
+
+-i instances,
+--instances=instances
+
+Specify a list of one or more
+names of instances for the nominated performance
+metric - just these instances will be retrieved and
+reported (the default is to report all instances). The list
+must be a single argument, with elements of the list
+separated by commas and/or white space.
+
+The instance
+name may be quoted with single (&rsquo;) or double (")
+quotes for those cases where the instance name contains
+white space or commas.
+
+Multiple
+-i options are allowed as an alternative way of
+specifying more than one instance of interest.
+
+As an example,
+the following are all equivalent:
+
+$ pmval -i
+"&rsquo;1 minute&rsquo;,&rsquo;5 minute&rsquo;"
+kernel.all.load 
+$ pmval -i &rsquo;"1 minute","5
+minute"&rsquo; kernel.all.load 
+$ pmval -i "&rsquo;1 minute&rsquo; &rsquo;5
+minute&rsquo;" kernel.all.load 
+$ pmval -i "&rsquo;1 minute&rsquo;" -i
+"&rsquo;5 minute&rsquo;" kernel.all.load 
+$ pmval &rsquo;localhost:kernel.all.load["1
+minute","5 minute"]&rsquo;
+
+-K spec,
+--spec-local=spec
+
+When fetching metrics from a
+local context (see -L), the -K option may be
+used to control the DSO PMDAs that should be made
+accessible. The spec argument conforms to the syntax
+described in pmSpecLocalPMDA(3). More than one
+-K option may be used.
+
+-L,
+--local-PMDA
+
+Use a local context to collect
+metrics from DSO PMDAs on the local host without PMCD. See
+also -K.
+
+-n pmnsfile,
+--namespace=pmnsfile
+
+Load an alternative Performance
+Metrics Name Space (PMNS(5)) from the file
+pmnsfile.
+
+-O origin,
+--origin=origin
+
+When reporting archived
+metrics, start reporting at origin within the time
+window (see -S and -T). Refer to
+PCPIntro(1) for a complete description of the syntax
+for origin.
+
+-p port,
+--guiport=port
+
+Attach pmval to an
+existing pmtime(1) time control process instance via
+the IPC channel identified by the port argument. This
+option is normally only used by other tools, e.g.
+pmchart(1), when they launch pmval with
+synchronized time control.
+
+-r, --raw
+
+Print raw values for cumulative
+counter metrics. Normally cumulative counter metrics are
+converted to rates. For example, disk transfers are reported
+as number of disk transfers per second during the preceding
+sample interval, rather than the raw value of number of disk
+transfers since the machine was booted. If you specify this
+option, the raw metric values are printed.
+
+-s samples,
+--samples=samples
+
+The samples argument
+defines the number of samples to be retrieved and reported.
+If samples is 0 or -s is not specified,
+pmval will sample and report continuously (in real
+time mode) or until the end of the set of PCP archives (in
+archive mode).
+
+-S starttime,
+--start=starttime
+
+When reporting archived
+metrics, the report will be restricted to those records
+logged at or after starttime. Refer to
+PCPIntro(1) for a complete description of the syntax
+for starttime.
+
+-t interval,
+--interval=interval
+
+Set the reporting
+interval to something other than the default 1
+second. The interval argument follows the syntax
+described in PCPIntro(1), and in the simplest form
+may be an unsigned integer (the implied units in this case
+are seconds).
+
+-T endtime,
+--finish=endtime
+
+When reporting archived
+metrics, the report will be restricted to those records
+logged before or at endtime. Refer to
+PCPIntro(1) for a complete description of the syntax
+for endtime.
+
+-U archive,
+--nointerp=archive
+
+Performance metric values are
+retrieved from the Performance Co-Pilot (PCP)
+archive. The argument is a comma-separated list of
+names, each of which may be the base name of an archive or
+the name of a directory containing one or more archives.
+However, unlike -a every recorded value in the
+archive for the selected metric and instances is reported
+(so no interpolation mode, and the sample interval
+(-t option) is ignored. See also -a.
+
+At most one of
+the options -a and -U may be specified.
+
+-v, --verbose
+
+Enable verbose mode.
+
+-V, --version
+
+Display version number and
+exit.
+
+-w width,
+--width=width
+
+Set the width of each column of
+output to be width columns. If not specified columns
+are wide enough to accommodate the largest value of the type
+being printed.
+
+-x pattern,
+--filter=pattern
+
+The given pattern is
+sent to the performance metric domain agent for the
+requested metricname before any values are requested.
+This serves two purposes. Firstly, it provides a mechanism
+for server-side event filtering that is customisable for
+individual event streams. In addition, some performance
+metrics domain agents also use the PMCD store mechanism to
+provide a basic security model (e.g. for sensitive log
+files, only a client host with pmStore(3) access
+would be able to access the event stream).
+
+As
+pattern may be processed by regcomp(3) it
+should be a non-empty string. Use . (dot) for a &ldquo;match
+all&rdquo; pattern.
+
+-X,
+--timestamp
+
+When replaying from an archive,
+this option requests that the timestamp be reported with
+additional date information and increased precision
+(microseconds with a single -X, nanoseconds with an
+additional -X), for example
+Sat May 22 20:32:20.971633 2021
+instead of the default format, for example
+20:32:20.971.
+
+-z,
+--hostzone
+
+Use the local timezone of the
+host that is the source of the performance metrics, as
+identified by either the -h or the -a or the
+-U options. The default is to use the timezone of the
+local host.
+
+-Z timezone,
+--timezone=timezone
+
+Use timezone for the
+date and time. Timezone is in the format of the
+environment variable TZ as described in
+environ(7).
+
+-?, --help
+
+Display usage message and
+exit.
+
+CAVEATS
+
+By default,
+pmval attempts to display non-integer numeric values
+in a way that does not distort the inherent precision
+(rarely more than 4 significant digits), and tries to
+maintain a tabular format in the output. These goals are
+sometimes in conflict.
+
+In the absence
+of the -f option (described above), the following
+table describes the formats used for different ranges of
+numeric values for any metric that is of type
+PM_TYPE_FLOAT or PM_TYPE_DOUBLE, or any metric
+that has the semantics of a counter (for which pmval
+reports the rate converted value):
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+For environment
+variables affecting PCP tools, see
+pmGetOptions(3).
+
+SEE ALSO
+
+PCPIntro(1),
+pmcd(1), pmchart(1), pmdumplog(1),
+pmdumptext(1), pminfo(1), pmlogger(1),
+pmrep(1), pmtime(1), PMAPI(3),
+pmStore(3), pmSpecLocalPMDA(3),
+pcp.conf(5), pcp.env(5) and
+PMNS(5).

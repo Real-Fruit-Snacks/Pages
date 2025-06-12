@@ -1,0 +1,260 @@
+NAME
+
+solver_option -
+direct and iterative solver options (rheolef-7.2)
+
+DESCRIPTION
+
+This class
+implements a set of options for customizing a
+solver(4). An instance of this class can be supplied
+to the solver(4) constructor.
+
+MAIN OPTION
+
+iterative
+
+This boolean
+flag controls the choice between an iterative or a direct
+method. Default is direct for matrix obtained from 1D or 2D
+PDE problems and iterative for 3D ones. The direct solver
+bases on the mumps library for a distributed
+environment and, otherwise, on the suitesparse or
+the eigen in a sequential one. The iterative solver
+bases on cg(5) conjugate gradient algorithm for
+symmetric positive definite matrix and on the
+gmres(5) algorithm otherwise.
+
+OPTION FOR DIRECT SOLVERS
+
+preferred_library
+
+The direct
+solver bases on an external library: it could be either
+mumps, suitesparse or eigen. When
+all these libraries are available, then mumps is
+the default when is is well configured with either the
+scoth or the metis ordering library. When
+neither mumps nor suitesparse are
+available, the eigen choice is selected. This
+option allows one to impose an alternative choice e.g.
+suitesparse, by setting the string to
+&rsquo;suitesparse&rsquo;. This option can be
+provided as a list of choices, separated by a space or a
+coma, e.g. preferred_library=&rsquo;suitesparse eigen
+mumps&rsquo;.
+
+default_preferred_library(a)
+
+This method
+returns all the the available libraries in the decreasing
+preference order. The result depends upon the matrix
+a, especially if it is symmetric definite positive
+or not, and whether it requires memory communications or
+not.
+
+used_library(a,sopt)
+
+This method
+returns the name of the available library that will be used
+by the solver when a direct solvers is selected.
+The result depends upon the properties of the a
+matrix and upon the solver option sopt, especially
+the sopt.preferred_library.
+
+compute_determinant
+
+Compute also
+the determinant of the matrix. Requires mumps or
+suitesparse.
+
+n_refinement
+
+Number of
+iterative refinement, when using a direct method
+(suitesparse only support it).
+
+OPTION FOR ITERATIVE SOLVERS
+
+tol
+
+This floating
+parameter control the tolerance for the stopping criterion.
+Default is the machine epsilon for the default
+Float_2 type. Recall that the default Float_2
+type is defined at Rheolef configuration time and is
+double by default, when no special
+configuration option is used.
+
+max_iter
+
+Maximum number
+of iteration when using an iterative method.
+
+absolute_stopping
+
+Absolute or
+relative stopping criterion. 
+With the absolute criterion, the algorithm stops when
+norm(A*x-b) , otherwise it stops when
+norm(A*x-b) . Default is to use an
+absolute stopping criterion.
+
+residue
+
+On return,
+gives the obtained residue, optionally divided by the
+initial one when using a relative stopping. It is less or
+equal to tol when the iterative algorithm stops
+with succes.
+
+n_iter
+
+On return,
+gives the number of iterations performed. It is always less
+or equal to max_iter when the iterative algorithm
+stops with succes.
+
+p_err
+
+A pointer to
+the diststream(2) where residues are printed during
+iterations. When this pointer is zero, no errors are
+printed. Default is to print to derr standard
+diststream(2) error.
+
+label
+
+When printing
+errors, each line is prefixed by [label]. When the
+label is empty, each iterative algorithm uses its default
+label, e.g. &rsquo;cg&rsquo; for the cg(5)
+conjugate gradient. By default the label is empty and this
+option is used to customize the convergence trace.
+
+krylov_dimension
+
+The dimension
+of the Krylov space used by the gmres(5) algorithm.
+Default is krylov_dimension=6.
+
+OPTIONS FOR DEVELOPERS
+
+verbose_level
+
+Can be set to
+0, 1, 2 or 3. The default is 0.
+
+level_of_fill
+
+Built an
+incomplete factorization with the prescribed level of fill
+[1:5].
+
+do_check
+
+Performs extra
+checks for debug.
+
+force_seq
+
+In distributed
+mode, restrict the linear system resolution to diagonal
+blocs per process. This option is only active when using the
+mumps direct solver.
+
+ooc
+
+Out-of-core
+limit (Mo/percent depending on compilation options). In
+development.
+
+amalgamation
+
+Level of
+amalgamation [10:70] for Kass. In development.
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+linalg/lib/solver_option.h
+
+class
+solver_option { 
+public: 
+typedef std::size_t size_type; 
+static const long int decide = -1; 
+mutable long int iterative; 
+Float tol; 
+size_type max_iter; 
+bool absolute_stopping; 
+mutable Float residue; 
+mutable size_type n_iter; 
+odiststream* p_err; 
+mutable std::string label; 
+size_type krylov_dimension; 
+size_type n_refinement; 
+bool compute_determinant; 
+std::string preferred_library; 
+size_type verbose_level; 
+bool do_check; 
+bool force_seq; 
+size_type level_of_fill; 
+size_type amalgamation; 
+size_type ooc;
+
+// allocator
+and default values:
+
+solver_option()
+
+: iterative (decide), 
+#if defined(_RHEOLEF_HAVE_FLOAT128) 
+tol (1e6*std::numeric_limits::epsilon()), 
+#else 
+tol (1e3*std::numeric_limits::epsilon()), 
+#endif 
+max_iter (100000), 
+absolute_stopping (true), 
+residue (0), 
+n_iter (0), 
+p_err (&derr), 
+label (), 
+krylov_dimension (6), 
+n_refinement (2), 
+compute_determinant(false), 
+preferred_library(), 
+verbose_level (0), 
+do_check (false), 
+force_seq (false), 
+level_of_fill (1), 
+amalgamation (10), 
+ooc (20000) 
+{ 
+} 
+solver_option (const solver_option&); 
+solver_option& operator= (const solver_option&);
+
+template  
+static std::string default_preferred_library (const
+csr& a); 
+template  
+static std::string used_library (const csr&
+a, const solver_option& sopt = solver_option());
+
+};
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html&gt;. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

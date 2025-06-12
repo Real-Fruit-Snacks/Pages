@@ -1,0 +1,166 @@
+NAME
+
+nbdkit-ext2-filter
+- read and write files inside ext2, ext3 or ext4
+filesystems
+
+SYNOPSIS
+
+nbdkit
+--filter=ext2 file fs.img ext2file=/disks/disk.raw
+
+nbdkit
+--filter=ext2 --filter=partition file fs.img \ 
+partition=1 ext2file=exportname
+
+DESCRIPTION
+
+"nbdkit-ext2-filter"
+is an nbdkit filter which can read and write files inside
+ext2, ext3 or ext4 filesystem images.
+
+Suppose you
+have an ext2/3/4 filesystem image called fs.img which
+contains inside itself a file called disk.raw inside
+a directory on the filesystem called /disks, then you
+could serve that file over NBD using:
+
+nbdkit
+--filter=ext2 file fs.img ext2file=/disks/disk.raw
+
+Commonly disk
+images are partitioned. In that case, you must select just
+the partition of a disk image that contains an ext2
+filesystem, by using nbdkit-partition-filter(1):
+
+nbdkit
+--filter=ext2 --filter=partition file fs.img \ 
+partition=1 ext2file=/disks/disk.raw
+
+This filter can
+both read and write to the file inside the filesystem. Use
+the -r flag to force a readonly connection, but note
+this does not guarantee that no writes are made to
+the filesystem. In particular we may have to replay the ext3
+journal in order to open a filesystem even read-only.
+
+The filter does
+not support multiple parallel connections, because
+there is a risk of corrupting the filesystem (as if the
+filesystem was mounted by multiple machines). If a second
+connection is made to nbdkit, it will block until the first
+connection closes.
+
+The filter is
+implemented using the ext2fs library which is provided in
+most Linux distros, and also available as part of the
+e2fsprogs project.
+
+nbdkit-guestfs-plugin(1)
+is a more generic plugin which can read files from all kinds
+of different filesystem types, even if they are partitioned
+or use logical volumes. It uses libguestfs instead of
+e2fsprogs.
+
+PARAMETERS
+
+ext2file=PATH
+
+The full path of the file
+within the filesystem that will be exposed over NBD. The
+path must be absolute (starts with "/").
+
+ext2file=exportname
+
+The plugin will expose the path
+within the filesystem chosen by the exportname passed by the
+client. Note that this mode allows the client to deduce
+which files exist within the disk image, which may be a
+security risk in some situations.
+
+At present,
+when using this mode, the server does not advertise any
+particular exports; however, you may use
+nbdkit-exportname-filter(1) to perform that task.
+Similarly, the underlying plugin must support the default
+export name, "".
+
+FILES
+
+$filterdir/nbdkit-ext2-filter.so
+
+The filter.
+
+Use
+"nbdkit --dump-config" to find the location of
+$filterdir.
+
+VERSION
+
+"nbdkit-ext2-filter"
+first appeared in nbdkit 1.18, replacing
+"nbdkit-ext2-plugin" which was added in nbdkit 1.4
+and removed in nbdkit 1.22.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-plugin(3), nbdkit-exportname-filter(1),
+nbdkit-partition-filter(1),
+nbdkit-guestfs-plugin(1),
+http://e2fsprogs.sourceforge.net/, fuse2fs(1).
+
+AUTHORS
+
+Eric Blake
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

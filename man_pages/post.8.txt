@@ -1,0 +1,284 @@
+NAME
+
+post - deliver
+an nmh message
+
+SYNOPSIS
+
+/usr/lib/mh/post
+
+[-help] [-version]
+[-alias aliasfile] [-filter
+
+filterfile]
+[-nofilter] [-format | -noformat]
+[-mime | -nomime] [-msgid |
+-nomsgid] [-messageid localname |
+random] [-verbose | -noverbose]
+[-watch | -nowatch] [-width
+columns] [-mts smtp |
+sendmail/smtp | sendmail/pipe]
+[-sendmail program] [-server
+servername] [-port portname/number]
+[-sasl] [-nosasl] [-saslmech
+mechanism] [-user username]
+[-tls] [-initialtls] [-notls]
+[-snoop] file
+
+DESCRIPTION
+
+post
+is the default program called by send to deliver the
+message in file to local and remote users. In fact,
+most of the features attributed to send in its manual
+page are performed by post, with send acting
+as a relatively simple preprocessor. Thus, it is post
+which parses the various header fields, appends a
+&ldquo;Date:&rdquo; line, and interacts with the mail
+transport system. post will not normally be called
+directly by the user, but can be replaced by the user with a
+postproc profile component that will have file
+as its final argument. See mh-profile(5) for more
+information on postproc.
+
+post
+searches the &ldquo;To:&rdquo;, &ldquo;cc:&rdquo;,
+&ldquo;Bcc:&rdquo;, &ldquo;Fcc:&rdquo;, and
+&ldquo;Resent-xxx:&rdquo; header lines of the specified
+message for destination addresses, checks these addresses
+for validity, and formats them so as to conform to ARPAnet
+Internet Message Format protocol, unless the
+-noformat flag is set. This will normally cause
+&ldquo;@local-site&rdquo; to be appended to each
+local destination address, as well as any local return
+addresses. The -width columns switch can be
+used to indicate the preferred length of the header
+components that contain addresses.
+
+If a
+&ldquo;Bcc:&rdquo; field is encountered, its addresses will
+be used for delivery, and the &ldquo;Bcc:&rdquo; field will
+be removed from the message sent to sighted recipients. The
+blind recipients will receive an entirely new message with a
+minimal set of headers. The body of this new message will
+contain a copy of the message sent to the sighted
+recipients, either marked up with the indicator text
+"Blind-Carbon-Copy" or encapsulated as a MIME
+digest.
+
+If
+-filter filterfile is specified, then this
+copy is filtered (re-formatted) by mhl prior to being
+sent to the blind recipients. Alternately, if the
+-mime switch is given, then post will use the
+MIME rules for encapsulation.
+
+If a
+&ldquo;Dcc:&rdquo; field is encountered and the
+sendmail/pipe mail transport method is not in use,
+its addresses will be used for delivery, and the
+&ldquo;Dcc:&rdquo; field will be removed from the message.
+The blind recipients will receive exactly the same message
+as the sighted recipients. *WARNING* Recipients listed in
+the &ldquo;Dcc:&rdquo; field receive no explicit indication
+that they have received a &ldquo;blind copy&rdquo;. This can
+cause blind recipients to inadvertently reply to all of the
+sighted recipients of the original message, revealing that
+they received a blind copy. On the other hand, since a
+normal reply to a message sent via a &ldquo;Bcc:&rdquo;
+field will generate a reply only to the sender of the
+original message, it takes extra effort in most mailers to
+reply to the included message, and so would usually only be
+done deliberately, rather than by accident.
+
+post
+rejects any message that contains a &ldquo;Dcc:&rdquo; field
+if the sendmail/pipe mail transport method is
+used.
+
+The
+-alias aliasfile switch can be used to specify
+a file that post should read aliases from. More than one
+file can be specified, with each being preceded by
+-alias. In any event, the primary alias file is read
+first.
+
+The
+-msgid switch indicates that a
+&ldquo;Message-ID:&rdquo; or
+&ldquo;Resent-Message-ID:&rdquo; field should be added to
+the header.
+
+The
+-messageid switch selects the style used for the part
+appearing after the @ in &ldquo;Message-ID:&rdquo;,
+&ldquo;Resent-Message-ID:&rdquo;, and
+&ldquo;Content-ID:&rdquo; header fields. The two acceptable
+options are localname (which is the default), and
+random. With localname, the local hostname is
+used. With random, a random sequence of characters is
+used instead. Note that the -msgid switch must be
+enabled for this switch to have any effect.
+
+The
+-verbose switch indicates that the user should be
+informed of each step of the posting/filing process.
+
+The
+-watch switch indicates that the user would like to
+watch the transport system&rsquo;s handling of the message
+(e.g., local and &ldquo;fast&rdquo; delivery).
+
+Under normal
+circumstances, post uses the &ldquo;From:&rdquo; line
+in the message draft as the identity of the originating
+mailbox. A &ldquo;From:&rdquo; line is required in all
+message drafts. By default the message composition utilities
+such as comp, repl and mhmail will
+automatically place a &ldquo;From:&rdquo; line in the
+message draft. There are two ways to override this behavior,
+however. Note that they apply equally to
+&ldquo;Resent-From:&rdquo; lines in messages sent with
+dist.
+
+The first way
+is to supply a &ldquo;Sender:&rdquo; line. The value of this
+field will be used as the originating mailbox identity when
+submitting the message to the mail transport system. If
+multiple addresses are given in the &ldquo;From:&rdquo;
+line, a &ldquo;Sender:&rdquo; line is required. If an
+&ldquo;Envelope-From:&rdquo; line is supplied when multiple
+addresses are given in the &ldquo;From:&rdquo; line, a
+&ldquo;Sender:&rdquo; header will be generated using the
+value of the &ldquo;Envelope-From:&rdquo; line, if
+the &ldquo;Envelope-From:&rdquo; line is not blank.
+
+The second way
+is to supply a &ldquo;Envelope-From:&rdquo; line. The value
+of this field will be used as the originating mailbox
+identity when submitting the message to the mail transport
+system. This will override both the value of the
+&ldquo;From:&rdquo; line and a &ldquo;Sender:&rdquo; line
+(if one is supplied). The &ldquo;Envelope-From:&rdquo; line
+is allowed to have a blank value; if the value is blank,
+then the mail transport system will be instructed to not
+send any bounces in response to the message. Not all mail
+transport systems support this feature.
+
+The mail
+transport system default is defined in
+/etc/nmh/mts.conf but can be overridden here with the
+-mts switch.
+
+If nmh is using
+sendmail/pipe or sendmail/smtp as its mail
+transport system, the -sendmail switch can be used to
+override the default sendmail program.
+
+If nmh is using
+the SMTP MTA, the -server and -port switches
+can be used to override the default mail server and port.
+The default server is set with servers in
+/etc/nmh/mts.conf, and the default port is
+submission, 587.
+
+If nmh
+has been compiled with SASL support, the -sasl and
+-nosasl switches will enable and disable the use of
+SASL authentication with the SMTP MTA. Depending on the SASL
+mechanism used, this may require an additional password
+prompt from the user (but the netrc file can be used
+to store this password, as described in
+mh-profile(5). The -saslmech switch can be
+used to select a particular SASL mechanism, and the
+-user switch can be used to select an authorization
+userid to provide to SASL, other than the default. The
+credentials profile entry in mh-profile(5) describes
+the ways to supply a username and password.
+
+If SASL
+authentication is successful, nmh will attempt to negotiate
+a security layer for session encryption. Encrypted data is
+labelled with &rsquo;(sasl-encrypted)&rsquo; and
+&rsquo;(sasl-decrypted)&rsquo; when viewing the SMTP
+transaction with the -snoop switch. Base64-encoded
+data is wrapped with &rsquo;b64<>&rsquo;. (Beware that
+the SMTP transaction may contain authentication information
+either in plaintext or easily decoded base64.)
+
+If nmh
+has been compiled with TLS support, the -tls and
+-initialtls switches will require the negotiation of
+TLS when connecting to the SMTP MTA. The -tls switch
+will negotiate TLS as part of the normal SMTP protocol using
+the STARTTLS command. The -initialtls will negotiate
+TLS immediately after the connection has taken place, before
+any SMTP commands are sent or received. Encrypted data is
+labelled with &rsquo;(tls-encrypted)&rsquo; and
+&rsquo;(tls-decrypted)&rsquo; when viewing the SMTP
+transaction with the -snoop switch. Base64-encoded
+data is wrapped with &rsquo;b64<>&rsquo;. (Beware that
+the SMTP transaction may contain authentication information
+either in plaintext or easily decoded base64.) The
+-notls switch will disable all attempts to negotiate
+TLS.
+
+If port 465 is
+specified and none of the TLS switches were enabled,
+-initialtls will be implied if TLS support was
+compiled in. Though port 465 for SMTPS (SMTP over SSL) was
+deregistered by IANA in 1998, it is still used for that
+service.
+
+post
+filters out header lines with names beginning with
+&ldquo;Nmh-&rdquo; (case insensitive) from the message
+draft. Those lines are reserved for internal nmh
+use.
+
+FILES
+
+/etc/nmh/mts.conf
+nmh mts configuration file 
+/etc/nmh/MailAliases global nmh alias file 
+/usr/bin/mh/refile Program to process Fcc:s 
+/usr/lib/mh/mhl Program to process Bcc:s
+
+PROFILE COMPONENTS
+
+post
+does not consult the user&rsquo;s
+.mh_profile
+
+SEE ALSO
+
+mhmail(1),
+send(1), mh-mail(5), mh-alias(5),
+mh-profile(5), mh-tailor(5)
+
+Standard for
+the Format of ARPA Internet Text Messages (RFC 822)
+
+DEFAULTS
+
+&rsquo;-alias&rsquo;
+defaults to /etc/nmh/MailAliases 
+&rsquo;-format&rsquo; 
+&rsquo;-nomime&rsquo; 
+&rsquo;-nomsgid&rsquo; 
+&rsquo;-messageid localname&rsquo; 
+&rsquo;-noverbose&rsquo; 
+&rsquo;-nowatch&rsquo; 
+&rsquo;-width 72&rsquo; 
+&rsquo;-nofilter&rsquo;
+
+CONTEXT
+
+None
+
+BUGS
+
+&ldquo;Reply-To:&rdquo;
+fields are allowed to have groups in them according to the
+RFC 822 specification, but post won&rsquo;t let you
+use them.

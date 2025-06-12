@@ -1,0 +1,668 @@
+NAME
+
+ctlinnd -
+Control the main InterNetNews daemon
+
+SYNOPSIS
+
+ctlinnd
+[-hs] [-t timeout] [command
+[argument ...]]
+
+DESCRIPTION
+
+ctlinnd
+sends a message to the control channel of innd(8), the main
+InterNetNews daemon.
+
+In the normal
+mode of behavior, the message is sent to the server, which
+then performs the requested action and sends back a reply
+with a text message and an exit code for ctlinnd. If
+the server successfully performed the command,
+ctlinnd will print the reply on standard output and
+exit with a status of zero. If the server could not perform
+the command, it will direct ctlinnd to exit with a
+status of one. By default, ctlinnd will wait forever
+for a response from innd; this can be changed with
+the -t flag.
+
+The
+"shutdown", "xabort", and
+"xexec" commands do not generate a reply, since
+they cause innd to exit. After these commands,
+ctlinnd will always exit silently with a status of
+zero.
+
+OPTIONS
+
+-h
+
+Prints a command summary. If a
+command is given along with the -h flag, only the
+usage for that command will be given.
+
+-s
+
+If the command was successful, don&rsquo;t print the
+output from innd.
+
+-t timeout
+
+Specifies how long to wait for
+the reply from the server, for commands other than
+"shutdown", "xabort", and
+"xexec". timeout is the number of seconds
+to wait. A value of zero says to wait forever, and a value
+less than zero says not to wait at all but just exit
+immediately with status zero. When waiting for a reply,
+ctlinnd will check every two minutes to be sure the
+server is still running, to make it less likely that
+ctlinnd will just hang.
+
+The default is
+zero, indicating that ctlinnd should wait
+forever.
+
+COMMANDS
+
+Here is the
+complete list of supported commands. Note that nearly all
+commands have a fixed number of arguments. If a parameter
+may be an empty string, it is still necessary to pass the
+empty string to ctlinnd as an argument (specified in
+the shell as two adjacent quotes, like ''). 
+addhist message-id arrival expires posted token
+
+Add an entry to the history
+database for message-id. The angle brackets around
+message-id are optional. It should normally be
+protected from the shell with single quotes.
+
+arrival,
+expires, and posted should be the number of
+seconds since epoch and indicate when the article arrived,
+when it expires (via the Expires header field), and when it
+was posted (given in the Date header field), respectively.
+expires should be "0" if the article
+doesn&rsquo;t have an Expires header field. token is
+the storage API token for the article, and may be empty.
+
+This command
+can only be used while the server is running, and will be
+rejected if the server is paused or throttled.
+
+allow reason
+
+Allow remote connections,
+reversing a prior "reject" command. reason
+must be the same text given to the "reject"
+command, or the empty string (which matches any reason).
+
+begin site
+
+Begin feeding site. The
+server will rescan the newsfeeds file to find the
+specified site and set up a news feed for it. If the site
+already existed, a "drop" for that site is done
+first. This command is forwarded; see "NOTES"
+below.
+
+cancel message-id
+
+Remove the article with the
+specified message-ID from the local system. This does
+not generate a cancel control message; it only affects the
+local system. The angle brackets around message-ID
+are optional. It should normally be protected from the shell
+with single quotes (and not double quotes). For
+instance:
+
+ctlinnd cancel
+'test [AT] foo.bar'
+
+Note that the
+history database is updated with the specified Message-ID so
+if an article with the same Message-ID is afterwards
+received, it will be rejected; it is useful for rejecting
+spam before it arrives.
+
+If the server
+is throttled manually, this command causes it to briefly
+open the history database. If the server is paused or
+throttled for any other reason, this command is
+rejected.
+
+changegroup group
+status
+
+The newsgroup group is
+changed so that its status (the fourth field in the
+active file) becomes status. This may be used
+to make an existing group moderated or unmoderated, for
+example.
+
+This command,
+unlike "newgroup" or "rmgroup", can only
+be used while the server is running, and will be rejected if
+the server is paused or throttled.
+
+checkfile
+
+Check the syntax of the
+newsfeeds file and display a message if any errors
+are found. The details of the errors are reported to
+syslog.
+
+drop site
+
+Flush and drop site from
+the server&rsquo;s list of active feeds. This command is
+forwarded; see "NOTES" below.
+
+feedinfo site
+
+Print detailed information
+about the state of the feed to site, or brief status
+about all feeds if site is the empty string.
+
+flush site
+
+Flush the buffer for the
+specified site. The action taken depends on the type of feed
+the site receives; see newsfeeds(5) for more information.
+This is useful when the site is being fed by a file and
+batching is about to start, or to cleanly shut down and
+respawn a channel feed. If site is an empty string,
+all sites are flushed and the active file and history
+database are also flushed to disk. This command is
+forwarded; see "NOTES" below.
+
+Flushing the
+innfeed channel feed is the recommended method of
+restarting innfeed to pick up new configuration.
+innd will spawn a new innfeed process while
+the old process shuts down cleanly.
+
+flushlogs
+
+Close the news and error log
+files and rename them to add ".old" to the file
+name, then open fresh news and error logs. The active
+file and history database are also flushed to disk. Exploder
+and process channels are reopened so that they properly take
+into account the new log files.
+
+go reason
+
+Re-open the history database
+and start accepting articles again, reversing a previous
+"pause" or "throttle" command.
+reason must be either the empty string or match the
+text that was given to the earlier "pause" or
+"throttle" command.
+
+If a
+"reject" command is in effect, this will also
+reverse it by doing the equivalent of an "allow"
+command if the reason matches reason. Likewise, if a
+"reserve" command had been given, this will clear
+the reservation if reason matches the text that was
+given to "reserve".
+
+The history
+database is automatically closed on "throttle" or
+"pause" and reopened on "go", so the
+history database can be replaced during the pause or
+throttle without requiring an explicit "reload"
+command. If any other configuration files or the
+active file were modified, a "reload"
+command should be given to force the server to re-read those
+files.
+
+If the server
+throttled itself because it accumulated too many I/O errors,
+this command will reset the error count.
+
+If innd
+was not started with the -n y flag, this command also
+does the equivalent of a "readers" command with
+"yes" as the flag and reason as the
+text.
+
+hangup channel
+
+Close the socket for the
+specified incoming channel. This may be useful when an
+incoming connection appears to be hung (although innd
+will close idle connections automatically after a timeout,
+as set with peertimeout in inn.conf).
+
+help [command]
+
+Print a command summary for all
+commands, or just command if one is specified. This
+is equivalent to the -h option.
+
+kill signal site
+
+Signal signal is sent to
+the process underlying the specified site, which must be a
+channel or exploder feed. signal may be a numeric
+signal number or one of "hup", "int", or
+"term"; case is not significant.
+
+logmode
+
+Cause the server to log its
+current operating mode to syslog.
+
+lowmark file
+
+Reset the low water marks in
+the active file based on the contents of file.
+Each line in file must be of the form:
+
+group
+low-value
+
+For
+example:
+
+comp.lang.c++
+243
+
+This command is
+mostly used by news.daily to update the active
+file after nightly expiration.
+
+mode
+
+Print the server&rsquo;s
+operating mode as a multi-line summary of the parameters and
+the operating state. The parameters in the output correspond
+to command-line flags to innd and give the current
+settings of those parameters that can be overridden by
+command-line flags.
+
+name channel
+
+Print the name and relevant
+information for the given incoming or outgoing channel
+number, or for all channels if channel is an empty
+string. The response is formatted as:
+
+::::
+
+where
+ is the name of the channel,  is
+its number (generally the same as the file descriptor
+assigned to it),  is the idle time for an NNTP
+channel or the process ID for a process channel, and
+ is the status for NNTP channels.
+
+The
+ field is one of the following values:
+
+control Control
+channel for ctlinnd 
+file An outgoing file feed 
+localconn Local channel used by nnrpd and rnews for posting
+
+nntp NNTP channel for remote connections 
+proc The process for a process feed 
+remconn The channel that accepts new remote connections
+
+Channel status
+indicates whether the channel is paused or not. Nothing is
+shown unless the channel is paused, in which case
+"paused" is shown. A channel will be paused
+automatically if the number of remote connections for that
+label in incoming.conf is greater than
+max-connections within hold-time seconds.
+
+newgroup group
+[status [creator]]
+
+Create the specified newsgroup.
+The status parameter is the fourth field of the
+active file entry, as described in active(5). If it
+is not an equal sign, only the first character is used.
+creator should be the identity of the person creating
+the group. If the newsgroup already exists, this is
+equivalent to the "changegroup" command.
+
+creator,
+encoded in UTF-8 if given, may be omitted; if so, it will
+default to the newsmaster (as specified at configure time,
+normally "usenet"). status may also be
+omitted; if so, it will default to "y" (a normal,
+unmoderated group). The combination of defaults make it
+possible to use the text of the Control header field
+directly (although don&rsquo;t do this without checking the
+syntactic validity of the header field first).
+
+This command
+can only be done while the server is running or throttled
+manually. It will update its internal state when a
+"go" command is sent. This command updates the
+active.times file as well. This command is forwarded;
+see "NOTES" below.
+
+param letter value
+
+Change the specified server
+parameter. letter is the innd command-line
+option to set and value is the new value. For
+example:
+
+ctlinnd param i
+5
+
+would direct
+the server to allow only five incoming connections. To
+enable or disable the action of the -n flag, use
+"n" for the letter and "y" or
+"n", respectively, for the value.
+
+The supported
+values for letter are "a", "c",
+"H", "i", "l", "n",
+"o", "T", "t", and
+"X".
+
+pause reason
+
+Pause the server so that no
+incoming articles are accepted. No existing connections are
+closed, but the history database is closed. This should be
+used for short-term locks, such as when replacing the
+history database. If the server was not started with the
+-n y flag, this command also does the equivalent of a
+"readers" command with "no" as the flag
+and reason as the text, encoded in UTF-8.
+
+perl flag
+
+Enable or disable Perl
+filtering on every article received by innd. This
+command is only available if INN was built with Perl
+filtering support. If flag starts with "y",
+filtering is enabled; if it starts with "n",
+filtering is disabled.
+
+When filtering
+is disabled, if the filter_innd.pl Perl filter
+defined a function "filter_end", it will be called
+prior to the deactivation of the filter.
+
+Note that
+enabling or disabling Perl filtering on every post received
+by nnrpd is parameterized with the perlfilter
+access parameter in readers.conf.
+
+python flag
+
+Enable or disable Python
+filtering on every article received by innd. This
+command is only available if INN was built with Python
+filtering support. If flag starts with "y",
+filtering is enabled; if it starts with "n",
+filtering is disabled.
+
+readers flag text
+
+Allow or disallow readers. If
+flag starts with the letter "n", then
+reading is disallowed by causing the server to pass
+text as the value of the -r flag to
+nnrpd. If flag starts with the letter
+"y" and text is either an empty string or
+the same string, encoded in UTF-8, that was used when
+reading was disabled, reading will be re-enabled.
+
+The advantage
+of this parameter over noreader in inn.conf is
+that it permits specifying a custom message.
+
+This command
+has no effect if nnrpd is being run separately rather
+than spawned by innd.
+
+reject reason
+
+Remote connections (those that
+would not be handed off to nnrpd) are rejected with
+reason given as the explanation, encoded in UTF-8.
+Existing connections are not closed.
+
+reload what reason
+
+Update the in-memory copy of
+server configuration files. what identifies what
+should be reloaded, and reason is reported to syslog
+in the message noting the reload.
+
+There is no way
+to reload inn.conf, storage.conf, or other
+configuration files for the storage or overview backends. To
+pick up changes to those files, use "ctlinnd xexec
+innd" to restart innd.
+
+If what
+is the empty string or the word "all", everything
+is reloaded. If it is the word "history", the
+history database is closed and re-opened. If it is the word
+"incoming.conf", the corresponding file is
+reloaded. If it is the word "active" or
+"newsfeeds", both the active and
+newsfeeds files are reloaded, which will also cause
+all outgoing feeds to be flushed and restarted.
+
+If what
+is the word "filter.perl", the
+filter_innd.pl file is reloaded. (This file is
+however not available for reloading unless INN was compiled
+with Perl filtering support.) If the Perl filter defined a
+function "filter_before_reload", it will be called
+prior to re-reading filter_innd.pl. If the Perl
+function "filter_after_reload" is defined, it will
+be called after filter_innd.pl has been reloaded.
+Reloading the Perl filter does not enable filtering if it
+has been disabled; use "perl y" to do this
+instead. startup_innd.pl cannot be reloaded.
+
+If what
+is the word "filter.python", the
+filter_innd.py file is reloaded. (This file is
+however not available for reloading unless INN was compiled
+with Python filtering support.) If a Python method named
+"filter_before_reload" exists, it will be called
+prior to re-reading filter_innd.py. If a Python
+method named "__init__" exists, it will be called
+after filter_innd.py has been reloaded. Reloading the
+Python filter does not enable filtering if it has been
+disabled; use "python y" to do this.
+
+renumber group
+
+Update the low water and high
+water marks for group in the active file based
+on the information in the overview database. Regardless of
+the contents of the overview database, the high water mark
+will not be decreased. (Decreasing it may cause duplicate
+article numbers to be assigned after a crash, which can
+cause serious problems with the tradspool storage method.)
+If group is the empty string, all newsgroups are
+renumbered. Renumber only works if overview data has been
+created (if enableoverview is set to true in
+inn.conf).
+
+renumberlow file
+
+Identical to the
+"lowmark" command.
+
+reserve reason
+
+Require the next
+"pause" or "throttle" command to use
+reason as its reason, encoded in UTF-8. This
+reservation is cleared by giving an empty string for the
+reason. This is used by programs like expire to
+coordinate pauses and throttles of the server and avoid
+trampling on other instances of themselves.
+
+rmgroup group
+
+Remove the specified newsgroup.
+The group is removed from the active file and its
+overview information is purged, making it immediately
+unavailable to readers. Unlike the "newgroup"
+command, this command does not update the
+active.times file.
+
+This command
+can only be done while the server is running or throttled
+manually. This command is forwarded; see "NOTES"
+below.
+
+send feed text
+
+The specified text is
+sent as a control line to the exploder feed.
+
+shutdown reason
+
+The server is shut down, with
+the specified reason recorded in the log and sent to all
+open connections. It is a good idea to send a
+"throttle" command first so that feeds can be shut
+down more gracefully.
+
+If Perl or
+Python filtering is compiled in and enabled, certain
+functions are called at "throttle" or
+"shutdown" (to save filter state to disk, for
+example). Consult the embedded filter documentation for
+details.
+
+stathist (off |
+filename)
+
+Enable or disable generation of
+history performance statistics. If the parameter is
+"off", no statistics are gathered. Otherwise,
+statistics are written to the specified file. A parser for
+this file is provided in the contrib tree of the INN
+distribution. See stathist in inn.conf(5) for
+information on how to set the default.
+
+status (off |
+interval)
+
+Adjust the frequency with which
+innd reports status information to syslog. Status
+reporting is turned off if "off" or "0"
+is given as the argument. Otherwise, status will be reported
+every interval seconds. See status in
+inn.conf(5) for information on how to set the default.
+
+throttle reason
+
+Close all existing incoming
+connections and outgoing feeds, and reject new connections.
+Close the history database. This should be used for
+long-term locks or for running a large number of
+"newgroup" and "rmgroup" commands
+without restarting all outgoing feeds between each one.
+(Note that changing the status of existing newsgroups when
+the server is throttled cannot be done.)
+
+If the server
+was not started with the -n y flag, then this command
+also does the equivalent of a "readers" command
+with "no" as the flag and reason as the
+text, encoded in UTF-8.
+
+timer (off |
+interval)
+
+Adjust the frequency with which
+innd reports performance information to syslog.
+Performance monitoring is turned off if "off" or
+"0" is given as the argument. Otherwise,
+statistics will be reported every interval seconds to
+syslog. See timer in inn.conf(5) for information on
+how to set the default.
+
+trace item flag
+
+Turn tracing on or off for the
+specified item. flag should start with the
+letter "y" or "n" to turn tracing on or
+off, respectively. If item starts with a number,
+tracing is set up for the specified innd channel,
+which must be an incoming NNTP feed. If it starts with the
+letter "i", general innd tracing is turned
+on or off. If it starts with the letter "n",
+future nnrpd processes spawned by "innd"
+will or will not be passed the -t flag, as
+appropriate. This will not affect any nnrpd processes
+already running, or nnrpd processes started by some
+means other than innd.
+
+xabort reason
+
+Log the specified reason
+and then abort. On most systems, this will cause innd
+to dump a core file. This is only useful for debugging.
+
+xexec path
+
+Shut down the server, but then
+rather than exiting, exec innd with all of its
+original arguments except for -r. path may be
+either "innd" or an empty string, both of which
+are equivalent. Any other value is an error.
+
+This is the
+easiest way to start a new copy of innd after
+upgrading or reload configuration files that can&rsquo;t be
+reloaded via the "reload" command.
+
+NOTES
+
+In addition to
+being acted on by the server, certain commands can be
+forwarded to an appropriate child process. If the site
+receiving the command is an exploder (such as
+buffchan) or a funnel that feeds into an exploder,
+the command can be forwarded. In this case, the server will
+send a command line to the exploder that consists of the
+ctlinnd command name. If the site funnels into an
+exploder that has an asterisk ("*") in its
+"W" flag (see newsfeeds(5) for more information on
+feed specifications), the site name will be appended to the
+command; otherwise, no argument is appended.
+
+BUGS
+
+ctlinnd
+uses Unix domain sockets on most systems to communicate with
+innd and is therefore limited by whatever maximum
+packet size the operating system imposes on Unix domain
+datagrams. This may mean that server replies are limited to
+4 KB on some systems.
+
+HISTORY
+
+Written by Rich
+$alz rsalz [AT] uunet.net> for InterNetNews. Rewritten
+in POD by Russ Allbery eagle [AT] eyrie.org>.
+
+SEE ALSO
+
+active(5),
+active.times(5), buffchan(8), incoming.conf(5), innd(8),
+inn.conf(5), libinn_inndcomm(3), newsfeeds(5), nnrpd(8).

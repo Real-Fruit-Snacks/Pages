@@ -1,0 +1,176 @@
+GBDE(8) BSD System Manager&rsquo;s Manual GBDE(8)
+
+NAME
+
+gbde &mdash; operation
+and management utility for Geom Based Disk Encryption
+
+SYNOPSIS
+
+gbde attach
+destination [&minus;l lockfile]
+[&minus;p pass-phrase] 
+gbde detach destination 
+gbde init destination [&minus;i]
+[&minus;f filename]
+[&minus;L lockfile]
+[&minus;P pass-phrase] 
+gbde setkey destination
+[&minus;n key]
+[&minus;l lockfile]
+[&minus;p pass-phrase]
+[&minus;L new-lockfile]
+[&minus;P new-pass-phrase] 
+gbde destroy destination
+[&minus;n key]
+[&minus;l lockfile]
+[&minus;p pass-phrase]
+[&minus;L lockfile]
+
+DESCRIPTION
+
+NOTICE: Please be aware that
+this code has not yet received much review and analysis by
+qualified cryptographers and therefore should be considered
+a slightly suspect experimental facility.
+
+We cannot at
+this point guarantee that the on-disk format will not change
+in response to reviews or bug-fixes, so potential users are
+advised to be prepared that
+dump(8)/restore(8) based migrations
+may be called for in the future.
+
+The gbde
+utility is the only official operation and management
+interface for the gbde(4) GEOM based disk encryption kernel
+facility. The interaction between the gbde utility
+and the kernel part is not a published interface.
+
+The operational
+aspect consists of two subcommands: one to open and attach a
+device to the in-kernel cryptographic gbde module,
+and one to close and detach a device.
+
+The management
+part allows initialization of the master key and lock
+sectors on a device, initialization and replacement of
+pass-phrases and key invalidation and blackening
+functions.
+
+The
+&minus;l lockfile argument is used to supply
+the lock selector data. If no &minus;l option is
+specified, the first sector is used for this purpose.
+
+The
+&minus;L new-lockfile argument specifies the
+lock selector file for the key modified with the
+setkey subcommand.
+
+The
+&minus;n key argument can be used to specify
+to which of the four keys the operation applies. A value of
+1 to 4 selects the specified key, a value of 0 (the default)
+means &rsquo;&rsquo;this key&rsquo;&rsquo; (i.e., the key
+used to gain access to the device) and a value of &minus;1
+means &rsquo;&rsquo;all keys&rsquo;&rsquo;.
+
+The
+&minus;f filename specifies an optional
+parameter file for use under initialization.
+
+Alternatively,
+the &minus;i option toggles an interactive mode where
+a template file with descriptions of the parameters can be
+interactively edited.
+
+The
+&minus;p pass-phrase argument specifies the
+pass-phrase used for opening the device. If not specified,
+the controlling terminal will be used to prompt the user for
+the pass-phrase. Be aware that using this option may expose
+the pass-phrase to other users who happen to run ps(1) or
+similar while the command is running.
+
+The
+&minus;P new-pass-phrase argument can be used
+to specify the new pass-phrase to the init and
+setkey subcommands. If not specified, the user is
+prompted for the new pass-phrase on the controlling
+terminal. Be aware that using this option may expose the
+pass-phrase to other users who happen to run ps(1) or
+similar while the command is running.
+
+EXAMPLES
+
+To initialize a device, using
+default parameters:
+
+gbde init
+/dev/ad0s1f -L /etc/ad0s1f.lock
+
+To attach an
+encrypted device:
+
+gbde attach
+ad0s1f -l /etc/ad0s1f.lock
+
+The encrypted
+device has the suffix .bde so a typical command to
+create and mount a file system would be:
+
+newfs
+/dev/ad0s1f.bde 
+mount /dev/ad0s1f.bde /secret
+
+To detach an
+encrypted device:
+
+gbde detach
+ad0s1f
+
+Please notice
+that detaching an encrypted device corresponds to physically
+removing it, do not forget to unmount the file system
+first.
+
+To initialize
+the second key using a detached lockfile and a trivial
+pass-phrase:
+
+gbde setkey
+ad0s1f -n 2 -P foo -L key2.lockfile
+
+To destroy all
+copies of the masterkey:
+
+gbde destroy
+ad0s1f -n -1
+
+SEE ALSO
+
+gbde(4), geom(4)
+
+HISTORY
+
+This software was developed for
+the FreeBSD Project by Poul-Henning Kamp and NAI Labs, the
+Security Research Division of Network Associates, Inc. under
+DARPA/SPAWAR contract N66001-01-C-8035
+(&rsquo;&rsquo;CBOSS&rsquo;&rsquo;), as part of the DARPA
+CHATS research program.
+
+AUTHORS
+
+Poul-Henning Kamp
+phk [AT] FreeBSD.org>
+
+BUGS
+
+The cryptographic algorithms and
+the overall design have not been attacked mercilessly for
+over 10 years by a gang of cryptoanalysts.
+
+BSD
+October 19, 2002 BSD

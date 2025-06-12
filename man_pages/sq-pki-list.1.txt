@@ -1,0 +1,141 @@
+NAME
+
+sq pki list -
+List all authenticated bindings (User ID and certificate
+pairs)
+
+SYNOPSIS
+
+sq pki
+list [OPTIONS] PATTERN
+
+DESCRIPTION
+
+List all
+authenticated bindings (User ID and certificate pairs).
+
+Only bindings
+that meet the specified trust amount (by default bindings
+that are fully authenticated, i.e., have a trust amount of
+120), are shown.
+
+Even if no
+bindings are shown, the exit status is 0.
+
+If
+&rsquo;--email&rsquo; is provided, then a pattern matches if
+it is a case insensitive substring of the email address
+as-is or the normalized email address. Note: unlike the
+email address, the pattern is not normalized. In particular,
+puny code normalization is not done on the pattern.
+
+OPTIONS
+
+Subcommand
+options 
+-a, --amount=AMOUNT
+
+The required amount of
+trust.
+
+120 indicates
+full authentication; values less than 120 indicate partial
+authentication. When &rsquo;--certification-network&rsquo;
+is passed, this defaults to 1200, i.e., &rsquo;sq pki&rsquo;
+tries to find 10 paths.
+
+--certification-network
+
+Treats the network as a
+certification network.
+
+Normally,
+&rsquo;sq pki&rsquo; treats the Web of Trust network as an
+authentication network where a certification only means that
+the binding is correct, not that the target should be
+treated as a trusted introducer. In a certification network,
+the targets of certifications are treated as trusted
+introducers with infinite depth, and any regular expressions
+are ignored. Note: The trust amount remains unchanged. This
+is how most so-called PGP path-finding algorithms work.
+
+--email
+
+Changes the USERID parameter to
+match User IDs with the specified email address.
+
+Interprets the
+USERID parameter as an email address, which is then used to
+select User IDs with that email address.
+
+Unlike when
+comparing User IDs, email addresses are first normalized by
+the domain to ASCII using IDNA2008 Punycode conversion, and
+then converting the resulting email address to lowercase
+using the empty locale.
+
+If multiple
+User IDs match, they are each considered in turn, and this
+function returns success if at least one of those User IDs
+can be authenticated. Note: The paths to the different User
+IDs are not combined.
+
+--gossip
+
+Treats all certificates as
+unreliable trust roots.
+
+This option is
+useful for figuring out what others think about a
+certificate (i.e., gossip or hearsay). In other words, this
+finds arbitrary paths to a particular certificate.
+
+Gossip is
+useful in helping to identify alternative ways to
+authenticate a certificate. For instance, imagine Ed wants
+to authenticate Laura&rsquo;s certificate, but asking her
+directly is inconvenient. Ed discovers that Micah has
+certified Laura&rsquo;s certificate, but Ed hasn&rsquo;t yet
+authenticated Micah&rsquo;s certificate. If Ed is willing to
+rely on Micah as a trusted introducer, and authenticating
+Micah&rsquo;s certificate is easier than authenticating
+Laura&rsquo;s certificate, then Ed has learned about an
+easier way to authenticate Laura&rsquo;s certificate.
+
+PATTERN
+
+A pattern to select the
+bindings to authenticate.
+
+The pattern is
+treated as a UTF-8 encoded string and a case insensitive
+substring search (using the current locale) is performed
+against each User ID. If a User ID is not valid UTF-8, the
+binding is ignored.
+
+Global
+options 
+See sq(1) for a description of the global
+options.
+
+EXAMPLES
+
+List all
+bindings for user IDs containing an email address from
+example.org, and that can be authenticated.
+
+sq pki list
+@example.org
+
+SEE ALSO
+
+sq(1),
+sq-pki(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org&gt;.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

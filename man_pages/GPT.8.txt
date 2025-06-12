@@ -1,0 +1,208 @@
+GPT(8) BSD System Manager&rsquo;s Manual GPT(8)
+
+NAME
+
+gpt &mdash; GUID
+partition table maintenance utility
+
+SYNOPSIS
+
+gpt
+[general_options] command
+[command_options] device ...
+
+DESCRIPTION
+
+The gpt utility provides
+the necessary functionality to manipulate GUID partition
+tables (GPTs), but see BUGS below for how and where
+functionality is missing. The basic usage model of the
+gpt tool follows that of the cvs(1) tool. The general
+options are described in the following paragraph. The
+remaining paragraphs describe the individual commands with
+their options. Here we conclude by mentioning that a
+device is either a special file corresponding to a
+disk-like device or a regular file. The command is applied
+to each device listed on the command line.
+
+General
+Options 
+The general options allow the user to change default
+settings or otherwise change the behaviour that is
+applicable to all commands. Not all commands use all default
+settings, so some general options may not have an effect on
+all commands.
+
+The
+&minus;p count option allows the user to
+change the number of partitions the GPT can accomodate. This
+is used whenever a new GPT is created. By default, the
+gpt utility will create space for 128 partitions (or
+32 sectors of 512 bytes).
+
+The
+&minus;r option causes the gpt utility to open
+the device for reading only. Currently this option is
+primarily useful for the show command, but the intent
+is to use it to implement dry-run behaviour.
+
+The
+&minus;v option controls the verbosity level. The
+level increases with every occurrence of this option. There
+is no formalized definition of the different levels yet.
+
+Commands
+
+gpt add [&minus;b number]
+[&minus;i index] [&minus;s
+count] [&minus;t type] device
+...
+
+The add command allows
+the user to add a new partition to an existing table. By
+default, it will create a UFS partition covering the first
+available block of an unused disk space. The
+command-specific options can be used to control this
+behaviour.
+
+The
+&minus;b number option allows the user to
+specify the starting (beginning) sector number of the
+partition. The minimum sector number is 1, but has to fall
+inside an unused region of disk space that is covered by the
+GPT.
+
+The
+&minus;i index option allows the user to
+specify which (free) entry in the GPT table is to be used
+for the new partition. By default the first free entry is
+selected.
+
+The
+&minus;s count option allows the user to
+specify the size of the partition in sectors. The minimum
+size is 1.
+
+The
+&minus;t type option allows the user to
+specify the partition type. The type is given as an UUID,
+but gpt accepts efi, swap, ufs,
+linux and windows as aliases for the most
+commonly used partition types.
+
+gpt create
+[&minus;p] device ...
+
+The create command
+allows the user to create a new (empty) GPT.
+
+The
+&minus;p option tells gpt to create only the
+primary table and not the backup table. This option is only
+useful for debugging and should not be used otherwise.
+
+gpt destroy
+[&minus;r] device ...
+
+The destroy command
+allows the user to destroy an existing, possibly not empty
+GPT.
+
+The
+&minus;r option instructs gpt to destroy the
+table in a way that it can be recovered.
+
+gpt migrate
+[&minus;k] [&minus;s] device ...
+
+The migrate command
+allows the user to migrate an MBR-based disk partitioning
+into a GPT-based partitioning.
+
+The
+&minus;k option instructs gpt to not destroy
+the current MBR. This option is primarily useful for
+debugging and should not be used by users.
+
+The
+&minus;s option prevents migrating BSD disk labels
+into GPT partitions by creating the GPT equivalent of a
+slice.
+
+gpt remove
+[&minus;b number] [&minus;i
+index] [&minus;s count]
+[&minus;t type] device ...
+
+The remove command
+allows the user to remove any partitions that match the
+selection. BEWARE: when no options are given, all GPT
+partitions will match and thus will be deleted.
+
+The
+&minus;b number option selects the partitions
+that starts at the given number.
+
+The
+&minus;i index option selects the partition
+with the given partition number.
+
+The
+&minus;s count option selects all partitions
+that have the given size. This can cause multiple partitions
+to be removed.
+
+The
+&minus;t type option selects all partitions
+that have the given type. The type is given as an UUID or by
+the aliases that the add command accepts. This can
+cause multiple partitions to be removed.
+
+gpt show device
+...
+
+The show command
+displays the current partitioning on the listed devices and
+gives an overall view of the disk contents.
+
+SEE ALSO
+
+fdisk(8), mount(8), newfs(8),
+swapon(8)
+
+HISTORY
+
+The gpt utility appeared
+in FreeBSD 5.0 for ia64.
+
+BUGS
+
+The development of the
+gpt utility is still work in progress. Many necessary
+features are missing or partially implemented. In practice
+this means that the manual page, supposed to describe these
+features, is farther removed from being complete or useful.
+As such, missing functionality is not even documented as
+missing. However, it is believed that the currently present
+functionality is reliable and stable enough that this tool
+can be used without bullet-proof footware if one thinks one
+does not make mistakes.
+
+It is expected
+that the basic usage model does not change, but it is
+possible that future versions will not be compatible in the
+strictest sense of the word. For example, the
+&minus;p count option may be changed to a
+command option rather than a generic option. There are only
+two commands that use it so there is a chance that the
+natural tendency for people is to use it as a command
+option. Also, options primarily intended for diagnostic or
+debug purposes may be removed in future versions.
+
+Another
+possibility is that the current usage model is accompanied
+by other interfaces to make the tool usable as a back-end.
+This all depends on demand and thus feedback.
+
+BSD
+August 7, 2004 BSD

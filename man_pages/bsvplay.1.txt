@@ -1,0 +1,78 @@
+Name
+
+bsvplay &mdash;
+convert BASICA music data to PCM
+
+Syntax
+
+bsvplay
+[-i part] [-q part] [-r
+rate] [file...] | aplay -f dat -c 1
+
+Description
+
+bsvplay will
+convert BASICA binary music data to linear 16-bit raw PCM.
+Normally, you will be wanting to pipe it into a raw PCM
+player like aplay(1) to actually output it to a sound
+device. Be sure to lower the volume beforehand to avoid
+nasty surprises that come with square waves. By default,
+bsvplay will mix 1:1 square:sine waves to give a medium tone
+hardness.
+
+Do note that
+the music data is embedded in BSV/EXE/COM files and needs to
+be manually located. It is usually very evident from a
+regular pattern in hexdumps.
+
+Options
+
+-q
+part
+
+Part to mix square waves in
+(default: 1.0)
+
+-i part
+
+Part to mix sine waves in
+(default: 1.0). If -q2 -i1 is specified for example,
+the final PCM output will consist of 2/3*squarepcm +
+1/3*sinpcm.
+
+-r rate
+
+PCM sample rate (default: 48000
+Hz)
+
+--pianoman
+
+Assume the input is Pianoman
+MUS.
+
+File format
+
+The BASICA
+format is defined 6-byte tuples of divisor, duration and
+pause.
+
+struct bsv_insn {
+
+uint16_t divisor;
+
+uint16_t duration; /* in ticks */
+
+uint16_t af_pause; /* in ticks */
+
+};
+
+where divisor
+specifies the divisor value that it directly handed to the
+x86 PC speaker. The following formula holds:
+
+frequency = 1193181 / divisor;
+
+See also
+
+aplay(1),
+qplay(1), hxtools(7)

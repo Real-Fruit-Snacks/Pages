@@ -1,0 +1,662 @@
+RC.SUBR(8) BSD System Manager&rsquo;s Manual
+RC.SUBR(8)
+
+NAME
+
+rc.subr &mdash; functions
+used by system shell scripts
+
+SYNOPSIS
+
+. /etc/rc.subr
+
+backup_file
+action file current backup 
+checkyesno var 
+check_pidfile pidfile procname
+[interpreter] 
+check_process procname [interpreter]
+
+debug message 
+err exitval message 
+force_depend name 
+info message 
+load_rc_config command 
+mount_critical_filesystems type 
+rc_usage command ... 
+reverse_list item ... 
+run_rc_command argument 
+run_rc_script file argument 
+set_rcvar [base] 
+wait_for_pids [pid ...] 
+warn message
+
+DESCRIPTION
+
+The rc.subr script
+contains commonly used shell script functions and variable
+definitions which are used by various scripts such as rc(8).
+Scripts required by ports in /usr/local/etc/rc.d will
+also eventually be rewritten to make use of it.
+
+The
+rc.subr functions were mostly imported from NetBSD
+and it is intended that they remain synced between the two
+projects. With that in mind there are several variable
+definitions that can help in this regard. They are:
+
+OSTYPE
+
+Its value will be either
+"FreeBSD" or "NetBSD", depending on
+which OS it is running on.
+
+SYSCTL
+
+The path to the sysctl(8)
+command.
+
+SYSCTL_N
+
+The path and argument list to
+display only the sysctl(8) values instead of a
+name=value pair.
+
+SYSCTL_W
+
+The path and argument to write
+or modify sysctl(8) values.
+
+The
+rc.subr functions are accessed by sourcing
+/etc/rc.subr into the current shell.
+
+The following
+shell functions are available:
+
+backup_file action
+file current backup
+
+Make a backup copy of
+file into current. If the rc.conf(5) variable
+backup_uses_rcs is &rsquo;&rsquo;YES&rsquo;&rsquo;,
+use rcs(1) to archive the previous version of
+current, otherwise save the previous version of
+current as backup.
+
+The
+action argument may be one of the following:
+
+add
+
+file is
+now being backed up by or possibly re-entered into this
+backup mechanism. current is created, and if
+necessary, the rcs(1) files are created as well.
+
+update
+
+file has
+changed and needs to be backed up. If current exists,
+it is copied to backup or checked into rcs(1) (if the
+repository file is old), and then file is copied to
+current.
+
+remove
+
+file is
+no longer being tracked by this backup mechanism. If rcs(1)
+is being used, an empty file is checked in and
+current is removed, otherwise current is moved
+to backup.
+
+checkyesno var
+
+Return 0 if var is
+defined to &rsquo;&rsquo;YES&rsquo;&rsquo;,
+&rsquo;&rsquo;TRUE&rsquo;&rsquo;,
+&rsquo;&rsquo;ON&rsquo;&rsquo;, or &rsquo;1&rsquo;. Return 1
+if var is defined to &rsquo;&rsquo;NO&rsquo;&rsquo;,
+&rsquo;&rsquo;FALSE&rsquo;&rsquo;,
+&rsquo;&rsquo;OFF&rsquo;&rsquo;, or &rsquo;0&rsquo;.
+Otherwise, warn that var is not set correctly. The
+values are case insensitive.
+
+check_pidfile pidfile
+procname [interpreter]
+
+Parses the first word of the
+first line of pidfile for a PID, and ensures that the
+process with that PID is running and its first argument
+matches procname. Prints the matching PID if
+successful, otherwise nothing. If interpreter is
+provided, parse the first line of procname, ensure
+that the line is of the form
+
+#! interpreter
+[...]
+
+and use
+interpreter with its optional arguments and
+procname appended as the process string to search
+for.
+
+check_process
+procname [interpreter]
+
+Prints the PIDs of any
+processes that are running with a first argument that
+matches procname. interpreter is handled as
+per check_pidfile.
+
+debug message
+
+Display a debugging message to
+stderr, log it to the system log using logger(1), and
+return to the caller. The error message consists of the
+script name (from $0), followed by &rsquo;&rsquo;:
+DEBUG: &rsquo;&rsquo;, and then message. This
+function is intended to be used by developers as an aid to
+debugging scripts. It can be turned on or off by the
+rc.conf(5) variable rc_debug.
+
+err exitval
+message
+
+Display an error message to
+stderr, log it to the system log using logger(1), and
+exit with an exit value of exitval. The error
+message consists of the script name (from $0),
+followed by &rsquo;&rsquo;: ERROR: &rsquo;&rsquo;, and then
+message.
+
+force_depend name
+
+Output an advisory message and
+force the name service to start. The name
+argument is the basename(1) component of the path to the
+script, usually /etc/rc.d/name. If the script fails
+for any reason it will output a warning and return with a
+return value of 1. If it was successful it will return
+0.
+
+info message
+
+Display an informational
+message to stdout, and log it to the system log using
+logger(1). The message consists of the script name (from
+$0), followed by &rsquo;&rsquo;: INFO:
+&rsquo;&rsquo;, and then message. The display of this
+informational output can be turned on or off by the
+rc.conf(5) variable rc_info.
+
+load_rc_config
+command
+
+Source in the configuration
+files for command. First, /etc/rc.conf is
+sourced if it has not yet been read in. Then,
+/etc/rc.conf.d/command is sourced if it is an
+existing file. The latter may also contain other variable
+assignments to override run_rc_command arguments
+defined by the calling script, to provide an easy mechanism
+for an administrator to override the behaviour of a given
+rc.d(8) script without requiring the editing of that
+script.
+
+mount_critical_filesystems
+type
+
+Go through a list of critical
+file systems, as found in the rc.conf(5) variable
+critical_filesystems_type, mounting each one that is
+not currently mounted.
+
+rc_usage command
+...
+
+Print a usage message for
+$0, with commands being the list of valid
+arguments prefixed by
+&rsquo;&rsquo;[fast|force|one]&rsquo;&rsquo;.
+
+reverse_list item
+...
+
+Print the list of items
+in reverse order.
+
+run_rc_command
+argument
+
+Run the argument method
+for the current rc.d(8) script, based on the settings of
+various shell variables. run_rc_command is extremely
+flexible, and allows fully functional rc.d(8) scripts to be
+implemented in a small amount of shell code.
+
+argument
+is searched for in the list of supported commands, which may
+be one of:
+
+start
+
+Start the
+service. This should check that the service is to be started
+as specified by rc.conf(5). Also checks if the service is
+already running and refuses to start if it is. This latter
+check is not performed by standard FreeBSD scripts if the
+system is starting directly to multi-user mode, to speed up
+the boot process.
+
+stop
+
+If the service
+is to be started as specified by rc.conf(5), stop the
+service. This should check that the service is running and
+complain if it is not.
+
+restart
+
+Perform a
+stop then a start. Defaults to displaying the
+process ID of the program (if running).
+
+rcvar
+
+Display which
+rc.conf(5) variables are used to control the startup of the
+service (if any).
+
+If
+pidfile or procname is set, also support:
+
+poll
+
+Wait for the
+command to exit.
+
+status
+
+Show the status
+of the process.
+
+Other supported
+commands are listed in the optional variable
+extra_commands.
+
+argument
+may have one of the following prefixes which alters its
+operation:
+
+fast
+
+Skip the check
+for an existing running process, and sets
+rc_fast=YES.
+
+force
+
+Skip the checks
+for rcvar being set to
+&rsquo;&rsquo;YES&rsquo;&rsquo;, and sets
+rc_force=YES. This ignores argument_precmd
+returning non-zero, and ignores any of the required_*
+tests failing, and always returns a zero exit status.
+
+one
+
+Skip the checks
+for rcvar being set to
+&rsquo;&rsquo;YES&rsquo;&rsquo;, but performs all the other
+prerequisite tests.
+
+run_rc_command
+uses the following shell variables to control its behaviour.
+Unless otherwise stated, these are optional.
+
+name
+
+The name of
+this script. This is not optional.
+
+rcvar
+
+The value of
+rcvar is checked with checkyesno to determine
+if this method should be run.
+
+command
+
+Full path to
+the command. Not required if argument_cmd is defined
+for each supported keyword.
+
+command_args
+
+Optional arguments and/or shell
+directives for command.
+
+command_interpreter
+
+command is started
+with
+
+#!
+command_interpreter [...]
+
+which results in its ps(1)
+command being
+
+command_interpreter
+[...] command
+
+so use that
+string to find the PID(s) of the running command rather than
+command.
+
+extra_commands
+
+Extra
+commands/keywords/arguments supported.
+
+pidfile
+
+Path to PID
+file. Used to determine the PID(s) of the running command.
+If pidfile is set, use
+
+check_pidfile
+$pidfile $procname
+
+to find the
+PID. Otherwise, if command is set, use
+
+check_process
+$procname
+
+to find the
+PID.
+
+procname
+
+Process name to
+check for. Defaults to the value of command.
+
+required_dirs
+
+Check for the existence of the
+listed directories before running the default start
+method.
+
+required_files
+
+Check for the readability of
+the listed files before running the default start
+method.
+
+required_vars
+
+Perform checkyesno on
+each of the list variables before running the default start
+method.
+
+${name}_chdir
+
+Directory to cd to
+before running command, if ${name}_chroot is
+not provided.
+
+${name}_chroot
+
+Directory to chroot(8) to
+before running command. Only supported after
+/usr is mounted.
+
+${name}_flags
+
+Arguments to call
+command with. This is usually set in rc.conf(5), and
+not in the rc.d(8) script. The environment variable
+&rsquo;flags&rsquo; can be used to override this.
+
+${name}_nice
+
+nice(1) level to run
+command as. Only supported after /usr is
+mounted.
+
+${name}_user
+
+User to run command as,
+using chroot(8). if ${name}_chroot is set, otherwise
+uses su(1). Only supported after /usr is mounted.
+
+${name}_group
+
+Group to run the chrooted
+command as.
+
+${name}_groups
+
+Comma separated list of
+supplementary groups to run the chrooted command
+with.
+
+argument_cmd
+
+Shell commands which override
+the default method for argument.
+
+argument_precmd
+
+Shell commands to run just
+before running argument_cmd or the default method for
+argument. If this returns a non-zero exit code, the
+main method is not performed. If the default method is being
+executed, this check is performed after the
+required_* checks and process (non-)existence
+checks.
+
+argument_postcmd
+
+Shell commands to run if
+running argument_cmd or the default method for
+argument returned a zero exit code.
+
+sig_stop
+
+Signal to send
+the processes to stop in the default stop method.
+Defaults to SIGTERM.
+
+sig_reload
+
+Signal to send the processes to
+reload in the default reload method. Defaults to
+SIGHUP.
+
+For a given
+method argument, if argument_cmd is not
+defined, then a default method is provided by
+run_rc_command:
+
+Argument
+
+Default
+method
+
+start
+
+If
+command is not running and checkyesno
+rcvar succeeds, start command.
+
+stop
+
+Determine the
+PIDs of command with check_pidfile or
+check_process (as appropriate), kill
+sig_stop those PIDs, and run wait_for_pids on
+those PIDs.
+
+reload
+
+Similar to
+stop, except that it uses sig_reload instead,
+and does not run wait_for_pids.
+
+restart
+
+Runs the
+stop method, then the start method.
+
+status
+
+Show the PID of
+command, or some other script specific status
+operation.
+
+poll
+
+Wait for
+command to exit.
+
+rcvar
+
+Display which
+rc.conf(5) variable is used (if any). This method always
+works, even if the appropriate rc.conf(5) variable is set to
+&rsquo;&rsquo;NO&rsquo;&rsquo;.
+
+The following
+variables are available to the methods (such as
+argument_cmd) as well as after run_rc_command
+has completed:
+
+rc_arg
+
+Argument
+provided to run_rc_command, after fast and force
+processing has been performed.
+
+rc_flags
+
+Flags to start
+the default command with. Defaults to ${name}_flags,
+unless overridden by the environment variable
+&rsquo;flags&rsquo;. This variable may be changed by the
+argument_precmd method.
+
+rc_pid
+
+PID of
+command (if appropriate).
+
+rc_fast
+
+Not empty if
+&rsquo;&rsquo;fast&rsquo;&rsquo; prefix was used.
+
+rc_force
+
+Not empty if
+&rsquo;&rsquo;force&rsquo;&rsquo; prefix was used.
+
+run_rc_script file
+argument
+
+Start the script file
+with an argument of argument, and handle the return
+value from the script.
+
+Various shell
+variables are unset before file is started:
+
+name,
+command, command_args,
+command_interpreter, extra_commands,
+pidfile, rcvar, required_dirs,
+required_files, required_vars,
+argument_cmd, argument_precmd.
+argument_postcmd.
+
+The startup
+behaviour of file depends upon the following
+checks:
+
+1.
+
+If file ends in
+.sh, it is sourced into the current shell.
+
+2.
+
+If file appears to be a
+backup or scratch file (e.g., with a suffix of ~,
+#, .OLD, or .orig), ignore it.
+
+3.
+
+If file is not
+executable, ignore it.
+
+4.
+
+If the rc.conf(5) variable
+rc_fast_and_loose is empty, source file in a
+sub shell, otherwise source file into the current
+shell.
+
+set_rcvar
+[base]
+
+Set the variable name required
+to start a service. In FreeBSD a daemon is usually
+controlled by an rc.conf(5) variable consisting of a
+daemon&rsquo;s name postfixed by the string
+&rsquo;&rsquo;_enable&rsquo;&rsquo;. This is not the case in
+NetBSD. When the following line is included in a script
+
+rcvar=&rsquo;set_rcvar&rsquo;
+
+This function
+will use the value of the $name variable, which
+should be defined by the calling script, to construct the
+appropriate rc.conf(5) knob. If the base argument is
+set it will use base instead of $name.
+
+wait_for_pids [pid
+...]
+
+Wait until all of the provided
+pids do not exist any more, printing the list of
+outstanding pids every two seconds.
+
+warn message
+
+Display a warning message to
+stderr and log it to the system log using logger(1).
+The warning message consists of the script name (from
+$0), followed by &rsquo;&rsquo;: WARNING:
+&rsquo;&rsquo;, and then message.
+
+FILES 
+/etc/rc.subr
+
+The
+rc.subr file resides in /etc.
+
+SEE ALSO
+
+rc.conf(5), rc(8)
+
+HISTORY
+
+The rc.subr script
+appeared in NetBSD 1.3. The rc.d(8) support functions
+appeared in NetBSD 1.5. The rc.subr script first
+appeared in FreeBSD 5.0.
+
+BSD
+January 6, 2004 BSD

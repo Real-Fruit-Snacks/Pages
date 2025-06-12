@@ -1,0 +1,229 @@
+NAME
+
+docheckgroups -
+Process checkgroups and output a list of changes
+
+SYNOPSIS
+
+docheckgroups
+[-u] [include-pattern
+[exclude-pattern]]
+
+DESCRIPTION
+
+docheckgroups
+is usually run by controlchan in order to process
+checkgroups control messages. It reads a list of newsgroups
+along with their descriptions on its standard input. That
+list should be formatted like the newsgroups(5) file: each
+line contains the name of a newsgroup followed by one or
+more tabulations and its description.
+
+docheckgroups
+will only check the presence of newsgroups which match
+include-pattern (an egrep expression like
+"^comp\..*$" for newsgroups starting with
+"comp.") and which do not match
+exclude-pattern (also an egrep expression)
+except for newsgroups mentioned in the
+pathetc/localgroups file. This file is also formatted
+like the newsgroups(5) file and should contain local
+newsgroups which would otherwise be mentioned for removal.
+There is no need to put local newsgroups of hierarchies for
+which no checkgroups control messages are sent, unless you
+manually process checkgroups texts for them. Lines beginning
+with a hash sign ("#") are not taken into account
+in this file. All the newsgroups and descriptions mentioned
+in pathetc/localgroups are appended to the processed
+checkgroups.
+
+If
+exclude-pattern is given, include-pattern
+should also be given before (you can use an empty string
+("") if you want to include all the newsgroups).
+Be that as it may, docheckgroups will only check
+newsgroups in the top-level hierarchies which are present in
+the checkgroups.
+
+Then,
+docheckgroups checks the active and
+newsgroups files and displays on its standard output
+a list of changes, if any. It does not change anything by
+default; it only points out what should be changed:
+
+&bull;
+
+Newsgroups which should be removed (they are in the
+active file but not in the checkgroups) and the
+relevant ctlinnd commands to achieve that;
+
+&bull;
+
+Newsgroups which should be added (they are not in the
+active file but in the checkgroups) and the relevant
+ctlinnd commands to achieve that;
+
+&bull;
+
+Newsgroups which are incorrectly marked as moderated or
+unmoderated (they are both in the active file and the
+checkgroups but their status differs) and the relevant
+ctlinnd commands to fix that;
+
+&bull;
+
+Descriptions which should be removed (they are in the
+newsgroups file but not in the checkgroups);
+
+&bull;
+
+Descriptions which should be added (they are not in the
+newsgroups file but in the checkgroups).
+
+The output of
+docheckgroups can be fed into mod-active (it
+will pause the news server, update the active file
+accordingly, reload it and resume the work of the news
+server) or into the shell (commands for ctlinnd will
+be processed one by one). In order to update the
+newsgroups file, the -u flag must be given to
+docheckgroups.
+
+When processing
+a checkgroups manually, it is always advisable to first
+check the raw output of docheckgroups. Then, if
+everything looks fine, use mod-active and the
+-u flag.
+
+OPTIONS
+
+-u
+
+If this flag is given,
+docheckgroups will update the newsgroups file:
+it removes obsolete descriptions and adds new ones. It also
+sorts this file alphabetically and improves its general
+format (see newsgroups(5) for an explanation of the
+preferred number of tabulations).
+
+EXAMPLES
+
+So as to better
+understand how docheckgroups works, here are examples
+with the following active file:
+
+a.first
+0000000000 0000000001 y 
+a.second.announce 0000000000 0000000001 y 
+a.second.group 0000000000 0000000001 y 
+b.additional 0000000000 0000000001 y 
+b.third 0000000000 0000000001 y 
+c.fourth 0000000000 0000000001 y
+
+the following
+newsgroups file (using tabulations):
+
+a.first First
+group. 
+a.second.announce Announce group. 
+a.second.group Second group. 
+b.third Third group. 
+c.fourth Fourth group.
+
+and the
+following localgroups file (using tabulations):
+
+b.additional A
+local newsgroup I want to keep.
+
+The checkgroups
+we process is in the file test which contains:
+
+a.first First
+group. 
+a.second.announce Announce group. (Moderated) 
+a.second.group Second group. 
+b.third Third group. 
+c.fourth Fourth group.
+
+If we run:
+
+cat test |
+docheckgroups
+
+docheckgroups
+will output that a.second.announce is incorrectly marked as
+unmoderated and that its description is obsolete. Besides,
+two new descriptions will be mentioned for addition (the new
+one for a.second.announce and the missing description for
+b.additional -- it should indeed be in the
+newsgroups file and not only in localgroups).
+Now that we have checked the output of docheckgroups
+and that we agree with the changes, we run it with the
+-u flag to update the newsgroups file and we
+redirect the standard output to mod-active to update
+the active file:
+
+cat test |
+docheckgroups -u | mod-active
+
+That&rsquo;s
+all!
+
+Now, suppose we
+run:
+
+cat test |
+docheckgroups "^c\..*$"
+
+Nothing is
+output (indeed, everything is fine for the c.* hierarchy).
+It would have been similar if the test file had only
+contained the checkgroups for the c.* hierarchy
+(docheckgroups would not have checked a.* and b.*,
+even if they had been in include-pattern).
+
+In order to
+check both a.* and c.*, you can run:
+
+cat test |
+docheckgroups "^a\..*$|^c\..*$"
+
+And if you want
+to check a.* but not a.second.*, you can run:
+
+cat test |
+docheckgroups "^a\..*$"
+"^a\.second\..*$"
+
+In our example,
+docheckgroups will then mention a.second.announce and
+a.second.group for removal since they are in the
+active file (the same goes for their descriptions).
+Notwithstanding, if you do want to keep a.second.announce,
+just add this group to localgroups and
+docheckgroups will no longer mention it for
+removal.
+
+FILES
+
+pathbin/docheckgroups
+
+The Shell script itself used to
+process checkgroups.
+
+pathetc/localgroups
+
+The list of local newsgroups
+along with their descriptions.
+
+HISTORY
+
+Documentation
+written by Julien Elie for InterNetNews.
+
+SEE ALSO
+
+active(5),
+controlchan(8), ctlinnd(8), mod-active(8),
+newsgroups(5).

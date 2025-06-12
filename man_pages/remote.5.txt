@@ -1,0 +1,194 @@
+REMOTE(5) BSD File Formats Manual REMOTE(5)
+
+NAME
+
+remote &mdash; remote
+host description file
+
+DESCRIPTION
+
+The systems known by tip(1) and
+their attributes are stored in an ASCII file which is
+structured somewhat like the termcap(5) file. Each line in
+the file provides a description for a single system.
+Fields are separated by a colon
+(&rsquo;&rsquo;:&rsquo;&rsquo;). Lines ending in a \
+character with an immediately following newline are
+continued on the next line.
+
+The first entry
+is the name(s) of the host system. If there is more than one
+name for a system, the names are separated by vertical bars.
+After the name of the system comes the fields of the
+description. A field name followed by an &rsquo;=&rsquo;
+sign indicates a string value. A field name followed by a
+&rsquo;#&rsquo; sign indicates a numeric value.
+
+Entries named
+&rsquo;&rsquo;tip*&rsquo;&rsquo; and
+&rsquo;&rsquo;cu*&rsquo;&rsquo; are used as default entries
+by tip(1), and the cu(1) interface to tip, as
+follows. When tip is invoked with only a phone
+number, it looks for an entry of the form
+&rsquo;&rsquo;tip300&rsquo;&rsquo;, where 300 is the data
+rate with which the connection is to be made. When the
+cu interface is used, entries of the form
+&rsquo;&rsquo;cu300&rsquo;&rsquo; are used.
+
+CAPABILITIES
+
+Capabilities are either strings
+(str), numbers (num), or boolean flags (bool). A string
+capability is specified by capability=value; for
+example, &rsquo;&rsquo;dv=/dev/harris&rsquo;&rsquo;. A
+numeric capability is specified by capability#value;
+for example, &rsquo;&rsquo;xa#99&rsquo;&rsquo;. A boolean
+capability is specified by simply listing the
+capability.
+
+at
+
+(str) Auto call
+unit type.
+
+br
+
+(num) The data
+rate (bits per second) used for communications on the serial
+port. When a modem is used, the data rate used to
+communicate with the remote modem may be different than this
+rate. This is a decimal number. The default rate is 9600
+bits per second.
+
+cm
+
+(str) An
+initial connection message to be sent to the remote host.
+For example, if a host is reached through a port selector,
+this might be set to the appropriate sequence required to
+switch to the host.
+
+cu
+
+(str) Call unit
+if making a phone call. Default is the same as the
+&rsquo;dv&rsquo; field.
+
+di
+
+(str)
+Disconnect message sent to the host when a disconnect is
+requested by the user.
+
+du
+
+(bool) This
+host is on a dial-up line.
+
+dv
+
+(str) UNIX
+device(s) to open to establish a connection. If this file
+refers to a terminal line, tip(1) attempts to perform an
+exclusive open on the device to ensure only one user at a
+time has access to the port.
+
+el
+
+(str)
+Characters marking an end-of-line. The default is NULL.
+&rsquo;~&rsquo; escapes are only recognized by tip
+after one of the characters in &rsquo;el&rsquo;, or after a
+carriage-return.
+
+fs
+
+(str) Frame
+size for transfers. The default frame size is equal to
+BUFSIZ.
+
+hd
+
+(bool) The host
+uses half-duplex communication, local echo should be
+performed.
+
+ie
+
+(str) Input
+end-of-file marks. The default is NULL.
+
+oe
+
+(str) Output
+end-of-file string. The default is NULL. When tip is
+transferring a file, this string is sent at end-of-file.
+
+pa
+
+(str) The type
+of parity to use when sending data to the host. This may be
+one of &rsquo;&rsquo;even&rsquo;&rsquo;,
+&rsquo;&rsquo;odd&rsquo;&rsquo;,
+&rsquo;&rsquo;none&rsquo;&rsquo;,
+&rsquo;&rsquo;zero&rsquo;&rsquo; (always set bit 8 to zero),
+&rsquo;&rsquo;one&rsquo;&rsquo; (always set bit 8 to 1). The
+default is even parity.
+
+pn
+
+(str) Telephone
+number(s) for this host. If the telephone number field
+contains an @ sign, tip searches the file
+/etc/phones file for a list of telephone numbers (see
+phones(5)).
+
+tc
+
+(str) Indicates
+that the list of capabilities is continued in the named
+description. This is used primarily to share common
+capability information.
+
+EXAMPLES
+
+Here is a short example showing
+the use of the capability continuation feature. It defines a
+56k modem connection on the first serial port at 115200 bits
+per second, no parity using the Hayes command set with
+standard line editing and end of file characters. The
+arpavax entry includes everything in the UNIX-57600 entry
+plus the phone number for arpavax (in this case an @
+character so that it is retrieved from the environment).
+
+UNIX-57600:\
+
+:dv=/dev/cuaa0:el=^D^U^C^S^Q^O@:oe=^D:du:at=hayes:br#115200:pa=none:
+
+arpavax|ax:\ 
+:pn=\@:tc=UNIX-57600
+
+FILES 
+/etc/remote
+
+The
+remote host description file resides in
+/etc.
+
+SEE ALSO
+
+cu(1), tip(1), phones(5)
+
+HISTORY
+
+The remote file format
+appeared in 4.2BSD.
+
+BUGS
+
+The tip(1) utility uses its own
+notion of the serial ports data rate rather than the system
+default for a serial port.
+
+BSD
+October 20, 2003 BSD

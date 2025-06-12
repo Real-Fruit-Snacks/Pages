@@ -1,0 +1,503 @@
+NAME
+
+adt&minus;run
+&minus; test an installed binary package using the source
+package&rsquo;s tests
+
+SYNOPSIS
+
+adt&minus;run
+options... &minus;&minus;&minus;
+virt&minus;server
+[virt&minus;server&minus;arg...]
+
+DESCRIPTION
+
+adt&minus;run
+is the program for invoking the autopkgtest package testing
+machinery.
+
+autopkgtest is
+a facility for testing binary Debian or Click packages, as
+installed on a system (such as a testbed system). The tests
+are those supplied in the source package.
+
+adt&minus;run
+runs each test supplied by a particular package and reports
+the results. It drives the specified virtualisation regime
+as appropriate, and parses the test description metadata,
+and arranges for data to be copied to and from the testbed
+as required.
+
+See
+/usr/share/doc/autopkgtest/README.running&minus;tests.rst.gz
+for an introduction about how to use adt&minus;run.
+
+SPECIFYING TESTS
+
+Actions specify
+the source and binary packages to test, or change what
+happens with package arguments: 
+--source dsc
+
+Run tests from Debian source
+package dsc. By default the package will also be
+built and the resulting binaries will be used to satisfy
+test dependencies; to disable that, specify the
+-B/--no-built-binaries option before.
+
+The ordering is
+significant: each --source option should precede
+options whose dependencies are to be satisfied by the
+binaries it produces.
+
+--unbuilt-tree
+directory
+
+Specifies that tests from the
+unbuilt Debian source tree directory should be run.
+This is very similar to specifying
+&minus;&minus;source except that a directory tree
+(which should be pristine) is supplied, instead of a source
+package.
+
+--built-tree
+directory
+
+Specifies that tests from the
+built Debian source tree directory should be run.
+Note that all test dependencies are then satisfied by
+archive packages, unless you explicitly specify locally
+built .debs with --binary.
+
+--apt-source
+srcpkgname
+
+Downloads srcpkgname
+with apt&minus;get source in the testbed and run its
+tests. This is similar to specifying
+&minus;&minus;source but avoids copying the source
+from the host to the testbed. Possibly built binaries will
+not be used to satisfy dependencies, as usually in
+this mode you want to test binaries from a real archive.
+
+--git-source URL
+[branchname]
+
+Specifies that tests from the
+unbuilt Debian source tree from git-cloning URL
+should be run. If branchname is given, this branch
+will be checked out instead of the default (usually
+"master").
+
+This is very
+similar to specifying &minus;&minus;unbuilt-tree
+after cloning, i. e. this is commonly used with
+&minus;&minus;no&minus;built&minus;binaries. The
+git package will be installed if necessary.
+
+--binary deb
+
+Specifies that deb
+should be used for tests of all following source packages.
+By default it will be used to satisfy dependencies, both
+during building and testing.
+
+The ordering is
+significant, as for --source. In particular, if a
+subsequent source package will build a binary of the same
+name, that will be used from then on, and deb will be
+ignored.
+
+--changes
+changes
+
+Specifies that the debs in the
+given .changes should be used for tests of the source
+package in that .changes. Acts as if you had specified the
+.debs and .dsc from a .changes file as explicit
+arguments.
+
+--click-source
+clicksrc
+
+Path to click source tree for
+subsequent --click package.
+
+--click
+clickpkg
+
+If clickpkg is a file
+(*.click), install given click package into testbed. If it
+is a click name (like "com.example.myapp"), assume
+it is already installed in the testbed and read the manifest
+from it.
+
+Run click
+package tests from the preceding --click-source. If a
+click source directory is not specified explicitly, it will
+be downloaded according to the manifest&rsquo;s
+x-source entry. Currently the only supported schema
+is vcs-bzr.
+
+filename
+
+Bare filename arguments are
+processed as if --built-tree, --source,
+--unbuilt-tree, --apt-source, --binary,
+--changes, --click-source, or --click
+was specified; the nature of the argument is guessed from
+the form of the filename. In the case of
+--built-tree, either the option must be specified, or
+the filename must end in a slash; two slashes at the end are
+taken to mean --unbuilt-tree. If a given directory
+has a "click" subdirectory, it is interpreted as
+--click-source.
+
+TEST OPTIONS
+
+Unless stated
+otherwise, these affect all subsequent test arguments.
+
+-B | --no-built-binaries
+
+All built binaries from
+subsequent --source or --unbuilt-tree tests
+will not be built or ignored, and dependencies are satisfied
+with packages from the archive. Note that packages still get
+built if a test requires build-needed.
+
+--built-binaries
+
+Subsequent --source or
+--unbuilt-tree tests will get built and their
+dependencies be satisfied with the built binaries. This is
+the default behaviour, so you only need this to revert a
+previously specified --no-built-binaries option.
+
+--override-control=PATH
+
+Read the test metadata from
+PATH instead of debian/tests/control (for
+Debian sources) or the Click manifest for the following
+test.
+
+--testname=TEST
+
+Run only the given test name
+(from test control file) in the following test.
+
+LOGGING OPTIONS
+
+If you
+don&rsquo;t specify any option, adt-run only writes
+its output/results to stderr. 
+-o dir | --output-dir=dir
+
+Specifies that test artifacts
+(stderr and stdout from the tests, the log file, built
+binary packages etc.) should be placed in the given
+directory. dir must not exist yet or be empty,
+otherwise adt-run will refuse to use it.
+
+-l logfile |
+--log-file=logfile
+
+Specifies that the trace log
+should be written to logfile instead of to
+output-dir.
+
+--summary=summary
+
+Specifies that a summary of the
+outcome should be written to summary. The events in
+the summary are written to the log in any case.
+
+-q | --quiet
+
+Do not send a copy of
+adt-run&rsquo;s trace logstream to stderr. This
+option does not affect the copy sent to logfile or
+output-dir. Note that without the trace logstream it
+can be very hard to diagnose problems.
+
+TEST BED SETUP OPTIONS
+
+&minus;&minus;setup&minus;commands=commands
+
+Run commands after
+opening the testbed. This can be used e. g. to enable
+additional apt sources, run apt-get update or
+similar. If commands is an existing file name, the
+commands are read from that; otherwise it is a string with
+the actual commands that gets run as-is. File names without
+directory will be searched in both the current directory and
+in /usr/share/autopkgtest/setup-commands/ so you do
+not need to give the full path for setup scripts shipped
+with autopkgtest.
+
+This option can
+be specified multiple times.
+
+If
+&minus;&minus;user is given or the test bed provides
+a suggested-normal-user capability, the
+$AUTOPKGTEST_NORMAL_USER environment variable will be
+set to that user.
+
+If the setup
+commands affect anything in boot directories (like /boot or
+/lib/systemd/system) and the testbed supports rebooting, the
+testbed will be rebooted after the setup commands. This can
+be suppressed by creating a file
+/run/autopkgtest_no_reboot.stamp.
+
+--apt-upgrade |
+-U
+
+Run apt&minus;get update
+and apt&minus;get dist-upgrade -y in the testbed
+before running the tests.
+
+&minus;&minus;apt&minus;pocket=pocket[=pkgname,src:srcname,...]
+
+Add apt sources for
+release-pocket. This finds the first
+deb line in /etc/apt/sources.list which does
+not already specify a pocket and adds a deb and deb-src line
+with that pocket to
+/etc/apt/sources.list.d/pocket.list.
+This also calls apt-get update for the new pocket
+(but not for anything else).
+
+If a package
+list is given after =, set up apt pinning to use only those
+packages from pocket. An entry
+"src:srcname" expands to all binary packages built
+by that source. This can be used for minimizing dependencies
+taken from pocket so that package updates in that
+pocket can be tested independently from each other for
+better isolation. Attention: This does not currently
+resolve some situations where dependencies of the given
+packages can only be resolved in the given pocket. In that
+case the apt pinning will be removed and package
+installation will be retried with the entirety of
+pocket.
+
+&minus;&minus;copy=HOSTPATH:TESTBEDPATH
+
+Copy file or directory from
+host into testbed after opening. This happens before
+&minus;&minus;setup-commands thus you can use these
+files in the setup commands.
+
+&minus;&minus;env=VAR=value
+
+Set arbitrary environment
+variable in the build and test. Can be specified multiple
+times.
+
+USER/PRIVILEGE HANDLING OPTIONS
+
+-u
+user | --user=user
+
+Run builds and tests as
+user on the testbed. This needs root on the testbed;
+if root on the testbed is not available then builds and
+tests run as whatever user is provided.
+
+--gain-root=gain-root
+
+Prefixes debian/rules
+binary with gain-root. The default is not to use
+anything, except that if --user is supplied or root
+on the testbed is not available the default is
+fakeroot.
+
+DEBUGGING OPTIONS
+
+--debug|-d
+
+Include additional debugging
+information in the trace log. Each additional -d
+increases the debugging level; the current maximum is
+-ddd. If you like to see what&rsquo;s going on, -d
+or -dd is recommended.
+
+--shell-fail|-s
+
+Run an interactive shell in the
+testbed after a failed build, test, or dependency
+installation.
+
+--shell
+
+Run an interactive shell in the
+testbed after every test.
+
+TIMEOUT OPTIONS
+
+--timeout-which=seconds
+
+Use a different timeout for
+operations on or with the testbed. There are five timeouts
+affected by five values of which: short:
+supposedly short operations like setting up the
+testbed&rsquo;s apt and checking the state (default: 100s);
+install: installation of packages including
+dependencies (default: 3,000s); test: test runs
+(default: 10,000s); copy: copy files/directories
+between host and testbed (default: 300s); and build:
+builds (default: 100,000s). The value must be specified as
+an integer number of seconds.
+
+--timeout-factor=double
+
+Multiply all of the default
+timeouts by the specified factor (see
+--timeout-which above). Only the defaults are
+affected; explicit timeout settings are used exactly as
+specified.
+
+LOCALE OPTIONS
+
+--set-lang=langval
+
+When running commands on the
+testbed, sets the LANG environment variable to
+langval. The default in adt-run is to set it
+to C.UTF-8.
+
+OTHER OPTIONS
+
+--no-auto-control
+
+Disable automatic test
+generation with autodep8, even if it is installed. In that
+case, packages without tests will exit with code 8 ("No
+tests in this package") just like without autodep8.
+
+--build-parallelN
+
+Set parallel=N
+DEB_BUILD_OPTION for building packages. By default this is
+the number of available processors. This is mostly useful in
+containers where you can restrict the available RAM, but not
+restrict the number of CPUs.
+
+&minus;h|&minus;&minus;help
+
+Show command line help and
+exit.
+
+VIRTUALIZATION SERVER
+
+---
+virt-server virt-server-arg...
+
+Specifies the virtualisation
+regime server, as a command and arguments to invoke.
+virt-server must be an existing autopkgtest
+virtualization server such as schroot or
+qemu.
+
+All the
+remaining arguments and options after --- are passed
+to the virtualisation server program. See the manpages of
+the individual servers for how to use them.
+
+OUTPUT FORMAT
+
+During a normal
+test run, one line is printed for each test. This consists
+of a short string identifying the test, some horizontal
+whitespace, and either PASS or FAIL reason or
+SKIP reason where the pass/fail indication is
+separated by any reason by some horizontal whitespace.
+
+The string to
+identify the test consists of a short alphanumeric string
+invented by adt-run to distinguish different
+command-line arguments, the argid, followed by a
+hyphen and the test name.
+
+Sometimes a
+SKIP will be reported when the name of the test is
+not known or not applicable: for example, when there are no
+tests in the package, or a there is a test stanza which
+contains features not understood by this version of
+adt-run. In this case * will appear where the
+name of the test should be.
+
+If
+adt-run detects that erroneous package(s) are
+involved, it will print the two lines blame:
+blamed-thing... and badpkg:
+message. Here each whitespace-separated
+blamed-thing is one of arg:argument
+(representing a pathname found in a command line argument),
+dsc:package (a source package name),
+deb:package (a binary package name) or
+possibly other strings to be determined. This indicates
+which arguments and/or packages might have contributed to
+the problem; the ones which were processed most recently and
+which are therefore most likely to be the cause of a problem
+are listed last.
+
+CONFIGURATION FILES
+
+If you use lots
+of options or nontrivial virt server arguments, you can put
+any part of the command line into a text file, with one line
+per option. E. g. you can create a file sid.cfg with
+contents like
+
+-s
+--output-dir=/tmp/testout
+--apt-upgrade
+---
+schroot
+sid
+
+and then
+run
+
+adt-run foo_1_amd64.changes @sid.cfg
+
+The contents of
+the configuration file will be expanded in-place as if you
+would have given its contents on the command line. Please
+ensure that you don&rsquo;t place spaces between
+short options and their values, they would become a part of
+the argument value.
+
+EXIT STATUS
+
+0 all tests
+passed 
+2 at least one test skipped 
+4 at least one test failed 
+6 at least one test failed and at least one test skipped
+
+8 no tests in this package 
+12 erroneous package 
+16 testbed failure 
+20 other unexpected failures including bad usage
+
+SEE ALSO
+
+/usr/share/doc/autopkgtest/README.running-tests.rst.gz
+
+/usr/share/doc/autopkgtest/README.package-tests.rst.gz
+
+AUTHORS AND COPYRIGHT
+
+This manpage is
+part of autopkgtest, a tool for testing Debian binary
+packages. autopkgtest is Copyright (C) 2006-2014 Canonical
+Ltd.
+
+See
+/usr/share/doc/autopkgtest/CREDITS for the list of
+contributors and full copying conditions.

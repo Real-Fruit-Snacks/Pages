@@ -1,0 +1,222 @@
+NAME
+
+dupload -
+Debian package upload tool
+
+SYNOPSIS
+
+dupload
+[options...] [changes-file|directory...]
+
+DESCRIPTION
+
+dupload
+is a tool that enables people maintaining Debian packages to
+easily upload them to a Debian repository.
+
+dupload
+checks each non-option argument to find readable files or
+directories. It parses the files as .changes files,
+or tries to find such files in the given directories.
+
+dupload
+will warn if the name of the file does not end with
+.changes. Further processing is done changing into
+the directories of the changes files.
+
+dupload
+tests the available checksums and size for each file listed
+in the .changes file, and fails if it finds a
+mismatch. If all this goes well, dupload checks if
+there is an .upload file with the basename of the
+.changes file. If the file to be uploaded is recorded
+to have already been uploaded to the specified host, it is
+skipped.
+
+After the list
+of files to upload is finished, dupload tries to
+connect to the server and upload. Each successfully uploaded
+file is recorded in the .upload log file.
+
+If all files of
+a package are processed, the .changes file is mailed
+to the announcement address specified in the configuration
+file. If files with 
+package.announce, package_UPSTREAMVER.announce,
+or 
+package_UPSTREAMVER-DEBIANREV.announce exist, these
+files get prepended to the announcement.
+UPSTREAMVER and
+DEBIANREV are to be replaced with
+actual version numbers. For example, if your package is
+called foobar, has upstream version 3.14, and Debian
+revision 2:
+
+&bull;
+
+If you only want the announcement to be made with only
+ONE upload, you name it
+foobar_3.14-2.announce. 
+
+&bull;
+
+If you want it to be made with every upload of a
+particular upstream version, name it
+foobar_3.14.announce. 
+
+&bull;
+
+If you want it made with every upload of a given
+package, name it foobar.announce.
+
+FTP
+login and password 
+If no login (username) is defined in the configuration file,
+anonymous is used. The password is derived from your
+login name and your hostname, which is common for anonymous
+FTP logins. For anonymous logins only, you
+can provide the "password" in the configuration
+file.
+
+For logins
+other than anonymous, you are asked for the password.
+For security reasons there is no way to supply it via the
+commandline or the environment.
+
+ftp / scp /
+rsync / copy 
+The default transfer method is ftp. Alternative
+methods are scp/SSH and rsync/SSH. For
+scp and rsync, the default login is delegated
+to SSH and its own configuration.
+
+The
+scp/SSH method only works properly if no password is
+required (see ssh(1)). When you use scp, it is
+recommended to set the "method" keyword to
+scpb, which will transfer all files in a batch.
+
+The copy
+method works by simply copying the files to another
+directory in the local filesystem.
+
+If you are
+using an upload queue, use ftp because it is fast. If
+you are using an authenticated host, always use
+scp or rsync via SSH, because
+ftp transmits the password in clear text.
+
+OPTIONS
+
+-d,
+--debug [level]
+
+Enable more verbose output from
+the FTP module.
+
+-f, --force
+
+Upload regardless of the transfers logged as already
+completed. 
+
+-k, --keep
+
+Keep going, skipping packages whose checksums does not
+match. 
+
+-c, --configfile
+filename
+
+Read the file filename
+as a configuration file, in addition to the global
+configuration file.
+
+--no
+
+Dry run, no files are changed, no upload is attempted,
+only tell what we would do.
+
+--nomail
+
+Suppress announcement for this run. You can send it
+later by just calling dupload again w/o this option. Note
+that this option is by default implied for all hosts with
+the dinstall_runs option set to 1.
+
+--mailonly
+
+Acts as if --no has been specified, but sends the
+announcements, unconditionally.
+
+--noarchive
+
+Adds an X-No-Archive: yes header so that the
+announcement will not be archived. You can use the per-host
+archive option in the configuration file.
+
+-p, --print
+
+Print the "database" as read from the config
+files and exit. If a host is specified via option
+--to, only this host&rsquo;s entry is displayed.
+
+-q, --quiet
+
+Be quiet, i.e., suppress normal output and progress
+bars. 
+
+-t, --to
+nickname
+
+Upload to
+nickname&rsquo;d host. nickname is the key for
+doing lookups in the config file. You can use the
+default_host configuration option to specify a host
+without --to.
+
+--help
+
+Prints the program usage message and exits.
+
+-V, --Version
+
+Prints version and exits.
+
+FILES
+
+Configuration
+
+The configuration files are searched as follows (and read in
+this order, overriding each other):
+
+        /etc/dupload.conf
+        ~/.dupload.conf
+
+Other
+
+Various Debian package files are used by dupload:
+.dsc, .changes, .deb, .orig.tar.*, .debian.tar.*,
+.diff.*
+
+dupload
+itself writes the log file
+package_version-debian.upload, and the additional
+announcement files package.announce,
+package_upstreamver.announce, or
+package_upstreamver-debianrev.announce.
+
+Announcement
+addresses 
+By default, the announcement addresses are unset because
+dinstall sends mails instead.
+
+BUGS
+
+dupload
+is tested on Debian systems only. It should not
+require too much effort to make it run under others systems,
+though.
+
+SEE ALSO
+
+dupload.conf(5)

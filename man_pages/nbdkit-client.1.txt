@@ -1,0 +1,162 @@
+NAME
+
+nbdkit-client -
+how to mount NBD filesystems on a client machine
+
+DESCRIPTION
+
+For NBD exports
+that contain filesystems there are several approaches to
+mounting them on a client machine.
+
+To ensure the
+nbd kernel module is loaded you may need to do:
+
+# echo nbd >
+/etc/modules-load.d/nbd.conf
+
+This will not
+take effect until you reboot, so also do:
+
+# modprobe
+nbd
+
+Easy
+mounting at boot time 
+For simple setups the following method is the easiest way to
+get an NBD filesystem to mount at boot. Create or edit
+/etc/rc.local or /etc/rc.d/rc.local:
+
+#!/bin/sh -
+
+nm-online 
+modprobe nbd 
+nbd-client server /dev/nbd0 
+mount /dev/nbd0 /mnt
+
+Mounting
+using systemd mount points 
+You can use systemd mount points to mount NBD filesystems at
+boot and/or on demand.
+
+Set up an
+nbdtab(5) mapping. If /etc/nbdtab
+doesn&rsquo;t exist, then create it first. Add this
+line:
+
+nbd0 server /
+bs=512,persist
+
+As a workaround
+for https://github.com/NetworkBlockDevice/nbd/issues/91 you
+must currently modify the nbd@.service file:
+
+# cp
+/usr/lib/systemd/system/nbd@.service /etc/systemd/system/
+
+# vi /etc/systemd/system/nbd@.service
+
+and edit or
+create these settings in the "[Service]"
+section:
+
+[Service] 
+Type=oneshot 
+RemainAfterExit=yes 
+ExecStart=/usr/sbin/nbd-client %i 
+ExecStop=/usr/sbin/nbd-client -d /dev/%i
+
+Finally create
+a systemd mount file called
+/etc/systemd/system/mnt.mount:
+
+[Unit] 
+Requires=nbd [AT] nbd0.service 
+[Mount] 
+What=/dev/nbd0 
+Where=/mnt 
+Type=ext4
+
+You can either
+reboot now or do:
+
+# systemctl
+start mnt.mount
+
+Other systemd
+services which need this mount point can depend on this
+mount unit.
+
+LIMITATIONS
+
+Red Hat
+Enterprise Linux 8 enabled the "nbd.ko" Linux
+kernel module but only for Unix domain sockets (ie. local
+connections). This means you cannot connect to an NBD server
+over a TCP network. This also affects Linux distributions
+derived from RHEL like CentOS, Alma and others.
+
+This does not
+affect use of nbdkit as an NBD server, only the Linux kernel
+as an NBD client. Userspace Linux clients such as
+libnbd(3) tools will work.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-loop(1), nbdkit-service(1),
+nbd-client(8), nbdtab(5), systemd(1),
+systemd.mount(5).
+
+AUTHORS
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

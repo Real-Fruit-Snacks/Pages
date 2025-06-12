@@ -1,0 +1,90 @@
+NG_EIFACE(4) BSD Kernel Interfaces Manual
+NG_EIFACE(4)
+
+NAME
+
+ng_eiface &mdash; generic
+Ethernet interface netgraph node type
+
+SYNOPSIS
+
+#include
+
+DESCRIPTION
+
+The eiface netgraph node
+implements the generic Ethernet interface. When
+eiface node is created, a new interface appears which
+is accessible via ifconfig(8). These interfaces are named
+&rsquo;&rsquo;ngeth0&rsquo;&rsquo;,
+&rsquo;&rsquo;ngeth1&rsquo;&rsquo;, etc. When a node is shut
+down, the corresponding interface is removed, and the
+interface name becomes available for reuse by future
+eiface nodes. New nodes always take the first unused
+interface.
+
+HOOKS
+
+An eiface node has a
+single hook named ether, which should be connected to
+the Ethernet downstream, for example, to the ng_vlan(4)
+node. Packets transmitted via the interface flow out this
+hook. Similarly, packets received on the hook go to the
+protocol stack as packets received by any real Ethernet
+interface.
+
+CONTROL MESSAGES
+
+This node type supports the
+generic control messages, plus the following:
+
+NGM_EIFACE_SET (set)
+
+Set link-level address of the
+interface. Requires struct ether_addr as an argument.
+This message also has an ASCII version, called
+&rsquo;&rsquo;set&rsquo;&rsquo;, which requires as an
+argument an ASCII string consisting of 6 colon-separated hex
+digits.
+
+NGM_EIFACE_GET_IFNAME
+(getifname)
+
+Return the name of the
+associated interface as a NUL-terminated ASCII string.
+
+NGM_EIFACE_GET_IFADDRS
+
+Return the list of link-level
+addresses associated with the node.
+
+SHUTDOWN
+
+This node shuts down upon
+receipt of a NGM_SHUTDOWN control message. The associated
+interface is removed and its name becomes available for
+reuse by future eiface nodes.
+
+Unlike most
+other node types, an eiface node does not go
+away when all hooks have been disconnected; rather, and
+explicit NGM_SHUTDOWN control message is required.
+
+SEE ALSO
+
+netgraph(4), ng_ether(4),
+ng_iface(4), ng_vlan(4), ifconfig(8), ngctl(8)
+
+HISTORY
+
+The eiface node type was
+implemented in FreeBSD 4.6.
+
+AUTHORS
+
+The eiface node type was
+written by Vitaly V Belekhov. This manual page was written
+by Gleb Smirnoff.
+
+BSD
+February 3, 2005 BSD

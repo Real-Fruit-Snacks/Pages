@@ -1,0 +1,160 @@
+MAC_PORTACL(4) BSD Kernel Interfaces Manual
+MAC_PORTACL(4)
+
+NAME
+
+mac_portacl &mdash;
+network port access control policy
+
+SYNOPSIS
+
+To compile the port access
+control policy into your kernel, place the following lines
+in your kernel configuration file:
+
+options MAC
+
+options MAC_PORTACL
+
+Alternately, to
+load the port access control policy module at boot time,
+place the following line in your kernel configuration
+file:
+
+options
+MAC
+
+and in
+loader.conf(5):
+
+mac_portacl_load="YES"
+
+DESCRIPTION
+
+The mac_portacl policy
+allows administrators to administratively limit binding to
+local UDP and TCP ports via the sysctl(8) interface.
+
+In order to
+enable the mac_portacl policy, MAC policy must be
+enforced on sockets (see mac(4)), and the port(s) protected
+by mac_portacl must not be included in the range
+specified by the net.inet.ip.portrange.reservedlow
+and net.inet.ip.portrange.reservedhigh sysctl(8)
+MIBs.
+
+The
+mac_portacl policy only affects ports explicitly
+bound by a user process (either for a listen/outgoing TCP
+socket, or a send/receive UDP socket). This policy will not
+limit ports bound implicitly for outgoing connections where
+the process has not explicitly selected a port: these are
+automatically selected by the IP stack.
+
+When
+mac_portacl is enabled, it will control binding
+access to ports up to the port number set in the
+security.mac.portacl.port_high sysctl(8) variable. By
+default, all attempts to bind to mac_portacl
+controlled ports will fail if not explicitly allowed by the
+port access control list, though binding by the superuser
+will be allowed, if the sysctl(8) variable
+security.mac.portacl.suser_exempt is set to a
+non-zero value.
+
+Runtime
+Configuration 
+The following sysctl(8) MIBs are available for fine-tuning
+the enforcement of this MAC policy. All sysctl(8) variables,
+except security.mac.portacl.rules, can also be set as
+loader(8) tunables in loader.conf(5).
+
+security.mac.portacl.enabled
+
+Enforce the mac_portacl
+policy. (Default: 1).
+
+security.mac.portacl.port_high
+
+The highest port number
+mac_portacl will enforce rules for. (Default:
+1023).
+
+security.mac.portacl.rules
+
+The port access control list is
+specified in the following format:
+
+idtype:id:protocol:port[,idtype:id:protocol:port,...]
+
+idtype
+
+Describes the
+type of subject match to be performed. Either uid for user
+ID matching, or gid for group ID matching.
+
+id
+
+The user or
+group ID (depending on idtype) allowed to bind to the
+specified port. NOTE: User and group names are not valid;
+only the actual ID numbers may be used.
+
+protocol
+
+Describes which
+protocol this entry applies to. Either tcp or udp are
+supported.
+
+port
+
+Describes which
+port this entry applies to. NOTE: MAC security policies
+may not override other security system policies by allowing
+accesses that they may deny, such as
+net.inet.ip.portrange.reservedlow /
+net.inet.ip.portrange.reservedhigh. If the specified
+port falls within the range specified, the
+mac_portacl entry will not function (i.e., even the
+specified user/group may not be able to bind to the
+specified port).
+
+security.mac.portacl.suser_exempt
+
+Allow superuser (i.e., root) to
+bind to all mac_portacl protected ports, even if the
+port access control list does not explicitly allow this.
+(Default: 1).
+
+security.mac.portacl.autoport_exempt
+
+Allow applications to use
+automatic binding to port 0. Applications use port 0 as a
+request for automatic port allocation when binding an IP
+address to a socket. This tunable will exempt port 0
+allocation from rule checking. (Default: 1).
+
+SEE ALSO
+
+mac(3), ip(4), mac_biba(4),
+mac_bsdextended(4), mac_ifoff(4), mac_mls(4), mac_none(4),
+mac_partition(4), mac_seeotheruids(4), mac_test(4),
+mac(9)
+
+HISTORY
+
+MAC first appeared in
+FreeBSD 5.0 and mac_portacl first appeared in
+FreeBSD 5.1.
+
+AUTHORS
+
+This software was contributed to
+the FreeBSD Project by NAI Labs, the Security Research
+Division of Network Associates Inc. under DARPA/SPAWAR
+contract N66001-01-C-8035
+(&rsquo;&rsquo;CBOSS&rsquo;&rsquo;), as part of the DARPA
+CHATS research program.
+
+BSD
+December 9, 2004 BSD

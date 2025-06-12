@@ -1,0 +1,644 @@
+NAME
+
+ipsend &minus;
+IP packet description language
+
+DESCRIPTION
+
+The
+ipsend program expects, with the -L option,
+input to be a text file which fits the grammar described
+below. The purpose of this grammar is to allow IP packets to
+be described in an arbitary way which also allows
+encapsulation to be so done to an arbitary level.
+
+GRAMMAR
+
+line ::= iface
+| arp | send | defrouter | ipv4line .
+
+iface ::= ifhdr
+"{" ifaceopts "}" ";" . 
+ifhdr ::= "interface" | "iface" . 
+ifaceopts ::= "ifname" name | "mtu" mtu
+| "v4addr" ipaddr |
+
+"eaddr" eaddr .
+
+send ::=
+"send" ";" | "send"
+"{" sendbodyopts "}" ";" .
+
+sendbodyopts ::= sendbody [ sendbodyopts ] . 
+sendbody ::= "ifname" name | "via"
+ipaddr .
+
+defrouter ::=
+"router" ipaddr .
+
+arp ::=
+"arp" "{" arpbodyopts "}"
+";" . 
+arpbodyopts ::= arpbody [ arpbodyopts ] . 
+arpbody ::= "v4addr" ipaddr | "eaddr"
+eaddr .
+
+bodyline ::=
+ipv4line | tcpline | udpline | icmpline | dataline .
+
+ipv4line ::=
+"ipv4" "{" ipv4bodyopts "}"
+";" . 
+ipv4bodyopts ::= ipv4body [ ipv4bodyopts ] | bodyline . 
+ipv4body ::= "proto" protocol | "src"
+ipaddr | "dst" ipaddr |
+
+"off" number | "v" number |
+"hl" number| "id" number |
+
+"ttl" number | "tos" number |
+"sum" number | "len" number |
+
+"opt" "{" ipv4optlist "}"
+";" .
+
+ipv4optlist ::= ipv4option [
+ipv4optlist ] . 
+ipv4optlist = "nop" | "rr" |
+"zsu" | "mtup" | "mtur" |
+"encode" | "ts" |
+
+"tr" | "sec" | "lsrr" |
+"e-sec" | "cipso" | "satid"
+| 
+
+"ssrr" | "addext" | "visa"
+| "imitd" | "eip" | "finn"
+| 
+
+"secclass" ipv4secclass.
+
+ipv4secclass :=
+"unclass" | "confid" |
+"reserv-1" | "reserv-2" |
+
+"reserv-3" | "reserv-4" |
+"secret" | "topsecret" .
+
+tcpline ::=
+"tcp" "{" tcpbodyopts "}"
+";" . 
+tcpbodyopts ::= tcpbody [ tcpbodyopts ] | bodyline . 
+tcpbody ::= "sport" port | "dport" port
+| "seq" number | "ack" number |
+
+"off" number | "urp" number |
+"win" number | "sum" number |
+
+"flags" tcpflags | data .
+
+udpline ::=
+"udp" "{" udpbodyopts "}"
+";" . 
+udpbodyopts ::= udpbody [ udpbodyopts ] | bodyline . 
+udpbody ::= "sport" port | "dport" port
+| "len" number | "sum" number |
+
+data .
+
+icmpline ::=
+"icmp" "{" icmpbodyopts "}"
+";" . 
+icmpbodyopts ::= icmpbody [ icmpbodyopts ] | bodyline . 
+icmpbody ::= "type" icmptype [ "code"
+icmpcode ] . 
+icmptype ::= "echorep" | "echorep"
+"{" echoopts "}" ";" |
+"unreach" |
+
+"unreach" "{" unreachtype
+"}" ";" | "squench" |
+"redir" |
+
+"redir" "{" redirtype "}"
+";" | "echo" "{" echoopts
+"}" ";" |
+
+"echo" | "routerad" |
+"routersol" | "timex" |
+
+"timex" "{" timextype "}"
+";" | "paramprob" |
+
+"paramprob" "{" parapptype
+"}" ";" | "timest" |
+"timestrep" |
+
+"inforeq" | "inforep" |
+"maskreq" | "maskrep" .
+
+echoopts ::=
+echoopts [ icmpechoopts ] . 
+unreachtype ::= "net-unr" | "host-unr" |
+"proto-unr" | "port-unr" |
+
+"needfrag" | "srcfail" |
+"net-unk" | "host-unk" |
+"isolate" |
+
+"net-prohib" | "host-prohib" |
+"net-tos" | "host-tos" |
+
+"filter-prohib" | "host-preced" |
+"cutoff-preced" .
+
+redirtype ::=
+"net-redir" | "host-redir" |
+"tos-net-redir" |
+
+"tos-host-redir" .
+
+timextype ::=
+"intrans" | "reass" . 
+paramptype ::= "optabsent" .
+
+data
+
+::= "data" "{" databodyopts
+"}" ";" .
+
+databodyopts ::=
+"len" number | "value" string |
+"file" filename .
+
+icmpechoopts
+::= "icmpseq" number | "icmpid" number
+.
+
+COMMANDS
+
+Before sending
+any packets or defining any packets, it is necessary to
+describe the interface(s) which will be used to send packets
+out. 
+interface
+
+is used to describe a network
+interface. The description included need not match the
+actual configuration currently employed by the operating
+system.
+
+send
+
+is used to actually send out a packet across the
+network. If the destination is not specified, it will
+attempt to send the packet directly out on the network to
+the destination without routing it.
+
+router
+
+configures the default router for ipsend, as distinct
+from the default route installed in the kernel.
+
+ipv4
+
+is used to describe an IP (version 4) packet. IP header
+fields can be specified, including options, followed by a
+data section which may contain further protocol headers.
+
+IPv4
+
+hl
+
+manually specifies the IP
+header length (automatically adjusts with the presence of IP
+options and defaults to 5);
+
+v 
+
+set the IP version. Default is
+4.
+
+tos 
+
+set the type of service (TOS)
+field in the IP header. Default is 0.
+
+len 
+
+manually specifies the length
+of the IP packet. The length will automatically be adjusted
+to accommodate data or further protocol headers.
+
+off 
+
+sets the fragment offset field
+of the IP packet. Default is 0.
+
+ttl 
+
+sets the time to live (TTL)
+field of the IP header. Default is 60.
+
+proto
+
+sets the protocol field of the
+IP header. The protocol can either be a number or a name
+found in /etc/protocols.
+
+sum
+
+manually specifies the checksum for the IP header. If
+left unset (0), it will be calculated prior to being
+sent. 
+
+src
+
+manually specifies the source address of the IP header.
+If left unset, it will default to the host&rsquo;s IP
+address. 
+
+dst
+
+sets the destination of the IP packet. The default is
+0.0.0.0. 
+
+opt
+
+is used to include IP options in the IP header.
+
+tcp
+
+is used to indicate the a TCP protocol header is to
+follow. See the TCP section for TCP header
+options. 
+
+udp
+
+is used to indicate the a UDP protocol header is to
+follow. See the UDP section for UDP header
+options. 
+
+icmp
+
+is used to indicate the a ICMP protocol header is to
+follow. See the ICMP section for ICMP header
+options. 
+
+data
+
+is used to indicate that raw data is to be included in
+the IP packet. See the DATA section for details on
+options available.
+
+IPv4 Options
+
+these keywords
+indicate that the relevant IP option should be added to the
+IP header (the header length field will be adjusted
+appropriately).
+
+nop
+
+No Operation [RFC 791] (space
+filler). 
+
+rr 
+
+Record Router [RFC 791]. The
+number given specifies the number of bytes to be used
+for storage. This should be a multiple of 4 for proper
+operation.
+
+zsu
+
+Experimental Measurement.
+
+mtup [RFC 1191].
+
+MTU Probe.
+
+mtur [RFC 1191].
+
+MTU Ready.
+
+encode
+
+ts
+
+Timestamp [RFC 791].
+
+tr
+
+Traceroute [RFC 1393].
+
+sec-class
+, sec
+
+Security [RFC 1108]. This
+option specifies the security label for the packet. Using
+sec sets up the framework of the security option but
+unless sec-class is given, the level may not be
+set.
+
+lsrr
+
+Loose Source Route [RFC
+791].
+
+e-sec
+
+Extended Security [RFC 1108].
+
+cipso
+
+Commercial Security.
+
+satid
+
+Stream ID [RFC 791].
+
+ssrr
+
+Strict Source Route [RFC
+791].
+
+addext
+
+Address Extension
+
+visa
+
+Experimental Access Control.
+
+imitd
+
+IMI Traffic Descriptor.
+
+eip
+
+[RFC 1358].
+
+finn
+
+Experimental Flow Control.
+
+TCP
+
+sport
+
+sets the source port to the
+number/name given. Default is 0.
+
+dport 
+
+sets the destination port to
+the number/name given. Default is 0.
+
+seq 
+
+sets the sequence number to the
+number specified. Default is 0.
+
+ack 
+
+sets the acknowledge number to
+the number specified. Default is 0.
+
+off 
+
+sets the offset value for the
+start of data to the number specified. This implies the size
+of the TCP header. It is automatically adjusted if TCP
+options are included and defaults to 5.
+
+urp 
+
+sets the value of the urgent
+data pointer to the number specified. Default is 0.
+
+win 
+
+sets the size of the TCP window
+to the number specified. Default is 4096.
+
+sum 
+
+manually specifies the checksum
+for the TCP pseudo-header and data. If left unset, it
+defaults to 0 and is automatically calculated.
+
+flags
+
+sets the TCP flags field to
+match the flags specified. Valid flags are "S"
+(SYN), "A" (ACK), "R" (RST),
+"F" (FIN), "U" (URG), "P"
+(PUSH).
+
+opt
+
+indicates that TCP header options follow. As TCP options
+are added to the TCP header, the off field is updated
+to match.
+
+data
+
+indicates that a data section is to follow and is to be
+included as raw data, being appended to the header.
+
+TCP options
+
+With a TCP
+header, it is possible to append a number of header options.
+The TCP header offset will be updated automatically to
+reflect the change in size. The valid options are:
+nop No Operation, eol End Of (option) List,
+mss [ size ] Maximum Segment Size - this sets the
+maximum receivable size of a packet containing data,
+wscale Window Scale, ts Timestamp.
+
+UDP
+
+sport
+
+sets the source port to the
+number/name given. Default is 0.
+
+dport 
+
+sets the destination port to
+the number/name given. Default is 0.
+
+len 
+
+manually specifies the length
+of the UDP header and data. If left unset, it is
+automatically adjusted to match the header presence and any
+data if present.
+
+sum 
+
+manually specifies the checksum
+for the UDP pseudo-header and data. If left unset, it
+defaults to 0 and is automatically calculated.
+
+data
+
+indicates that a data section is to follow and is to be
+included as raw data, being appended to the header.
+
+ICMP
+
+type
+
+sets the ICMP type according
+the to the icmptype tag. This may either be a number or one
+of the recognised tags (see the ICMP TYPES section
+for a list of names recognised).
+
+code
+
+sets the ICMP code.
+
+data
+
+indicates that a data section is to follow and is to be
+included as raw data, being appended to the header.
+
+DATA
+
+Each of the
+following extend the packet in a different way. Len
+just increases the length (without adding any content),
+value uses a string and file a file. 
+len 
+
+extend the length of the packet
+by number bytes (without filling those bytes with any
+particular data).
+
+value 
+
+indicates that the string
+provided should be added to the current packet as data. A
+string may be a consecutive list of characters and numbers
+(with no white spaces) or bounded by "&rsquo;s (may not
+contain them, even if \&rsquo;d). The \ character is
+recognised with the appropriate C escaped values, including
+octal numbers.
+
+file
+
+reads data in from the
+specified file and appends it to the current packet. If the
+new total length would exceed 64k, an error will be
+reported.
+
+ICMP TYPES
+
+echorep
+
+Echo Reply.
+
+unreach [ unreachable-code
+]
+
+Generic Unreachable error. This
+is used to indicate that an error has occurred whilst trying
+to send the packet across the network and that the
+destination cannot be reached. The unreachable code names
+are: net-unr network unreachable, host-unr
+host unreachable, proto-unr protocol unreachable,
+port-unr port unreachable, needfrag,
+srcfail source route failed, net-unk network
+unknown, host-unk host unknown, isolate,
+net-prohib administratively prohibited contact with
+network, host-prohib administratively prohibited
+contact with host, net-tos network unreachable with
+given TOS, host-tos host unreachable with given TOS,
+filter-prohib packet prohibited by packet filter,
+host-preced, cutoff-preced.
+
+squench
+
+Source Quence.
+
+redir [ redirect-code
+]
+
+Redirect (routing). This is
+used to indicate that the route being chosen for forwarding
+the packet is suboptimal and that the sender of the packet
+should be routing packets via another route. The redirect
+code names are: net-redir redirect packets for a
+network, host-redir redirect packets for a host,
+tos-net-redir redirect packets for a network with a
+given TOS, tos-host-redir redirect packets for a host
+with a given TOS.
+
+echo
+
+Echo.
+
+routerad
+
+Router Advertisment.
+
+routersol
+
+Router solicitation.
+
+timex [ timexceed-code
+]
+
+Time Exceeded. This is used to
+indicate that the packet failed to reach the destination
+because it was in transit too long (i.e. ttl reached 0). The
+valid code names are: intrans, reass could not
+reassemble packet from fragments within a given time.
+
+paramprob [ paramprob-code
+]
+
+Parameter problem. There is
+only one available parameter problem code name:
+optabsent.
+
+timest
+
+Time stamp request.
+
+timestrep [ { timestamp-code
+} ]
+
+Time stamp reply. In a
+timestamp reply, it is possible to supply the following
+values: rtime, otime, ttime.
+
+inforeq
+
+Information request.
+
+inforep
+
+Information reply.
+
+maskreq
+
+Address mask request.
+
+maskrep
+
+Address mask reply.
+
+FILES
+
+/etc/hosts 
+/etc/protocols 
+/etc/services
+
+SEE ALSO
+
+ipsend(1),
+iptest(1), hosts(5), protocols(5), services(5)

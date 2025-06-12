@@ -1,0 +1,274 @@
+NAME
+
+mode2 -
+Show kernel output available for LIRC drivers
+
+SYNOPSIS
+
+mode2
+--driver driver> [--device
+device>] [other options]
+
+mode2
+--raw --device device> [other
+options]
+
+mode2
+--driver driver> --list-devices
+
+DESCRIPTION
+
+The original
+purpose of this program has been to check operation of
+home-brew LIRC receiver hardware and to see the IR waveform
+of the remote controller without an expensive oscilloscope.
+Over time, mode2 has evolved to a generic tool to
+check what kind of output the kernel makes available for
+lirc.
+
+mode2 will
+simply print pulse and space lengths to stdout for drivers
+supporting LIRC_MODE_MODE2. For drivers supporting
+LIRC_MODE_LIRCCODE such as TV-cards and the irman driver
+writes the decoded, integer values.
+
+From version
+0.9.4, mode2 can also list the devices available for
+a given driver. This requires enumeration support which is
+available in most but not all drivers.
+
+When given the
+correct driver mode2 should always work. Without a driver,
+the --raw option should always work for /dev/lirc* devices.
+At the time of writing, usb devices also works in most
+cases. However, since it is tricky to get the path to the
+usb device, such ones are normally best accessed using a
+driver.
+
+Not all drivers
+requires a device.
+
+OPTIONS
+
+-d
+--device=device
+
+Read from given device.
+
+-H
+--driver=driver
+
+Use given driver.
+
+-m --mode
+
+Write pulse/space data as raw
+config files. Does not affect LIRCCODE drivers.
+
+-s
+--scope=time
+
+Enable &rsquo;scope like
+display with time us per char. Does not affect lirccode
+drivers.
+
+-k --keep-root
+
+Don&rsquo;t drop root
+privileges after opening device. See RUNNING AS ROOT.
+
+-l --list-devices
+
+List all available devices for
+given driver. Requires support not present in all
+drivers.
+
+-g --gap=time
+
+Treat spaces longer than time
+as the gap. Time is in microseconds.
+
+-r --raw
+
+Access device directly. This is
+primarely intended to be used with kernel rc drivers i .e.,
+when accessing /dev/lirc* devices. Using other
+devices might work, but is in general undefined.
+
+-A
+--driver-options=key:value[|key:value...]
+
+Set driver-specific option
+named key to given value.
+
+-U
+--plugindir=directory
+
+Load drivers from directory.
+See DRIVER LOADING.
+
+-O, --options-file
+path>
+
+File containing default values
+for all options. A relative path is interpreted from current
+directory. See [FILES] below.
+
+-D
+--loglevel=level
+
+Determine the amount of logging
+information. [level] can be a symbolic syslog level:
+&rsquo;error&rsquo;,&rsquo;warning, &rsquo;info&rsquo;,
+&rsquo;notice&rsquo; or &rsquo;debug&rsquo;. lirc also
+defines three additional levels &rsquo;trace&rsquo;,
+&rsquo;trace1&rsquo; and &rsquo;trace2&rsquo; which gives
+even more messages (&rsquo;trace2&rsquo; bringing the most).
+However, in the log these messages are marked as
+&rsquo;debug&rsquo;. The level can also be an integer in the
+range 3 (almost no messages) to 10.
+
+-h --help
+
+Display usage summary.
+
+-v --version
+
+Display version.
+
+RUNNING AS ROOT
+
+In many cases
+mode2 needs to run as root to access devices not available
+to regular users. On the other hand, running as root creates
+problems such as log files owned by root, security concerns
+etc.
+
+In order to
+cope with this, mode2 by default drops root privileges after
+opening the input device. This support is based on that root
+permissions are accquired using sudo(1) e. g., using
+
+$ sudo mode2
+--raw /dev/lirc0
+
+If not using
+sudo, the same behaviour could be accomplished using the
+SUDO_USER environment variable e. g.,
+
+#
+SUDO_USER=$LOGNAME mode2 --raw /dev/lirc0
+
+The --keep-root
+option will make mode2 to keep root privileges for the
+complete run.
+
+EXAMPLES
+
+Invoked with a
+MODE2 type driver with mode2 prints space/mark
+timings: 
+al@snorken $ ./mode2 --driver default --device /dev/lirc0
+
+Using driver default on device /dev/lirc0 
+Trying device: /dev/lirc0 
+Using device: /dev/lirc0 
+pulse 2750 
+space 800 
+pulse 500 
+space 350 
+pulse 550 
+space 350 
+pulse 550 
+...
+
+Invoked with a
+LIRCCODE type driver mode2 prints decoded values:
+
+$ ./mode2
+--driver atilibusb 
+Using driver atilibusb on device /dev/lirc0 
+Trying device: /dev/bus/usb/001/007 
+Using device: /dev/bus/usb/001/007 
+code: 0x14709b0000 
+code: 0x14709b0000 
+code: 0x14709b0000 
+code: 0x14709b0000 
+code: 0x14709b0000 
+...
+
+Invoked using
+mode2 --list-devices for the devinput driver with a
+
+single X10 RF usb device plugged in: 
+$ ./mode2 --list-devices --driver devinput 
+/dev/input/event12 [0bc7:0006] X10 WTI RF receiver vers:
+1.10 serial: ? 
+/dev/input/by-id/usb-X10_WTI_RF_receiver-event-if00 ->
+../event12 
+/dev/input/by-path/pci-0000:0b:00.0-usb-0:1:1.0-event ->
+../event12
+
+DRIVER LOADING
+
+Drivers are
+loaded dynamically. The search path used for this is
+determined by (falling priority):
+
+-
+
+The --plugindir option.
+
+-
+
+The &rsquo;plugindir&rsquo; entry in the [lircd] section
+of the lirc_options.conf file.
+
+-
+
+The environment variable LIRC_PLUGINDIR.
+
+-
+
+A hardcoded default
+(/usr/lib/i386-linux-gnu/lirc/plugins). 
+
+ENVIRONMENT
+
+LIRC_LOGLEVEL
+
+Used as fallback when there is
+no --loglevel option present. Syntax is the same as for
+--loglevel, see OPTIONS.
+
+FILES
+
+/etc/lirc/lirc_options.conf
+
+The options file holding
+default values for command line options in the [mode2]
+section. For some values including debug, plugindir, driver
+and device mode2 falls back to the [lircd] section if not
+found in [mode2].
+
+The location of this file can be changed using the
+-O/--options-file command-line option or using the
+environment variable LIRC_OPTIONS_PATH.
+
+~/.cache/mode2.log
+
+Debug log. Setting the
+XDG_CACHE_HOME environment variable relocates this file to
+$XDG_CACHE_HOME/mode2.log. The amount of logging respects
+the LIRC_LOGLEVEL environment variable, defaulting to the
+debug value in lirc_options.conf.
+
+SEE ALSO
+
+xmode2(1) 
+lirc(4)
+
+The
+documentation for lirc is maintained as html pages.
+They are located under html/ in the documentation
+directory.

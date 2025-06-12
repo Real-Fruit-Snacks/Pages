@@ -1,0 +1,330 @@
+NAME
+
+nbdkit-info-plugin
+- serve client and server information
+
+SYNOPSIS
+
+nbdkit info
+[mode=]exportname|base64exportname|address| 
+time|uptime|conntime
+
+DESCRIPTION
+
+"nbdkit-info-plugin"
+is a test plugin which serves information about the client
+and server in a disk image back to the client.
+
+In its default
+mode ("mode=exportname") it converts the export
+name passed from the client into a disk image.
+"mode=base64exportname" is similar except the
+client must base64-encode the data in the export name,
+allowing arbitrary binary data to be sent (see
+"EXAMPLES" below to make this clearer). Export
+names are limited to 4096 bytes by the NBD protocol,
+although some clients have smaller limits.
+
+"mode=address"
+creates a disk which contains the client&rsquo;s IP address
+and port number as a string.
+
+"mode=time",
+"mode=uptime" and "mode=conntime" report
+server wallclock time, nbdkit uptime, or time since the
+connection was opened respectively and may be used to
+measure latency.
+
+The plugin only
+supports read-only access. To make the disk writable, add
+nbdkit-cow-filter(1) on top.
+
+EXAMPLES
+
+Create a
+&ldquo;reflection disk&rdquo;. By setting the export name to
+"hello" when we open it, a virtual disk of only 5
+bytes containing these characters is created. We then
+display the contents:
+
+$ nbdkit
+--exit-with-parent info mode=exportname & 
+$ nbdsh -u 'nbd://localhost/hello' -c - 
+size = h.get_size() 
+print("size = %d" % size) 
+buf = h.pread(size, 0) 
+print("buf = %r" % buf) 
+EOF
+
+size = 5 
+buf = b"hello"
+
+By running the
+info plugin, you can pass whole bootable VMs on the qemu
+command line:
+
+$ nbdkit info
+mode=base64exportname 
+$ qemu-system-x86_64 \ 
+-drive
+'snapshot=on,file.driver=nbd,file.host=localhost,file.port=10809,file.export=
+
+tACwA80QtBOzCrABuRwAtgCyAL0ZfM0Q9CoqKiBIZWxsbyBmcm9tIG5iZGtp
+
+dCEgKioqDQoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+AAAAAAAAAAAAAAAAAAAAVao= 
+'
+
+Another use for
+the info plugin is to send back the client&rsquo;s IP
+address:
+
+$ nbdkit info
+mode=address 
+$ nbdsh -u 'nbd://localhost' -c 'print(h.pread(h.get_size(),
+0))'
+
+which will
+print something like:
+
+b'[::1]:58912'
+
+This plugin can
+also return the wallclock time:
+
+$ nbdkit info
+time --run 'nbdsh -u "$uri" -c
+"sys.stdout.buffer.write(h.pread(12,0))" | hexdump
+-C' 
+00000000 00 00 00 00 5d 8f 24 c7 00 04 24 01 
+
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+
+&#9484;&#9472;&#9496; 
+&#9474; 
+$ date --date="@$(( 0x5d8f24c7 ))" 
+Sat 28 Sep 10:15:51 BST 2019
+
+or the nbdkit
+server uptime:
+
+$ nbdkit info
+uptime --run 'nbdsh -u "$uri" -c
+"sys.stdout.buffer.write(h.pread(12,0))" | hexdump
+-C' 
+00000000 00 00 00 00 00 00 00 00 00 00 60 4b 
+&#9492;&#9472;&#9472;&#9516;&#9472;&#9472;&#9496; 
+0x604b is about 25ms
+
+or the time
+since the client opened the connection:
+
+$ nbdkit info
+conntime --run 'nbdsh -u "$uri" -c
+"sys.stdout.buffer.write(h.pread(12,0))" | hexdump
+-C' 
+00000000 00 00 00 00 00 00 00 00 00 00 00 e0 
+&#9492;&#9472;&#9516;&#9472;&#9496; 
+0xe0 is about 200&mu;s
+
+PARAMETERS
+
+[mode=]address
+
+Send the client&rsquo;s IP
+address and client port number as a string in the usual
+format. For Unix sockets this sets the disk to the string
+"unix" to avoid leaking host paths.
+
+This mode is
+only supported on some platforms. You can find out if it is
+supported by checking if:
+
+$ nbdkit info
+--dump-plugin
+
+contains:
+
+info_address=yes
+
+[mode=]base64exportname
+
+Send the export name passed by
+the client, assuming the client string is base64
+encoded.
+
+This mode is
+only supported if nbdkit was compiled with GnuTLS &ge;
+3.6.0. You can find out by checking if:
+
+$ nbdkit info
+--dump-plugin
+
+contains:
+
+info_base64=yes
+
+[mode=]exportname
+
+Send the raw export name passed
+by the client. Note the export name cannot contain ASCII NUL
+characters.
+
+This is the
+default mode.
+
+[mode=]time
+
+Reflect server wallclock time
+as seconds and microseconds since the Epoch (see
+gettimeofday(2)):
+
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+
+&#9474; offset &#9474; length &#9474; format &#9474; field
+&#9474; 
+
+&#9566;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9578;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9578;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9578;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9569;
+
+&#9474; 0 &#9474; 8 &#9474; 64 bit int &#9474; seconds
+&#9474; 
+&#9474; &#9474; &#9474; big endian &#9474; &#9474; 
+
+&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;
+
+&#9474; 8 &#9474; 4 &#9474; 32 bit int &#9474; microseconds
+&#9474; 
+&#9474; &#9474; &#9474; big endian &#9474; &#9474; 
+
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+
+To be able to
+read this atomically you must read the whole 12 bytes in a
+single request.
+
+Note that
+exposing server time may be insecure. It is safer to use
+"mode=uptime" or "mode=conntime"
+instead.
+
+[mode=]uptime
+
+Reflect nbdkit uptime in
+seconds and microseconds (ie. both fields are 0 immediately
+after nbdkit starts, although a client would never be able
+to observe this). The format is exactly the same as for
+"mode=time" above.
+
+In the current
+implementation this can jump forwards or backwards
+discontinuously if the server time is adjusted. In future we
+may fix this bug.
+
+[mode=]conntime
+
+Reflect time since the NBD
+client connection was opened in seconds and microseconds.
+The format is exactly the same as for "mode=time"
+above.
+
+In the current
+implementation this can jump forwards or backwards
+discontinuously if the server time is adjusted. In future we
+may fix this bug.
+
+"mode="
+is a magic config key and may be omitted in most cases. See
+"Magic parameters" in nbdkit(1).
+
+FILES
+
+$plugindir/nbdkit-info-plugin.so
+
+The plugin.
+
+Use
+"nbdkit --dump-config" to find the location of
+$plugindir.
+
+VERSION
+
+"nbdkit-info-plugin"
+first appeared in nbdkit 1.16.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-plugin(3), nbdkit-cow-filter(1),
+nbdkit-data-plugin(1).
+
+AUTHORS
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

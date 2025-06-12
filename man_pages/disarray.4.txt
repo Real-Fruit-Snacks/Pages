@@ -1,0 +1,384 @@
+NAME
+
+disarray -
+distributed container (rheolef-7.2)
+
+DESCRIPTION
+
+This class
+provides a std::vector like container for a
+distributed memory model array.
+
+The
+disarray interface is similar to those of the
+std::vector with the addition of some communication
+features for a distributed memory model.
+
+EXAMPLE
+
+int main (int
+argc, char**argv) { 
+environment distributed(argc, argv); 
+distributor ownership (100); 
+disarray x (ownership, 3.14); 
+dout 
+}
+
+NOTATION
+
+There are two
+kind of indexes:
+
+dis_i
+
+This index
+refers to the complete array. It is valid on all
+processes.
+
+i
+
+This index
+refers to the subset of the array that is owned by the
+current process. It is valid only on the local process.
+
+Read and write
+accessors to the subset of the array that is owned by the
+current process are still denoted by square brackets, e.g.
+value = x[i] and x[i] = value,
+respectively.
+
+Read and write
+accessors to the complete array, including array subsets
+that are owned by some others processors, are introduced
+with the help of new member functions:
+
+x.dis_entry(dis_i)
+= value
+
+write access at
+any location
+
+value =
+x.dis_at(dis_i)
+
+read access at
+any location
+
+In order to
+optimize communications, they should be grouped.
+
+GROUPED WRITES
+
+Loop on any
+dis_i and write your value:
+
+for (...) {
+
+x.dis_entry (dis_i) = value; 
+}
+
+Finally,
+perform all communications in one pass:
+
+x.dis_entry_assembly();
+
+After this
+command, each value is stored in x, at its right
+place, depending on dis_i and its
+ownership. Note that, when dis_i is owned
+by the current process, the value is directly written as
+x[i] = value and no communication are
+generated.
+
+GROUPED READS
+
+First, define
+the set of indexes that you want to access:
+
+std::set
+dis_i_set;
+
+Then, loop on
+dis_i all these indexes and append it to this
+set:
+
+for (...) {
+
+dis_i_set.insert (dis_i); 
+}
+
+Next, perform
+communications:
+
+x.set_dis_indexes
+(dis_i_set);
+
+After this
+command, each values associated to the dis_i index,
+and that belongs to the index set, is also available also on
+the current processor:
+
+for (...) {
+
+value = x.dis_at (dis_i); 
+}
+
+Note that, when
+dis_i is owned by the current process, the value is
+directly read as value = x[i] and no communication
+are generated.
+
+TEMPLATE PARAMETERS
+
+Recall that the
+std::class that takes two template parameters, a
+T one for the stored elements and a A one
+for the memory allocator, the present disarray
+class take three template parameters:
+
+&bull;
+
+T: the stored object type
+
+&bull;
+
+M: the memory model, i.e. sequential
+or distributed, by default
+default_memory_model with is defined at the
+configuration stage
+
+&bull;
+
+A: the memory allocator, by default
+std::allocator 
+
+CONSTRUCTOR
+
+In the
+sequential case, the class interface provides a
+simplified constructor:
+
+int local_size
+= 100; 
+disarray x (local_size,
+init_val);
+
+This
+declaration is similar to those of a std::vector
+one: no communications are possible. In order to enable
+communication, your have to replace the local_size
+by information on how the array is distributed in
+memory:
+
+distributor
+ownership (100); 
+disarray x (ownership, 3.14);
+
+The
+distributor(4) class does this job.
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+linalg/lib/disarray.h
+
+template
+
+class disarray : public
+smart_pointer > {
+
+public:
+
+//
+typedefs:
+
+typedef
+disarray_rep rep; 
+typedef smart_pointer base;
+
+typedef
+distributed memory_type; 
+typedef typename rep::size_type size_type; 
+typedef typename rep::difference_type difference_type; 
+typedef typename rep::value_type value_type; 
+typedef typename rep::reference reference; 
+typedef typename rep::dis_reference dis_reference; 
+typedef typename rep::iterator iterator; 
+typedef typename rep::const_reference const_reference; 
+typedef typename rep::const_iterator const_iterator; 
+typedef typename rep::scatter_map_type scatter_map_type;
+
+//
+allocators:
+
+disarray (const
+distributor& ownership = distributor(), const T&
+init_val = T(), const A& alloc = A()); 
+void resize (const distributor& ownership =
+distributor(), const T& init_val = T());
+
+// local
+accessors & modifiers:
+
+A
+get_allocator() const { return base::data().get_allocator();
+} 
+size_type size () const { return base::data().size(); } 
+size_type dis_size () const { return
+base::data().dis_size(); } 
+const distributor& ownership() const { return
+base::data().ownership(); } 
+const communicator& comm() const { return
+base::data().comm(); }
+
+reference
+operator[] (size_type i) { return base::data().operator[]
+(i); } 
+const_reference operator[] (size_type i) const { return
+base::data().operator[] (i); } 
+reference operator() (size_type i) { return
+base::data().operator[] (i); } 
+const_reference operator() (size_type i) const { return
+base::data().operator[] (i); }
+
+iterator
+begin() { return base::data().begin(); } 
+const_iterator begin() const { return base::data().begin();
+} 
+iterator end() { return base::data().end(); } 
+const_iterator end() const { return base::data().end();
+}
+
+// global
+accessor:
+
+template 
+void append_dis_entry (const Set& ext_idx_set, Map&
+ext_idx_map) const { base::data().append_dis_entry
+(ext_idx_set, ext_idx_map); }
+
+template 
+void get_dis_entry (const Set& ext_idx_set, Map&
+ext_idx_map) const { base::data().get_dis_entry
+(ext_idx_set, ext_idx_map); }
+
+template 
+void append_dis_indexes (const Set& ext_idx_set) const {
+base::data().append_dis_indexes (ext_idx_set); } 
+void reset_dis_indexes() const {
+base::data().reset_dis_indexes(); } 
+void get_dis_indexes (std::set&
+ext_idx_set) const { base::data().get_dis_indexes
+(ext_idx_set); }
+
+template 
+void set_dis_indexes (const Set& ext_idx_set) const {
+base::data().set_dis_indexes (ext_idx_set); }
+
+const T&
+dis_at (size_type dis_i) const { return base::data().dis_at
+(dis_i); }
+
+// get all
+external pairs (dis_i, values): 
+const scatter_map_type& get_dis_map_entries() const {
+return base::data().get_dis_map_entries(); }
+
+// global
+modifiers (for compatibility with distributed
+interface):
+
+dis_reference
+dis_entry (size_type dis_i) { return
+base::data().dis_entry(dis_i); }
+
+template::type> 
+void dis_entry_assembly_begin (SetOp my_set_op = SetOp()) {
+base::data().dis_entry_assembly_begin (my_set_op); } 
+template::type> 
+void dis_entry_assembly_end (SetOp my_set_op = SetOp()) {
+base::data().dis_entry_assembly_end (my_set_op); } 
+template::type> 
+void dis_entry_assembly (SetOp my_set_op = SetOp()) {
+base::data().dis_entry_assembly (my_set_op); }
+
+void
+dis_entry_assembly_begin() { base::data().template
+dis_entry_assembly_begin::type>(); } 
+void dis_entry_assembly_end() { base::data().template
+dis_entry_assembly_end::type>(); } 
+void dis_entry_assembly() { dis_entry_assembly_begin();
+dis_entry_assembly_end(); }
+
+// apply a
+partition:
+
+template 
+void repartition ( // old_numbering for *this 
+const RepSize& partition, // old_ownership 
+disarray& new_disarray, //
+new_ownership (created) 
+RepSize& old_numbering, // new_ownership 
+RepSize& new_numbering) const // old_ownership 
+{ return base::data().repartition (partition.data(),
+new_disarray.data(), old_numbering.data(),
+new_numbering.data()); }
+
+template 
+void permutation_apply ( // old_numbering for *this 
+const RepSize& new_numbering, // old_ownership 
+disarray& new_disarray) const //
+new_ownership (already allocated) 
+{ base::data().permutation_apply (new_numbering.data(),
+new_disarray.data()); }
+
+void
+reverse_permutation ( // old_ownership for
+*this=iold2dis_inew 
+disarray& inew2dis_iold)
+const // new_ownership 
+{ base::data().reverse_permutation (inew2dis_iold.data());
+}
+
+// i/o:
+
+odiststream&
+put_values (odiststream& ops) const { return
+base::data().put_values(ops); } 
+idiststream& get_values (idiststream& ips) { return
+base::data().get_values(ips); } 
+void dump (std::string name) const { return
+base::data().dump(name); }
+
+template
+
+idiststream& get_values (idiststream& ips,
+GetFunction get_element) { return
+base::data().get_values(ips, get_element); } 
+template  
+odiststream& put_values (odiststream& ops,
+PutFunction put_element) const { return
+base::data().put_values(ops, put_element); } 
+template 
+odiststream& permuted_put_values ( 
+odiststream& ops, const
+disarray& perm,
+PutFunction put_element) const 
+{ return base::data().permuted_put_values (ops, perm.data(),
+put_element); } 
+};
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html&gt;. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

@@ -1,0 +1,139 @@
+NAME
+
+nbdkit-nocache-filter
+- nbdkit nocache filter
+
+SYNOPSIS
+
+nbdkit
+--filter=nocache plugin [cachemode=MODE]
+[plugin-args...]
+
+DESCRIPTION
+
+"nbdkit-nocache-filter"
+is a filter that intentionally disables efficient handling
+of advisory client cache requests across the NBD protocol.
+It is mainly useful for evaluating timing differences to
+determine the impact of caching requests.
+
+Note that the
+effects of this filter (in crippling handling of client
+cache requests) is somewhat orthogonal from that of the
+nbdkit-cache-filter(1) (adding local caching of
+client read/write requests); the two filters can be run
+together to experiment with timings.
+
+PARAMETERS
+
+cachemode=none
+
+cachemode=emulate 
+cachemode=nop
+
+Optional, controls which mode
+the filter will use. Mode none (default) means that
+cache support is not advertised to the client. Mode
+emulate means that cache support is emulated by the
+filter using the plugin&rsquo;s "pread" callback,
+regardless of whether the plugin itself implemented the
+"cache" callback. Mode nop means that cache
+requests are always accepted and immediately ignored, rather
+than having any actual impact.
+
+EXAMPLES
+
+Serve the file
+disk.img, but prevent "NBD_CMD_CACHE"
+requests altogether, to get a baseline timing of behavior
+when the client is unable to make cache requests:
+
+nbdkit
+--filter=nocache file disk.img
+
+Serve the file
+disk.img, but with cache requests silently ignored,
+rather than being forwarded on to the file plugin (which
+attempts to use posix_fadvise(3)), to compare against
+the timings without the filter and determine whether the
+file plugin caching was worthwhile:
+
+nbdkit
+--filter=nocache file disk.img cachemode=nop
+
+FILES
+
+$filterdir/nbdkit-nocache-filter.so
+
+The filter.
+
+Use
+"nbdkit --dump-config" to find the location of
+$filterdir.
+
+VERSION
+
+"nbdkit-nocache-filter"
+first appeared in nbdkit 1.14.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-file-plugin(1), nbdkit-filter(3),
+nbdkit-cache-filter(1), nbdkit-fua-filter(1),
+nbdkit-multi-conn-filter(1),
+nbdkit-noextents-filter(1),
+nbdkit-noparallel-filter(1),
+nbdkit-nozero-filter(1).
+
+AUTHORS
+
+Eric Blake
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

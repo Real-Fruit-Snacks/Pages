@@ -1,0 +1,189 @@
+NAME
+
+pmSeriesSetup,
+pmSeriesSetSlots, pmSeriesSetEventLoop,
+pmSeriesSetConfiguration,
+pmSeriesSetMetricRegistry, pmSeriesClose -
+fast, scalable time series services
+
+C SYNOPSIS
+
+#include
+
+int
+pmSeriesSetup(pmSeriesModule *module,
+pmSeriesCallBacks *callbacks, void
+*arg);
+
+int
+pmSeriesSetSlots(pmSeriesModule *module, void
+*slots); 
+int pmSeriesSetEventLoop(pmSeriesModule
+*module, void *uvloop); 
+int pmSeriesSetConfiguration(pmSeriesModule
+*module, struct dict *config);
+
+int pmSeriesSetMetricRegistry(pmSeriesModule
+*module, struct mmv_registry
+*registry);
+
+int
+pmSeriesClose(pmSeriesModule *module);
+
+cc ...
+-lpcp_web
+
+DESCRIPTION
+
+The
+pmSeriesSetup and related API functions prepare an
+application for accessing the fast, scalable time series
+querying functionality of the Performance Co-Pilot
+(PCP).
+
+This
+functionality is provided through asynchronous APIs, which
+function in an event-driven fashion. The interfaces
+described here prepare a given time series module
+which associates callback routines with certain asynchronous
+events that occur as part of servicing time series
+requests.
+
+As a general
+pattern, all interfaces in these APIs that need to invoke
+callbacks provided by the calling program will take
+an opaque (void * pointer) parameter, arg. This
+pointer will be passed through unchanged and is typically
+used to access a data structure maintaining state within the
+calling program.
+
+Where
+asynchronous setup is required by pmSeriesSetup its
+completion will be indicated through use of the
+on_setup callback, which is part of the passed in
+pmSeriesModule structure. This structure also
+provides for custom diagnostics handling, through the
+on_info callback. These are self-explanatory, see
+ for exact calling
+conventions.
+
+The
+callbacks registered by pmSeriesSetup to
+handle events are as follows: 
+pmSeriesMatchCallBack on_match
+
+When a time series query
+discovers time series identifiers that match the query, the
+on_match callback will be called once for every
+series identifier (SID). The SID is a unique 40-byte ASCII
+representation of a SHA hash.
+
+pmSeriesDescCallBack
+on_desc
+
+Metric descriptor requests from
+pmSeriesDescs(1) will invoke this callback once for
+each series identifier.
+
+pmSeriesInstCallBack
+on_inst
+
+Instance identification
+callback - internal (numeric) and external (string) instance
+IDs, as well as time series and source (host) SHA1
+identifiers. Called once for each instance. The associated
+series identifier is also provided to the callback.
+
+pmSeriesLabelCallBack
+on_labelmap
+
+Provides metric labels (name
+and value mappings) for each series identifier passed to
+pmSeriesLabels(1).
+
+pmSeriesStringCallBack
+on_instance
+
+Provides an instance name for a
+call to pmSeriesInstances(1)- the callback is
+called once for each instance name. The associated series
+identifier is also provided to the callback.
+
+pmSeriesStringCallBack
+on_context
+
+Provides a context name for a
+call to pmSeriesSources(1)- the callback is
+called once for each source (hostname or archive). The
+associated source identifier is also provided to the
+callback.
+
+pmSeriesStringCallBack
+on_metric
+
+Provides a metric name for a
+call to pmSeriesMetrics(1)- the callback is
+called once for each metric name. The associated series
+identifier is also provided to the callback.
+
+pmSeriesStringCallBack
+on_label
+
+Provides a label name for a
+call to pmSeriesLabels(1)- the callback is
+called once for each label name. The associated series
+identifier is also provided to the callback.
+
+pmSeriesValueCallBack
+on_value
+
+Calls to the
+pmSeriesQuery interface that provide a time window
+may result in values being found for matching time series.
+The on_value callback will be invoked once for each
+time series value, also providing the sample timestamp (in
+both string and binary form, as a time in nanoseconds since
+the epoch). The associated series identifier is also
+provided to the callback.
+
+pmSeriesDoneCallBack
+on_done
+
+On completion of all
+asynchronous interfaces that return success (zero return
+code), this callback will be called. It provides a status
+code indicating overall success (zero) or failure (negative
+PMAPI code) of the operation.
+
+The helper
+functions pmSeriesSetSlots (redis),
+pmSeriesSetEventLoop (libuv),
+pmSeriesSetConfiguration (configuration file) and
+pmSeriesSetMetricRegistry (MMV instrumentation)
+interfaces provide a mechanism for passing in state for each
+of the associated subsystems.
+
+Finally, a call
+to pmSeriesClose is used to end services available
+from a series module previously established through
+pmSeriesSetup.
+
+Within PCP, the
+pmproxy(1) and pmseries(1) utilities are the
+primary users of these interfaces, providing REST API and
+command line time series query services respectively.
+
+DIAGNOSTICS
+
+Where these
+functions return a status code, this is always zero on
+success. On failure a negative PMAPI error code is
+returned.
+
+SEE ALSO
+
+pmproxy(1),
+pmlogger(1), pmseries(1),
+redis-server(1), mmv_stats_registry(3),
+pmSeriesDescs(3), pmSeriesQuery(3),
+PMAPI(3) and PMWEBAPI(3).

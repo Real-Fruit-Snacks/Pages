@@ -1,0 +1,169 @@
+NAME
+
+nbdkit-qcow2dec-filter
+- decode qcow2 files
+
+SYNOPSIS
+
+nbdkit
+--filter=qcow2dec PLUGIN
+
+DESCRIPTION
+
+"nbdkit-qcow2dec-filter"
+is a filter for nbdkit(1) that can decode some qcow2
+files. You can use it on top of plugins that provide qcow2
+data, such as nbdkit-file-plugin(1) or
+nbdkit-curl-plugin(1). For example to expose a local
+qcow2 file as raw format over NBD:
+
+nbdkit -r
+--filter=qcow2dec file image.qcow2
+
+This filter can
+only decode qcow2 files, it cannot write to them, and it has
+other limitations. See "LIMITATIONS" below. The
+NBD export will be read-only unless you use
+nbdkit-cow-filter(1) on top.
+
+qemu-nbd(8)
+is an alternate NBD server with native support for
+qcow2.
+
+LIMITATIONS
+
+This filter has
+several limitations, and some of them we never intend to
+implement. For general qcow2 access, especially creating and
+writing to qcow2 files, it is always better to use qemu and
+tools such as qemu-img(1) and qemu-nbd(8).
+
+Read-only
+
+This filter only supports
+decoding qcow2 into raw format. You cannot write to the
+qcow2 file. The NBD export will be read-only.
+
+Versions 2 and 3 only
+
+Only qcow2 subversions 2 and 3
+(a.k.a. "compat=0.10" and "compat=1.1")
+are supported.
+
+Deflate or Zstd compression
+only
+
+The most common types of qcow2
+compression are supported if nbdkit was built with the
+correct libraries. To find out which types of compression
+are supported, use:
+
+$ nbdkit null
+--filter=qcow2dec --dump-plugin 
+... 
+qcow2dec_deflate=yes # printed if Deflate (zlib) is
+supported 
+qcow2dec_zstd=yes # printed if Zstd is supported
+
+No snapshots
+
+We may add the ability to
+extract an internal snapshot in future.
+
+No bitmaps
+
+It may be possible to support
+bitmaps in future.
+
+No backing files 
+No dirty or corrupted qcow2 files 
+No encryption 
+No extended L2 entries 
+No external data files
+
+These features are not
+currently supported and unlikely to be supported in
+future.
+
+PARAMETERS
+
+There are no
+parameters specific to this filter. Parameters are passed
+through to the underlying plugin.
+
+FILES
+
+$filterdir/nbdkit-qcow2dec-filter.so
+
+The filter.
+
+Use
+"nbdkit --dump-config" to find the location of
+$filterdir.
+
+VERSION
+
+"nbdkit-qcow2dec-filter"
+first appeared in nbdkit 1.36.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-cow-filter(1), nbdkit-curl-plugin(1),
+nbdkit-file-plugin(1), nbdkit-filter(3),
+https://github.com/qemu/qemu/blob/master/docs/interop/qcow2.txt,
+https://web.archive.org/web/20201006212750/https://people.gnome.org/~markmc/qcow-image-format-version-1.html,
+qemu-img(1), qemu-nbd(8).
+
+AUTHORS
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

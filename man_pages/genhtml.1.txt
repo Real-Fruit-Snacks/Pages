@@ -1,0 +1,587 @@
+NAME
+
+genhtml -
+Generate HTML view from LCOV coverage data files
+
+SYNOPSIS
+
+genhtml
+[-h|--help] [-v|--version]
+
+[-q|--quiet]
+[-s|--show-details]
+[-f|--frames] 
+[-b|--baseline-file] baseline-file 
+[-o|--output-directory
+output-directory] 
+[-t|--title title] 
+[-d|--description-file
+description-file] 
+[-k|--keep-descriptions]
+[-c|--css-file css-file] 
+[-p|--prefix prefix]
+[--no-prefix] 
+[--no-source] [--num-spaces num]
+[--highlight] 
+[--legend] [--html-prolog prolog-file]
+
+[--html-epilog epilog-file]
+[--html-extension extension] 
+[--html-gzip] [--sort] [--no-sort] 
+[--function-coverage] [--no-function-coverage]
+
+[--branch-coverage] [--no-branch-coverage]
+
+[--demangle-cpp] [--ignore-errors
+errors] 
+[--config-file config-file] [--rc
+keyword=value] 
+[--precision [--missed] 
+tracefile(s)
+
+DESCRIPTION
+
+Create an HTML
+view of coverage data found in tracefile. Note that
+tracefile may also be a list of filenames.
+
+HTML output
+files are created in the current working directory unless
+the --output-directory option is used. If tracefile
+ends with ".gz", it is assumed to be
+GZIP-compressed and the gunzip tool will be used to
+decompress it transparently.
+
+Note that all
+source code files have to be present and readable at the
+exact file system location they were compiled.
+
+Use option
+--css-file to modify layout and colors of the
+generated HTML output. Files are marked in different colors
+depending on the associated coverage rate. By default, the
+coverage limits for low, medium and high coverage are set to
+0-75%, 75-90% and 90-100% percent respectively. To change
+these values, use configuration file options
+genhtml_hi_limit and genhtml_med_limit.
+
+Also note that
+when displaying percentages, 0% and 100% are only printed
+when the values are exactly 0% and 100% respectively. Other
+values which would conventionally be rounded to 0% or 100%
+are instead printed as nearest non-boundary value. This
+behavior is in accordance with that of the gcov(1)
+tool.
+
+OPTIONS
+
+-h 
+--help
+
+Print a short help text, then
+exit.
+
+-v 
+--version
+
+Print version number, then
+exit.
+
+-q 
+--quiet
+
+Do not print progress
+messages.
+
+Suppresses all
+informational progress output. When this switch is enabled,
+only error or warning messages are printed.
+
+-f 
+--frames
+
+Use HTML frames for source code
+view.
+
+If enabled, a
+frameset is created for each source code file, providing an
+overview of the source code as a "clickable"
+image. Note that this option will slow down output creation
+noticeably because each source code character has to be
+inspected once. Note also that the GD.pm Perl module has to
+be installed for this option to work (it may be obtained
+from http://www.cpan.org).
+
+-s 
+--show-details
+
+Generate detailed directory
+view.
+
+When this
+option is enabled, genhtml generates two versions of
+each file view. One containing the standard information plus
+a link to a "detailed" version. The latter
+additionally contains information about which test case
+covered how many lines of each source file.
+
+-b
+baseline-file 
+--baseline-file baseline-file
+
+Use data in
+baseline-file as coverage baseline.
+
+The tracefile
+specified by baseline-file is read and all counts
+found in the original tracefile are decremented by
+the corresponding counts in baseline-file before
+creating any output.
+
+Note that when
+a count for a particular line in baseline-file is
+greater than the count in the tracefile, the result
+is zero.
+
+-o
+output-directory 
+--output-directory output-directory
+
+Create files in
+output-directory.
+
+Use this option
+to tell genhtml to write the resulting files to a
+directory other than the current one. If
+output-directory does not exist, it will be
+created.
+
+It is advisable
+to use this option since depending on the project size, a
+lot of files and subdirectories may be created.
+
+-t
+title 
+--title title
+
+Display title in header
+of all pages.
+
+title is
+written to the header portion of each generated HTML page to
+identify the context in which a particular output was
+created. By default this is the name of the tracefile.
+
+-d
+description-file 
+--description-file description-file
+
+Read test case descriptions
+from description-file.
+
+All test case
+descriptions found in description-file and referenced
+in the input data file are read and written to an extra page
+which is then incorporated into the HTML output.
+
+The file format
+of description-file is:
+
+for each test
+case:
+
+TN: 
+TD:
+
+Valid test case
+names can consist of letters, numbers and the underscore
+character (&rsquo;_&rsquo;).
+
+-k 
+--keep-descriptions
+
+Do not remove unused test
+descriptions.
+
+Keep
+descriptions found in the description file even if the
+coverage data indicates that the associated test case did
+not cover any lines of code.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_keep_descriptions.
+
+-c
+css-file 
+--css-file css-file
+
+Use external style sheet file
+css-file.
+
+Using this
+option, an extra .css file may be specified which will
+replace the default one. This may be helpful if the default
+colors make your eyes want to jump out of their sockets
+:)
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_css_file.
+
+-p
+prefix 
+--prefix prefix
+
+Remove prefix from all
+directory names.
+
+Because lists
+containing long filenames are difficult to read, there is a
+mechanism implemented that will automatically try to shorten
+all directory names on the overview page beginning with a
+common prefix. By default, this is done using an algorithm
+that tries to find the prefix which, when applied, will
+minimize the resulting sum of characters of all directory
+names.
+
+Use this option
+to specify the prefix to be removed by yourself.
+
+--no-prefix
+
+Do not remove prefix from
+directory names.
+
+This switch
+will completely disable the prefix mechanism described in
+the previous section.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_no_prefix.
+
+--no-source
+
+Do not create source code
+view.
+
+Use this switch
+if you don&rsquo;t want to get a source code view for each
+file.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_no_source.
+
+--num-spaces
+spaces
+
+Replace tabs in source view
+with num spaces.
+
+Default value
+is 8.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_num_spaces.
+
+--highlight
+
+Highlight lines with
+converted-only coverage data.
+
+Use this option
+in conjunction with the --diff option of lcov to
+highlight those lines which were only covered in data sets
+which were converted from previous source code versions.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_highlight.
+
+--legend
+
+Include color legend in HTML
+output.
+
+Use this option
+to include a legend explaining the meaning of color coding
+in the resulting HTML output.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_legend.
+
+--html-prolog
+prolog-file
+
+Read customized HTML prolog
+from prolog-file.
+
+Use this option
+to replace the default HTML prolog (the initial part of the
+HTML source code leading up to and including the
+ tag) with the contents of prolog-file.
+Within the prolog text, the following words will be replaced
+when a page is generated:
+
+@pagetitle@
+
+The title of the page.
+
+@basedir@
+
+A relative path leading to the base directory (e.g. for
+locating css-files).
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_html_prolog.
+
+--html-epilog
+epilog-file
+
+Read customized HTML epilog
+from epilog-file.
+
+Use this option
+to replace the default HTML epilog (the final part of the
+HTML source including ) with the contents of
+epilog-file.
+
+Within the
+epilog text, the following words will be replaced when a
+page is generated:
+
+@basedir@
+
+A relative path leading to the base directory (e.g. for
+locating css-files).
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_html_epilog.
+
+--html-extension
+extension
+
+Use customized filename
+extension for generated HTML pages.
+
+This option is
+useful in situations where different filename extensions are
+required to render the resulting pages correctly (e.g. php).
+Note that a &rsquo;.&rsquo; will be inserted between the
+filename and the extension specified by this option.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_html_extension.
+
+--html-gzip
+
+Compress all generated html
+files with gzip and add a .htaccess file specifying
+gzip-encoding in the root output directory.
+
+Use this option
+if you want to save space on your webserver. Requires a
+webserver with .htaccess support and a browser with support
+for gzip compressed html.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_html_gzip.
+
+--sort 
+--no-sort
+
+Specify whether to include
+sorted views of file and directory overviews.
+
+Use --sort to
+include sorted views or --no-sort to not include them.
+Sorted views are enabled by default.
+
+When sorted
+views are enabled, each overview page will contain links to
+views of that page sorted by coverage rate.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_sort.
+
+--function-coverage
+
+--no-function-coverage
+
+Specify whether to display
+function coverage summaries in HTML output.
+
+Use
+--function-coverage to enable function coverage summaries or
+--no-function-coverage to disable it. Function coverage
+summaries are enabled by default
+
+When function
+coverage summaries are enabled, each overview page will
+contain the number of functions found and hit per file or
+directory, together with the resulting coverage rate. In
+addition, each source code view will contain a link to a
+page which lists all functions found in that file plus the
+respective call count for those functions.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_function_coverage.
+
+--branch-coverage
+
+--no-branch-coverage
+
+Specify whether to display
+branch coverage data in HTML output.
+
+Use
+--branch-coverage to enable branch coverage display or
+--no-branch-coverage to disable it. Branch coverage data
+display is enabled by default
+
+When branch
+coverage display is enabled, each overview page will contain
+the number of branches found and hit per file or directory,
+together with the resulting coverage rate. In addition, each
+source code view will contain an extra column which lists
+all branches of a line with indications of whether the
+branch was taken or not. Branches are shown in the following
+format:
+
+&rsquo; +
+&rsquo;: Branch was taken at least once 
+&rsquo; - &rsquo;: Branch was not taken 
+&rsquo; # &rsquo;: The basic block containing the branch was
+never executed
+
+Note that it
+might not always be possible to relate branches to the
+corresponding source code statements: during compilation,
+GCC might shuffle branches around or eliminate some of them
+to generate better code.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_branch_coverage.
+
+--demangle-cpp
+
+Specify whether to demangle C++
+function names.
+
+Use this option
+if you want to convert C++ internal function names to human
+readable format for display on the HTML function overview
+page. This option requires that the c++filt tool is
+installed (see c++filt(1)).
+
+--ignore-errors
+errors
+
+Specify a list of errors after
+which to continue processing.
+
+Use this option
+to specify a list of one or more classes of errors after
+which geninfo should continue processing instead of
+aborting.
+
+errors
+can be a comma-separated list of the following keywords:
+
+source:
+the source code file for a data set could not be found.
+
+--config-file
+config-file
+
+Specify a configuration file to
+use.
+
+When this
+option is specified, neither the system-wide configuration
+file /etc/lcovrc, nor the per-user configuration file
+~/.lcovrc is read.
+
+This option may
+be useful when there is a need to run several instances of
+genhtml with different configuration file options in
+parallel.
+
+--rc
+keyword=value
+
+Override a configuration
+directive.
+
+Use this option
+to specify a keyword=value statement which
+overrides the corresponding configuration statement in the
+lcovrc configuration file. You can specify this option more
+than once to override multiple configuration statements. See
+lcovrc(5) for a list of available keywords and their
+meaning.
+
+--precision
+num
+
+Show coverage rates with
+num number of digits after the decimal-point.
+
+Default value
+is 1.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_precision.
+
+--missed
+
+Show counts of missed lines,
+functions, or branches
+
+Use this option
+to change overview pages to show the count of lines,
+functions, or branches that were not hit. These counts are
+represented by negative numbers.
+
+When specified
+together with --sort, file and directory views will be
+sorted by missed counts.
+
+This option can
+also be configured permanently using the configuration file
+option genhtml_missed.
+
+FILES
+
+/etc/lcovrc
+
+The system-wide configuration
+file.
+
+~/.lcovrc
+
+The per-user configuration
+file.
+
+AUTHOR
+
+Peter
+Oberparleiter Peter.Oberparleiter [AT] de.com>
+
+SEE ALSO
+
+lcov(1),
+lcovrc(5), geninfo(1), genpng(1),
+gendesc(1), gcov(1)

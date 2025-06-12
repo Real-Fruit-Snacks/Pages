@@ -1,0 +1,152 @@
+NAME
+
+rarpd &minus;
+Reverse Address Resolution Protocol (RARP) daemon
+
+SYNOPSIS
+
+rarpd
+[&minus;aAvode] [&minus;b bootdir]
+[interface]
+
+DESCRIPTION
+
+Rarpd is
+a daemon which responds to RARP requests. RARP is used by
+some machines at boot time to discover their IP address.
+They provide their Ethernet address and rarpd
+responds with their IP address if it finds it in the ethers
+database (either /etc/ethers file or NIS+ lookup) and
+using DNS lookup if the ethers database contains a hostname
+and not an IP address. In addition, /etc/hosts will
+provide further means of pairing an IP address to a
+hostname, in the standard fashion.
+
+By default
+rarpd also checks if a bootable image, of a name
+starting with the IP address in hexadecimal upper-case
+letters, is present in the TFTP boot directory before it
+decides whether to respond to the RARP request. The
+comparison involves exactly the first eight characters, and
+ignores any additional character. A file name shorter than
+eight characters in length is unsuccessful. Typically,
+192.168.0.122 would correspond to an image named like
+C0A8007A.SUN.
+
+The optional
+argument interface restricts the daemon instance to
+access only the indicated network interface. Only a single
+name is possible.
+
+OPTIONS
+
+&minus;a
+
+Do not bind to a single
+interface, but listen at all configured interfaces.
+
+&minus;A
+
+Respond to reverse requests received as ARP-packets, in
+addition to those protocol conformant requests transmitted
+as RARP-packets. See the notes for the background.
+
+&minus;v
+
+Tell the user what is going on by being verbose.
+
+&minus;d
+
+Debugging mode. Do not detach from the tty. This also
+implies verbose mode.
+
+&minus;e
+
+Skip the check for bootable images in the TFTP boot
+directory. In the absence of this switch, even if the
+Ethernet address is present in the ethers database, the lack
+of a bootable image for the resolved IP will make
+rarpd refrain from responding to requests for this
+particular address.
+
+&minus;o
+
+Accept offlink packages on the active interfaces.
+
+&minus;b
+bootdir
+
+Access bootdir instead
+of the default /tftpboot as the TFTP boot directory
+for bootable image checks.
+
+OBSOLETES
+
+This daemon
+rarpd obsoletes kernel rarp daemon present in
+Linux kernels up to 2.2 which was controlled by the rarp(8)
+command.
+
+SIGNALS
+
+SIGHUP
+
+Renew the internal address list,
+which records IPv4 addresses available at each active
+network interface. The restriction set by the command line
+argument interface is still in effect, if in use.
+
+NOTES
+
+The protocol
+stipulates that Reverse Requests be broadcast as RARP
+packets, using a protocol number different from that in use
+by ARP packets. However, there has been an obsolete practice
+of transmitting also Reverse Requests in ARP packets, and
+some old clients may still be around that adhere to that
+practice. To activate support for such obsolete client
+hosts, the switch &minus;A must be applied. Observe,
+however, that only ARP-packaged ARPOP_RREQUEST messages are
+added to the servers responsabilities with the use of this
+option, and that the replies to these will be sent as
+ARP-packaged ARPOP_RREPLY messages.
+
+FILES
+
+/etc/ethers
+
+Text data base of ethernet to
+host pairs.
+
+/etc/hosts
+
+Text lookup table of host
+names.
+
+/etc/nsswitch.conf
+
+Name resolver
+configuration.
+
+/tftpboot
+
+Default boot directory.
+
+/tftpboot/HEXADDR
+
+Typical name of a boot image.
+It is a file or a directory. The IPv4 address is translated
+as eight upper-case, hexadecimal digits in the mandatory
+part HEXADDR. Optionally, the name may be extended
+with an arbitrary suffix.
+
+SEE ALSO
+
+ethers(5),
+hosts(5), nsswitch.conf(5)
+
+AUTHORS
+
+Alexey
+Kuznetsov, kuznet [AT] ms2.ru> 
+Jakub Jelinek, jakub [AT] redhat.com>

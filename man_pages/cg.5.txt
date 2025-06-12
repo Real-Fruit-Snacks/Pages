@@ -1,0 +1,118 @@
+NAME
+
+cg - conjugate
+gradient algorithm (rheolef-7.2)
+
+SYNOPSIS
+
+template
+
+int cg (const Matrix &A, Vector &x, const Vector2
+&Mb, const Preconditioner &M, 
+const solver_option& sopt = solver_option())
+
+EXAMPLE
+
+solver_option
+sopt; 
+sopt.max_iter = 100; 
+sopt.tol = 1e-7; 
+int status = cg (A, x, b, eye(), sopt);
+
+DESCRIPTION
+
+This function
+solves the symmetric positive definite linear system
+A*x=b with the conjugate gradient method. The
+cg function follows the algorithm described on p.
+15 in
+
+R. Barrett, M.
+Berry, T. F. Chan, J. Demmel, J. Donato, 
+J. Dongarra, V. Eijkhout, R. Pozo, C. Romine and H. Van der
+Vorst, 
+Templates for the solution of linear systems: building
+blocks for iterative methods, 
+SIAM, 1994.
+
+The fourth
+argument of cg is a preconditionner: here, the
+eye(5) one is a do-nothing preconditionner, for
+simplicity. Finally, the solver_option(4) variable
+sopt transmits the stopping criterion with
+sopt.tol and sopt.max_iter.
+
+On return, the
+sopt.residue and sopt.n_iter indicate the
+reached residue and the number of iterations effectively
+performed. The return status is zero when the
+prescribed tolerance tol has been obtained, and
+non-zero otherwise. Also, the x variable contains
+the approximate solution. See also the
+solver_option(4) for more controls upon the stopping
+criterion.
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+linalg/lib/cg.h
+
+The present
+template implementation is inspired from the IML++
+1.2 iterative method library,
+http://math.nist.gov/iml++
+
+template
+
+int cg (const Matrix &A, Vector &x, const Vector2
+&Mb, const Preconditioner &M, 
+const solver_option& sopt = solver_option())
+
+{ 
+typedef typename Vector::size_type Size; 
+typedef typename Vector::float_type Real; 
+std::string label = (sopt.label != "" ? sopt.label
+: "cg"); 
+Vector b = M.solve(Mb); 
+Real norm2_b = dot(Mb,b); 
+if (sopt.absolute_stopping || norm2_b == Real(0)) norm2_b =
+1; 
+Vector Mr = Mb - A*x; 
+Real norm2_r = 0; 
+if (sopt.p_err) (*sopt.p_err) 
+Vector p; 
+for (sopt.n_iter = 0; sopt.n_iter 
+Vector r = M.solve(Mr); 
+Real prev_norm2_r = norm2_r; 
+norm2_r = dot(Mr, r); 
+sopt.residue = sqrt(norm2_r/norm2_b); 
+if (sopt.p_err) (*sopt.p_err) 
+if (sopt.residue 
+if (sopt.n_iter == 0) { 
+p = r; 
+} else { 
+Real beta = norm2_r/prev_norm2_r; 
+p = r + beta*p; 
+} 
+Vector Mq = A*p; 
+Real alpha = norm2_r/dot(Mq, p); 
+x += alpha*p; 
+Mr -= alpha*Mq; 
+} 
+return 1; 
+}
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html&gt;. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

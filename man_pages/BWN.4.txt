@@ -1,0 +1,138 @@
+BWN(4) BSD Kernel Interfaces Manual BWN(4)
+
+NAME
+
+bwn &mdash; Broadcom
+BCM43xx SoftMAC IEEE 802.11 wireless network driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, add the following lines to the kernel configuration
+file:
+
+device bwn
+
+device bhnd 
+device bhndb 
+device bhndb_pci 
+device bcma 
+device siba 
+device gpio 
+device wlan 
+device wlan_amrr 
+device firmware
+
+To load the
+driver as a module at boot, add the following lines to
+loader.conf(5):
+
+if_bwn_load="YES"
+
+DESCRIPTION
+
+The bwn driver provides
+support for Broadcom BCM43xx based PCI/CardBus network
+adapters.
+
+It supports
+station and monitor mode operation. Only one
+virtual interface may be configured at any time. For more
+information on configuring this device, see ifconfig(8).
+
+This driver
+requires firmware to be loaded before it will work. The
+ports/net/bwn-firmware-kmod port needs to be
+installed before ifconfig(8) will work. In most cases the
+bwn_v4_ucode kernel module from the port should be
+used. However, if an LP (low power) PHY is being used, the
+bwn_v4_lp_ucode module should be used.
+
+HARDWARE
+
+The bwn driver supports
+Broadcom BCM43xx based wireless devices, including:
+
+Card Chip
+Bus Standard 
+Apple Airport Extreme BCM4318 PCI b/g 
+ASUS WL-138g BCM4318 PCI b/g 
+Buffalo WLI-CB-G54S BCM4318 CardBus b/g 
+Dell Wireless 1390 BCM4311 Mini PCI b/g 
+Dell Wireless 1470 BCM4318 Mini PCI b/g 
+Dell Truemobile 1400 BCM4309 Mini PCI b/g 
+HP Compaq 6715b BCM4312 PCI b/g 
+HP nx6125 BCM4319 PCI b/g 
+Linksys WPC54G Ver 3 BCM4318 CardBus b/g 
+Linksys WPC54GS Ver 2 BCM4318 CardBus b/g 
+US Robotics 5411 BCM4318 CardBus b/g
+
+Users of older
+Broadcom chipsets (BCM4301, BCM4303 and BCM4306 rev 2) must
+use bwi(4) because the v4 version of the firmware does not
+support these chips. The newer firmware is too big to fit
+into these old chips.
+
+EXAMPLES
+
+Join an existing BSS network
+(i.e., connect to an access point):
+
+ifconfig wlan
+create wlandev bwn0 inet 192.168.0.20 \ 
+netmask 0xffffff00
+
+Join a specific
+BSS network with network name
+&rsquo;&rsquo;my_net&rsquo;&rsquo;:
+
+ifconfig wlan
+create wlandev bwn0 ssid my_net up
+
+Join a specific
+BSS network with 64-bit WEP encryption:
+
+ifconfig wlan
+create wlandev bwn0 ssid my_net \ 
+wepmode on wepkey 0x1234567890 weptxkey 1 up
+
+LOADER TUNABLES
+
+Tunables can be set at the
+loader(8) prompt before booting the kernel or stored in
+loader.conf(5).
+
+hw.bwn.usedma
+
+This tunable enables DMA
+operations on the hardware. If the value is 0, PIO mode
+would be used. The default value is 1.
+
+SEE ALSO
+
+arp(4), bcma(4), bhnd(4),
+bhndb(4), bwi(4), cardbus(4), intro(4), pci(4), siba(4),
+wlan(4), wlan_amrr(4), ifconfig(8), wpa_supplicant(8)
+
+HISTORY
+
+The bwn driver first
+appeared in FreeBSD 8.1. The driver was updated to
+support the common Broadcom bhnd(4) bus interface in
+FreeBSD 12.0.
+
+AUTHORS
+
+The bwn driver was
+written by Weongyo Jeong weongyo [AT] FreeBSD.org>.
+Support for bhnd(4) was added by Landon Fuller
+landonf [AT] FreeBSD.org>.
+
+CAVEATS
+
+Some LP PHY devices have DMA
+operation problems that in that case try to use PIO
+mode.
+
+BSD
+December 16, 2017 BSD

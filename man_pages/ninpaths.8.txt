@@ -1,0 +1,242 @@
+NAME
+
+ninpaths -
+Report Usenet Path header field statistics (new inpaths)
+
+SYNOPSIS
+
+ninpaths -p
+-d dumpfile
+
+ninpaths
+-r site -u dumpfile [-u
+dumpfile ...] -v level
+
+DESCRIPTION
+
+This is an
+efficient and space-saving inpaths reporting program.
+It works as follows: you feed it the Path header fields via
+an INN channel feed or some other similar method, and from
+time to time the program writes all its internal counters
+accumulated so far to a dump file. Another instance of the
+program picks up all the dump files, adds them up and
+formats them into the report. The purpose of the final
+report is to summarize the frequency of occurrence of sites
+in the Path header fields of articles.
+
+Some central
+sites accumulate the Path header field data from many news
+servers running this program or one like it, and then report
+statistics on the most frequently seen news servers in
+Usenet article Path header fields. The sendinpaths
+script can be run daily to mail the accumulated statistics
+to such a site and remove the old dump files.
+
+You can get a
+working setup by doing the following:
+
+1.
+
+Create a directory at pathlog/path (replacing
+pathlog here and in all steps that follow with the
+full path to your INN log directory). Do not change the name
+of the "path" subdirectory because it is used by
+sendinpaths. 
+
+2.
+
+Set up a channel feed using a newsfeeds entry
+like: 
+
+inpaths!\ 
+:*\ 
+:Tc,WP:/ninpaths -p -d
+/path/inpaths.%d
+
+if your version
+of INN supports "WP" (2.0 and later all do).
+Replace  with the full path to your INN
+binaries directory, and  with the full path
+to your INN log directory.
+
+Note that the
+naming convention of the generated inpaths dump files should
+not be changed. sendinpaths explicitly searches files
+whose name starts with "inpaths." in the
+/path directory.
+
+3.
+
+Run the following command to
+start logging these statistics:
+
+ctlinnd reload
+newsfeeds 'inpaths feed setup'
+
+4.
+
+Enter into your news user
+crontab these two lines:
+
+6 6 * * *
+/ctlinnd flush inpaths! 
+10 6 * * * /sendinpaths
+
+(the actual
+time doesn&rsquo;t matter). This will force ninpaths
+to generate a dump file once a day. Then, a few minutes
+later, sendinpaths collects the dumps, makes a
+report, sends the collected statistics, and deletes the old
+dumps.
+
+Note that you
+can manually generate a report without mailing it, and
+without deleting processed dump files, with
+"sendinpaths -n". Another useful command is
+"sendinpaths -c" so as to receive a copy of the
+e-mail sent by sendinpaths and therefore make sure
+that everything is properly set.
+
+5.
+
+In a couple of days, check that
+your daily statistics properly appear in
+http://top1000.anthologeek.net/&gt;. 
+
+OPTIONS
+
+-d
+dumpfile
+
+Save dumps in dumpfile.
+Any "%d" in dumpfile will be replaced with
+the current system time when the dump is made. This option
+should be used with -p. If dumpfile is
+"-", then stdout is used.
+
+The format of
+these dump files is described below.
+
+-p
+
+Read Path header fields from standard input.
+
+-r site
+
+Generate a report for
+site. Generally site should be the value of
+pathhost from inn.conf.
+
+-u dumpfile
+
+Read data from dumpfile.
+This option can be repeated to read data from multiple dump
+files.
+
+-v level
+
+Set the verbosity level of the
+report. Valid values for level are "0",
+"1", and "2", with "2" being
+the default.
+
+DUMP FILE FORMAT
+
+The format of
+the generated dump files is:
+
+!!NINP
+
+   ... 
+!!NLREC 
+
+:!,:!,
+... 
+!!NEND 
+
+where times are
+UNIX timestamps. Then, nb-sites records follow. Each
+record is separated by a space or a new line, and consists
+of a host name site_n followed by a number of
+appearances count_n. The number of processed Path
+header fields is nb-articles.
+
+Afterwards,
+nb-relations relations follow. In 3.0.x versions, the
+relations are separated by a space or a new line, and their
+syntax is
+"site_a!site_b!count_ab"
+where site_a and site_b are numbers of the
+site records starting at 0.
+
+In 3.1.x
+versions, the relations begin with a colon and are separated
+by either nothing or a new line. Their syntax is
+":site_a!site_b,count_ab"
+with the same meaning as in previous versions. The count can
+be omitted when it is "1". More than two sites can
+be specified in the relation
+(":site_a!site_b!site_c,count_abc").
+
+For
+instance:
+
+!!NINP 3.1.1
+1302944821 1302944838 5 2 1302944826 
+newsgate.cistron.nl 1 news.trigofacile.com 2 news.ecp.fr 2
+
+usenet.stanford.edu 1 
+bleachbot 1 
+!!NLREC 
+:3!2:2!1,2:4!0:0!2 
+!!NLEND 4
+
+where the two
+processed Path header fields are:
+
+Path:
+news.trigofacile.com!news.ecp.fr!usenet.stanford.edu 
+!not-for-mail 
+Path: news.trigofacile.com!news.ecp.fr!newsgate.cistron.nl
+
+!bleachbot!not-for-mail
+
+NOTES
+
+If your INN
+doesn&rsquo;t have the "WP" feed flag (1.5 does
+not, 1.6 and 1.7 do, 2.0 and later all do), use the
+following newsfeeds entry:
+
+inpaths!:*:Tc,WH:/ginpaths
+
+where
+ginpaths is the following script:
+
+#!/bin/sh 
+exec egrep '^Path: ' \ 
+| /ninpaths -p -d
+/path/inpaths.%d
+
+replacing
+ and  as above.
+
+HISTORY
+
+This is a
+slightly modified version of Olaf Titz&rsquo;s original
+ninpaths program, which is posted to alt.sources and
+kept on his WWW archive under
+http://sites.inka.de/~bigred/sw/&gt;.
+
+The idea and
+some implementation details for ninpaths come from
+the original inpaths program, but most of the code
+has been rewritten for clarity. This program is in the
+public domain.
+
+SEE ALSO
+
+newsfeeds(5),
+sendinpaths(8).

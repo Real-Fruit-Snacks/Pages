@@ -1,0 +1,116 @@
+NAME
+
+characteristic
+- Lagrange-Galerkin method (rheolef-7.2)
+
+DESCRIPTION
+
+The class
+characteristic implements the Lagrange-Galerkin method. It
+is the extension of the method of characteristic from the
+finite difference to the finite element context.
+
+Note that the
+Lagrange-Galerkin method applies to diffusion-convection
+problems when the convection term is not dominant. For more
+serious problems, please refer to the discontinuous Galerkin
+method in the Rheolef library.
+
+EXAMPLE
+
+Consider the
+bilinear form lh defined by
+
+/ 
+| 
+lh(x) = | uh(x+dh(x)) v(x) dx 
+| 
+/ Omega
+
+where
+dh is a deformation vector field. The
+characteristic is defined by X(x)=x+dh(x) for any x
+in Omega, and the previous integral writes equivalently:
+
+/ 
+| 
+lh(x) = | uh(X(x)) v(x) dx 
+| 
+/ Omega
+
+For instance,
+in Lagrange-Galerkin methods, the deformation field
+dh(x)=-dt*uh(x) where uh is the advection
+field and dt a time step. The following code
+implements the computation of lh:
+
+field dh = ...;
+
+field uh = ...; 
+characteristic X (dh); 
+test v (Xh); 
+field lh = integrate (compose(uh, X)*v, qopt);
+
+The
+Gauss-Lobatto quadrature formula is recommended for the
+computation of integrals involving the characteristic
+X of the Lagrange-Galerkin method. The order equal
+to the polynomial order of Xh (order 1: trapeze,
+order 2: simpson, etc). Recall that this choice of
+quadrature formula guaranties inconditionnal stability at
+any polynomial order. Alternative quadrature formulae or
+order can be used by using the additional
+integrate_option(3) argument to the
+integrate(3) function.
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+main/lib/characteristic.h
+
+The
+characteristic class is simply an alias to the
+characteristic_basic class
+
+typedef
+characteristic_basic characteristic;
+
+The
+characteristic_basic class provides an interface, via the
+smart_pointer(7) class family, to a data container:
+
+template 
+class characteristic_basic : public
+smart_pointer > { 
+public: 
+typedef characteristic_rep rep; 
+typedef smart_pointer base;
+
+//
+allocator:
+
+characteristic_basic(const
+field_basic& dh);
+
+//
+accesors:
+
+const
+field_basic& get_displacement() const;
+
+};
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html&gt;. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

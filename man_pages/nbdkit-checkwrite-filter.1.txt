@@ -1,0 +1,145 @@
+NAME
+
+nbdkit-checkwrite-filter
+- check writes match contents of plugin
+
+SYNOPSIS
+
+nbdkit
+--filter=checkwrite PLUGIN
+
+DESCRIPTION
+
+"nbdkit-checkwrite-filter"
+is an nbdkit filter that turns write operations into checks
+that what is written matches the existing content of the
+plugin. If the content matches then the write operation
+succeeds (doing nothing). If not then the write operation
+fails returning EIO Input/output error.
+
+The purpose of
+this filter is to test copying tools as described below.
+
+The underlying
+plugin is opened read-only and is never written to. All
+write-like operations are covered by this filter, such as
+trimming and zeroing. This filter tests the logical
+equivalence of the writes, ignoring differences in
+sparseness.
+
+Using this
+filter to test copying tools 
+You can check that a copying tool is copying data correctly
+by creating an nbdkit instance containing some test data,
+overlaying this filter, and copying from and to nbdkit at
+the same time:
+
+nbdkit
+--filter=checkwrite data "@32768 1" \ 
+--run 'nbdcopy "$uri" "$uri"'
+
+nbdkit
+--filter=checkwrite file disk.img \ 
+--run 'nbdcopy "$uri" "$uri"'
+
+nbdkit
+--filter=checkwrite linuxdisk testdir/ \ 
+--run 'qemu-img convert -n "$uri"
+"$uri"'
+
+If the copying
+program is buggy then you will see EIO errors and (if the
+copying program also handles errors correctly) it should
+exit with an error.
+
+Other
+plugins for testing NBD tools 
+If you are doing this kind of testing you will also want to
+look at nbdkit-random-plugin(1) and
+nbdkit-sparse-random-plugin(1). These plugins already
+have this behaviour built in to them (because it is more
+efficient to build it into the plugin) &mdash; you do
+not need to use this filter with those plugins. This
+filter is useful for testing with arbitrary plugins.
+
+PARAMETERS
+
+There are no
+parameters specific to this filter. Parameters are passed
+through to the underlying plugin.
+
+FILES
+
+$filterdir/nbdkit-checkwrite-filter.so
+
+The filter.
+
+Use
+"nbdkit --dump-config" to find the location of
+$filterdir.
+
+VERSION
+
+"nbdkit-checkwrite-filter"
+first appeared in nbdkit 1.24.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-random-plugin(1),
+nbdkit-sparse-random-plugin(1),
+nbdkit-filter(3), nbdkit-plugin(3),
+nbdcopy(1), qemu-img(1).
+
+AUTHORS
+
+Richard W.M.
+Jones
+
+COPYRIGHT
+
+Copyright Red
+Hat
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

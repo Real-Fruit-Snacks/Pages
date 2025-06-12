@@ -1,0 +1,500 @@
+NAME
+
+mhfixmsg -
+nmh&rsquo;s MIME-email rewriter with various
+transformations
+
+SYNOPSIS
+
+mhfixmsg
+
+[-help] [-version]
+[+folder] [msgs | absolute pathname |
+-file 
+
+file]
+[-decodetext 8bit|7bit|binary | -nodecodetext]
+[-decodetypes type/[subtype][,...]]
+[-decodeheaderfieldbodies utf-8 |
+-nodecodeheaderfieldbodies] [-crlflinebreaks |
+-nocrlflinebreaks] [-textcharset
+charset | -notextcharset] [-reformat |
+-noreformat] [-replacetextplain |
+-noreplacetextplain] [-fixboundary |
+-nofixboundary] [-fixcte | -nofixcte]
+[-checkbase64 | -nocheckbase64]
+[-fixtype mimetype] [-outfile
+outfile] [-rmmproc program]
+[-normmproc] [-changecur |
+-nochangecur] [-verbose |
+-noverbose]
+
+DESCRIPTION
+
+mhfixmsg
+rewrites MIME messages, applying specific transformations
+such as decoding of MIME-encoded message parts and repairing
+invalid MIME headers.
+
+MIME messages
+are specified in RFC 2045 to RFC 2049 (see
+mhbuild(1)). The mhlist command is invaluable
+for viewing the content structure of MIME messages.
+mhfixmsg passes non-MIME messages through without any
+transformations. If no transformations apply to a MIME
+message, the original message or file is not modified or
+removed. Thus, mhfixmsg can safely be run multiple
+times on a message.
+
+The
+-decodetext switch enables a transformation to decode
+each base64 and quoted-printable text message part to the
+selected 8-bit, 7-bit, or binary encoding. If 7-bit is
+selected for a base64 part but it will only fit 8-bit, as
+defined by RFC 2045, then it will be decoded to 8-bit
+quoted-printable. Similarly, with 8-bit, if the decoded text
+would be binary, then the part is not decoded (and a message
+will be displayed if -verbose is enabled). Note that
+-decodetext binary can produce messages that are not
+compliant with RFC 5322, &sect;2.1.1.
+
+When the
+-decodetext switch is enabled, each carriage return
+character that precedes a linefeed character is removed from
+text parts encoded in ASCII, ISO-8859-x, UTF-8, or
+Windows-12xx.
+
+The
+-decodetypes switch specifies the message parts, by
+type and optionally subtype, to which -decodetext
+applies. Its argument is a comma-separated list of
+type/subtype elements. If an element does not contain a
+subtype, then -decodetext applies to all subtypes of
+the type. The default -decodetypes includes
+text; it can be overridden, e.g., with
+-decodetypes text/plain to restrict
+-decodetext to just text/plain parts.
+
+The
+-decodeheaderfieldbodies switch enables decoding of
+header field bodies to the specified character set. The
+-nodecodeheaderfieldbodies inhibits this
+transformation. The transformation can produce a message
+that does not conform with RFC 2047, &sect;1, paragraph 6,
+because the decoded header field body could contain
+unencoded non-ASCII characters. It is therefore not enabled
+by default. Decoding of most header field bodies, or to a
+character set that is different from that of the
+user&rsquo;s locale, requires that nmh be built with
+iconv(3); see mhparam(1) for how to determine
+whether your nmh installation includes that.
+
+By default,
+carriage return characters are preserved or inserted at the
+end of each line of text content. The -crlflinebreaks
+switch selects this behavior and is enabled by default. The
+-nocrlflinebreaks switch causes carriage return
+characters to be stripped from, and not inserted in, text
+content when it is decoded and encoded. Note that its use
+can cause the generation of MIME messages that do not
+conform with RFC 2046, &sect;4.1.1, paragraph 1.
+
+The
+-textcharset switch specifies that all text/plain
+parts of the message(s) should be converted to
+charset. Charset conversions require that nmh
+be built with iconv(3); see mhparam(1) for how
+to determine whether your nmh installation includes
+that. To convert text parts other than text/plain, an
+external program can be used, via the -reformat
+switch. The -textcharset switch can also be used,
+depending on the nmh installation as described below,
+to specify the Content-Type charset parameter for text/plain
+parts added with -reformat.
+
+The
+-reformat switch enables a transformation for text
+parts in the message. For each text part that is not
+text/plain and that does not have a corresponding text/plain
+in a multipart/alternative part, mhfixmsg looks for a
+mhfixmsg-format-text/subtype profile entry that matches the
+subtype of the part. If one is found and can be used to
+successfully convert the part to text/plain, mhfixmsg
+inserts that text/plain part at the beginning of the
+containing multipart/alternative part, if present. If not,
+it creates a multipart/alternative part.
+
+With the
+-reformat switch, multipart/related parts are handled
+differently than multipart/alternative. If the
+multipart/related has only a single part that is not
+text/plain and can be converted to text/plain, a text/plain
+part is added and the type of the part is changed to
+multipart/alternative. If the multipart/related has more
+than one part but does not have a text/plain part,
+mhfixmsg tries to add one.
+
+The
+-replacetextplain switch broadens the applicability
+of -reformat, by always replacing a corresponding
+text/plain part, if one exists. If -verbose is
+enabled, the replacement will be shown as two steps: a
+removal of the text/plain part, followed by the usual
+insertion of a new part.
+
+-reformat
+requires a profile entry for each text part subtype to be
+reformatted. The mhfixmsg-format-text/subtype profile
+entries are based on external conversion programs, and are
+used in the same way that mhshow uses its
+mhshow-show-text/subtype entries. When nmh is
+installed, it searches for a conversion program for
+text/html content, and if one is found, inserts a
+mhfixmsg-format-text/html entry in /etc/nmh/mhn.defaults. An
+entry of the same name in the user&rsquo;s profile takes
+precedence. The user can add entries for other text subtypes
+to their profile.
+
+The character
+set (charset) of text/plain parts added by -reformat
+is determined by the external program that generates the
+content. Detection of the content charset depends on how the
+nmh installation was configured. If a program, such
+as file with a --mime-encoding option, was
+found that can specify the charset of a file, then that will
+be used for the Content-Type charset parameter. To determine
+if your nmh was so configured, run mhparam
+mimeencodingproc and see if a non-empty string is
+displayed.
+
+If your
+nmh was not configured with a program to determine
+the charset of a file, then the value of the
+-textcharset switch is used. It is up to the user to
+ensure that the -textcharset value corresponds to the
+character set of the content generated by the external
+program.
+
+The
+-fixboundary switch enables a transformation to
+repair the boundary portion of the Content-Type header field
+of the message to match the boundaries of the outermost
+multipart part of the message, if it does not. That
+condition is indicated by a &ldquo;bogus multipart content
+in message&rdquo; error message from mhlist and other
+nmh programs that parse MIME messages.
+
+The
+-fixcte switch enables a transformation to change the
+Content-Transfer-Encoding from an invalid value to 8-bit in
+message parts with a Content-Type of multipart and message,
+as required by RFC 2045, &sect;6.4. That condition is
+indicated by a &ldquo;must be encoded in 7bit, 8bit, or
+binary&rdquo; error message from mhlist and other
+nmh programs that parse MIME messages.
+
+The
+-checkbase64 switch enables a check of the encoding
+validity in base64-encoded MIME parts. The check looks for a
+non-encoded text footer appended to a base64-encoded part.
+Per RFC 2045 &sect;6.8, the occurrence of a "="
+character signifies the end of base-64 encoded content. If
+none is found, a heuristic is used: specifically, two
+consecutive invalid base64 characters signify the beginning
+of a plain text footer. If a text footer is found and this
+switch is enabled, mhfixmsg separates the
+base64-encoded and non-encoded content and places them in a
+pair of subparts to a newly constructed multipart/mixed
+part. That multipart/mixed part replaces the original
+base64-encoded part in the MIME structure of the
+message.
+
+The
+-fixtype switch ensures that each part of the message
+has the correct MIME type shown in its Content-Type header.
+It may be repeated. It is typically used to replace
+&ldquo;application/octet-stream&rdquo; with a more
+descriptive MIME type. It may not be used for multipart and
+message types.
+
+mhfixmsg
+applies two transformations unconditionally. The first
+removes an extraneous trailing semicolon from the parameter
+lists of MIME header field values. The second replaces RFC
+2047 encoding with RFC 2231 encoding of name and filename
+parameters in Content-Type and Content-Disposition header
+field values, respectively.
+
+The
+-verbose switch directs mhfixmsg to output
+informational message for each transformation applied.
+
+The return
+status of mhfixmsg is 0 if all of the requested
+transformations are performed, or non-zero otherwise.
+(mhfixmsg will not decode to binary content with the
+default -decodetext setting, but a request to do so
+is not considered a failure, and is noted with
+-verbose.) If a problem is detected with any one of
+multiple messages such that the return status is non-zero,
+then none of the messages will be modified.
+
+The
+-file file switch directs mhfixmsg to
+use the specified file as the source message, rather than a
+message from a folder. Only one file argument may be
+provided. The -file switch is implied if file
+is an absolute pathname. If the file is &ldquo;-&rdquo;,
+then mhfixmsg accepts the source message on the
+standard input stream. If the -outfile switch is not
+enabled when using the standard input stream,
+mhfixmsg will not produce a transformed output
+message.
+
+mhfixmsg,
+by default, transforms the message in place. If the
+-outfile switch is enabled, then mhfixmsg does
+not modify the input message or file, but instead places its
+output in the specified file. An outfile name of
+&ldquo;-&rdquo; specifies the standard output stream.
+
+Combined with
+the -verbose switch, the -outfile switch can
+be used to show what transformations mhfixmsg would
+apply without actually applying them, e.g.,
+
+mhfixmsg
+-outfile /dev/null -verbose
+
+As always, this
+usage obeys any mhfixmsg switches in the user&rsquo;s
+profile.
+
+-outfile
+can be combined with rcvstore to add a single
+transformed message to a different folder, e.g.,
+
+mhfixmsg
+-outfile - | \ 
+/usr/lib/mh/rcvstore +folder
+
+Summary of
+Applicability 
+The transformations apply to the parts of a message
+depending on content type and/or encoding as follows:
+
+-decodetext
+base64 and quoted-printable encoded text parts 
+-decodetypes limits parts to which -decodetext applies 
+-decodeheaderfieldbodies all message parts 
+-crlflinebreaks text parts 
+-textcharset text/plain parts 
+-reformat text parts that are not text/plain 
+-fixboundary outermost multipart part 
+-fixcte multipart or message part 
+-checkbase64 base64 encoded parts 
+-fixtype all except multipart and message parts
+
+Backup of
+Original Message/File 
+If it applies any transformations to a message or file, and
+the -outfile switch is not used, mhfixmsg
+backs up the original the same way as rmm. That is,
+it uses the rmmproc profile component, if present. If
+not present, mhfixmsg moves the original message to a
+backup file. The -rmmproc switch may be used to
+override this profile component. The -normmproc
+switch disables the use of any rmmproc profile
+component and negates all prior -rmmproc
+switches.
+
+Integration
+with inc 
+mhfixmsg can be used as an add-hook, as described in
+/usr/share/doc/nmh/README-HOOKS. Note that add-hooks are
+called from all nmh programs that add a message to a
+folder, not just inc. Alternatively, a simple shell
+alias or function can be used to call mhfixmsg
+immediately after a successful invocation of inc. One
+approach could be based on:
+
+msgs=`inc
+-format &rsquo;%(msg)&rsquo;` && [ -n
+"$msgs" ] && scan $msgs &&
+mhfixmsg -nochangecur $msgs
+
+Another
+approach would rely on adding a sequence to Unseen-Sequence,
+which inc sets with the newly incorporated messages.
+Those could then be supplied to mhfixmsg. An example
+is shown below.
+
+Integration
+with procmail 
+By way of example, here is an excerpt from a procmailrc file
+that filters messages through mhfixmsg before storing
+them in the user&rsquo;s nmh-workers folder. It also
+stores the incoming message in the Backups folder in
+a filename generated by mkstemp, which is a non-POSIX
+utility to generate a temporary file. Alternatively,
+mhfixmsg could be called on the message after it is
+stored.
+
+PATH =
+/usr/bin/mh:$PATH 
+LANG = en_US.utf8 
+MAILDIR = `mhparam path` 
+#### The Backups directory is relative to MAILDIR. 
+MKSTEMP = &rsquo;mkstemp -directory Backups -prefix
+mhfixmsg&rsquo; 
+MHFIXMSG = &rsquo;mhfixmsg -noverbose -file - -outfile
+-&rsquo; 
+STORE = /usr/lib/mh/rcvstore
+
+:0 w:
+nmh-workers/procmail.$LOCKEXT 
+* ^TOnmh-workers [AT] nongnu.org 
+| tee `$MKSTEMP` | $MHFIXMSG | $STORE +nmh-workers
+
+EXAMPLES
+
+Basic
+usage 
+To run mhfixmsg on the current message in the current
+folder, with default transformations to fix MIME boundaries
+and Content-Transfer-Encoding, to decode text and
+application/ics content parts to 8 bit, and to add a
+corresponding text/plain part where lacking:
+
+mhfixmsg
+-verbose
+
+Specified
+folder and messages 
+To run mhfixmsg on specified messages, without its
+informational output:
+
+mhfixmsg +inbox
+last:4
+
+View without
+modification 
+By default, mhfixmsg transforms the message in place.
+To view the MIME structure that would result from running
+mhfixmsg on the current message, without modifying
+the message:
+
+mhfixmsg
+-outfile - | mhlist -file -
+
+Search
+message without modification 
+To search the current message, which possibly contains
+base64 or quoted printable encoded text parts, without
+modifying it, use the -outfile switch:
+
+mhfixmsg
+-outfile - | grep pattern
+
+-outfile
+can be abbreviated in usual MH fashion, e.g., to -o. The
+search will be on the entire message, not just text
+parts.
+
+Translate
+text/plain parts to UTF-8 
+To translate all text/plain parts in the current message to
+UTF-8, in addition to all of the default
+transformations:
+
+mhfixmsg
+-textcharset utf-8
+
+Fix all
+messages in a folder 
+To run mhfixmsg on all of the messages in a
+folder:
+
+mhfixmsg
++folder all
+
+Alternatively,
+mhfixmsg can be run on each message separately, e.g.,
+using a Bourne shell loop:
+
+for msg in
+`pick +folder`; do mhfixmsg +folder $msg; done
+
+The two
+appearances of the +folder switch in that command
+protect against concurrent context changes by other
+nmh command invocations.
+
+Run on newly
+incorporated messages 
+To run mhfixmsg on messages as they are
+incorporated:
+
+inc &&
+mhfixmsg -nochangecur unseen
+
+This assumes
+that the Unseen-Sequence profile entry is set to
+unseen, as shown in mh-profile(5).
+
+FILES
+
+mhfixmsg
+looks for mhn.defaults in multiple locations: absolute
+pathnames are accessed directly, tilde expansion is done on
+usernames, and files are searched for in the user&rsquo;s
+Mail directory as specified in their profile. If not
+found there, the directory &ldquo;/etc/nmh&rdquo; is
+checked.
+
+$HOME/.mh_profile
+The user profile 
+/etc/nmh/mhn.defaults Default mhfixmsg conversion
+entries
+
+PROFILE COMPONENTS
+
+Path: To
+determine the user&rsquo;s nmh directory 
+Current-Folder: To find the default current folder 
+rmmproc: Program to delete original messages or files
+
+SEE ALSO
+
+iconv(3),
+inc(1), mh-mkstemp(1), mh-profile(5),
+mhbuild(1), mhlist(1), mhparam(1),
+mhshow(1), procmail(1), procmailrc(5),
+rcvstore(1), rmm(1)
+
+DEFAULTS
+
+&rsquo;+folder&rsquo;
+defaults to the current folder 
+&rsquo;msgs&rsquo; defaults to cur 
+&rsquo;-decodetext 8bit&rsquo; 
+&rsquo;-decodetypes text,application/ics&rsquo; 
+&rsquo;-nodecodeheaderfieldbodies&rsquo; 
+&rsquo;-crlflinebreaks&rsquo; 
+&rsquo;-notextcharset&rsquo; 
+&rsquo;-reformat&rsquo; 
+&rsquo;-noreplacetextplain&rsquo; 
+&rsquo;-fixboundary&rsquo; 
+&rsquo;-fixcte&rsquo; 
+&rsquo;-checkbase64&rsquo; 
+&rsquo;-changecur&rsquo; 
+&rsquo;-noverbose&rsquo;
+
+CONTEXT
+
+If a folder is
+given, it will become the current folder. The last message
+selected from a folder will become the current message,
+unless the -nochangecur switch is enabled. If the
+-file switch or an absolute pathname is used, the
+context will not be modified.

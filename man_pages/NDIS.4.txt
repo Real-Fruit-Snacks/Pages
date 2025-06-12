@@ -1,0 +1,89 @@
+NDIS(4) BSD Kernel Interfaces Manual NDIS(4)
+
+NAME
+
+ndis &mdash; NDIS
+miniport driver wrapper
+
+SYNOPSIS
+
+options NDISAPI 
+device ndis 
+device wlan
+
+DESCRIPTION
+
+The ndis driver is a
+wrapper designed to allow binary Windows&reg; NDIS miniport
+network drivers to be used with FreeBSD. The ndis
+driver is provided in source code form and must be combined
+with the Windows&reg; driver supplied with your network
+adapter. The ndis driver uses the ndisapi
+kernel subsystem to relocate and link the Windows&reg;
+binary so that it can be used in conjunction with native
+code. The ndisapi subsystem provides an interface
+between the NDIS API and the FreeBSD networking
+infrastructure. The Windows&reg; driver is essentially
+fooled into thinking it is running on Windows&reg;. Note
+that this means the ndis driver is only useful on x86
+machines.
+
+To build a
+functional driver, the user must have a copy of the driver
+distribution media for his or her card. From this
+distribution, the user must extract two files: the
+.SYS file containing the driver binary code, and its
+companion .INF file, which contains the definitions
+for driver-specific registry keys and other installation
+data such as device identifiers. These two files can be
+converted into a kernel module file using the ndisgen(8)
+utility. This file contains a binary image of the driver
+plus registry key data. When the ndis driver loads,
+it will create sysctl(3) nodes for each registry key
+extracted from the .INF file.
+
+The ndis
+driver is designed to support mainly Ethernet and wireless
+network devices with PCI, PCMCIA and USB bus attachments.
+(Cardbus devices are also supported as a subset of PCI.) It
+can support many different media types and speeds. One
+limitation however, is that there is no consistent way to
+learn if an Ethernet device is operating in full or half
+duplex mode. The NDIS API allows for a generic means for
+determining link state and speed, but not the duplex
+setting. There may be driver-specific registry keys to
+control the media setting which can be configured via the
+sysctl(8) command.
+
+DIAGNOSTICS
+
+ndis%d: watchdog
+timeout  A packet was queued for transmission and a
+transmit command was issued, however the device failed to
+acknowledge the transmission before a timeout expired.
+
+SEE ALSO
+
+altq(4), arp(4), netintro(4),
+ng_ether(4), ifconfig(8), ndis_events(8), ndiscvt(8),
+ndisgen(8), wpa_supplicant(8)
+
+NDIS 5.1
+specification
+
+,
+
+http://www.microsoft.com .
+
+HISTORY
+
+The ndis device driver
+first appeared in FreeBSD 5.3.
+
+AUTHORS
+
+The ndis driver was
+written by Bill Paul wpaul [AT] windriver.com>.
+
+BSD
+March 14, 2010 BSD

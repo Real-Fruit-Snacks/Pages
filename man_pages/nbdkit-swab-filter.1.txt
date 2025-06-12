@@ -1,0 +1,165 @@
+NAME
+
+nbdkit-swab-filter
+- nbdkit filter for swapping byte order
+
+SYNOPSIS
+
+nbdkit
+--filter=swab PLUGIN [PLUGIN-ARGS...]
+[swab-bits=8|16|32|64]
+
+DESCRIPTION
+
+"nbdkit-swab-filter"
+is a filter for nbdkit(1) which swaps bytes in the
+underlying plugin.
+
+One use for
+this is to read disk images which were formatted on the
+Atari Falcon, where the IDE controller is wired in reverse
+order.
+
+EXAMPLE
+
+Swap bytes
+from a disk image 
+nbdkit --filter=swab file file=disk.img
+
+The above
+command serves the disk image disk.img, swapping even
+and odd bytes:
+
+disk.img 0 1 2
+3 4 5 ... 
+&#9587; &#9587; &#9587; 
+output 1 0 3 2 5 4 ...
+
+This filter
+truncates the size of the plugin down to the alignment
+determined by swab-bits (since operating on an unaligned
+tail would be awkward). If you need to round the image size
+up instead to access the last few bytes, combine this filter
+with nbdkit-truncate-filter(1); fortunately,
+sector-based disk images are already suitably sized.
+
+Note that this
+filter fails operations where the offset or count are not
+aligned to the swab-bits boundaries; if you need byte-level
+access, apply the nbdkit-blocksize-filter(1) before
+this one, to get read-modify-write access to individual
+bytes.
+
+PARAMETERS
+
+swab-bits=8
+
+This turns off the filter.
+
+swab-bits=16
+
+This is the default setting
+which swaps pairs of bytes. This is suitable when reading
+and writing to Atari Falcon drives.
+
+swab-bits=32
+
+This swaps the endianness of
+each 4 byte word in the disk, ie:
+
+input 0 1 2 3 4
+5 6 7
+
+output 3 2 1 0
+7 6 5 4
+
+swab-bits=64
+
+This swaps the endianness of
+each 8 byte word in the disk, ie:
+
+input 0 1 2 3 4
+5 6 7
+
+output 7 6 5 4
+3 2 1 0
+
+This can be
+used to make nbdkit-pattern-plugin(1) little endian
+instead of big endian.
+
+FILES
+
+$filterdir/nbdkit-swab-filter.so
+
+The filter.
+
+Use
+"nbdkit --dump-config" to find the location of
+$filterdir.
+
+VERSION
+
+"nbdkit-swab-filter"
+first appeared in nbdkit 1.22.
+
+SEE ALSO
+
+nbdkit(1),
+nbdkit-file-plugin(1),
+nbdkit-pattern-plugin(1), nbdkit-filter(3),
+nbdkit-blocksize-filter(1).
+nbdkit-truncate-filter(1).
+
+AUTHORS
+
+Fran&ccedil;ois
+Revol
+
+COPYRIGHT
+
+Copyright (C)
+2020 Fran&ccedil;ois Revol
+
+LICENSE
+
+Redistribution
+and use in source and binary forms, with or without
+modification, are permitted provided that the following
+conditions are met:
+
+&bull;
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer. 
+
+&bull;
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+&bull;
+
+Neither the name of Red Hat nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission. 
+
+THIS SOFTWARE
+IS PROVIDED BY RED HAT AND CONTRIBUTORS &rsquo;&rsquo;AS
+IS&rsquo;&rsquo; AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL RED HAT OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

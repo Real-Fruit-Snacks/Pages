@@ -1,0 +1,96 @@
+NAME
+
+slapo-deref -
+Dereference Control overlay to slapd
+
+SYNOPSIS
+
+/etc/ldap/slapd.conf
+
+/etc/ldap/slapd.d
+
+DESCRIPTION
+
+This overlay
+implements the draft Dereference control. The overlay can be
+used with any backend or globally for all backends.
+
+EXAMPLES
+
+database mdb
+
+... 
+overlay deref
+
+Given these
+entries: 
+dn: cn=Howard Chu,ou=people,dc=example,dc=org 
+objectClass: inetOrgPerson 
+cn: Howard Chu 
+sn: Chu 
+uid: hyc
+
+dn:
+cn=Pierangelo Masarati,ou=people,dc=example,dc=org 
+objectClass: inetOrgPerson 
+cn: Pierangelo Masarati 
+sn: Masarati 
+uid: ando
+
+dn: cn=Test
+Group,ou=groups,dc=example,dc=org 
+objectClass: groupOfNames 
+cn: Test Group 
+member: cn=Howard Chu,ou=people,dc=example,dc=org 
+member: cn=Pierangelo
+Masarati,ou=people,dc=example,dc=org
+
+A search could
+be performed with a Dereference request control value
+specified as
+
+{ member, uid
+}
+
+I.e., 
+ldapsearch -x -b dc=example,dc=org -E
+&rsquo;deref=member:uid&rsquo;
+
+and the
+"cn=Test Group" entry would be returned with the
+response control value 
+{ { member, cn=Howard Chu,ou=people,dc=example,dc=org, 
+{ { uid, [hyc] } } }, 
+{ member, cn=Pierangelo
+Masarati,ou=people,dc=example,dc=org, 
+{ { uid, [ando] } } } }
+
+FILES
+
+/etc/ldap/slapd.conf
+
+default slapd configuration
+file
+
+/etc/ldap/slapd.d
+
+default slapd configuration
+directory
+
+SEE ALSO
+
+slapd.conf(5),
+slapd-config(5).
+
+"OpenLDAP
+Administrator&rsquo;s Guide"
+(http://www.OpenLDAP.org/doc/admin/)
+
+IETF LDAP
+Dereference Control proposal by P. Masarati, H. Chu, in IETF
+document "draft-masarati-ldap-deref-00.txt".
+
+AUTHOR
+
+Pierangelo
+Masarati

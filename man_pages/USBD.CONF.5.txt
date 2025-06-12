@@ -1,0 +1,152 @@
+USBD.CONF(5) BSD File Formats Manual USBD.CONF(5)
+
+NAME
+
+usbd.conf &mdash; usbd(8)
+configuration file
+
+DESCRIPTION
+
+The usbd.conf file is the
+configuration file for the usbd(8) daemon. It provides
+information to allow execution of userland commands on
+events reported by the usb(4) subsystem in the kernel.
+Currently the only events are device attach and detach, but
+could in the future be extended to include power management
+functions.
+
+The
+configuration file consists of a sorted list of entries.
+Each entry describes a set of criteria commands. When an
+event occurs, the criteria are checked and if met, the
+commands for that event are executed through a shell. The
+list is sorted and scanned from top to bottom. The first
+matching entry is used for an event.
+
+Each entry
+contains a number of fields. There are 3 types of fields:
+descriptive fields, selection criteria and commands to
+execute on events. The field names are case sensitive and
+should be all lower case. Each field can have one or more
+arguments.
+
+The following
+fields are available:
+
+device string
+
+Start a new
+entry. string is an arbitrary string used for pretty
+printing.
+
+product id
+
+Product Id
+
+vendor id
+
+Vendor Id
+
+release id
+
+Release Id,
+also called revision Id sometimes.
+
+class id
+
+Device
+Class
+
+subclass id
+
+Device
+Subclass
+
+protocol id
+
+Device
+Protocol
+
+devname string
+
+Device name,
+for example umass2, or ums0. These device names can contain
+regular expressions. See regex(3) and re_format(7). The
+device name that is matched can be used in the commands
+below through adding ${DEVNAME} somewhere in that
+string.
+
+String arguments
+may be quoted. If a string argument contains a space or tab
+character it needs to be enclosed in single or double
+quotes. If an argument contains a single or double quote,
+that quote needs to be enclosed in double or single quotes
+respectively. See below for examples.
+
+Numeric
+arguments can either be specified in decimal (42), octal
+(052) or hexadecimal (0x2a).
+
+The values for
+the fields product, vendor, release, class, subclass and
+protocol can be retrieved by killing the usbd daemon
+and running it with the &minus;d and &minus;v
+flags.
+
+Commands to be
+executed when the action is matched:
+
+attach string
+
+Shell command
+to execute when a device is attached.
+
+detach string
+
+Shell command
+to execute when a device is detached.
+
+EXAMPLES
+
+A sample entry to rescan the
+SCSI bus on connection of a Iomega USB Zip Drive:
+
+device "USB
+Zip drive" 
+product 0x0001 
+vendor 0x059b 
+release 0x0100 
+attach "/usr/bin/camcontrol rescan 0"
+
+To start up
+moused for a newly attached mouse:
+
+device
+"Mouse" 
+devname "ums[0-9]+" 
+attach "/usr/sbin/moused -p /dev/${DEVNAME} -I
+/var/run/moused.${DEVNAME}.pid"
+
+FILES 
+/etc/usbd.conf
+
+The usbd
+configuration file.
+
+SEE ALSO
+
+usb(4), usbd(8), usbdevs(8)
+
+BUGS
+
+It is currently not possible to
+use a selection criterion more than once. For example, it is
+not possible to specify more than one vendor ID.
+
+AUTHORS
+
+This manual page was written by
+Nick Hibma n_hibma [AT] FreeBSD.org>.
+
+BSD
+November 19, 1999 BSD

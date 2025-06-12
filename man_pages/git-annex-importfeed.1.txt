@@ -1,0 +1,187 @@
+NAME
+
+git-annex-importfeed
+- import files from podcast feeds
+
+SYNOPSIS
+
+git annex
+importfeed [url ...]
+
+DESCRIPTION
+
+Imports the
+contents of podcasts and other rss and atom feeds. Only
+downloads files whose content has not already been added to
+the repository before, so you can delete, rename, etc the
+resulting files and repeated runs won&rsquo;t duplicate
+them.
+
+When
+yt-dlp is installed, it can be used to download links
+in the feed. This allows importing e.g., YouTube playlists.
+(However, this is disabled by default as it can be a
+security risk. See the documentation of
+annex.security.allowed-ip-addresses in git-annex(1) for
+details.)
+
+To make the
+import process add metadata to the imported files from the
+feed, git config annex.genmetadata true
+
+By default, the
+downloaded files are put in a directory with the title of
+the feed, and files are named based on the title of the item
+in the feed. This can be changed using the --template
+option.
+
+Existing files
+are not overwritten by this command. If "some
+feed/foo.mp3" already exists, it will instead write to
+"some feed/2_foo.mp3" (or 3, 4, etc). Sometimes a
+feed will change an item&rsquo;s url, resulting in the new
+url being downloaded to such a filename.
+
+OPTIONS
+
+--force
+
+Force
+downloading items it&rsquo;s seen before.
+
+--fast,
+--relaxed, --verifiable, --raw,
+--raw-except
+
+These options behave the same
+as when using git-annex-addurl(1).
+
+--fast
+
+Avoid immediately downloading urls. The url is still
+checked (via HEAD) to verify that it exists, and to get its
+size if possible.
+
+--relaxed
+
+Don&rsquo;t immediately
+download urls, and avoid storing the size of the url&rsquo;s
+content. This makes git-annex accept whatever content is
+there at a future point.
+
+--raw
+
+Prevent special handling of urls by yt-dlp, bittorrent,
+and other special remotes. This will for example, make
+importfeed download a .torrent file and not the contents it
+points to.
+
+--no-raw
+
+Require content pointed to by
+the url to be downloaded using yt-dlp or a special remote,
+rather than the raw content of the url. if that cannot be
+done, the import will fail, and the next import of the feed
+will retry.
+
+--scrape
+
+Rather than downloading the url
+and parsing it as a rss/atom feed to find files to import,
+uses yt-dlp to screen scrape the equivilant of a feed, and
+imports what it found.
+
+--template
+
+Controls where the files are
+stored.
+
+The default
+template is
+&rsquo;${feedtitle}/${itemtitle}${extension}&rsquo;
+
+The available
+variables in the template include these that are information
+about the feed: feedtitle, feedauthor, feedurl
+
+And these that
+are information about individual items in the feed:
+itemtitle, itemauthor, itemsummary, itemdescription,
+itemrights, itemid.
+
+Also, title is
+itemtitle but falls back to feedtitle if the item has no
+title, and author is itemauthor but falls back to
+feedauthor.
+
+(All of the
+above are also added as metadata when annex.genmetadata is
+set.)
+
+The extension
+variable is the extension of the file in the feed, or
+sometimes ".m" if no extension can be
+determined.
+
+The template
+also has some variables for when an item was published.
+
+itempubyear
+(YYYY), itempubmonth (MM), itempubday (DD), itempubhour
+(HH), itempubminute (MM), itempubsecond (SS), itempubdate
+(YYYY-MM-DD or if the feed&rsquo;s date cannot be parsed,
+the raw value from the feed).
+
+(These use the
+UTC time zone, not the local time zone.)
+
+--no-check-gitignore
+
+By default, gitignores are
+honored and it will refuse to download an url to a file that
+would be ignored. This makes such files be added despite any
+ignores.
+
+--jobs=N -JN
+
+Runs multiple downloads
+parallel. For example: -J4
+
+Setting this to
+"cpus" will run one job per CPU core.
+
+--backend
+
+Specifies which key-value
+backend to use.
+
+--json
+
+Enable JSON output. This is intended to be parsed by
+programs that use git-annex. Each line of output is a JSON
+object. 
+
+--json-progress
+
+Include progress objects in
+JSON output.
+
+--json-error-messages
+
+Messages that would normally be
+output to standard error are included in the JSON
+instead.
+
+Also the
+git-annex-common-options(1) can be used.
+
+SEE ALSO
+
+git-annex(1)
+
+git-annex-addurl(1)
+
+AUTHOR
+
+Joey Hess
+id [AT] joeyh.name>

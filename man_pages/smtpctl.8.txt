@@ -1,0 +1,485 @@
+SMTPCTL(8) BSD System Manager&rsquo;s Manual
+SMTPCTL(8)
+
+NAME
+
+smtpctl, mailq
+&mdash; control the SMTP daemon
+
+SYNOPSIS
+
+smtpctl command
+[argument ...] 
+mailq
+
+DESCRIPTION
+
+The smtpctl program
+controls smtpd(8). Commands may be abbreviated to the
+minimum unambiguous prefix; for example, sh ro for
+show routes.
+
+The mailq
+command is provided for compatibility with other MTAs and is
+simply a shortcut for show queue.
+
+The following
+commands are available:
+
+discover
+envelope-id | message-id
+
+Schedule a single envelope, or
+all envelopes with the same message ID that were manually
+moved to the queue.
+
+encrypt
+[string]
+
+Encrypt the password
+string to a representation suitable for user
+credentials and print it to the standard output. If
+string is not provided, cleartext passwords are read
+from standard input.
+
+It is advised
+to avoid providing the password as a parameter as it will be
+visible from top(1) and ps(1) output.
+
+log brief
+
+Disable verbose debug
+logging.
+
+log verbose
+
+Enable verbose debug
+logging.
+
+monitor
+
+Display updates of some
+smtpd(8) internal counters in one second intervals. Each
+line reports the increment of all counters since the last
+update, except for some counters which are always absolute
+values. The first line reports the current value of each
+counter. The fields are:
+
+&bull;
+
+Current number of active SMTP
+clients (absolute value).
+
+&bull;
+
+New SMTP clients.
+
+&bull;
+
+Disconnected clients.
+
+&bull;
+
+Current number of envelopes in
+the queue (absolute value).
+
+&bull;
+
+Newly enqueued envelopes.
+
+&bull;
+
+Dequeued envelopes.
+
+&bull;
+
+Successful deliveries.
+
+&bull;
+
+Temporary failures.
+
+&bull;
+
+Permanent failures.
+
+&bull;
+
+Message loops.
+
+&bull;
+
+Expired envelopes.
+
+&bull;
+
+Envelopes removed by the
+administrator.
+
+&bull;
+
+Generated bounces.
+
+pause envelope
+envelope-id | message-id | all
+
+Temporarily suspend scheduling
+for the envelope with the given ID, envelopes with the given
+message ID, or all envelopes.
+
+pause mda
+
+Temporarily stop deliveries to
+local users.
+
+pause mta
+
+Temporarily stop relaying and
+deliveries to remote users.
+
+pause smtp
+
+Temporarily stop accepting
+incoming sessions.
+
+profile
+subsystem
+
+Enables real-time profiling of
+subsystem. Supported subsystems are:
+
+&bull;
+
+queue, to profile cost of queue
+IO
+
+&bull;
+
+imsg, to profile cost of event
+handlers
+
+remove envelope-id
+| message-id | all
+
+Remove a single envelope,
+envelopes with the given message ID, or all envelopes.
+
+resume envelope
+envelope-id | message-id | all
+
+Resume scheduling for the
+envelope with the given ID, envelopes with the given message
+ID, or all envelopes.
+
+resume mda
+
+Resume deliveries to local
+users.
+
+resume mta
+
+Resume relaying and deliveries
+to remote users.
+
+resume route
+route-id
+
+Resume routing on disabled
+route route-id.
+
+resume smtp
+
+Resume accepting incoming
+sessions.
+
+schedule
+envelope-id | message-id | all
+
+Mark as ready for immediate
+delivery a single envelope, envelopes with the given message
+ID, or all envelopes.
+
+show envelope
+envelope-id
+
+Display envelope content for
+the given ID.
+
+show hosts
+
+Display the list of known
+remote MX hosts. For each of them, it shows the IP address,
+the canonical hostname, a reference count, the number of
+active connections to this host, and the elapsed time since
+the last connection.
+
+show hoststats
+
+Display status of last delivery
+for domains that have been active in the last 4 hours. It
+consists of the following fields, separated by a
+"|":
+
+&bull;
+
+Domain.
+
+&bull;
+
+UNIX timestamp of last
+delivery.
+
+&bull;
+
+Status of last delivery.
+
+show message
+envelope-id
+
+Display message content for the
+given ID.
+
+show queue
+
+Display information concerning
+envelopes that are currently in the queue. Each line of
+output describes a single envelope. It consists of the
+following fields, separated by a "|":
+
+&bull;
+
+Envelope ID.
+
+&bull;
+
+Address family of the client
+which enqueued the mail.
+
+&bull;
+
+Type of delivery: one of
+"mta", "mda" or "bounce".
+
+&bull;
+
+Various flags on the
+envelope.
+
+&bull;
+
+Sender address (return
+path).
+
+&bull;
+
+The original recipient
+address.
+
+&bull;
+
+The destination address.
+
+&bull;
+
+Time of creation.
+
+&bull;
+
+Time of expiration.
+
+&bull;
+
+Time of last delivery or
+relaying attempt.
+
+&bull;
+
+Number of delivery or relaying
+attempts.
+
+&bull;
+
+Current runstate: either
+"pending" or "inflight" if smtpd(8) is
+running, or "offline" otherwise.
+
+&bull;
+
+Delay in seconds before the
+next attempt if pending, or time elapsed if currently
+running. This field is blank if smtpd(8) is not running.
+
+&bull;
+
+Error string for the last
+failed delivery or relay attempt.
+
+show relays
+
+Display the list of currently
+active relays and associated connectors. For each relay, it
+shows a number of counters and information on its internal
+state on a single line. Then comes the list of connectors
+(source addresses to connect from for this relay).
+
+show routes
+
+Display status of routes
+currently known by smtpd(8). Each line consists of a route
+number, a source address, a destination address, a set of
+flags, the number of connections on this route, the current
+penalty level which determines the amount of time the route
+is disabled if an error occurs, and the delay before it gets
+reactivated. The following flags are defined:
+
+D
+
+The route is
+currently disabled.
+
+N
+
+The route is
+new. No SMTP session has been established yet.
+
+Q
+
+The route has a
+timeout registered to lower its penalty level and possibly
+reactivate or discard it.
+
+show stats
+
+Displays runtime statistics
+concerning smtpd(8).
+
+show status
+
+Shows if MTA, MDA and SMTP
+systems are currently running or paused.
+
+spf walk
+
+Recursively look up SPF records
+for the domains read from stdin. For example:
+
+$ smtpctl spf
+walk 
+
+SPF records may
+contain macros which cannot be included in a static list and
+must be resolved dynamically at connection time. spf
+walk cannot provide full results in these cases.
+
+trace
+subsystem
+
+Enables real-time tracing of
+subsystem. Supported subsystems are:
+
+&bull;
+
+imsg
+
+&bull;
+
+io
+
+&bull;
+
+smtp (incoming sessions)
+
+&bull;
+
+filters
+
+&bull;
+
+mta (outgoing sessions)
+
+&bull;
+
+bounce
+
+&bull;
+
+scheduler
+
+&bull;
+
+expand (aliases/virtual/forward
+expansion)
+
+&bull;
+
+lookup (user/credentials
+lookups)
+
+&bull;
+
+stat
+
+&bull;
+
+rules (matched by incoming
+sessions)
+
+&bull;
+
+mproc
+
+&bull;
+
+all
+
+unprofile
+subsystem
+
+Disables real-time profiling of
+subsystem.
+
+untrace
+subsystem
+
+Disables real-time tracing of
+subsystem.
+
+update table
+name
+
+Updates the contents of table
+name, for tables using the &ldquo;file&rdquo;
+backend.
+
+When
+smtpd receives a message, it generates a
+message-id for the message, and one
+envelope-id per recipient. The message-id is a
+32-bit random identifier that is guaranteed to be unique on
+the host system. The envelope-id is a 64-bit unique
+identifier that encodes the message-id in the 32
+upper bits and a random envelope identifier in the 32 lower
+bits.
+
+A command which
+specifies a message-id applies to all recipients of a
+message; a command which specifies an envelope-id
+applies to a specific recipient of a message.
+
+FILES 
+/var/run/smtpd.sock
+
+UNIX-domain
+socket used for communication with smtpd(8).
+
+SEE ALSO
+
+smtpd(8)
+
+HISTORY
+
+The smtpctl program first
+appeared in OpenBSD 4.6.
+
+BSD
+March 2, 2023 BSD

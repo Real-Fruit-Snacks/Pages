@@ -1,0 +1,197 @@
+NAME
+
+scanspool -
+Perform a sanity scan over all articles in news spool
+
+SYNOPSIS
+
+scanspool
+[-cnrv] [-a active-file] [-s
+spool-dir]
+
+DESCRIPTION
+
+scanspool
+is a Perl script for use with a tradspool article
+spool. It will scan the active file as well as all
+articles in the spool and report on the errors it
+encounters. As this may take a while, using the -v
+switch is recommended to see how far the program has
+progressed.
+
+scanspool
+will skip any file named other than just all-digits when
+treating the contents of the news spool.
+
+First,
+scanspool scans the active file, noting
+problems such as:
+
+&bull;
+
+malformed lines;
+
+&bull;
+
+duplicate entries;
+
+&bull;
+
+newsgroups aliased to a non-existent newsgroup;
+
+&bull;
+
+newsgroups aliased to a newsgroup that is also
+aliased. 
+
+Then it will
+examine all articles under your news spool directory,
+complaining about articles that:
+
+&bull;
+
+have a basename that starts with
+a leading 0;
+
+&bull;
+
+have a basename that is out of range according to the
+low and high water marks of the active file;
+
+&bull;
+
+do not contain a Newsgroups header field;
+
+&bull;
+
+are in a directory for which there is no newsgroup in
+the active file;
+
+&bull;
+
+are in a newsgroup to which they do not belong.
+
+scanspool
+will also complain about directories with an all-digit
+component, in case the parent directory is a newsgroup with
+a high water mark below that all-digit component, as the
+name of such directories will conflict with a future article
+file with the same name.
+
+scanspool
+understands aliased newsgroups. Thus, if an article is
+posted to foo.old.name that is aliased to foo.bar, it will
+be expected to be found under foo.bar and not
+foo.old.name.
+
+scanspool
+assumes that the path of a valid newsgroup&rsquo;s directory
+from the root of the spool tree will not contain any
+"." character. Thus, directories such as
+out.going, tmp.dir, in.coming and
+news.archive will not be searched. This program also
+assumes that article basenames contain only decimal digits.
+Last, files under the top level directory lost+found
+are not scanned.
+
+OPTIONS
+
+-a
+active-file
+
+The active file to use;
+pathdb/active is the default.
+
+-c
+
+Only check article filenames. scanspool will
+therefore not actually scan the Newsgroups header field of
+the articles.
+
+-n
+
+Don&rsquo;t throttle innd while scanning.
+
+-r
+
+Remove articles reported to have a problem. To see the
+list of articles in question, run scanspool without
+this flag first.
+
+Be warned that
+using this flag may result in inaccessible articles if
+articles are removed whereas they are perfectly valid
+articles. Have a look at them to ensure they can be safely
+removed, and then use this flag.
+
+-s spool-dir
+
+The root of the spool tree;
+patharticles is the default.
+
+-v
+
+Setting this flag enables a verbose mode.
+scanspool will then print which newsgroup is
+currently worked upon. It will list all the articles found
+in non-active directories (that is to say articles
+sorted into groups no longer present in the active
+file), rather than just printing the group once.
+
+DIAGNOSTICS
+
+The output of
+scanspool will start with one of the following forms:
+
+"FATAL:" (to stderr)
+
+Fatal or internal error.
+
+"WARNING:" (to
+stderr)
+
+active or article format
+problem, newsgroup alias problem, find(1) error, article
+open error.
+
+"path/123:" (to
+stdout)
+
+Issues such as:
+
+&bull;
+
+basename starts with 0;
+
+&bull;
+
+article number out of range;
+
+&bull;
+
+article in the wrong directory;
+
+&bull;
+
+article in a directory not related to an active
+non-aliased newsgroup.
+
+"\t ..." (to
+stdout)
+
+Verbose messages start with a
+tab.
+
+HISTORY
+
+scanspool
+was written by Landon Curt Noll (chongo was here
+/\../\).
+
+This manual
+page was written by Florian Schlichting, largely based on
+comments in the script.
+
+SEE ALSO
+
+active(5).

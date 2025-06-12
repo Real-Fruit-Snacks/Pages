@@ -1,0 +1,94 @@
+NAME
+
+pmStore,
+pmStoreHighRes - modify values of performance
+metrics
+
+C SYNOPSIS
+
+#include
+
+int
+pmStore(const pmResult *result); 
+int pmStoreHighRes(const pmHighResResult
+*result);
+
+cc ...
+-lpcp
+
+DESCRIPTION
+
+In some special
+cases it may be helpful to modify the current values of
+performance metrics, e.g. to reset a counter to zero, or to
+modify a &rsquo;&rsquo;metric&rsquo;&rsquo; which is a
+control variable for some agent collecting performance
+metrics.
+
+The routines
+pmStore and pmStoreHighRes are lightweight
+inverses of pmFetch(3) and pmFetchHighRes(3)
+respectively.
+
+The caller must
+build the result data structure (of course, this
+could have been returned from an earlier pmFetch(3)
+or pmFetchHighRes(3) call).
+
+It is an error
+to pass a result to pmStore or
+pmStoreHighRes in which the numval field
+within any of the pmValueSet structures has a value
+less than one.
+
+The current
+Performance Metrics Application Programming Interface
+(PMAPI) context must be one with a host as the source of
+metrics, and the current value of the nominated metrics will
+be changed, i.e. pmStore and pmStoreHighRes
+cannot be used to make retrospective changes to information
+in either the archives, or in the recent past for real-time
+sources of metrics.
+
+The return code
+from pmStore and pmStoreHighRes is zero for
+success.
+
+DIAGNOSTICS
+
+PM_ERR_GENERIC
+
+At least one of the
+modifications was rejected. No other status is available
+from below the PMAPI (this is the lightweight part of the
+functionality!). In cases where the outcome of storing into
+individual metrics is important, the caller should make one
+call to either pmStore or pmStoreHighRes for
+each metric. On the other hand, a bulk modification can be
+performed in a single call for situations in which the
+outcome is not critical.
+
+PM_ERR_NOTHOST
+
+The current PMAPI context is an
+archive rather than a host, or it is a host that is not set
+to the current time, i.e. has been
+&rsquo;&rsquo;rewound&rsquo;&rsquo; to the recent past using
+pmSetMode(3) or pmSetModeHighRes(3).
+
+PM_ERR_TOOSMALL
+
+The number of metrics specified
+in result is less than one.
+
+PM_ERR_VALUE
+
+One or more of the
+pmValueSets in result has a numval
+field with a value less than one.
+
+SEE ALSO
+
+PMAPI(3),
+pmFetch(3), pmFetchHighRes(3),
+pmSetModeHighRes(3) and pmSetMode(3).

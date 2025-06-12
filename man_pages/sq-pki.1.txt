@@ -1,0 +1,322 @@
+NAME
+
+sq pki -
+Authenticate certs using the Web of Trust
+
+SYNOPSIS
+
+sq pki
+authenticate [OPTIONS] FINGERPRINT|KEYID
+USERID 
+sq pki lookup [OPTIONS] USERID 
+sq pki identify [OPTIONS]
+FINGERPRINT|KEYID 
+sq pki certify [OPTIONS] CERTIFIER-KEY
+KEY_ID|FINGERPRINT|FILE USERID 
+sq pki link [OPTIONS] SUBCOMMAND 
+sq pki list [OPTIONS] PATTERN 
+sq pki path [OPTIONS] FINGERPRINT|KEYID
+USERID
+
+DESCRIPTION
+
+Authenticate
+certs using the Web of Trust.
+
+The "Web
+of Trust" is a decentralized trust model popularized by
+PGP. It is a superset of X.509, which is a hierarchical
+trust model, and is the most popular trust model on the
+public internet today. As used on the public internet,
+however, X.509 relies on a handful of global certification
+authorities (CAs) who often undermine its security.
+
+The Web of
+Trust is more nuanced than X.509. Using the Web of Trust,
+require multiple, independent paths to authenticate a
+binding by only partially trusting CAs. This prevents a
+single bad actor from compromising their security. And those
+who have stronger security requirements can use the Web of
+Trust in a completely decentralized manner where only the
+individuals they select &ndash; who are not necessarily
+institutions &ndash; act as trusted introducers.
+
+SUBCOMMANDS
+
+sq pki
+authenticate 
+Authenticate a binding.
+
+Authenticate a
+binding (a certificate and User ID) by looking for a path
+from the trust roots to the specified binding in the Web of
+Trust. Because certifications may express uncertainty (i.e.,
+certifications may be marked as conveying only partial or
+marginal trust), multiple paths may be needed.
+
+If a binding
+could be authenticated to the specified level (by default:
+fully authenticated, i.e., a trust amount of 120), then the
+exit status is 0. Otherwise the exit status is 1.
+
+If any valid
+paths to the binding are found, they are printed on stdout
+whether they are sufficient to authenticate the binding or
+not.
+
+sq pki
+lookup 
+Lookup the certificates associated with a User ID.
+
+Identifies
+authenticated bindings (User ID and certificate pairs) where
+the User ID matches the specified User ID.
+
+If a binding
+could be authenticated to the specified level (by default:
+fully authenticated, i.e., a trust amount of 120), then the
+exit status is 0. Otherwise the exit status is 1.
+
+If a binding
+could be partially authenticated (i.e., its trust amount is
+greater than 0), then the binding is displayed, even if the
+trust is below the specified threshold.
+
+sq pki
+identify 
+Identify a certificate.
+
+Identify a
+certificate by finding authenticated bindings (User ID and
+certificate pairs).
+
+If a binding
+could be authenticated to the specified level (by default:
+fully authenticated, i.e., a trust amount of 120), then the
+exit status is 0. Otherwise the exit status is 1.
+
+If a binding
+could be partially authenticated (i.e., its trust amount is
+greater than 0), then the binding is displayed, even if the
+trust is below the specified threshold.
+
+sq pki
+certify 
+Certify a User ID for a Certificate.
+
+Using a
+certification a keyholder may vouch for the fact that
+another certificate legitimately belongs to a user id. In
+the context of emails this means that the same entity
+controls the key and the email address. These kind of
+certifications form the basis for the Web of Trust.
+
+This command
+emits the certificate with the new certification. The
+updated certificate has to be distributed, preferably by
+sending it to the certificate holder for attestation. See
+also &rsquo;sq key attest-certifications&rsquo;.
+
+By default a
+certification expires after 5 years. Using the
+&rsquo;--expiry&rsquo; argument specific validity periods
+may be defined. It allows for providing a point in time for
+validity to end or a validity duration.
+
+&rsquo;sq pki
+certify&rsquo; respects the reference time set by the
+top-level &rsquo;--time&rsquo; argument. It sets the
+certification&rsquo;s creation time to the reference
+time.
+
+sq pki
+link 
+Manage authenticated certificate and User ID links.
+
+Link a
+certificate and User ID is one way of making
+&rsquo;sq&rsquo; consider a binding to be authentic. Another
+way is to use &rsquo;sq pki certify&rsquo; to certify the
+binding with an explicitly configured trust root. The
+linking functionality is often easier to work with, and the
+information is private by default.
+
+Authenticated
+bindings can be used to designate a certificate using a
+symbolic name. For instance, using &rsquo;sq
+encrypt&rsquo;&rsquo;s &rsquo;--recipient-userid&rsquo; and
+&rsquo;--recipient-email&rsquo; options, a user can
+designate a certificate using a User ID or an email address
+that is authenticated for that certificate.
+
+&rsquo;sq&rsquo;
+also uses authenticated certificates to authenticate other
+data. For instance, &rsquo;sq verify&rsquo; considers
+signatures made by an authenticated certificate to be
+authentic.
+
+Users can
+create a link using &rsquo;sq pki link add&rsquo;. That link
+can later be retracted using &rsquo;sq pki link
+retract&rsquo;. A certificate can also be accepted as a
+trusted introducer by passing the &rsquo;--ca&rsquo; option
+to &rsquo;sq pki link add&rsquo;.
+
+&rsquo;sq&rsquo;
+implements linking using non-exportable certifications, and
+an implicit trust root. An OpenPGP certificate directory,
+the default certificate store used by &rsquo;sq&rsquo;,
+includes a local trust root, which is stored under the
+&rsquo;trust-root&rsquo; special name. When the user
+instructs &rsquo;sq&rsquo; to accept a binding,
+&rsquo;sq&rsquo; uses the local trust root to create a
+non-exportable certification, which it stores in the
+certificate directory. In this way, operations that use the
+Web of Trust to authenticate a binding automatically use
+links.
+
+When a user
+retracts a link, &rsquo;sq&rsquo; creates a new,
+non-exportable certification with zero trust. This
+certification suppresses the previous link.
+
+sq pki
+list 
+List all authenticated bindings (User ID and certificate
+pairs).
+
+Only bindings
+that meet the specified trust amount (by default bindings
+that are fully authenticated, i.e., have a trust amount of
+120), are shown.
+
+Even if no
+bindings are shown, the exit status is 0.
+
+If
+&rsquo;--email&rsquo; is provided, then a pattern matches if
+it is a case insensitive substring of the email address
+as-is or the normalized email address. Note: unlike the
+email address, the pattern is not normalized. In particular,
+puny code normalization is not done on the pattern.
+
+sq pki
+path 
+Verify the specified path.
+
+A path is a
+sequence of certificates starting at the root, and a User
+ID. This function checks that each path segment has a valid
+certification, which also satisfies any constraints (trust
+amount, trust depth, regular expressions).
+
+If a valid path
+is not found, then this subcommand also lints the path. In
+particular, it report if any certifications are
+insufficient, e.g., not enough trust depth, or invalid,
+e.g., because they use SHA-1, but the use of SHA-1 has been
+disabled.
+
+EXAMPLES
+
+sq pki
+authenticate 
+Authenticate a specific binding.
+
+sq pki
+authenticate EB28F26E2739A4870ECC47726F0073F60FD0CBF0 \
+
+"Alice
+alice [AT] example.org>"
+
+Check whether
+we can authenticate any user ID with the specified email
+address for the given certificate.
+
+sq pki
+authenticate EB28F26E2739A4870ECC47726F0073F60FD0CBF0 \
+
+--email alice [AT] example.org
+
+sq pki
+lookup 
+Lookup certificates that can be authenticated for the given
+user ID.
+
+sq pki lookup
+"Alice alice [AT] example.org>"
+
+Lookup
+certificates that have a user ID with the specified email
+address, and that user ID can be authenticated.
+
+sq pki lookup
+--email alice [AT] example.org
+
+sq pki
+identify 
+Identify the user IDs that can be authenticated for the
+certificate.
+
+sq pki identify
+EB28F26E2739A4870ECC47726F0073F60FD0CBF0
+
+List all user
+IDs that have that have been certified by anyone.
+
+sq pki identify
+--gossip \
+
+511257EBBF077B7AEDAE5D093F68CB84CE537C9A
+
+sq pki
+certify 
+Juliet certifies that Romeo controls romeo.pgp and
+romeo [AT] example.org
+
+sq pki certify
+juliet.pgp romeo.pgp
+&rsquo;romeo [AT] example.org>&rsquo;
+
+Certify the
+User ID Ada, and set the certification time to July 21, 2013
+at midnight UTC:
+
+sq pki certify
+--time 20130721 neal.pgp ada.pgp Ada
+
+sq pki
+list 
+List all bindings for user IDs containing an email address
+from example.org, and that can be authenticated.
+
+sq pki list
+@example.org
+
+sq pki
+path 
+Verify that Alice ceritified a particular User ID for
+Bob&rsquo;s certificate.
+
+sq pki path
+EB28F26E2739A4870ECC47726F0073F60FD0CBF0 \
+
+511257EBBF077B7AEDAE5D093F68CB84CE537C9A
+\ 
+"Bob bob [AT] example.org>"
+
+SEE ALSO
+
+sq(1),
+sq-pki-authenticate(1), sq-pki-lookup(1),
+sq-pki-identify(1), sq-pki-certify(1),
+sq-pki-link(1), sq-pki-list(1),
+sq-pki-path(1).
+
+For the full
+documentation see https://book.sequoia-pgp.org&gt;.
+
+VERSION
+
+0.34.0
+(sequoia-openpgp 1.19.0)

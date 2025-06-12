@@ -1,0 +1,159 @@
+NAME
+
+jot - print
+sequential or random data
+
+SYNOPSIS
+
+jot [
+options ] [ reps [ begin [ end [
+s ] ] ] ]
+
+DESCRIPTION
+
+Jot
+is used to print out increasing, decreasing, random, or
+redundant data, usually numbers, one per line. The
+options are understood as follows.
+
+-r
+
+Generate random data instead of sequential data, the
+default. 
+
+-b word
+
+Just print word
+repetitively.
+
+-w word
+
+Print word with the
+generated data appended to it. Octal, hexadecimal,
+exponential, ASCII, zero padded, and right-adjusted
+representations are possible by using the appropriate
+printf(3) conversion specification inside
+word, in which case the data are inserted rather than
+appended.
+
+-c
+
+This is an abbreviation for -w %c.
+
+-s string
+
+Print data separated by
+string. Normally, newlines separate data.
+
+-n
+
+Do not print the final newline normally appended to the
+output. 
+
+-p precision
+
+Print only as many digits or
+characters of the data as indicated by the integer
+precision. In the absence of -p, the precision
+is the greater of the precisions of begin and
+end. The -p option is overridden by whatever
+appears in a printf(3) conversion following
+-w.
+
+The last four
+arguments indicate, respectively, the number of data, the
+lower bound, the upper bound, and the step size or, for
+random data, the seed. While at least one of them must
+appear, any of the other three may be omitted, and will be
+considered as such if given as -. Any three of these
+arguments determines the fourth. If four are specified and
+the given and computed values of reps conflict, the
+lower value is used. If fewer than three are specified,
+defaults are assigned left to right, except for s,
+which assumes its default unless both begin and
+end are given.
+
+Defaults for
+the four arguments are, respectively, 100, 1, 100, and 1,
+except that when random data are requested, s
+defaults to a seed depending upon the time of day.
+Reps is expected to be an unsigned integer, and if
+given as zero is taken to be infinite. Begin and
+end may be given as real numbers or as characters
+representing the corresponding value in ASCII. The last
+argument must be a real number.
+
+Random numbers
+are obtained through random(3). The name jot
+derives in part from iota, a function in APL.
+
+EXAMPLES
+
+The command
+
+jot 21 -1
+1.00
+
+prints 21
+evenly spaced numbers increasing from -1 to 1. The ASCII
+character set is generated with
+
+jot -c 128
+0
+
+and the strings
+xaa through xaz with
+
+jot -w xa%c
+26 a
+
+while 20 random
+8-letter strings are produced with
+
+jot -r -c
+160 a z | rs -g 0 8
+
+Infinitely many
+yes&rsquo;s may be obtained through
+
+jot -b yes
+0
+
+and thirty
+ed(1) substitution commands applying to lines 2, 7,
+12, etc. is the result of
+
+jot -w
+%ds/old/new/ 30 2 - 5
+
+The stuttering
+sequence 9, 9, 8, 8, 7, etc. can be produced by suitable
+choice of precision and step size, as in
+
+jot 0 9 -
+-.5
+
+and a file
+containing exactly 1024 bytes is created with
+
+jot -b x 512
+> block
+
+Finally, to set
+tabs four spaces apart starting from column 10 and ending in
+column 132, use
+
+expand -`jot
+-s, - 10 132 4`
+
+and to print
+all lines 80 characters or longer,
+
+grep `jot -s
+"" -b . 80`
+
+SEE ALSO
+
+ed(1),
+expand(1), rs(1), yes(1), printf(3), random(3),
+expand(1)

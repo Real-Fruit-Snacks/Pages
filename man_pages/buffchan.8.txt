@@ -1,0 +1,256 @@
+NAME
+
+buffchan -
+Buffered file-writing backend for INN
+
+SYNOPSIS
+
+buffchan
+[-bru] [-c lines] [-C
+seconds] [-d directory] [-f
+num-fields] [-l lines] [-L
+seconds] [-m map] [-p
+pid-file] [-s format]
+
+DESCRIPTION
+
+buffchan
+reads lines from standard input and copies the initial
+fields in each line to the files named by the remaining
+fields on the line. buffchan is intended to be called
+by innd as an exploder feed.
+
+The input is
+interpreted as a sequence of lines. Each line contains a
+fixed number of initial fields, followed by a variable
+number of filename fields. All fields in a line are
+separated by whitespace and do not contain any whitespace.
+The default number of initial fields is one.
+
+For each line
+of input, buffchan writes the initial fields,
+separated by a space and followed by a newline, to each of
+the files named in the filename fields. The output files are
+kept open and are only flushed or closed based on the
+schedule given by the -c, -C, -l, and
+-L options.
+
+As an exploder
+feed (see newsfeeds(5) for an explanation), buffchan
+interprets lines beginning with an exclamation point as
+commands. Besides "!begin" (which only marks the
+start of the feed), there are three supported commands: 
+!flush [site]
+
+The flush command closes and
+reopens all open files. An optional site can be specified,
+in which case buffchan flushes only that file. This
+command is analogous to the "ctlinnd flush"
+command. This command can be sent via innd using
+"ctlinnd send buffchan-site 'flush
+site'".
+
+Applications
+can tell that flush has completed by renaming the file
+before issuing the command. When the original file name has
+reappeared, the flush is complete. If fchmod(3) is
+available, buffchan also changes the file to
+read-only while it&rsquo;s actively writing to it and
+changes it back to read/write once it has been closed. It
+will change the mode back to read-only only if it reopens
+the same file.
+
+!drop [site]
+
+The drop command is similar to
+the flush command, except that no files are reopened. If
+given an argument, only the specified site is dropped;
+otherwise, all sites are dropped. (Note that a site will be
+restarted if the input stream mentions the site again.)
+
+When a
+"ctlinnd drop site" command is sent, innd
+will automatically forward the command to buffchan if
+the site is listed as a funnel feeding into the
+buffchan exploder. To drop all sites, use
+"ctlinnd send buffchan-site drop".
+
+!readmap
+
+The map file specified with the
+-m option, if given, will be reloaded.
+
+Once
+buffchan opens a file, it keeps it open (in the
+absence of a drop command). The input must therefore never
+specify more files than the maximum number of files a
+process may open.
+
+OPTIONS
+
+-b
+
+Force the output to be buffered.
+(This is generally the default, but it may depend on the
+operating system.) If -b is given, a buffer size of
+BUFSIZ (a constant of the system standard I/O library) is
+used. 
+
+-c lines
+
+If the -c flag is given,
+buffchan will close and reopen a file after every
+lines lines are written to the file.
+
+-C seconds
+
+If the -C flag is given,
+buffchan will close and reopen a file if it has been
+open for more than seconds seconds.
+
+-d directory
+
+By default, buffchan
+writes its output into the pathoutgoing directory.
+This flag may be used to specify a directory the program
+should change to before starting. If this flag is used, the
+default for the -s flag (see below) is changed to be
+a simple "%s" (in other words, output files are
+considered to be relative to directory).
+
+-f num-fields
+
+By default, each line is
+expected to contain one fixed field followed by some number
+of filename fields. If this flag is given, num-fields
+will be used as the number of initial fixed fields.
+
+-l lines
+
+If the -l flag is given,
+buffchan will flush the output after every
+lines lines are written to a file.
+
+-L seconds
+
+If the -L flag is given,
+buffchan will flush each output file every
+seconds seconds.
+
+-m map
+
+Map files translate the names
+in the filename fields on each line into filenames that
+should be used instead. It&rsquo;s used primarily when short
+names are used in newsfeeds, but the output files
+should use the full domain names of remote peers.
+
+In the map
+file, blank lines and lines starting with a number sign
+("#") are ignored. All other lines should have two
+host names separated by a colon. The first field is the name
+that may appear in the input stream; the second field names
+the file to be used when the name in the first field
+appears.
+
+For example,
+the following map file may be used to map the short names
+used in the example below to the full domain names:
+
+# This is a
+comment 
+uunet:news.uu.net 
+foo:foo.com 
+munnari:munnari.oz.au
+
+-p pid-file
+
+If the -p option is
+given, buffchan will write a line containing its
+process ID (in text) to the specified file when it
+starts.
+
+-r
+
+By default, buffchan sends its error messages to
+pathlog/errlog. To suppress this redirection and send
+error messages to standard error, use the -r
+flag. 
+
+-s
+
+The -s flag may be used to specify a format that
+maps a filename from the filename fields at the end of each
+line to an actual filename. This is a sprintf(3) format
+string that should contain a single instance of
+"%s", which will be replaced with the value of the
+filename field (possibly after mapping with the map file
+from -m). The default value is
+pathoutgoing/"%s". 
+
+-u
+
+If the -u flag is used, the output will be
+unbuffered. 
+
+EXAMPLES
+
+If
+buffchan is invoked with "-f 2" and given
+the following input:
+
+news.software.nntp
+1643 [AT] munnari.au> foo uunet 
+news.software.nntp 102060 [AT] litchi.com> uunet
+munnari 
+comp.sources.unix 999 [AT] news.com> foo uunet
+munnari
+
+then the file
+foo in pathoutgoing will have these lines:
+
+news.software.nntp
+1643 [AT] munnari.au> 
+comp.sources.unix 999 [AT] news.com>
+
+the file
+munnari in pathoutgoing will have these
+lines:
+
+news.software.nntp
+102060 [AT] litchi.com> 
+comp.sources.unix 999 [AT] news.com>
+
+and the file
+uunet in pathoutgoing will have these
+lines:
+
+news.software.nntp
+1643 [AT] munnari.au> 
+news.software.nntp 102060 [AT] litchi.com> 
+comp.sources.unix 999 [AT] news.com>
+
+Using
+buffchan this way can be done in newsfeeds
+with for instance:
+
+foo:*,@misc.*:Ap,Tm:buffchan!
+
+munnari:*,@rec.*:Ap,Tm:buffchan! 
+uunet:*:Ap,Tm:buffchan! 
+buffchan!:*:Tx,WGm*:/buffchan -f 2
+
+It will
+generate the examples above. See the "W" flag in
+newsfeeds(5) for how to parameterize the output.
+
+HISTORY
+
+Written by Rich
+$alz rsalz [AT] uunet.net> for InterNetNews. Converted
+to POD by Russ Allbery eagle [AT] eyrie.org>.
+
+SEE ALSO
+
+ctlinnd(8),
+inn.conf(5), innd(8), newsfeeds(5).

@@ -1,0 +1,709 @@
+KEYNOTE(3) BSD Library Functions Manual KEYNOTE(3)
+
+NAME
+
+keynote &mdash; a
+trust-management system library
+
+SYNOPSIS
+
+#include 
+
+#include  
+#include 
+
+struct
+environment 
+{ 
+char *env_name; 
+char *env_value; 
+int env_flags; 
+regex_t env_regex; 
+struct environment *env_next; 
+};
+
+struct
+keynote_deckey 
+{ 
+int dec_algorithm; 
+void *dec_key; 
+};
+
+struct
+keynote_binary 
+{ 
+int bn_len; 
+char *bn_key; 
+};
+
+struct
+keynote_keylist 
+{ 
+int key_alg; 
+void *key_key; 
+char *key_stringkey; 
+struct keynote_keylist *key_next; 
+};
+
+int
+keynote_errno ;
+
+int
+
+kn_init(void);
+
+int
+
+kn_add_assertion(int sessid,
+char *assertion, int len,
+int flags);
+
+int
+
+kn_remove_assertion(int sessid,
+int assertid);
+
+int
+
+kn_add_action(int sessid,
+char *name, char *value,
+int flags);
+
+int
+
+kn_remove_action(int sessid,
+char *name);
+
+int
+
+kn_add_authorizer(int sessid,
+char *principal);
+
+int
+
+kn_remove_authorizer(int sessid,
+char *principal);
+
+int
+
+kn_do_query(int sessid,
+char **returnvalues,
+int numvalues);
+
+int
+
+kn_get_failed(int sessid,
+int type, int seq);
+
+int
+
+kn_cleanup_action_environment(int sessid);
+
+int
+
+kn_close(int sessid);
+
+int
+
+kn_query(struct environment *env,
+char **returnvalues, int numvalues,
+char **trusted, int *trustedlen, int numtrusted,
+char **untrusted, int *untrustedlen, int numuntrusted,
+char **authorizers, int numauthauthorizers);
+
+char
+**
+
+kn_read_asserts(char *array,
+int arraylen,
+int *numassertions);
+
+int
+
+kn_keycompare(void *key1,
+void *key2, int algorithm);
+
+void
+*
+
+kn_get_authorizer(int sessid,
+int assertid, int *algorithm);
+
+struct
+keynote_keylist *
+
+kn_get_licensees(int sessid,
+int assertid);
+
+int
+
+kn_encode_base64(unsigned char const *src,
+unsigned int srclen, char *dst,
+unsigned int dstlen);
+
+int
+
+kn_decode_base64(char const *src,
+unsigned char *dst,
+unsigned int dstlen);
+
+int
+
+kn_encode_hex(unsigned char *src,
+char **dst, int srclen);
+
+int
+
+kn_decode_hex(char *src,
+char **dst);
+
+char
+*
+
+kn_encode_key(struct keynote_deckey *dc,
+int iencoding, int encoding,
+int keytype);
+
+int
+
+kn_decode_key(struct keynote_deckey *dc,
+char *key, int keytype);
+
+char
+*
+
+kn_sign_assertion(char *assertion,
+int len, char *key,
+char *algorithm, int vflag);
+
+int
+
+kn_verify_assertion(char *assertion,
+int len);
+
+void
+
+kn_free_key(struct keynote_deckey *);
+
+char
+*
+
+kn_get_string(char *);
+
+Link options:
+-lkeynote -lm -lcrypto
+
+DESCRIPTION
+
+For more details on
+KeyNote, see RFC 2704.
+
+keynote_errno
+contains an error code if some library call failed. Failed
+calls return &minus;1 (if their return value is integer), or
+NULL (if their return value is a pointer) and set
+keynote_errno. The defined error codes are:
+
+ERROR_MEMORY
+
+Some memory
+allocation or usage error was encountered.
+
+ERROR_SYNTAX
+
+Some syntactic
+or logical error was encountered.
+
+ERROR_NOTFOUND
+
+One of the
+arguments referred to a nonexistent structure or entry.
+
+If no errors
+were encountered, keynote_errno will be set to 0.
+This variable should be reset to 0 if an error was
+encountered, prior to calling other library routines.
+
+The main
+interface to KeyNote is centered around the concept
+of a session. A session describes a collection of policies,
+assertions, action authorizers, return values, and action
+attributes that the KeyNote system uses to evaluate a
+query. Information is not shared between sessions. Policies,
+credentials, action authorizers, and action attributes can
+be added or deleted at any point during the lifetime of a
+session. Furthermore, an application can discover which
+assertions failed to be evaluated, and in what way, during a
+query.
+
+For those
+applications that only need to do a simple query, there
+exists a single call that takes as arguments all the
+necessary information and performs all the necessary steps.
+This is essentially a wrapper that calls the session API
+functions as necessary.
+
+Finally, there
+exist functions for doing ASCII to hexadecimal and Base64
+encoding (and vice versa), for encoding/decoding keys
+between ASCII and binary formats, and for signing and
+verifying assertions.
+
+The description
+of all KeyNote library functions follows.
+
+kn_init()
+creates a new KeyNote session, and performs any
+necessary initializations. On success, this function returns
+the new session ID, which is used by all subsequent calls
+with a sessid argument. On failure, it returns
+&minus;1 and sets keynote_errno to ERROR_MEMORY.
+
+kn_add_assertion()
+adds the assertion pointed to by the array assertion,
+of length len in the session identified by
+sessid. The first argument can be discarded after the
+call to this function. The following flags are defined:
+
+ASSERT_FLAG_LOCAL
+
+Mark this
+assertion as ultimately trusted. Trusted assertions need not
+be signed, and the Authorizer and Licensees
+fields can have non-key entries.
+
+At least one
+(trusted) assertion should have POLICY as the
+Authorizer. On success, this function will return an
+assertion ID which can be used to remove the assertion from
+the session, by using kn_remove_assertion(3). On failure,
+&minus;1 is returned, and keynote_errno is set to
+ERROR_NOTFOUND if the session was not found, ERROR_SYNTAX if
+the assertion was syntactically incorrect, or ERROR_MEMORY
+if necessary memory could not be allocated.
+
+kn_remove_assertion()
+removes the assertion identified by assertid from the
+session identified by sessid. On success, this
+function returns 0. On failure, it returns &minus;1 and sets
+keynote_errno to ERROR_NOTFOUND.
+
+kn_add_action()
+inserts the variable name in the action environment
+of session sessid, with the value value. The
+same attribute may be added more than once, but only the
+last instance will be used (memory resources are consumed
+however).
+
+The flags
+specified are formed by or&rsquo;ing the following
+values:
+
+ENVIRONMENT_FLAG_FUNC
+
+In this case,
+value is a pointer to a function that takes as
+argument a string and returns a string. This is used to
+implement callbacks for getting action attribute values. The
+argument passed to such a callback function is a string
+identifying the action attribute whose value is requested,
+and should return a pointer to string containing that value
+(this pointer will not be freed by the library), the empty
+string if the value was not found, or a NULL to indicate an
+error (and may set keynote_errno appropriately).
+Prior to first use (currently, at the time the attribute is
+added to the session environment), such functions are called
+with KEYNOTE_CALLBACK_INITIALIZE as the argument (defined in
+keynote.h) so that they can perform any special
+initializations. Furthermore, when the session is deleted,
+all such functions will be called with
+KEYNOTE_CALLBACK_CLEANUP to perform any special cleanup
+(such as free any allocated memory). A function may be
+called with either of these arguments more than once, if it
+has been defined as the callback function for more than one
+attribute.
+
+ENVIRONMENT_FLAG_REGEX
+
+In this case,
+name is a regular expression that may match more than
+one attribute. In case of conflict between a regular
+expression and a &rsquo;&rsquo;simple&rsquo;&rsquo;
+attribute, the latter will be given priority. In case of
+conflict between two regular expression attributes, the one
+added later will be given priority. A callback function
+should never change the current KeyNote session,
+start/invoke/operate on another session, or call one of the
+session-API functions.
+
+The combination
+of the two flags may be used to specify callback functions
+that handle large sets of attributes (even to the extent of
+having one callback function handling all attribute
+references). This is particularly useful when the action
+attribute set is particularly large.
+
+On success,
+keynote_add_action(3) returns 0. On failure, it returns
+&minus;1 and sets keynote_errno to ERROR_NOTFOUND if
+the session was not found, ERROR_SYNTAX if the name
+was invalid (e.g., started with an underscore character) or
+was NULL, or ERROR_MEMORY if necessary memory could not be
+allocated.
+
+kn_remove_action()
+removes action attribute name from the environment of
+session sessid. Notice that if more than one
+instances of name exist, only the one added last will
+be deleted. On success, this function returns 0. On failure,
+it returns &minus;1 and keynote_errno is set to
+ERROR_NOTFOUND if the session or the attribute were not
+found, or ERROR_SYNTAX if the name was invalid. If the
+attribute value was a callback, that function will be called
+with the define KEYNOTE_CALLBACK_CLEANUP as the
+argument.
+
+kn_add_authorizer()
+adds the principal pointed to by principal to the
+action authorizers list of session sessid. The
+principal is typically an ASCII-encoded key. On success,
+this function will return 0. On failure, it returns &minus;1
+and sets keynote_errno to ERROR_NOTFOUND if the
+session was not found, ERROR_SYNTAX if the encoding was
+invalid, or ERROR_MEMORY if necessary memory could not be
+allocated.
+
+kn_remove_authorizer()
+removes principal from the action authorizer list of
+session sessid. On success, this function returns 0.
+On failure, it returns &minus;1 and sets
+keynote_errno to ERROR_NOTFOUND if the session was
+not found.
+
+kn_do_query()
+evaluates the request based on the assertions, action
+attributes, and action authorizers added to session
+sessid. returnvalues is an ordered array of
+strings that contain the return values. The lowest-ordered
+return value is contained in returnvalues[0], and the
+highest-ordered value is returnvalues[numvalues - 1].
+If returnvalues is NULL, the returnvalues from
+the previous call to kn_do_query(3) will be used. The
+programmer SHOULD NOT free returnvalues after the
+call to kn_do_query(3) if this feature is used, as the array
+is not replicated internally. On success, this function
+returns an index into the returnvalues array. On
+failure, it returns &minus;1 and sets keynote_errno
+to ERROR_NOTFOUND if the session was not found or the
+authorizers list was empty, ERROR_SYNTAX if no
+returnvalues have been specified, or ERROR_MEMORY if
+necessary memory could not be allocated.
+
+kn_get_failed()
+returns the assertion ID of the num&rsquo;th
+assertion (starting from zero) in session sessid that
+was somehow invalid during evaluation. This function is
+typically called after kn_do_query(3) is used to evaluate a
+request. type specifies the type of failure the
+application is interested in. It can be set to:
+
+KEYNOTE_ERROR_ANY
+
+to indicate
+interest in any error.
+
+KEYNOTE_ERROR_SYNTAX
+
+for syntactic
+or semantic errors.
+
+KEYNOTE_ERROR_MEMORY
+
+for
+memory-related problems.
+
+KEYNOTE_ERROR_SIGNATURE
+
+if the
+assertion could not be cryptographically verified.
+
+These values are
+defined in keynote.h. An application can then delete the
+offending assertion using kn_remove_assertion(3). For
+example, to remove all assertion whose signature failed, an
+application could do something like:
+
+while ((assertid
+= kn_get_failed(sessid, KEYNOTE_ERROR_SIGNATURE, 0) 
+!= -1) 
+kn_remove_assertion(sessid, assertid);
+
+On success,
+kn_get_failed(3) returns an assertion ID. On failure, or
+when no assertion matching the given criteria is found, it
+returns &minus;1 and set keynote_errno to
+ERROR_NOTFOUND.
+
+kn_cleanup_action_environment()
+removes all action attributes from the action environment of
+session sessid. It returns 0 on success.
+
+kn_close()
+closes session sessid and frees all related
+resources, deleting action attributes, action authorizers,
+and assertions. On success, this function returns 0. On
+failure, it returns &minus;1 and sets keynote_errno
+to ERROR_NOTFOUND if the session was not found.
+
+kn_read_asserts()
+parses the string array of length arraylen and
+returns an array of pointers to strings containing copies of
+the assertions found in array. Both the array of
+pointers and the strings are allocated by
+kn_read_asserts() dynamically, and thus should be
+freed by the programmer when they are no longer needed.
+numassertions contains the number of assertions (and
+thus strings in the returned array) found in array.
+On failure, this function returns NULL and sets
+keynote_errno to ERROR_MEMORY if necessary memory
+could not be allocated, or ERROR_SYNTAX if array was
+NULL. Note that if there were no assertions found in
+array, a valid pointer will be returned, but
+numassertions will contain the value zero on return.
+The returned pointer should be freed by the programmer.
+
+kn_keycompare()
+compares key1 and key2 (which must be of the
+same algorithm) and returns 1 if equal and 0
+otherwise.
+
+kn_get_authorizer()
+returns the authorizer key (in binary format) for assertion
+assertid in session sessid. It also sets the
+algorithm argument to the algorithm of the authorizer
+key. On failure, kn_get_authorizer() returns NULL,
+and sets keynote_errno to ERROR_NOTFOUND.
+
+kn_get_licensees()
+returns the licensee key(s) for assertion assertid in
+session sessid. The keys are returned in a linked
+list of struct keynote_keylist structures. On
+failure, kn_get_licensees() returns NULL. and sets
+keynote_errno to ERROR_NOTFOUND.
+
+kn_query()
+takes as arguments a list of action attributes in
+env, a list of return values in returnvalues
+(the number of returnvalues in indicated by
+numvalues), a number (numtrusted) of
+locally-trusted assertions in trusted (the length of
+each assertion is given by the respective element of
+trustedlen), a number (numuntrusted) of
+assertions that need to be cryptographically verified in
+untrusted (the length of each assertion is given by
+the respective element of untrustedlen), and a number
+(numauthorizers) of action authorizers in
+authorizers. env is a linked list of struct
+environment structures. The env_name,
+env_value, and env_flags fields correspond to
+the name, value, and flags arguments to
+kn_add_assertion(3) respectively. env_regex is not
+used. On success, this function returns an index in
+returnvalues indicating the returned value to the
+query. On failure, it returns &minus;1 and sets
+keynote_errno to the same values as kn_do_query(3),
+or to ERROR_MEMORY if a trusted or untrusted assertion could
+not be added to the session due to lack of memory resources.
+Syntax errors in assertions will not be reported by
+kn_query().
+
+kn_encode_base64()
+converts the data of length srclen contained in
+src in Base64 encoding and stores them in dst
+which is of length dstlen. The actual length of the
+encoding stored in dst is returned. dst should be
+long enough to also contain the trailing string
+terminator. If srclen is not a multiple of 4, or
+dst is not long enough to contain the encoded data,
+this function returns &minus;1 and sets keynote_errno
+to ERROR_SYNTAX.
+
+kn_decode_base64()
+decodes the Base64-encoded data stored in src and
+stores the result in dst, which is of length
+dstlen. The actual length of the decoded data is
+returned on success. On failure, this function returns
+&minus;1 and sets keynote_errno to ERROR_SYNTAX,
+denoting either an invalid Base64 encoding or insufficient
+space in dst.
+
+kn_encode_hex()
+encodes in ASCII-hexadecimal format the data of length
+srclen contained in src. This function
+allocates a chunk of memory to store the result, which is
+returned in dst. Thus, this function should be used
+as follows:
+
+char *dst;
+
+kn_encode_hex(src,
+&dst, srclen);
+
+The length of
+the allocated buffer will be (2 * srclen + 1). On success,
+this function returns 0. On failure, it returns &minus;1 and
+sets keynote_errno to ERROR_MEMORY if it failed to
+allocate enough memory, ERROR_SYNTAX if dst was
+NULL.
+
+kn_decode_hex()
+decodes the ASCII hex-encoded string in src and
+stores the result in a memory chunk allocated by the
+function. A pointer to that memory is stored in dst.
+The length of the allocated memory will be (strlen(src) /
+2). On success, this function returns 0. On failure, it
+returns &minus;1 and sets keynote_errno to
+ERROR_MEMORY if it could not allocate enough memory, or
+ERROR_SYNTAX if dst was NULL, or the length of
+src is not even.
+
+kn_encode_key()
+ASCII-encodes a cryptographic key. The binary representation
+of the key is contained in dc. The field
+dec_key in that structure is a pointer to some
+cryptographic algorithm dependent information describing the
+key. In this implementation, this pointer should be a DSA
+* or RSA * for DSA or RSA keys respectively, as
+used in the SSL library, or a keynote_binary * for
+cryptographic keys whose algorithm KeyNote does not
+know about but the application wishes to include in the
+action authorizers (and thus need to be canonicalized). The
+field dec_algorithm describes the cryptographic
+algorithm, and may be one of KEYNOTE_ALGORITHM_DSA,
+KEYNOTE_ALGORITHM_RSA, or KEYNOTE_ALGORITHM_BINARY in this
+implementation.
+
+iencoding
+describes how the key should be binary-encoded. This
+implementation supports INTERNAL_ENC_PKCS1 for RSA keys,
+INTERNAL_ENC_ASN1 for DSA keys, and INTERNAL_ENC_NONE for
+BINARY keys. encoding describes what ASCII encoding
+should be applied to the key. Valid values are ENCODING_HEX
+and ENCODING_BASE64, for hexadecimal and Base64 encoding
+respectively. keytype is one of KEYNOTE_PUBLIC_KEY or
+KEYNOTE_PRIVATE_KEY to indicate whether the key is public or
+private. Private keys have the string
+KEYNOTE_PRIVATE_KEY_PREFIX (defined in keynote.h) prefixed
+to the algorithm name. On success, this function returns a
+string containing the encoded key. On failure, it returns
+NULL and sets keynote_errno to ERROR_NOTFOUND if the
+dc argument was invalid, ERROR_MEMORY if it failed to
+allocate the necessary memory, or ERROR_SYNTAX if the key to
+be converted was invalid.
+
+kn_decode_key()
+decodes the ASCII-encoded string contained in key.
+The result is placed in dc, with dec_algorithm
+describing the algorithm (see kn_encode_key(3)), and
+dec_key pointing to an algorithm-dependent structure.
+In this implementation, this is an SSLeay/OpenSSL-defined
+DSA * for DSA keys, RSA * for RSA and
+X509-based keys, and a keynote_binary * for BINARY
+keys. keytype takes the values KEYNOTE_PUBLIC_KEY or
+KEYNOTE_PRIVATE_KEY to specify a public or private key,
+where applicable. On success, this function returns 0. On
+failure, it returns &minus;1 and sets keynote_errno
+to ERROR_MEMORY if necessary memory could not be allocated,
+or ERROR_SYNTAX if the key or the ASCII encoding was
+malformed.
+
+kn_sign_assertion()
+produces the cryptographic signature for the assertion of
+length len stored in assertion, using the
+ASCII-encoded cryptographic key contained in key. The
+type of signature to be produced is described by the string
+algorithm. Possible values for this string are
+SIG_RSA_SHA1_HEX SIG_RSA_SHA1_BASE64, SIG_RSA_MD5_HEX, and
+SIG_RSA_MD5_HEX for RSA keys, SIG_DSA_SHA1_HEX and
+SIG_DSA_SHA1_BASE64 for DSA keys, SIG_X509_SHA1_HEX, and
+SIG_X509_SHA1_BASE64 for X509-based keys. No other
+cryptographic signatures are currently supported by this
+implementation. If vflag is set to 1, then the
+generated signature will also be verified. On success, this
+function returns a string containing the ASCII-encoded
+signature, without modifying the assertion. On
+failure, it returns NULL and sets keynote_errno to
+ERROR_NOTFOUND if one of the arguments was NULL,
+ERROR_MEMORY if necessary memory could not be allocated, or
+ERROR_SYNTAX if the algorithm, the key, or the
+assertion (if signature verification was requested)
+was invalid.
+
+kn_verify_assertion()
+verifies the cryptographic signature on the assertion of
+length len contained in string assertion. On
+success, this function returns SIGRESULT_TRUE if the
+signature could be verified, or SIGRESULT_FALSE otherwise.
+On failure, this function returns &minus;1 and sets
+keynote_errno to ERROR_MEMORY if necessary memory
+could not be allocated, or ERROR_SYNTAX if the assertion
+contained a syntactic error, or the cryptographic algorithm
+was not supported.
+
+kn_free_key()
+frees a cryptographic key.
+
+kn_get_string()
+parses the argument, treating it as a keynote(4) (quoted)
+string. This is useful for parsing key files.
+
+FILES 
+keynote.h 
+libkeynote.a 
+SEE ALSO
+
+keynote(1), keynote(4),
+keynote(5)
+
+&rsquo;&rsquo;The KeyNote
+Trust-Management System, Version 2&rsquo;&rsquo;
+
+M. Blaze, J. Feigenbaum, A. D.
+Keromytis, Internet Drafts, RFC 2704.
+
+&rsquo;&rsquo;Decentralized
+Trust Management&rsquo;&rsquo;
+
+M. Blaze, J. Feigenbaum, J.
+Lacy, 1996 IEEE Conference on Privacy and Security
+
+&rsquo;&rsquo;Compliance-Checking
+in the PolicyMaker Trust Management System&rsquo;&rsquo;
+
+M. Blaze, J. Feigenbaum, M.
+Strauss, 1998 Financial Crypto Conference
+
+Web Page
+
+http://www.cis.upenn.edu/~keynote
+
+AUTHOR
+
+Angelos D. Keromytis
+(angelos [AT] dsl.edu)
+
+DIAGNOSTICS
+
+The return values of all the
+functions have been given along with the function
+description above.
+
+BUGS
+
+None that we know of. If you
+find any, please report them to
+
+keynote [AT] research.com
+
+BSD
+April 29, 1999 BSD

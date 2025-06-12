@@ -1,0 +1,388 @@
+NAME
+
+pdnsd
+&minus; dns proxy daemon
+
+SYNOPSIS
+
+pdnsd
+[&minus;h] [&minus;V] [&minus;s] [&minus;d] [&minus;g]
+[&minus;t] [&minus;p file] [&minus;vn]
+[&minus;mxx] [&minus;c file] [&minus;4]
+[&minus;6] [&minus;a]
+
+This man page
+is an extract of the documentation of pdnsd. For
+complete, current documentation, refer to the HTML (or plain
+text) documentation (which you can find in the doc/
+subdirectory of the source or in a standard documentation
+directory, typically /usr/share/doc/pdnsd/ if you are
+using a binary package).
+
+DESCRIPTION
+
+pdnsd is
+a IPv6 capable proxy domain name server (DNS) which saves
+the contents of its DNS cache to the disk on exit.
+
+OPTIONS
+
+&minus;4
+
+enables IPv4 support. IPv6
+support is automatically disabled (should it be available).
+On by default.
+
+&minus;6
+
+enables IPv6 support. IPv4 support is automatically
+disabled (should it be available). Off by default.
+
+&minus;a
+
+With this option, pdnsd will try to detect automatically
+if the system supports IPv6, and fall back to IPv4
+otherwise. 
+
+&minus;V or
+&minus;&minus;version
+
+Print version information and
+exit.
+
+&minus;c FILE or
+&minus;&minus;config&minus;file=FILE
+
+specifies that configuration is
+to be read from FILE. Default is
+/etc/pdnsd.conf.
+
+&minus;d or
+&minus;&minus;daemon
+
+Start pdnsd in daemon
+mode (as a background process).
+
+&minus;g or
+&minus;&minus;debug
+
+Print some debug messages on
+the console or to the file pdnsd.debug in your cache
+directory (in daemon mode).
+
+&minus;h or
+&minus;&minus;help
+
+Print an option summary and
+exit.
+
+&minus;i PREFIX
+or &minus;&minus;ipv4_6_prefix=PREFIX
+
+specifies the prefix pdnsd uses
+(when running in IPv6 mode) to map IPv4 addresses in the
+configuration file to IPv6 addresses. Must be a valid IPv6
+address. Default is ::ffff:0.0.0.0
+
+&minus;p FILE
+
+writes the pid the server runs
+as to the specified filename. Works only in daemon mode.
+
+&minus;&minus;pdnsd&minus;user
+
+Print the user pdnsd
+will run as and exit.
+
+&minus;s or
+&minus;&minus;status
+
+enables the status control
+socket. Either this option should be passed to the command
+line or status_ctl=on; should be specified in the
+config file if you want to use pdnsd&minus;ctl(8) to
+control pdnsd at runtime.
+
+&minus;t or
+&minus;&minus;tcp
+
+enables the TCP server thread.
+pdnsd will then serve TCP and UDP queries.
+
+&minus;vn
+
+sets the verbosity of pdnsd. n is a
+numeric argument between 0 (normal operation) to 3 (many
+messages for debugging).
+
+&minus;mxx
+
+sets the query method pdnsd uses. Possible values
+for xx are:
+
+to
+&minus; pdnsd will use TCP only. TCP queries usually take
+more time than UDP queries, but are more secure against
+certain attacks, where an attacker tries to guess your query
+id and to send forged answers. TCP queries are not supported
+by some name servers.
+
+tu
+&minus; pdnsd will try to use TCP, and will fall back to UDP
+if its connection is refused or times out.
+
+uo
+&minus; pdnsd will use UDP only. This is the fastest method,
+and should be supported by all name servers on the
+Internet.
+
+Additionally,
+"no" can be prepended to the &minus;&minus;status,
+&minus;&minus;daemon, &minus;&minus;debug and
+&minus;&minus;tcp options (e.g. &minus;&minus;notcp) to
+reverse their effect.
+
+USAGE
+
+pdnsd is
+usually run from a startup script. For pdnsd to work,
+You need to:-
+
+1. Tell your
+system to use pdnsd as the primary DNS server by
+modifying /etc/resolv.conf.
+
+2. Tell
+pdnsd to use an authentic source for DNS records, by
+including the IP addresses of one or more DNS servers,
+usually your ISP&rsquo;s DNS servers, in
+/etc/pdnsd.conf.
+
+For this, put
+the following line in your /etc/resolv.conf
+
+nameserver
+127.0.0.X
+
+where X can be
+any number. (I use 3). Comment out all other entries. You
+should put the same value in the server_ip= line in
+global section of /etc/pdnsd.conf. 
+If you want to use pdnsd as the DNS server for a
+small local network, you should use the IP address or name
+of the interface connected to this network instead of
+127.0.0.X.
+
+To tell
+pdnsd where to get DNS information from, add the
+following lines in /etc/pdnsd.conf:-
+
+server { 
+label= "myisp"; 
+ip=123.456.789.001,123.456.789.002; 
+proxy_only=on; 
+timeout=10; 
+}
+
+Note the
+opening and closing braces. Add more such server
+sections for each set of DNS servers you want pdnsd
+to query. Of course the configuration options shown here are
+just examples. More examples can be found in
+/etc/pdnsd.conf.sample or the pdnsd.conf in the
+documentation directory. See the pdnsd.conf(5) man
+page for all the possible options and their exact
+meaning.
+
+If you use a
+dial up connection, remember that ppp scripts usually
+replace /etc/resolv.conf when connection with the ISP
+is established. You need to configure ppp (or whatever you
+use to establish a connection) so that
+/etc/resolv.conf is not replaced every time a
+connection is established. Read the documentation for the
+scripts run when your network comes up.
+
+If you use
+pppconfig, specify &rsquo;none&rsquo; in the
+&rsquo;nameservers&rsquo; option in the
+&rsquo;advanced&rsquo; tab. If you use multiple ISPs, you
+should do this for each connection/account.
+
+If you use
+multiple ISPs, you should tell pdnsd which DNS
+servers have become available by calling
+pdnsd&minus;ctl, the pdnsd control utility, in
+a script (e.g. /etc/ppp/ip&minus;up when you use
+pppd) that is run when the connection is established. If the
+addresses of the DNS servers are obtained through some type
+of dynamic configuration protocol (e.g. pppd with the
+usepeerdns option or a DHCP client), you can pass the DNS
+server addresses as an extra argument to
+pdnsd&minus;ctl to configure pdnsd at run
+time. See the pdnsd&minus;ctl(8) man page for
+details.
+
+FILES
+
+/etc/pdnsd.conf
+is the pdnsd configuration file. The file format and
+configuration options are described in the
+pdnsd.conf(5) man page. You can find examples of
+almost all options in /etc/pdnsd.conf.sample.
+
+/var/cache/pdnsd/pdnsd.cache
+
+/var/cache/pdnsd/pdnsd.status
+is the status control socket, which must be enabled before
+you can use pdnsd&minus;ctl.
+
+/etc/init.d/pdnsd
+(the name and location of the start-up script may be
+different depending on your distribution.)
+
+/etc/resolv.conf
+
+/etc/defaults/pdnsd
+contains additional parameters or options which may be
+passed to pdnsd at boot time. This saves the hassle of
+fiddling with initscripts (not available on all
+distributions).
+
+BUGS
+
+The verbosity
+option -vn presently does not seem to have
+much effect on the amount of debug output. 
+Report any remaining bugs to the authors.
+
+CONFORMING TO
+
+pdnsd
+should comply with RFCs 1034 and 1035. As of version 1.0.0,
+RFC compliance has been improved and pdnsd is now believed
+(or hoped?) to be fully RFC compatible. It completely
+follows RFC 2181 (except for one minor issue in the FreeBSD
+port, see the documentation).
+
+It does
+NOT support the following features, of which most are
+marked optional, experimental or obsolete in these RFCs:
+
+&bull; Inverse
+queries
+
+&bull; Status
+queries
+
+&bull;
+Completion queries
+
+&bull;
+Namespaces other than IN (Internet)
+
+&bull; AXFR and
+IXFR queries (whole zone transfers); since pdnsd does not
+maintain zones, that should not violate the standard
+
+The following
+record types, that are extensions to the original DNS
+standard, are supported if given as options at compile time.
+(if you do not need them, you do not need to compile support
+for them into pdnsd and save cache and executable
+space):
+
+&bull; RP
+(responsible person, RFC 1183)
+
+&bull; AFSDB
+(AFS database location, RFC 1183)
+
+&bull; X25 (X25
+address, RFC 1183)
+
+&bull; ISDN
+(ISDN number/address, RFC 1183)
+
+&bull; RT
+(route through, RFC 1183)
+
+&bull; NSAP
+(Network Service Access Protocol address , RFC 1348)
+
+&bull; PX
+(X.400/RFC822 mapping information, RFC 1995)
+
+&bull; GPOS
+(geographic position, deprecated)
+
+&bull; AAAA
+(IPv6 address, RFC 1886)
+
+&bull; LOC
+(location, RFC 1876)
+
+&bull; EID
+(Nimrod EID)
+
+&bull; NIMLOC
+(Nimrod locator)
+
+&bull; SRV
+(service record, RFC 2052)
+
+&bull; ATMA
+(ATM address)
+
+&bull; NAPTR
+(URI mapping, RFC 2168)
+
+&bull; KX (key
+exchange, RFC 2230)
+
+SEE ALSO
+
+pdnsd&minus;ctl(8),
+pdnsd.conf(5), pppconfig(8),
+resolv.conf(5)
+
+More
+documentation is available in the doc/ subdirectory
+of the source, or in /usr/share/doc/pdnsd/ if you are
+using a binary package.
+
+AUTHORS
+
+pdnsd
+was originally written by Thomas Moestl,
+tmoestl [AT] gmx.net>, and was extensively
+revised by Paul Rombouts
+p.a.rombouts [AT] home.nl> (for versions
+1.1.8b1&minus;par and later).
+
+Several others
+have contributed to pdnsd; see files in the source or
+/usr/share/doc/pdnsd/ directory.
+
+This man page
+was written by Mahesh T. Pai
+paivakil [AT] yahoo.in> using the
+documents in /usr/share/docs/pdnsd/ directory for
+Debian, but can be used on other distributions too.
+
+Last revised:
+30 Jun 2005 by Paul Rombouts.
+
+COPYRIGHT
+
+This man page
+is a part of the pdnsd package, and may be distributed in
+original or modified form under terms of the GNU General
+Public License, as published by the Free Software
+Foundation; either version 2, or (at your option) any later
+version.
+
+You can find a
+copy of the GNU GPL in the file COPYING in the source
+or the /usr/share/common&minus;licenses/ directory if
+you are using a Debian system.

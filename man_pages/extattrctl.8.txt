@@ -1,0 +1,157 @@
+EXTATTRCTL(8) BSD System Manager&rsquo;s Manual
+EXTATTRCTL(8)
+
+NAME
+
+extattrctl &mdash; manage
+UFS1 extended attributes
+
+SYNOPSIS
+
+extattrctl start
+path 
+extattrctl stop path 
+extattrctl initattr [&minus;f]
+[&minus;p path] attrsize attrfile
+
+extattrctl showattr attrfile 
+extattrctl enable path attrnamespace attrname
+attrfile 
+extattrctl disable path attrnamespace
+attrname
+
+DESCRIPTION
+
+The extattrctl utility is
+the management utility for extended attributes over the UFS1
+file system. It allows the starting and stopping of extended
+attributes on a file system, as well as initialization of
+attribute backing files, and enabling and disabling of
+specific extended attributes on a file system.
+
+The first
+argument on the command line indicates the operation to be
+performed. Operation must be one of the following:
+
+start path
+
+Start extended attribute
+support on the file system named using path. The file
+system must be an UFS1 file system, and the UFS_EXTATTR
+kernel option must have been enabled.
+
+stop path
+
+Stop extended attribute support
+on the file system named using path. Extended
+attribute support must previously have been started.
+
+initattr
+[&minus;f] [&minus;p path] attrsize
+attrfile
+
+Create and initialize a file to
+use as an attribute backing file. You must specify a maximum
+per-inode size for the attribute in bytes in
+attrsize, as well as the file where the attribute
+will be stored, using attrfile.
+
+The
+&minus;f argument may be used to indicate that it is
+alright to overwrite an existing attribute backing file;
+otherwise, if the target file exists, an error will be
+returned.
+
+The
+&minus;p path argument may be used to
+preallocate space for all attributes rather than relying on
+sparse files to conserve space. This has the advantage of
+guaranteeing that space will be available for attributes
+when they are written, preventing low disk space conditions
+from denying attribute service.
+
+This file
+should not exist before running initattr.
+
+showattr
+attrfile
+
+Show the attribute header
+values in the attribute file named by attrfile.
+
+enable path
+attrnamespace attrname attrfile
+
+Enable an attribute named
+attrname in the namespace attrnamespace on the
+file system identified using path, and backed by
+initialized attribute file attrfile. Available
+namespaces are "user" and "system". The
+backing file must have been initialized using
+initattr before its first use. Attributes must have
+been started on the file system prior to the enabling of any
+attributes.
+
+disable path
+attrnamespace attrname
+
+Disable the attributed named
+attrname in namespace attrnamespace on the
+file system identified by path. Available namespaces
+are "user" and "system". The file system
+must have attributes started on it, and the attribute most
+have been enabled using enable.
+
+EXAMPLES
+
+extattrctl start /
+
+Start extended
+attributes on the root file system.
+
+extattrctl
+initattr 17 /.attribute/system/md5
+
+Create an
+attribute backing file in /.attribute/system/md5, and set
+the maximum size of each attribute to 17 bytes, with a
+sparse file used for storing the attributes.
+
+extattrctl
+enable / system md5 /.attribute/system/md5
+
+Enable an
+attribute named md5 on the root file system, backed from the
+file /.attribute/system/md5.
+
+extattrctl
+disable / md5
+
+Disable the
+attribute named md5 on the root file system.
+
+extattrctl stop
+/
+
+Stop extended
+attributes on the root file system.
+
+SEE ALSO
+
+ffs(7), getextattr(8),
+setextattr(8), extattr(9)
+
+HISTORY
+
+Extended attribute support was
+developed as part of the TrustedBSD Project, and introduced
+in FreeBSD 5.0. It was developed to support security
+extensions requiring additional labels to be associated with
+each file or directory.
+
+AUTHORS
+
+Robert N M Watson
+
+BSD
+March 30, 2000 BSD

@@ -1,0 +1,404 @@
+NG_CCATM(4) BSD Kernel Interfaces Manual NG_CCATM(4)
+
+NAME
+
+ng_ccatm &mdash; ATM Call
+Control netgraph node type
+
+SYNOPSIS
+
+#include
+
+#include  
+#include  
+#include  
+#include  
+#include  
+#include  
+#include  
+#include 
+
+DESCRIPTION
+
+The ng_ccatm node
+implements the API specified by the ATM Forum for access to
+ATM services (see ATM-Forum document af-saa-0108).
+This document specifies the semantics of the API, not the
+exact language binding. For this reason, it is expected that
+this implementation is neither compile-time nor binary
+compatible with other implementations of this API. It
+should, however, be fairly straightforward to convert
+between different API implementations.
+
+This node is
+usually stacked on top of one or more UNI nodes (see
+ng_uni(4)). Each of these hooks appears as a
+&rsquo;&rsquo;port&rsquo;&rsquo; to the user of the node. It
+also has one hook connected to the ILMI daemon for
+management purposes.
+
+The node is
+removed when it receives a NGM_SHUTDOWN messages or when all
+hooks are disconnected.
+
+HOOKS
+
+The node understands a number of
+hooks with predefined names and an unlimited number of hooks
+for user connections. The predefined names are:
+
+uniNNN
+
+These hooks
+stack the ng_ccatm node on top of a UNI stack. The
+node expects the interface on these hooks to conform to the
+upper interface specified in ng_uni(4). These hooks are
+forced into queuing mode, so that there are no circular
+calls from call control to UNI and UNI back to call control.
+The NNN in the hook name is the decimal port number
+and should not be zero. The port number is a 32-bit unsigned
+integer.
+
+manage
+
+This hook
+should be connected to the ILMI daemon. No data is ever sent
+on this hook and all received data is discarded. The hook is
+used to send control messages along.
+
+dump
+
+On receipt of a
+NGM_CCATM_DUMP command a textual description of the current
+state of the node is sent out of this hook. This text is
+sent as one large message consisting of more than one
+mbuf.
+
+All other hook
+names are taken to be user hooks and correspond to an ATM
+endpoint as specified in the ATM Forum document. The
+interface on these hooks is defined in
+atmapi.h> and uses a structure
+
+struct ccatm_op
+{
+
+uint32_t
+
+op;
+
+/* request code */
+
+u_char
+
+data[];
+
+/* optional data */
+
+};
+
+This structure
+is followed directly by the data for the operation. The
+opcode is one of the following:
+
+enum atmop {
+
+ATMOP_RESP,
+
+ATMOP_ABORT_CONNECTION,
+
+ATMOP_ACCEPT_INCOMING_CALL,
+
+ATMOP_ADD_PARTY,
+
+ATMOP_ADD_PARTY_REJECT,
+
+ATMOP_ADD_PARTY_SUCCESS,
+
+ATMOP_ARRIVAL_OF_INCOMING_CALL,
+
+ATMOP_CALL_RELEASE,
+
+ATMOP_CONNECT_OUTGOING_CALL,
+
+ATMOP_DROP_PARTY,
+
+ATMOP_GET_LOCAL_PORT_INFO,
+
+ATMOP_P2MP_CALL_ACTIVE,
+
+ATMOP_P2P_CALL_ACTIVE,
+
+ATMOP_PREPARE_INCOMING_CALL,
+
+ATMOP_PREPARE_OUTGOING_CALL,
+
+ATMOP_QUERY_CONNECTION_ATTRIBUTES,
+
+ATMOP_REJECT_INCOMING_CALL,
+
+ATMOP_SET_CONNECTION_ATTRIBUTES,
+
+ATMOP_WAIT_ON_INCOMING_CALL,
+
+ATMOP_SET_CONNECTION_ATTRIBUTES_X,
+
+ATMOP_QUERY_CONNECTION_ATTRIBUTES_X,
+
+ATMOP_QUERY_STATE
+
+};
+
+These codes
+correspond directly to the operations specified in the ATM
+Forum document with the following exceptions:
+
+ATMOP_RESP
+
+As discussed in ng_uni(4), this
+is used to &rsquo;&rsquo;synchronify&rsquo;&rsquo; the
+interface. The argument is a
+
+struct atm_resp
+{
+
+int32_t
+
+resp;
+
+uint32_t
+
+data;
+
+/* type of attached data */
+
+};
+
+If the response
+code resp is zero, the node has accepted the user
+request. If something goes wrong, resp contains an
+error code. For requests that return data, data
+contains a code describing the type of data and the data
+itself starts immediately after the structure.
+
+ATMOP_QUERY_CONNECTION_ATTRIBUTES_X
+
+This is the same as
+ATMOP_QUERY_CONNECTION_ATTRIBUTES except that it allows to
+query several attributes within one request.
+
+ATMOP_SET_CONNECTION_ATTRIBUTES_X
+
+This is the same as
+ATMOP_SET_CONNECTION_ATTRIBUTES except that it allows to set
+several attributes within one request. The list of
+attributes is followed directly by the attributes in the
+same order as they appear in the list.
+
+If a user hook
+is disconnected, an active connection on that hook is
+released. Incoming connections waiting to be accepted are
+reoffered to other listening hooks or rejected.
+
+CONTROL MESSAGES
+
+Besides the generic messages the
+node understands the following special messages:
+
+NGM_CCATM_DUMP (dump)
+
+This causes the internal state
+of the node to be dumped in ASCII to the dump
+hook.
+
+NGM_CCATM_STOP (stop)
+
+This message causes all
+connections on that port to be aborted (not released!) and
+all ATM endpoints which are bound to that port to be closed.
+It stops processing of all messages from the UNI stack on
+that port UNI stack. The argument is a
+
+struct
+ngm_ccatm_port {
+
+uint32_t
+
+port;
+
+};
+
+NGM_CCATM_START
+(start)
+
+Start processing on the port.
+The argument is a ngm_ccatm_port structure.
+
+NGM_CCATM_CLEAR
+(clear)
+
+This message takes a
+ngm_ccatm_port structure and clears all prefixes and
+addresses on that port. If the port number is zero, all
+ports are cleared.
+
+NGM_CCATM_GET_ADDRESSES
+(get_addresses)
+
+Get the list of all registered
+addresses on the given port. The argument is a
+ngm_ccatm_port structure and the result is a
+ngm_ccatm_get_addresses structure:
+
+struct
+ngm_ccatm_get_addresses {
+
+uint32_t
+
+count;
+
+struct ngm_ccatm_address_req addr[0];
+
+}; 
+struct ngm_ccatm_address_req {
+
+uint32_t
+
+port;
+
+struct uni_addr
+
+addr;
+
+};
+
+If the
+port field is zero in the request, all addresses on
+all ports are returned. If it is not zero, only the
+addresses on that port are reported. The number of addresses
+is returned in the count field.
+
+NGM_CCATM_ADDRESS_REGISTERED
+(address_reg)
+
+This message is used by ILMI to
+inform the ng_ccatm node that a previous address
+registration request was successful. This causes the node to
+activate that address. The argument to the message is a
+ngm_ccatm_address_req structure.
+
+NGM_CCATM_ADDRESS_UNREGISTERED
+(address_unreg)
+
+This message is used by ILMI to
+inform the ng_ccatm node that an address has been
+unregistered. The node clears that address from its tables.
+The argument is a ngm_ccatm_address_req
+structure.
+
+NGM_CCATM_SET_PORT_PARAM
+(set_port_param)
+
+This request sets the
+parameters on the given port. The argument is a
+
+struct
+ngm_ccatm_atm_port {
+
+uint32_t port;
+
+/* port for which to set parameters */
+
+uint32_t pcr;
+
+/* port peak cell rate */
+
+uint32_t max_vpi_bits;
+
+uint32_t max_vci_bits;
+
+uint32_t max_svpc_vpi;
+
+uint32_t max_svcc_vpi;
+
+uint32_t min_svcc_vci;
+
+uint8_t
+
+esi[6];
+
+uint32_t num_addr;
+
+};
+
+This should be
+used only by ILMI and when that port is stopped and the
+address and prefix tables of that port are empty. The
+num_addr field is ignored.
+
+NGM_CCATM_GET_PORT_PARAM
+(get_port_param)
+
+Retrieve the parameters of the
+given port. The argument is a ngm_ccatm_port and the
+result a ngm_ccatm_atm_port.
+
+NGM_CCATM_GET_PORTLIST
+(get_portlist)
+
+Get a list of all available
+ports on that node. This is returned as a
+
+struct
+ngm_ccatm_portlist {
+
+uint32_t
+
+nports;
+
+uint32_t
+
+ports[];
+
+};
+
+NGM_CCATM_GETSTATE
+(getstate)
+
+Return the state of a port. The
+argument is a struct ngm_ccatm_port and the return
+values as a uint32_t.
+
+NGM_CCATM_SETLOG
+(setlog)
+
+This requests sets a new
+logging level and returns the previous one. The argument is
+either a uint32_t in which case it specifies the new
+logging level, or may be empty in which case just the old
+level is returned as a uint32_t.
+
+NGM_CCATM_RESET
+(reset)
+
+Reset the node. This is allowed
+only if the number of user hooks and connected UNI stacks is
+zero.
+
+NGM_CCATM_GET_EXSTAT
+
+Return extended status
+information from the node.
+
+SEE ALSO
+
+netgraph(4), ng_uni(4),
+ngctl(8)
+
+AUTHORS
+
+Harti Brandt
+harti [AT] FreeBSD.org>
+
+BSD
+March 10, 2005 BSD

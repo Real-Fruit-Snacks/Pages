@@ -1,0 +1,186 @@
+NAME
+
+git-annex-initremote
+- creates a special (non-git) remote
+
+SYNOPSIS
+
+git annex
+initremote name type=value [param=value ...]
+
+DESCRIPTION
+
+Creates a new
+special remote, and adds it to .git/config.
+
+Example Amazon
+S3 remote:
+
+git annex
+initremote mys3 type=S3 encryption=hybrid
+keyid=me [AT] example.com datacenter=EU
+
+Many different
+types of special remotes are supported by git-annex. For a
+list and details, see
+https://git-annex.branchable.com/special_remotes/&gt;
+
+The
+remote&rsquo;s configuration is specified by the parameters
+passed to this command. Different types of special remotes
+need different configuration values, so consult the
+documentation of a special remote for details. The command
+will prompt for any required parameters you leave out; you
+can also pass --whatelse to see additional parameters.
+
+A few
+parameters that are supported by all special remotes are
+documented in the next section below.
+
+Once a special
+remote has been initialized once with this command, other
+clones of the repository can also be set up to access it
+using git annex enableremote.
+
+The name you
+provide for the remote can&rsquo;t be one that&rsquo;s been
+used for any other special remote before, because
+git-annex enableremote uses the name to identify
+which special remote to enable. If some old special remote
+that&rsquo;s no longer used has taken the name you want to
+reuse, you might want to use git annex
+renameremote.
+
+OPTIONS
+
+--whatelse
+/ -w
+
+Describe
+additional configuration parameters that you could
+specify.
+
+For example, if
+you know you want a S3 remote, but forget how to configure
+it:
+
+git annex
+initremote mys3 type=S3 --whatelse
+
+For a
+machine-readable list of the parameters, use this with
+--json.
+
+--fast
+
+When initializing a remote that uses encryption, a
+cryptographic key is created. This requires sufficient
+entropy. If initremote seems to hang or take a long time
+while generating the key, you may want to Ctrl-c it and
+re-run with --fast, which causes it to use a
+lower-quality source of randomness. (Ie, /dev/urandom
+instead of /dev/random)
+
+--sameas=remote
+
+Use this when the new special
+remote uses the same underlying storage as some other
+remote. This will result in the new special remote having
+the same uuid as the specified remote, and either can be
+used to access the same content.
+
+The
+remote can be the name of a git remote, or the
+description or uuid of any git-annex repository.
+
+When using this
+option, the new remote inherits the encryption settings of
+the existing remote, so you should not specify any
+encryption parameters. No other configuration is inherited
+from the existing remote.
+
+This will only
+work if both remotes use the underlying storage in
+compatible ways. See this page for information about known
+compatabilities.
+http://git-annex.branchable.com/tips/multiple_remotes_accessing_the_same_data_store/&gt;
+
+--private
+
+Avoid recording information
+about the special remote in the git-annex branch. The
+special remote will only be usable from the repository where
+it was created.
+
+--json
+
+Enable JSON output. This is intended to be parsed by
+programs that use git-annex.
+
+--json-error-messages
+
+Messages that would normally be
+output to standard error are included in the JSON
+instead.
+
+Also the
+git-annex-common-options(1) can be used.
+
+COMMON CONFIGURATION PARAMETERS
+
+encryption
+
+Almost all
+special remotes support encryption. You will need to specify
+what encryption, if any, to use.
+
+If you do not
+want any encryption, use encryption=none
+
+To encrypt to a
+GPG key, use encryption=hybrid keyid=$keyid ... and
+fill in the GPG key id (or an email address associated with
+a GPG key).
+
+For details
+about this and other encrpytion settings, see
+https://git-annex.branchable.com/encryption/&gt; or
+--whatelse
+
+autoenable
+
+To avoid git annex
+enableremote needing to be run, you can pass
+"autoenable=true". Then when git-annex is run in a
+new clone, it will attempt to enable the special remote. Of
+course, this works best when the special remote does not
+need anything special to be done to get it enabled.
+
+cost
+
+Specify this to override the default cost of the special
+remote. This configuration can be overridden by the local
+git config, eg remote.name.annex-cost.
+
+uuid
+
+Normally, git-annex initremote generates a new UUID for
+the new special remote. If you want to, you can specify a
+UUID for it to use, by passing a uuid=whatever parameter.
+This can be useful in some unusual situations. But if in
+doubt, don&rsquo;t do this.
+
+SEE ALSO
+
+git-annex(1)
+
+git-annex-enableremote(1)
+
+git-annex-configremote(1)
+
+git-annex-renameremote(1)
+
+AUTHOR
+
+Joey Hess
+id [AT] joeyh.name>

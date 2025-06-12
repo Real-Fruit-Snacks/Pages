@@ -1,0 +1,166 @@
+VGA(4) BSD Kernel Interfaces Manual VGA(4)
+
+NAME
+
+vga &mdash; generic video
+card interface
+
+SYNOPSIS
+
+options VESA 
+options VESA_DEBUG=N 
+options VGA_ALT_SEQACCESS 
+options VGA_NO_FONT_LOADING 
+options VGA_NO_MODE_CHANGE 
+options VGA_SLOW_IOACCESS 
+options VGA_WIDTH90 
+device vga
+
+In
+/boot/device.hints:
+
+hint.vga.0.at="isa"
+
+DESCRIPTION
+
+The vga driver is a
+generic video card driver which provides access to video
+cards. This driver is required for the console driver
+syscons(4). The console driver will call the vga
+driver to manipulate video hardware (changing video modes,
+loading font, etc).
+
+The vga
+driver supports the standard video cards: MDA, CGA, EGA and
+VGA. In addition, the driver can utilize VESA BIOS
+extensions if the video card supports them. VESA support can
+either be statically included in the kernel or can be loaded
+as a separate module.
+
+In order to
+statically link the VESA support to the kernel, the VESA
+option (see below) must be defined in the kernel
+configuration file.
+
+The vesa
+module can be dynamically loaded into the kernel using
+kldload(8).
+
+DRIVER CONFIGURATION
+
+Kernel Configuration
+Options 
+The following kernel configuration options (see config(8))
+can be used to control the vga driver. These options
+provide compatibility with certain VGA cards.
+
+VGA_ALT_SEQACCESS
+
+You may want to try this option
+if the mouse pointer is not drawn correctly or the font does
+not seem to be loaded properly on the VGA card. However, it
+may cause flicker on some systems.
+
+VGA_SLOW_IOACCESS
+
+Older VGA cards may require
+this option for proper operation. It makes the driver
+perform byte-wide I/O to VGA registers and slow down a
+little.
+
+VGA_WIDTH90
+
+This option enables 90 column
+modes: 90x25, 90x30, 90x43, 90x50, 90x60. These modes are
+not always supported by the video card and the display. It
+is highly likely that LCD display cannot work with these
+modes.
+
+The following
+options add optional features to the driver.
+
+VESA
+
+Add VESA BIOS
+support to the driver. If the VGA card has the VESA BIOS
+extension 1.2 or later, this option will utilize the VESA
+BIOS service to switch to high resolution modes.
+
+VESA_DEBUG=N
+
+Set the VESA support debug
+level to N. The default value is zero, which
+suppresses all debugging output.
+
+The following
+options will remove some features from the vga driver
+and save kernel memory.
+
+VGA_NO_FONT_LOADING
+
+The vga driver can load
+software font to EGA and VGA cards. This option removes this
+feature. Note that if you use this option and still wish to
+use the mouse on the console then you must also use the
+SC_ALT_MOUSE_IMAGE option. See syscons(4).
+
+VGA_NO_MODE_CHANGE
+
+This option prevents the driver
+from changing video modes.
+
+EXAMPLES
+
+Your kernel configuration should
+normally have:
+
+device vga
+
+And you need the
+following line in /boot/device.hints.
+
+hint.vga.0.at="isa"
+
+The following
+lines should be included in the kernel configuration file in
+order to enable the VESA BIOS Extension support.
+
+options VESA
+
+device vga
+
+If you do not
+want VESA support included in the kernel, but want to use
+occasionally, do not add the VESA option. And load the
+vesa module as desired:
+
+kldload
+vesa
+
+SEE ALSO
+
+vgl(3), syscons(4), config(8),
+kldload(8), kldunload(8)
+
+STANDARDS 
+Video Electronics Standards Association
+
+,
+
+VESA BIOS Extension (VBE) .
+
+HISTORY
+
+The vga driver first
+appeared in FreeBSD 3.1.
+
+AUTHORS
+
+The vga driver was
+written by S&oslash;ren Schmidt
+sos [AT] FreeBSD.org> and Kazutaka Yokota
+yokota [AT] FreeBSD.org>. This manual page was
+written by Kazutaka Yokota.
+
+BSD
+June 30, 1999 BSD

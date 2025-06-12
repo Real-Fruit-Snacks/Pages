@@ -1,0 +1,267 @@
+PKG_DELETE(1) BSD General Commands Manual
+PKG_DELETE(1)
+
+NAME
+
+pkg_delete &mdash; a
+utility for deleting previously installed software package
+distributions
+
+SYNOPSIS
+
+pkg_delete
+[&minus;dDfGinrvxX]
+[&minus;p prefix] pkg-name ...
+
+pkg_delete &minus;a [flags]
+
+DESCRIPTION
+
+The pkg_delete command is
+used to delete packages that have been previously installed
+with the pkg_add(1) command.
+
+WARNING
+
+Since the
+pkg_delete command may execute scripts or programs
+provided by a package file, your system may be susceptible
+to &rsquo;&rsquo;trojan horses&rsquo;&rsquo; or other subtle
+attacks from miscreants who create dangerous package
+files.
+
+You are
+advised to verify the competence and identity of those who
+provide installable package files. For extra protection,
+examine all the package control files in the package record
+directory (/var/db/pkg//). Pay particular
+attention to any +INSTALL, +POST-INSTALL, +DEINSTALL,
++POST-DEINSTALL, +REQUIRE or +MTREE_DIRS files, and inspect
+the +CONTENTS file for @cwd, @mode
+(check for setuid), @dirrm,
+@exec, and @unexec directives,
+and/or use the pkg_info(1) command to examine
+the installed package control files.
+
+OPTIONS
+
+The following command line
+options are supported:
+
+pkg-name ...
+
+The named packages are
+deinstalled.
+
+&minus;a
+
+Unconditionally
+delete all currently installed packages.
+
+&minus;i
+
+Request
+confirmation before attempting to delete each package,
+regardless whether or not the standard input device is a
+terminal.
+
+&minus;v
+
+Turn on verbose
+output.
+
+&minus;D
+
+If a
+deinstallation script exists for a given package, do not
+execute it.
+
+&minus;n
+
+Don&rsquo;t
+actually deinstall a package, just report the steps that
+would be taken if it were.
+
+&minus;p
+prefix
+
+Set prefix as the
+directory in which to delete files from any installed
+packages which do not explicitly set theirs. For most
+packages, the prefix will be set automatically to the
+installed location by pkg_add(1).
+
+&minus;d
+
+Remove empty
+directories created by file cleanup. By default, only
+files/directories explicitly listed in a package&rsquo;s
+contents (either as normal files/directories or with the
+@dirrm directive) will be removed at deinstallation
+time. This option tells pkg_delete to also remove any
+directories that were emptied as a result of removing the
+package.
+
+&minus;f
+
+Force removal
+of the package, even if a dependency is recorded or the
+deinstall or require script fails.
+
+&minus;G
+
+Do not try to
+expand shell glob patterns in the pkg-name when
+selecting packages to be deleted (by default
+pkg_delete automatically expands shell glob patterns
+in the pkg-name).
+
+&minus;x
+
+Treat the
+pkg-name as a regular expression and delete all
+packages whose names match that regular expression. Multiple
+regular expressions could be provided, in that case
+pkg_delete deletes all packages that match at least
+one regular expression from the list.
+
+&minus;X
+
+Like
+&minus;x, but treats the pkg-name as an
+extended regular expression.
+
+&minus;r
+
+Recursive
+removal. In addition to specified packages, delete all
+packages that depend on those packages as well.
+
+TECHNICAL DETAILS
+
+The pkg_delete utility
+does pretty much what it says. It examines installed package
+records in /var/db/pkg/, deletes the
+package contents, and finally removes the package records.
+If the environment variable PKG_DBDIR is set, this overrides
+the /var/db/pkg/ path shown above.
+
+If a package is
+required by other installed packages, pkg_delete will
+list those dependent packages and refuse to delete the
+package (unless the &minus;f option is given).
+
+If the package
+contains a require file (see pkg_create(1)), then
+this is executed first as
+
+require
+ DEINSTALL
+
+(where pkg-name is the
+name of the package in question and DEINSTALL is a
+keyword denoting that this is a deinstallation) to see
+whether or not deinstallation should continue. A non-zero
+exit status means no, unless the &minus;f option is
+specified.
+
+If a
+deinstall script exists for the package, it is
+executed before any files are removed. It is this
+script&rsquo;s responsibility to clean up any additional
+messy details around the package&rsquo;s installation, since
+all pkg_delete knows how to do is delete the files
+created in the original distribution. The deinstall
+script is called as:
+
+script
+ DEINSTALL
+
+where pkg-name is the
+name of the package in question and DEINSTALL is a
+keyword denoting this as the pre-deinstallation phase.
+
+Note: The
+DEINSTALL keyword will not appear if separate scripts
+for deinstall and post-deinstall are given during package
+creation time (using the &minus;k and &minus;K
+flags to pkg_create(1)).
+
+If a
+post-deinstall script exists for the package, it is
+executed after all files are removed. It is this
+script&rsquo;s responsibility to clean up any additional
+messy details around the package&rsquo;s installation, and
+leave the system (hopefully) in the same state that it was
+prior to the installation of the package.
+
+The
+post-deinstall script is called as:
+
+script
+ POST-DEINSTALL
+
+where pkg-name is the
+name of the package in question and POST-DEINSTALL is
+a keyword denoting this as the post-deinstallation
+phase.
+
+Note: The
+POST-DEINSTALL keyword will not appear if separate
+scripts for deinstall and post-deinstall are given during
+package creation time (using the &minus;k and
+&minus;K flags to pkg_create(1)).
+
+Reasoning behind
+passing keywords such as DEINSTALL and
+POST-DEINSTALL is that it lets you potentially write
+only one program/script that handles all aspects of
+installation and deletion.
+
+But experience
+has proved that this is a lot more difficult to maintain and
+is not as advantageous as having separate scripts that
+handle each aspect of installation and deinstallation.
+
+All scripts are
+called with the environment variable PKG_PREFIX set to the
+installation prefix (see the &minus;p option above).
+This allows a package author to write a script that reliably
+performs some action on the directory where the package is
+installed, even if the user might have changed it by
+specifying the &minus;p option when running
+pkg_delete or pkg_add.
+
+ENVIRONMENT
+
+The environment variable
+PKG_DBDIR specifies an alternative location for the
+installed package database.
+
+FILES 
+/var/db/pkg
+
+Default
+location of the installed package database.
+
+SEE ALSO
+
+pkg_add(1), pkg_create(1),
+pkg_info(1), pkg_version(1), mktemp(3), mtree(8)
+
+AUTHORS
+
+Jordan Hubbard
+
+CONTRIBUTORS
+
+John Kohl
+jtk [AT] rational.com>, Oliver Eikemeier
+eik [AT] FreeBSD.org>
+
+BUGS
+
+Sure to be some.
+
+BSD
+June 29, 2004 BSD

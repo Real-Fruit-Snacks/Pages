@@ -1,0 +1,115 @@
+NAME
+
+userdbpw -
+create an encrypted password
+
+SYNOPSIS
+
+userdbpw [[-md5] |
+[-hmac-md5] | [-hmac-sha1]] |userdb {name} set
+{field} 
+
+DESCRIPTION
+
+userdbpw
+enables secure entry of encrypted passwords into
+/etc/courier/userdb.
+
+userdbpw
+reads a single line of text on standard input, encrypts it,
+and prints the encrypted result to standard output.
+
+If standard
+input is attached to a terminal device, userdbpw
+explicitly issues a "Password: " prompt on
+standard error, and turns off echo while the password is
+entered.
+
+The -md5
+option is available on systems that use MD5-hashed passwords
+(such as systems that use the current version of the PAM
+library for authenticating, with MD5 passwords enabled).
+This option creates an MD5 password hash, instead of using
+the traditional crypt() function.
+
+-hmac-md5
+and -hmac-sha1 options are available only if the
+userdb library is installed by an application that uses a
+challenge/response authentication mechanism.
+-hmac-md5 creates an intermediate HMAC context using
+the MD5 hash function. -hmac-sha1 uses the SHA1 hash
+function instead. Whether either HMAC function is actually
+available depends on the actual application that installs
+the userdb library.
+
+Note that even
+though the result of HMAC hashing looks like an encrypted
+password, it's really not. HMAC-based challenge/response
+authentication mechanisms require the cleartext password to
+be available as cleartext. Computing an intermediate HMAC
+context does scramble the cleartext password, however if its
+compromised, it WILL be possible for an attacker to
+succesfully authenticate. Therefore, applications that use
+challenge/response authentication will store intermediate
+HMAC contexts in the "pw" fields in the userdb
+database, which will be compiled into the userdbshadow.dat
+database, which has group and world permissions turned off.
+The userdb library also requires that the cleartext userdb
+source for the userdb.dat and userdbshadow.dat databases is
+also stored with the group and world permissions turned
+off.
+
+userdbpw
+is usually used together in a pipe with userdb, which
+reads from standard input. For example:
+
+userdbpw
+-md5 | userdb users/john set systempw
+
+or:
+
+userdbpw
+-hmac-md5 | userdb users/john set hmac-md5pw
+
+These commands
+set the systempw field in the record for the user
+john in /etc/courier/userdb/users file, and the
+hmac-md5pw field. Don't forget to run
+makeuserdb for the change to take effect.
+
+The following
+command does the same thing:
+
+userdb
+users/john set systempw=SECRETPASSWORD
+
+However, this
+command passes the secret password as an argument to the
+userdb command, which can be viewed by anyone who
+happens to run ps(1) at the same time. Using
+userdbpw allows the secret password to be specified
+in a way that cannot be easily viewed by ps(1).
+
+SEE ALSO
+
+userdb(8)
+[1]
+,
+makeuserdb(8)
+[2]
+
+NOTES
+
+1. 
+
+userdb(8) 
+
+[set
+$man.base.url.for.relative.links]/userdb.html
+
+2. 
+
+makeuserdb(8) 
+
+[set
+$man.base.url.for.relative.links]/makeuserdb.html

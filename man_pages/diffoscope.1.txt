@@ -1,0 +1,482 @@
+NAME
+
+diffoscope -
+in-depth comparison of files, archives, and directories
+
+SYNOPSIS
+
+diffoscope
+--help 
+diffoscope [OPTIONS] [--json output_diff]
+path1 path2 
+diffoscope [OPTIONS] diff 
+diffoscope [OPTIONS] diff
+
+DESCRIPTION
+
+diffoscope will
+try to get to the bottom of what makes files or directories
+different. It will recursively unpack archives of many kinds
+and transform various binary formats into more
+human-readable form to compare them. It can compare two
+tarballs, ISO images, or PDF just as easily.
+
+It can be
+scripted through error codes, and a report can be produced
+with the detected differences. The report can be text or
+HTML. When no type of report has been selected, diffoscope
+defaults to write a text report on the standard output.
+
+diffoscope was
+initially started by the "reproducible builds"
+Debian project and now being developed as part of the
+(wider) ???Reproducible Builds??? initiative. It is
+meant to be able to quickly understand why two builds of the
+same package produce different outputs. diffoscope was
+previously named debbindiff.
+
+See the
+COMMAND-LINE EXAMPLES section further below to get
+you started, as well as more detailed explanations of all
+the command-line options. The same information is also
+available in /usr/share/doc/diffoscope/README.rst or
+similar.
+
+path1
+
+First file or directory to compare. Specify
+"-" to read a diffoscope diff from stdin.
+
+path2
+
+Second file or directory to compare. If omitted, no
+comparison is done but instead we read a diffoscope diff
+from path1 and will output this in the formats specified by
+the rest of the command line.
+
+optional
+arguments: 
+--debug
+
+Display debug messages
+
+--pdb
+
+Open the Python pdb debugger in case of crashes
+
+--status-fd FD
+
+Send machine-readable status to
+file descriptor FD
+
+--progress,
+--no-progress
+
+Show an approximate progress
+bar. Default: yes if stdin is a tty, otherwise no.
+
+--no-default-limits
+
+Disable most default output
+limits and diff calculation limits.
+
+output
+types: 
+--text OUTPUT_FILE
+
+Write plain text output to
+given file (use - for stdout)
+
+--text-color WHEN
+
+When to output color diff. WHEN
+is one of {never, auto, always}. Default: auto, meaning yes
+if the output is a terminal, otherwise no.
+
+--output-empty
+
+If there was no difference,
+then output an empty diff for each output type that was
+specified. In --text output, an empty file is
+written.
+
+--html OUTPUT_FILE
+
+Write HTML report to given file
+(use - for stdout)
+
+--html-dir
+OUTPUT_DIR
+
+Write multi-file HTML report to
+given directory
+
+--css URL
+
+Link to an extra CSS for the
+HTML report
+
+--jquery URL
+
+URL link to jQuery, for
+--html and --html-dir output. If this is a
+non-existent relative URL, diffoscope will create a symlink
+to a system installation. (Paths searched:
+/usr/share/javascript/jquery/jquery.js.) If not
+given, --html output will not use JS but
+--htmldir will if it can be found; give
+"disable" to disable JS on all outputs.
+
+--json OUTPUT_FILE
+
+Write JSON text output to given
+file (use - for stdout)
+
+--markdown
+OUTPUT_FILE
+
+Write Markdown text output to
+given file (use - for stdout)
+
+--restructured-text
+OUTPUT_FILE
+
+Write RsT text output to given
+file (use - for stdout)
+
+--difftool TOOL
+
+Compare differences one-by-one
+using the specified external command similar to
+git-difftool(1)
+
+--profile
+[OUTPUT_FILE]
+
+Write profiling info to given
+file (use - for stdout)
+
+output
+limits: 
+--max-text-report-size BYTES
+
+Maximum bytes written in
+--text report. (0 to disable, default: 0)
+
+--max-report-size
+BYTES
+
+Maximum bytes of a report in a
+given format, across all of its pages. Note that some
+formats, such as --html, may be restricted by even
+smaller limits such as --max-page-size. (0 to
+disable, default: 41943040)
+
+--max-diff-block-lines
+LINES
+
+Maximum number of lines output
+per unified-diff block, across all pages. (0 to disable,
+default: 1024)
+
+--max-page-size
+BYTES
+
+Maximum bytes of the top-level
+(--html-dir) or sole (--html) page. (default:
+41943040, remains in effect even with
+--no-default-limits)
+
+--max-page-diff-block-lines
+LINES
+
+Maximum number of lines output
+per unified-diff block on the top-level (--html-dir)
+or sole (--html) page, before spilling it into a
+child page (--html-dir) or skipping the rest of the
+diff block. (default: 128, remains in effect even with
+--no-default-limits)
+
+diff
+calculation: 
+--new-file
+
+Treat absent files as empty
+
+--exclude
+GLOB_PATTERN
+
+Exclude files whose names
+(including any directory part) match GLOB_PATTERN. Use this
+option to ignore files based on their names.
+
+--exclude-command
+REGEX_PATTERN
+
+Exclude commands that match
+REGEX_PATTERN. For example
+&rsquo;^readelf.*\s--debug-dump=info&rsquo; and
+&rsquo;^radare2.*&rsquo; can takea long time and differences
+here are likely secondary differences caused by something
+represented elsewhere. Use this option to disable commands
+that use a lot of resources.
+
+--exclude-directory-metadata
+{auto,yes,no,recursive}
+
+Exclude directory metadata.
+Useful if comparing files whose filesystem-level metadata is
+not intended to be distributed to other systems. This is
+true for most distributions package builders, but not true
+for the output of commands such as &rsquo;make
+install&rsquo;. Metadata of archive members remain
+un-excluded except if "recursive" choice is set.
+Use this option to ignore permissions, timestamps, xattrs
+etc. Default: False if comparing two directories, else True.
+Note that "file" metadata actually a property of
+its containing directory, and is not relevant when
+distributing the file across systems.
+
+--diff-mask
+REGEX_PATTERN
+
+Replace/unify substrings that
+match regular expression REGEX_PATTERN from output strings
+before applying diff. For example, to filter out a version
+number or changed path.
+
+--fuzzy-threshold
+FUZZY_THRESHOLD
+
+Threshold for fuzzy-matching (0
+to disable, 60 is default, 400 is high fuzziness)
+
+--tool-prefix-binutils
+PREFIX
+
+Prefix for binutils program
+names, e.g. "aarch64-linux-gnu-" for a
+foreign-arch binary or "g" if you&rsquo;re on a
+non-GNU system.
+
+--max-diff-input-lines
+LINES
+
+Maximum number of lines fed to
+diff(1) (0 to disable, default: 4194304)
+
+--max-container-depth
+DEPTH
+
+Maximum depth to recurse into
+containers. (Cannot be disabled for security reasons,
+default: 50)
+
+--max-diff-block-lines-saved
+LINES
+
+Maximum number of lines saved
+per diff block. Most users should not need this, unless you
+run out of memory. This truncates diff(1) output before
+emitting it in a report, and affects all types of output,
+including --text and --json. (0 to disable,
+default: 0)
+
+--use-dbgsym WHEN
+
+When to automatically use
+corresponding -dbgsym packages when comparing .deb
+files. WHEN is one of {no, auto, yes}. Default: auto,
+meaning yes if two .changes or .buildinfo files are
+specified, otherwise no.
+
+--force-details
+
+Force recursing into the depths
+of file formats even if files have the same content, only
+really useful for debugging diffoscope. Default: False
+
+information
+commands: 
+--help, -h
+
+Show this help and exit
+
+--version
+
+Show program&rsquo;s version
+number and exit
+
+--list-tools
+[DISTRO]
+
+Show external tools required
+and exit. DISTRO can be one of {arch, debian, FreeBSD,
+guix}. If specified, the output will list packages in that
+distribution that satisfy these dependencies.
+
+--list-debian-substvars
+
+List packages needed for Debian
+in &rsquo;substvar&rsquo; format.
+
+--list-missing-tools
+[DISTRO]
+
+Show missing external tools and
+exit. DISTRO can be one of {arch, debian, FreeBSD, guix}. If
+specified, the output will list packages in that
+distribution that satisfy these dependencies.
+
+file formats
+supported: 
+Android APK files, Android boot images, Apple Xcode
+
+mobile provisioning files,
+ar(1) archives, ASM Function, Berkeley DB database files,
+bzip2 archives, character/block devices, ColorSync colour
+profiles (.icc), Coreboot CBFS filesystem images, cpio
+archives, Dalvik .dex files, Debian .buildinfo files, Debian
+.changes files, Debian source packages (.dsc), Device Tree
+Compiler blob files, directories, ELF binaries,
+ext2/ext3/ext4/btrfs/fat filesystems, FreeDesktop Fontconfig
+cache files, FreePascal files (.ppu), Gettext message
+catalogues, GHC Haskell .hi files, GIF image files, Git
+repositories, GNU R database files (.rdb), GNU R Rscript
+files (.rds), Gnumeric spreadsheets, GPG keybox databases,
+Gzipped files, Hierarchical Data Format database, ISO 9660
+CD images, Java .class files, Java .jmod modules, JavaScript
+files, JPEG images, JSON files, LLVM IR bitcode files, LZ4
+compressed files, MacOS binaries, Microsoft Windows icon
+files, Microsoft Word .docx files, Mono &rsquo;Portable
+Executable&rsquo; files, Mozillaoptimized .ZIP archives,
+Multimedia metadata, OCaml interface files, Ogg Vorbis audio
+files, OpenOffice .odt files, OpenSSH public keys, OpenWRT
+package archives (.ipk), PDF documents, PE32 files, PGP
+signatures, PGP signed/encrypted messages, PNG images,
+PostScript documents, Public Key Cryptography Standards
+(PKCS) files (version #7), RPM archives, Rust object files
+(.deflate), SQLite databases, SquashFS filesystems,
+symlinks, tape archives (.tar), tcpdump capture files
+(.pcap), text files, TrueType font files, WebAssembly binary
+module, XML binary schemas (.xsb), XML files, XZ compressed
+files, ZIP archives and Zstandard compressed files.
+
+diffoscope
+homepage:
+
+https://diffoscope.org/&gt;
+
+bugs/issues:
+
+https://salsa.debian.org/reproducible-builds/diffoscope/issues&gt;
+
+EXIT STATUS
+
+Exit status is
+0 if inputs are the same, 1 if different, 2 if trouble.
+
+COMMAND-LINE EXAMPLES
+
+To compare two
+files in-depth and produce an HTML report, run something
+like:
+
+$ diffoscope --html output.html build1.changes build2.changes
+
+diffoscope will
+exit with 0 if there's no differences and 1 if there
+are.
+
+diffoscope
+can also compare non-existent files:
+
+$ diffoscope /nonexistent archive.zip
+
+To get all
+possible options, run:
+
+$ diffoscope --help
+
+If you have
+enough RAM, you can improve performance by running:
+
+$ TMPDIR=/run/shm diffoscope very-big-input-0/ very-big-input-1/
+
+By default this
+allowed to use up half of RAM; for more add something
+like:
+
+tmpfs   /run/shm    tmpfs   size=80%    0   0
+
+to your
+/etc/fstab; see man mount for details.
+
+EXTERNAL DEPENDENCIES
+
+diffoscope
+requires Python 3 and the following modules available on
+PyPI: libarchive-c, python-magic.
+
+The various
+comparators rely on external commands being available. To
+get a list of them, please run:
+
+$ diffoscope --list-tools
+
+CONTRIBUTORS
+
+Lunar, Reiner
+Herrmann, Chris Lamb, Mattia Rizzolo, Ximin Luo, Helmut
+Grohne, Holger Levsen, Daniel Kahn Gillmor, Paul Gevers,
+Peter De Wachter, Yasushi SHOJI, Clemens Lang, Ed Maste,
+Joachim Breitner, Mike McQuaid. Baptiste Daroussin, Levente
+Polyak.
+
+CONTACT
+
+The preferred
+way to report bugs about diffoscope, as well as
+suggest fixes and requests for improvements is to submit
+reports to the issue tracker at:
+
+https://salsa.debian.org/reproducible-builds/diffoscope/issues
+
+For more
+instructions, see CONTRIBUTING.rst in this
+directory.
+
+Join the users
+and developers mailing-list: https://lists.reproducible-builds.org/listinfo/diffoscope>
+
+diffoscope
+website is at https://diffoscope.org/>
+
+LICENSE
+
+diffoscope is
+free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+diffoscope is
+distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have
+received a copy of the GNU General Public License along with
+diffoscope. If not, see
+https://www.gnu.org/licenses/>.
+
+SEE ALSO
+
+&bull;
+
+https://diffoscope.org/&gt; 
+
+&bull;
+
+https://wiki.debian.org/ReproducibleBuilds&gt;

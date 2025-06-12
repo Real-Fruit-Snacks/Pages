@@ -1,0 +1,176 @@
+NAME
+
+atmsigd - ATM
+signaling demon
+
+SYNOPSIS
+
+atmsigd
+[-b] [-c config_file] [-d]
+[-D dump_dir]
+[-l logfile] [-m mode]
+[-n] [-q qos]
+[-t trace_length]
+[-u uni_version]
+[[itf.]vpi.vci
+[input output]] 
+atmsigd -V
+
+DESCRIPTION
+
+atmsigd
+implements the ATM UNI signaling protocol. Requests to
+establish, accept, or close ATM SVCs are sent from the
+kernel (using a comparably simple protocol) to the signaling
+demon, which then performs the dialog with the network.
+
+Note that
+atmsigd is not able to accept or establish
+connections until the local ATM address of the interface is
+configured by ilmid or manually using
+atmaddr.
+
+The default
+signaling VC (interface 0, VPI 0, VCI 5) can be overridden
+on the command line by specifying a different PVC
+address.
+
+When overriding
+the default VC, optionally a pair of named pipes to use for
+communicating with the user of signaling can be specified.
+Normally, the kernel is the user of signaling and
+atmsigd opens a special socket for communication with
+it.
+
+If
+atmsigd is killed, all system calls requiring
+interaction with it will return with an error and set
+errno to EUNATCH.
+
+OPTIONS
+
+-b
+
+Run in background (i.e. in a
+forked child process) after initializing.
+
+-c config_file
+
+Use the specified configuration
+file instead of /etc/atmsigd.conf If an option is
+specified in the configuration file and on the command line,
+the command line has priority.
+
+-d
+
+Enables (lots of) debugging output. By default,
+atmsigd is comparably quiet.
+
+-D dump_dir
+
+Specifies the directory to
+which atmsigd will write status and trace dumps. If
+-D is not specified, dumps are written to
+/var/tmp.
+
+-l logfile
+
+Write diagnostic messages to
+the specified file. The special name syslog is used
+to send diagnostics to the system logger, stderr is
+used to send diagnostics to standard error. If -l is
+absent, the setting in atmsigd.conf is used. If
+atmsigd doesn&rsquo;t specify a destination either,
+messages are written to standard error.
+
+-m mode
+
+Set the mode of operation. The
+following modes are available: user for the user side
+(the default), network for the network side (useful
+if you have two PCs but no switch), and switch for
+operation with a signaling relay in a switch.
+
+-n
+
+Prints addresses in numeric format only, i.e. no address
+to name translation is attempted.
+
+-q qos
+
+Configures the signaling VC to use the specified quality
+of service (see qos(7) for the syntax). By default, UBR at
+link speed is used on the signaling VC.
+
+-t trace_length
+
+Sets the number of entries that
+should be kept in the trace buffer. -t 0 disables
+tracing. If -t is not specified, atmsigd uses
+a default of 20 trace entries.
+
+-u uni_version
+
+Sets the signaling mode. The
+following modes are supported: uni30 for UNI 3.0,
+uni31 for UNI 3.1, uni31+uni30 for UNI 3.1
+with 3.0 compatibility, uni40 for UNI 4.0, and
+uni40+q.2963.1 for UNI 4.0 with Q.2963.1 peak cell
+rate renegotiation.
+
+-V
+
+Prints the version number of atmsigd on standard
+output and exits.
+
+FILES
+
+/etc/atmsigd.conf
+
+default configuration file
+
+/var/tmp/atmsigd.pid.status.version
+
+default location of status
+dumps
+
+/var/tmp/atmsigd.pid.trace.version
+
+default location of signaling
+trace dumps
+
+DEBUGGING
+
+When receiving
+a SIGUSR1 signal, atmsigd dumps the list of
+all internal socket descriptors. With SIGUSR2, it
+dumps the contents of the trace buffer. If a dump directory
+was set, dumps are written to files called
+atmsigd.pid.status.number and
+atmsigd.pid.trace.number,
+respectively, with number starting at zero and being
+incremented for every dump. If no dump directory is set,
+dumps are written to standard error.
+
+Dumps are also
+generated whenever atmsigd detects a fatal error and
+terminates. No attempt is made to catch signals like
+SIGSEGV.
+
+BUGS
+
+The generation
+of traces is a comparably slow process which may already
+take several seconds for only 100 trace entries. To generate
+a trace dump, atmsigd therefore forks a child process
+that runs in parallel to the signaling demon.
+
+AUTHOR
+
+Werner
+Almesberger, EPFL ICA Werner.Almesberger [AT] epfl.ch>
+
+SEE ALSO
+
+atmaddr(8),
+atmsigd.conf(4), ilmid(8), qos(7)

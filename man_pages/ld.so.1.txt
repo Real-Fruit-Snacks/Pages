@@ -1,0 +1,170 @@
+RTLD(1) BSD General Commands Manual RTLD(1)
+
+NAME
+
+ld-elf.so.1,
+ld.so, rtld &mdash; run-time link-editor
+
+DESCRIPTION
+
+The ld-elf.so.1 utility
+is a self-contained shared object providing run-time support
+for loading and link-editing shared objects into a
+process&rsquo; address space. It is also commonly known as
+the dynamic linker. It uses the data structures contained
+within dynamically linked programs to determine which shared
+libraries are needed and loads them using the mmap(2) system
+call.
+
+After all shared
+libraries have been successfully loaded, ld-elf.so.1
+proceeds to resolve external references from both the main
+program and all objects loaded. A mechanism is provided for
+initialization routines to be called on a per-object basis,
+giving a shared object an opportunity to perform any extra
+set-up before execution of the program proper begins. This
+is useful for C++ libraries that contain static
+constructors.
+
+The
+ld-elf.so.1 utility itself is loaded by the kernel
+together with any dynamically-linked program that is to be
+executed. The kernel transfers control to the dynamic
+linker. After the dynamic linker has finished loading,
+relocating, and initializing the program and its required
+shared objects, it transfers control to the entry point of
+the program.
+
+To locate the
+required shared objects in the file system,
+ld-elf.so.1 may use a
+&rsquo;&rsquo;hints&rsquo;&rsquo; file prepared by the
+ldconfig(8) utility.
+
+The
+ld-elf.so.1 utility recognizes a number of
+environment variables that can be used to modify its
+behaviour as follows:
+
+LD_DUMP_REL_POST
+
+If set
+ld-elf.so.1 will print a table containing all
+relocations after symbol binding and relocation.
+
+LD_DUMP_REL_PRE
+
+If set
+ld-elf.so.1 will print a table containing all
+relocations before symbol binding and relocation.
+
+LD_LIBMAP_DISABLE
+
+If set,
+disables the use of libmap.conf(5).
+
+LD_LIBRARY_PATH
+
+A colon
+separated list of directories, overriding the default search
+path for shared libraries. This is ignored for set-user-ID
+and set-group-ID programs.
+
+LD_PRELOAD
+
+A list of
+shared libraries, separated by colons and/or white space, to
+be linked in before any other shared libraries. If the
+directory is not specified then the directories specified by
+LD_LIBRARY_PATH will be searched first followed by the set
+of built-in standard directories. This is ignored for
+set-user-ID and set-group-ID programs.
+
+LD_BIND_NOW
+
+When set to a
+nonempty string, causes ld-elf.so.1 to relocate all
+external function calls before starting execution of the
+program. Normally, function calls are bound lazily, at the
+first call of each function. LD_BIND_NOW increases the
+start-up time of a program, but it avoids run-time surprises
+caused by unexpectedly undefined functions.
+
+LD_TRACE_LOADED_OBJECTS
+
+When set to a nonempty string,
+causes ld-elf.so.1 to exit after loading the shared
+objects and printing a summary which includes the absolute
+pathnames of all objects, to standard output.
+
+LD_TRACE_LOADED_OBJECTS_ALL
+
+When set to a nonempty string,
+causes ld-elf.so.1 to expand the summary to indicate
+which objects caused each object to be loaded.
+
+LD_TRACE_LOADED_OBJECTS_FMT1
+
+LD_TRACE_LOADED_OBJECTS_FMT2
+
+When set, these variables are
+interpreted as format strings a la printf(3) to customize
+the trace output and are used by ldd(1)&rsquo;s
+&minus;f option and allows ldd(1) to be operated as a
+filter more conveniently. The following conversions can be
+used:
+
+%a
+
+The main
+program&rsquo;s name (also known as
+&rsquo;&rsquo;__progname&rsquo;&rsquo;).
+
+%A
+
+The value of
+the environment variable
+LD_TRACE_LOADED_OBJECTS_PROGNAME
+
+%o
+
+The library
+name.
+
+%m
+
+The
+library&rsquo;s major version number.
+
+%p
+
+The full
+pathname as determined by rtld&rsquo;s library search
+rules.
+
+%x
+
+The
+library&rsquo;s load address.
+
+Additionally,
+&rsquo;\n&rsquo; and &rsquo;\t&rsquo; are recognized and
+have their usual meaning.
+
+FILES 
+/var/run/ld-elf.so.hints
+
+Hints file.
+
+/etc/libmap.conf
+
+The libmap
+configuration file.
+
+SEE ALSO
+
+ld(1), ldd(1), elf(5),
+libmap.conf(5), ldconfig(8)
+
+BSD May 31,
+2003 BSD

@@ -1,0 +1,203 @@
+NAME
+
+userdb -
+manipulate /etc/courier/userdb
+
+SYNOPSIS
+
+userdb {addr} set
+{field=value...} 
+
+userdb {addr}
+unset {field...}
+
+userdb {addr}
+del 
+
+userdb {path/addr}
+[set | unset | del] ...
+
+userdb -f {file}
+{adr} [set | unset | del] ...
+
+userdb -show
+{path} 
+
+userdb -show
+{path} {addr}
+
+userdb -show -f
+{file} 
+
+userdb -show -f
+{file} {addr}
+
+DESCRIPTION
+
+userdb
+is a convenient script to individually manipulate entries in
+/etc/courier/userdb. See
+makeuserdb(8)
+[1]
+for a description of its contents.
+/etc/courier/userdb can always be edited using any text
+editor, but userdb is a convenient way to modify this
+file from another script.
+
+/etc/courier/userdb
+can also be a subdirectory, instead of a file. Specify
+foo/bar/addr to manipulate addr in the file
+/etc/courier/userdb/foo/bar. You can also use the
+-f flag: -f /etc/courier/userdb/foo/bar
+is equivalent. Use whatever form makes the most sense to
+you.
+
+/etc/courier/userdb
+must not have any group or world permissions. That's because
+its contents may include system passwords (depending upon
+the application which uses this virtual user account
+database).
+
+Each
+line in /etc/courier/userdb takes following form:
+
+addrfield=value|field=value...
+
+addr
+specifies a unique virtual address. It is followed by a
+single tab character, then a list of
+field=value pairs, separated by vertical slash
+characters. See
+makeuserdb(8)
+[1]
+for field definitions.
+
+A
+text editor can be used to add blank lines or comments in
+/etc/courier/userdb. Any blank lines or comments are ignored
+by the userdb script.
+
+The
+names of the actual fields, and their contents, are defined
+entirely by applications that use the /etc/courier/userdb
+database, the userdb command just adds or removes
+arbitrary fields.
+
+For
+example:
+
+userdb
+default/info set mail=/home/mail/info
+
+This
+command accesses the address "info" in
+/etc/courier/userdb/default.
+
+If
+the second argument to userdb is
+"set", the remaining arguments are taken as
+field=value pairs, which are added to the record for
+addr. If there is no record for addr, a new
+record will be appended to the file. If addr exists,
+any existing values of any specified fields are removed. If
+=value is missing, userdb stops and prompts
+for it. This is useful if you're setting a password field,
+where you do not want to specify the password on the command
+line, which can be seen by the ps(1) command. If
+userdb is being executed by a script, the value can
+be provided on standard input.
+
+Use
+"unset" to delete fields from an existing
+record. Use "del" to delete all fields in
+the existing record, plus the record itself.
+
+DISPLAYING
+/etc/courier/userdb 
+If the first argument to userdb is -show,
+userdb displays the contents of /etc/courier/userdb.
+If /etc/courier/userdb is a subdirectory, path must
+refer to a specific file in /etc/courier/userdb. The
+-f option can be used instead of path in order
+to specify an arbitrary file.
+
+If
+addr is not specified, userdb produces a list,
+on standard output, containing all addresses found in the
+file, on per line. If addr is specified,
+userdb produces a list, on standard output, of all
+the fields in /etc/courier/userdb for this
+addr.
+
+International
+domains 
+addrs with international domains should use UTF-8 to
+specify an international domain name:
+
+userdb
+postmaster@test.&#1080;&#1089;&#1087;&#1099;&#1090;&#1072;&#1085;&#1080;&#1077;
+set \ 
+home=/home/postmaster.test.com uid=999
+gid=999
+
+REBUILDING
+/etc/courier/userdb.dat 
+The actual virtual account/address database is
+/etc/courier/userdb.dat. This is a binary database file.
+/etc/courier/userdb is the plain text version. After
+running userdb, execute the
+makeuserdb(8)
+[1]
+command to rebuild
+/etc/courier/userdb.dat for the changes to take
+effect.
+
+BUGS
+
+addr
+must be unique. If /etc/courier/userdb is a subdirectory,
+it's possible to create the same addr in different
+files in the subdirectory. This is an error that is not
+currently detected by userdb, however the
+subsequent
+makeuserdb(8)
+[1]
+command will fail with an error
+message.
+
+FILES
+
+/etc/courier/userdb
+- plain text file, or directory of plain text
+files
+
+.lock.filename
+- lock file for filename
+
+.tmp.filename
+- temporary file used to create new contents of
+filename
+
+SEE ALSO
+
+makeuserdb(8)
+[1]
+,
+userdbpw(8)
+[2]
+
+NOTES
+
+1. 
+
+makeuserdb(8) 
+
+[set
+$man.base.url.for.relative.links]/makeuserdb.html
+
+2. 
+
+userdbpw(8) 
+
+[set
+$man.base.url.for.relative.links]/userdbpw.html

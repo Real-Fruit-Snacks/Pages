@@ -1,0 +1,310 @@
+NAME
+
+mongodb_table -
+Postfix MongoDB client configuration
+
+SYNOPSIS
+
+postmap -q
+"string"
+mongodb:/etc/postfix/filename
+
+postmap -q -
+mongodb:/etc/postfix/filename
+inputfile
+
+DESCRIPTION
+
+The Postfix
+mail system uses optional tables for address rewriting or
+mail routing. These tables are usually in dbm or
+db format.
+
+Alternatively,
+lookup tables can be specified as MongoDB databases. In
+order to use MongoDB lookups, define a MongoDB source as a
+lookup table in main.cf, for example: 
+alias_maps = mongodb:/etc/postfix/mongodb-aliases.cf
+
+In this
+example, the file /etc/postfix/mongodb-aliases.cf has the
+same format as the Postfix main.cf file, and can specify the
+parameters described below. It is also possible to have the
+configuration in main.cf; see "OBSOLETE MAIN.CF
+PARAMETERS" below.
+
+It is strongly
+recommended to use proxy:mongodb, in order to reduce the
+number of database connections. For example: 
+alias_maps =
+proxy:mongodb:/etc/postfix/mongodb-aliases.cf
+
+Note: when
+using proxy:mongodb:/file, the file must be readable
+by the unprivileged postfix user (specified with the Postfix
+mail_owner configuration parameter).
+
+MONGODB PARAMETERS
+
+uri
+
+The URI of mongo server/cluster
+that Postfix will try to connect to and query from. Please
+see 
+
+https://www.mongodb.com/docs/manual/reference/connection-string/
+
+Example: 
+uri = mongodb+srv://user:pass@loclhost:27017/mail
+
+dbname
+
+Name of the database to read the
+information from. Example:
+
+dbname = mail
+
+collection
+
+Name of the collection (table)
+to read the information from. Example: 
+collection = mailbox
+
+query_filter
+
+The MongoDB query template used
+to search the database, where %s is a substitute for
+the email address that Postfix is trying to resolve. Please
+see: 
+
+https://www.mongodb.com/docs/manual/tutorial/query-documents/
+
+Example: 
+query_filter = {"$or": [{"username":
+"%s"}, {"alias.address":
+"%s"}], "active": 1}
+
+This parameter
+supports the following &rsquo;%&rsquo; expansions:
+
+%%
+
+This is replaced by a literal &rsquo;%&rsquo;
+character. 
+
+%s
+
+This is replaced by the input key. The %s must appear in
+quotes, because all Postfix queries are strings containing
+(parts from) a domain or email address. Postfix makes no
+numerical queries.
+
+%u
+
+When the input key is an address of the form
+user@domain, %u is replaced by the local part of the
+address. Otherwise, %u is replaced by the entire
+search string.
+
+%d
+
+When the input key is an address of the form
+user@domain, %d is replaced by the domain part of the
+address. 
+
+%[1-9]
+
+The patterns %1, %2, ... %9 are replaced by the
+corresponding most significant component of the input
+key&rsquo;s domain. If the input key is
+user [AT] mail.com, then %1 is com, %2 is
+example and %3 is mail.
+
+In the above
+substitutions, characters will be quoted as required by RFC
+4627. For example, each double quote or backslash character
+will be escaped with a backslash characacter.
+
+projection
+
+Advanced MongoDB query
+projections. Please see: 
+
+https://www.mongodb.com/docs/manual/tutorial/project-fields-from-query-results/
+
+&bull;
+
+If projection is non-empty, then
+result_attribute must be empty.
+
+&bull;
+
+This implementation can extract information only from
+result fields that have type string (UTF8),
+integer (int32, int64) and array. Other result
+fields will be ignored with a warning. Please see:
+
+https://mongoc.org/libbson/current/bson_type_t.html
+
+&bull;
+
+As with result_attribute,
+the top-level _id field (type OID) is automatically removed
+from projection results.
+
+result_attribute
+
+Comma or whitespace separated
+list with the names of fields to be returned in a lookup
+result.
+
+&bull;
+
+If result_attribute is non-empty, then
+projection must be empty.
+
+&bull;
+
+As with projection, the top-level _id field (type
+OID) is automatically removed from lookup results.
+
+result_format (default:
+%s)
+
+Format template applied to the
+result from projection or result_attribute.
+Most commonly used to append (or prepend) text to the
+result. This parameter supports the following
+&rsquo;%&rsquo; expansions:
+
+%%
+
+This is replaced by a literal &rsquo;%&rsquo;
+character. 
+
+%s
+
+This is replaced by the value of the result attribute.
+When result is empty it is skipped.
+
+%u
+
+When the result attribute value is an address of the
+form user@domain, %u is replaced by the local part of
+the address. When the result has an empty localpart it is
+skipped. 
+
+%d
+
+When a result attribute value is an address of the form
+user@domain, %d is replaced by the domain part of the
+attribute value. When the result is unqualified it is
+skipped. 
+
+%[SUD1-9]
+
+The upper-case and decimal
+digit expansions interpolate the parts of the input key
+rather than the result. Their behavior is identical to that
+described with query_filter, and in fact because the
+input key is known in advance, lookups whose key does not
+contain all the information specified in the result template
+are suppressed and return no results.
+
+For example,
+using "result_format = smtp:[%s]" allows one to
+use a mailHost attribute as the basis of a transport(5)
+table. After applying the result format, multiple values are
+concatenated as comma separated strings. The expansion_limit
+parameter explained below allows one to restrict the number
+of values in the result, which is especially useful for maps
+that should return a single value.
+
+The default
+value %s specifies that each attribute value should
+be used as is.
+
+NOTE: DO NOT
+put quotes around the result format! The result is not a
+JSON string.
+
+domain (default: no domain
+list)
+
+This is a list of domain names,
+paths to files, or "type:table" databases. When
+specified, only fully qualified search keys with a
+*non-empty* localpart and a matching domain are eligible for
+lookup: &rsquo;user&rsquo; lookups, bare domain lookups and
+"@domain" lookups are not performed. This can
+significantly reduce the query load on the backend database.
+Example: 
+domain = postfix.org, hash:/etc/postfix/searchdomains
+
+expansion_limit (default:
+0)
+
+A limit on the total number of
+result elements returned (as a comma separated list) by a
+lookup against the map. A setting of zero disables the
+limit. Lookups fail with a temporary error if the limit is
+exceeded. Setting the limit to 1 ensures that lookups do not
+return multiple values.
+
+OBSOLETE MAIN.CF PARAMETERS
+
+MongoDB
+parameters can also be defined in main.cf. Specify as
+MongoDB source a name that doesn&rsquo;t begin with a slash
+or a dot. The MongoDB parameters will then be accessible as
+the name you&rsquo;ve given the source in its definition, an
+underscore, and the name of the parameter. For example, if a
+map is specified as
+"mongodb:mongodb_source", the
+"uri" parameter would be defined in main.cf as
+"mongodb_source_uri".
+
+Note: with this
+form, passwords are written in main.cf, which is normally
+world-readable, and &rsquo;$&rsquo; in a mongodb parameter
+setting needs to be written as &rsquo;$$&rsquo;.
+
+SEE ALSO
+
+postmap(1),
+Postfix lookup table maintenance 
+postconf(5), configuration parameters
+
+README FILES
+
+Use
+"postconf readme_directory" or
+"postconf html_directory" to locate this
+information. 
+DATABASE_README, Postfix lookup table overview 
+MONGODB_README, Postfix MONGODB client guide
+
+LICENSE
+
+The Secure
+Mailer license must be distributed with this software.
+
+HISTORY
+
+MongoDB support
+was introduced with Postfix version 3.9.
+
+AUTHOR(S)
+
+Hamid Maadani
+(hamid [AT] dexo.tech) 
+Dextrous Technologies, LLC
+
+Edited by: 
+Wietse Venema 
+porcupine.org
+
+Based on prior
+work by: 
+Stephan Ferraro 
+Aionda GmbH

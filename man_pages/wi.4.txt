@@ -1,0 +1,839 @@
+WI(4) BSD Kernel Interfaces Manual WI(4)
+
+NAME
+
+wi &mdash; Lucent Hermes,
+and Intersil PRISM IEEE 802.11 driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, place the following lines in your kernel
+configuration file:
+
+device wi
+
+device wlan
+
+Alternatively,
+to load the driver as a module at boot time, place the
+following line in loader.conf(5):
+
+if_wi_load="YES"
+
+DESCRIPTION
+
+The wi driver provides
+support for 802.11b wireless network adapters based around
+the Lucent Hermes, Intersil PRISM-II, Intersil PRISM-2.5,
+and Intersil Prism-3 chipsets. All chipsets provide a
+similar interface to the driver. Only the Intersil chipsets
+support access point operation or WPA. Very old versions of
+firmware are not supported at all. Older versions of the
+firmware that are supported may severely limit the ability
+to use these cards in newer networks. Only relatively recent
+versions of Intersil firmware supports WPA. See CAVEATS for
+details. All host/device interaction is via programmed I/O,
+even on those cards that support a DMA interface.
+
+For more
+information on configuring this device, see ifconfig(8).
+
+wi
+supports station, adhoc, adhoc-demo,
+hostap, and monitor mode operation. Only one
+virtual interface may be configured at a time. For more
+information on configuring this device, see ifconfig(8).
+
+Cards supported
+by the wi driver come in a variety of packages,
+though the most common are of the PCMCIA type. In many
+cases, the PCI version of a wireless card is simply a PCMCIA
+card bundled with a PCI adapter. The PCI adapters come in
+two flavors: true PCMCIA bridges and dumb PCMCIA bridges. A
+true PCMCIA bridge (such as those sold by Lucent) will
+attach as a real PCMCIA controller. The wireless card will
+then attach to the PCMCIA bus. Wireless cards in PCMCIA
+slots may be inserted and ejected on the fly.
+
+A dumb bridge,
+on the other hand, does not show up as a true PCMCIA bus.
+The wireless card will simply appear to the host as a normal
+PCI device and will not require any PCMCIA support. Cards in
+this type of adapter should only be removed when the machine
+is powered down.
+
+The following
+cards are among those supported by the wi driver:
+
+Card Chip
+Bus
+
+3Com AirConnect 3CRWE777A
+
+Prism-II
+
+PCI
+
+Accton airDirect WN3301
+
+PCMCIA
+
+ACTIONTEC HWC01170
+
+Prism-2.5
+
+PCMCIA
+
+Adaptech ANW-8030
+
+Prism-3
+
+PCMCIA
+
+Addtron AWP-100
+
+Prism-II
+
+PCMCIA
+
+Adtec Adlink/340C
+
+Prism-II
+
+PCMCIA
+
+Airvast WN 100
+
+Prism-3
+
+PCMCIA
+
+Airway 802.11 Adapter
+
+PCMCIA
+
+Agere Orinoco
+
+Hermes
+
+PCMCIA
+
+Allied Telesis WR211PCM
+
+Prism-II
+
+PCMCIA
+
+ArTem OnAir
+
+Prism?
+
+PCMCIA
+
+Asus WL100
+
+Prism-2.5
+
+PCMCIA
+
+Avaya Wireless
+
+Prism-II
+
+PCMCIA
+
+Bay eMobility 11B
+
+Prism-2.5?
+
+PCMCIA
+
+Blue Concentric Circle WL-379F
+
+Prism-II
+
+CF
+
+BreezeNet Wireless
+
+Prism-II
+
+PCMCIA
+
+Buffalo WLI-PCM-S11
+
+Prism-II
+
+PCMCIA
+
+Buffalo WLI-PCM-L11G
+
+Hermes
+
+PCMCIA
+
+Buffalo WLI-CF-S11G
+
+Prism-II
+
+CF
+
+Buffalo WLI2-CF-S11G
+
+Prism 2.5
+
+CF
+
+Cabletron RoamAbout
+
+Hermes
+
+PCMCIA
+
+Compaq Agency NC5004
+
+Prism-II
+
+PCMCIA
+
+Compaq WL100
+
+Prism-II
+
+PCMCIA
+
+Compaq WL110
+
+Hermes
+
+PCMCIA
+
+Compaq WL200
+
+Prism-II
+
+PCMCIA
+
+Contec FLEXLAN/FX-DS110-PCC
+
+Prism-II
+
+PCMCIA
+
+Corega PCC-11
+
+Prism-II
+
+PCMCIA
+
+Corega PCCA-11
+
+Prism-II
+
+PCMCIA
+
+Corega PCCB-11
+
+Prism-II
+
+PCMCIA
+
+Corega CGWLPCIA11
+
+Prism-II
+
+PCI
+
+Dell TrueMobile 1150
+
+Hermes
+
+PCMCIA
+
+Dlink Air 660
+
+Prism-II
+
+PCMCIA
+
+Dlink DWL520
+
+Prism-2.5
+
+PCI
+
+Dlink DWL650
+
+Prism-2.5
+
+PCMCIA
+
+ELECOM Air@Hawk/LD-WL11/PCC
+
+PCMCIA
+
+ELSA MC-11
+
+PCMCIA
+
+ELSA XI300
+
+Prism-II
+
+PCMCIA
+
+ELSA XI325
+
+Prism-2.5
+
+PCMCIA
+
+ELSA APDL325
+
+Prism-2.5
+
+PCMCIA
+
+ELSA XI330
+
+Prism-3
+
+PCMCIA
+
+ELSA XI800
+
+Prism-II
+
+CF
+
+EMTAC A2424i
+
+Prism-II
+
+PCMCIA
+
+Farallon Skyline
+
+Prism-II
+
+PCMCIA
+
+Gemtek WL-311
+
+Prism-2.5
+
+PCMCIA
+
+Hawking Technology WE110P
+
+Prism-2.5
+
+PCMCIA
+
+Home Wireless Networks
+
+Prism-II
+
+PCMCIA
+
+IBM High Rate Wireless
+
+Hermes
+
+PCMCIA
+
+ICOM SL-1100
+
+Prism-II
+
+PCMCIA
+
+I-O DATA WN-B11/PCM
+
+Prism-II
+
+PCMCIA
+
+Intersil Prism II
+
+Prism-II
+
+PCMCIA
+
+Intersil Mini-PCI
+
+Prism-2.5
+
+PCI
+
+Intersil ISL37100P
+
+Prism-3
+
+PCMCIA
+
+Intersil ISL37110P
+
+Prism-3
+
+PCMCIA
+
+Intersil ISL37300P
+
+Prism-3
+
+PCMCIA
+
+Laneed Wireless
+
+PCMCIA
+
+Linksys Instant Wireless WPC11
+
+Prism-II
+
+PCMCIA
+
+Linksys Instant Wireless WPC11 2.5
+
+Prism-2.5
+
+PCMCIA
+
+Linksys Instant Wireless WPC11 3.0
+
+Prism-3
+
+PCMCIA
+
+Linksys WCF11
+
+Prism-3
+
+PCMCIA
+
+Linksys WCF12
+
+Prism-3
+
+CF
+
+Lucent WaveLAN
+
+Hermes
+
+PCMCIA
+
+Melco Airconnect
+
+Prism-II
+
+PCMCIA
+
+Microsoft MN-520 WLAN
+
+Prism-II
+
+PCMCIA
+
+NANOSPEED ROOT-RZ2000
+
+Prism-II
+
+PCMCIA
+
+NCR WaveLAN/IEEE 802.11
+
+PCMCIA
+
+NDC/Sohoware NCP130
+
+Prism-II
+
+PCI
+
+NEC CMZ-RT-WP
+
+Prism-II
+
+PCMCIA
+
+NEC PK-WL001
+
+Lucent
+
+PCMCIA
+
+NEC PC-WL/11C
+
+Prism-II
+
+PCMCIA
+
+Netgear MA311
+
+Prism-2.5
+
+PCI
+
+Netgear MA401
+
+Prism-II/2.5
+
+PCMCIA
+
+Netgear MA401RA
+
+Prism-II
+
+PCMCIA
+
+Netgear MA701
+
+Prism-II
+
+CF
+
+NOKIA C020 WLAN
+
+Prism-II
+
+PCMCIA
+
+NOKIA C110 WLAN
+
+Prism-2.5
+
+PCMCIA
+
+NTT-ME 11Mbps Wireless LAN
+
+Prism-II
+
+PCMCIA
+
+Planex GeoWave/GW-NS110
+
+Prism-II
+
+PCMCIA
+
+Planex GW-NS11H
+
+Prism-II
+
+PCMCIA
+
+Proxim Harmony
+
+Prism-II
+
+PCMCIA
+
+Proxim RangeLAN-DS
+
+Prism-II
+
+PCMCIA
+
+Samsung MagicLAN SWL-2000N
+
+Prism-II
+
+PCMCIA
+
+SENAO SL-2511CD
+
+Prism-3
+
+PCMCIA
+
+Siemens SpeedStream SS1021
+
+Prism-II
+
+PCMCIA
+
+Siemens SpeedStream SS1021
+
+Prism-3
+
+PCMCIA
+
+SMC 2532W-B
+
+Prism-II
+
+PCMCIA
+
+SMC 2602 EZ Connect (3.3V)
+
+Prism-II
+
+PCI or PCMCIA
+
+SMC 2632 EZ Connect
+
+Prism-II
+
+PCMCIA
+
+Socket Low Power WLAN-CF
+
+Prism-II
+
+CF
+
+Sony PCWA-C100
+
+Lucent
+
+PCMCIA
+
+Sony PEGA-WL110
+
+Prism-2.5
+
+PCMCIA
+
+TDK LAK-CD011WL
+
+Prism-II
+
+PCMCIA
+
+Toshiba Wireless LAN Card
+
+Prism-II
+
+PCMCIA
+
+U.S. Robotics Wireless Card 2410
+
+Prism-II
+
+PCMCIA
+
+YIS YWL-11B
+
+Prism-II
+
+PCMCIA
+
+Several vendors
+sell PCI adapters built around the PLX Technology 9050 or
+9052 chip. The following such adapters are supported or
+expected to work:
+
+3Com AirConnect
+3CRWE777A (3.3V) 
+Belkin F5D6000 (a rebadged WL11000P) 
+Eumitcom WL11000P 
+Global Sun Technology GL24110P (untested) 
+Global Sun Technology GL24110P02 
+LinkSys WDT11 (a rebadged GL24110P02) 
+Netgear MA301 
+US Robotics 2415 (rebadged WL11000P) 
+Wisecom Wireless LAN PCI Adapter
+
+The following
+adapters have the same model numbers as those listed above,
+but might not work if the actual card is after the change
+away from the Prism family:
+
+DLink DWL520
+
+EXAMPLES
+
+Join an existing BSS network
+(ie: connect to an access point):
+
+ifconfig wlan
+create wlandev wi0 inet 192.168.0.20 \ 
+netmask 0xffffff00
+
+Join a specific
+BSS network with network name
+&rsquo;&rsquo;my_net&rsquo;&rsquo;:
+
+ifconfig wlan
+create wlandev wi0 inet 192.168.0.20 \ 
+netmask 0xffffff00 ssid my_net
+
+Join a specific
+BSS network with WEP encryption:
+
+ifconfig wlan
+create wlandev wi0 inet 192.168.0.20 \ 
+netmask 0xffffff00 ssid my_net \ 
+wepmode on wepkey 0x8736639624 weptxkey 1
+
+Join a Lucent
+legacy demo ad-hoc network with network name
+&rsquo;&rsquo;my_net&rsquo;&rsquo;:
+
+ifconfig wlan
+create wlandev wi0 wlanmode ahdemo \ 
+inet 192.168.0.20 netmask 0xffffff00 ssid my_net
+
+Join/create an
+IBSS network with network name
+&rsquo;&rsquo;my_net&rsquo;&rsquo;:
+
+ifconfig wlan
+create wlandev wi0 wlanmode adhoc wi0 \ 
+inet 192.168.0.22 netmask 0xffffff00 ssid my_net
+
+Create a
+host-based access point (Prism only):
+
+ifconfig wlan
+create wlandev wi0 wlanmode hostap \ 
+inet 192.168.0.10 netmask 0xffffff00 ssid my_ap
+
+Create a
+host-based access point with WEP enabled (Prism only) and
+plumb it into bridge to fxp0:
+
+ifconfig wlan0
+create wlandev wi0 wlanmode hostap \ 
+inet 192.168.0.10 netmask 0xffffff00 ssid my_ap \ 
+wepmode on wepkey 0x1234567890 weptxkey 1 
+ifconfig bridge0 create 
+ifconfig bridge0 addm wlan0 addm fxp0 up
+
+This will give
+you the same functionality as an access point.
+
+DIAGNOSTICS
+
+wi%d: init failed 
+The WaveLAN card failed to become ready after an
+initialization command was issued.
+
+wi%d: failed
+to allocate %d bytes on NIC  The driver was unable
+to allocate memory for transmit frames in the NIC&rsquo;s
+on-board RAM. This can also be an indication of an
+incorrectly configured interrupt.
+
+wi%d: device
+timeout  The WaveLAN card failed to generate an
+interrupt to acknowledge a transmit command.
+
+SEE ALSO
+
+intro(4), pccard(4), pccbb(4),
+pcic(4), wlan(4), wlan_ccmp(4), wlan_tkip(4), wlan_wep(4),
+wlan_xauth(4), hostapd(8), ifconfig(8),
+wpa_supplicant(8).
+
+HCF Light programming
+specification
+
+,
+
+http://web.archive.org/web/20040130141721/http://wavelan.com/
+.
+
+HISTORY
+
+The wi device driver
+first appeared in FreeBSD 3.0.
+
+AUTHORS
+
+The original wi driver
+was written by Bill Paul
+wpaul [AT] ctr.edu>. This man page comes
+from OpenBSD.
+
+CAVEATS
+
+The driver will reject devices
+with old firmware to avoid dealing with numerous defects.
+Unfortunately the driver does not support downloading new
+firmware to the card so if new firmware is needed users will
+have to boot a different system to accomplish this.
+
+Intersil Prism
+cards must have firmware versions 0.8.0 or later and version
+1.7.0 or later are required to support functionality such as
+WPA. Some users of Prism-II and 2.5 based cards report that
+station firmware version 1.3.4 works better for them in
+hostap than 1.4.9. Older versions of the Prism station
+firmware have a number of issues with hostap mode. The
+IBSS/adhoc mode appears to work well on station firmware
+1.3.1 and later. The IBSS/adhoc mode appears to have
+problems for some people with older versions of station
+firmware.
+
+Lucent cards
+prior to firmware version 6.0.6 do not implement IBSS mode
+and are not supported.
+
+Prior versions
+of wi supported Symbol firmware. That support has
+been removed due to persistent problems with this firmware
+as well as getting proper documentation on this
+firmware.
+
+Hermes 2 and
+Hermes 3 chips are not supported by this driver.
+
+Here&rsquo;s the
+above requirements in the form of a table
+
+Firmware
+Minimum WPA Host AP Adhoc/IBSS
+
+Prism II/2.5
+
+0.8.0
+
+1.7.0
+
+1.3.4
+
+1.3.1
+
+Prism 3
+
+0.8.0
+
+1.7.0
+
+1.4.9
+
+1.3.1
+
+Hermes
+
+6.0.6
+
+none
+
+none
+
+6.0.6
+
+Symbol
+
+none
+
+none
+
+none
+
+none
+
+BUGS
+
+Not all the new messages are
+documented here, and many of them are indications of
+transient errors that are not indications of serious
+problems.
+
+BSD
+July 23, 2011 BSD

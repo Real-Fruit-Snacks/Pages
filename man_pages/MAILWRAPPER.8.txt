@@ -1,0 +1,115 @@
+MAILWRAPPER(8) BSD System Manager&rsquo;s Manual
+MAILWRAPPER(8)
+
+NAME
+
+mailwrapper &mdash;
+invoke appropriate MTA software based on configuration
+file
+
+SYNOPSIS
+
+Special. See below.
+
+DESCRIPTION
+
+At one time, the only Mail
+Transfer Agent (MTA) software easily available was
+sendmail(8). As a result of this, most Mail User Agents
+(MUAs) such as mail(1) had the path and calling conventions
+expected by sendmail(8) compiled in.
+
+Times have
+changed, however. On a modern UNIX system, the administrator
+may wish to use one of several available MTAs.
+
+It would be
+difficult to modify all MUA software typically available on
+a system, so most of the authors of alternative MTAs have
+written their front end message submission programs so that
+they use the same calling conventions as sendmail(8) and may
+be put into place instead of sendmail(8) in
+/usr/sbin/sendmail.
+
+sendmail(8) also
+typically has aliases named mailq(1) and newaliases(1)
+linked to it. The program knows to behave differently when
+its argv[0] is &rsquo;&rsquo;mailq&rsquo;&rsquo; or
+&rsquo;&rsquo;newaliases&rsquo;&rsquo; and behaves
+appropriately. Typically, replacement MTAs provide similar
+functionality, either through a program that also switches
+behavior based on calling name, or through a set of programs
+that provide similar functionality.
+
+Although having
+replacement programs that plug replace sendmail(8) helps in
+installing alternative MTAs, it essentially makes the
+configuration of the system depend on hard installing new
+programs in /usr. This leads to configuration
+problems for many administrators, since they may wish to
+install a new MTA without altering the system provided
+/usr. (This may be, for example, to avoid having
+upgrade problems when a new version of the system is
+installed over the old.) They may also have a shared
+/usr among several machines, and may wish to avoid
+placing implicit configuration information in a read-only
+/usr.
+
+The
+mailwrapper utility is designed to replace
+/usr/sbin/sendmail and to invoke an appropriate MTA
+instead of sendmail(8) based on configuration information
+placed in /etc/mail/mailer.conf. This permits the
+administrator to configure which MTA is to be invoked on the
+system at run time.
+
+Other
+configuration files may need to be altered when replacing
+sendmail(8). For example, if the replacement MTA does not
+support the &minus;A option with mailq(1),
+daily_status_include_submit_mailq should be turned
+off in /etc/periodic.conf.
+
+FILES
+
+Configuration for
+mailwrapper is kept in /etc/mail/mailer.conf.
+/usr/sbin/sendmail is typically set up as a symbolic
+link to mailwrapper which is not usually invoked on
+its own.
+
+DIAGNOSTICS
+
+The mailwrapper utility
+will return an error value and print a diagnostic if its
+configuration file is missing or malformed, or does not
+contain a mapping for the name under which
+mailwrapper was invoked.
+
+SEE ALSO
+
+mail(1), mailq(1),
+newaliases(1), mailer.conf(5), periodic.conf(5),
+sendmail(8)
+
+HISTORY
+
+The mailwrapper utility
+first appeared in NetBSD 1.4 and then
+FreeBSD 4.0.
+
+AUTHORS
+
+Perry E. Metzger
+perry [AT] piermont.com>
+
+BUGS
+
+The entire reason this program
+exists is a crock. Instead, a command for how to submit mail
+should be standardized, and all the "behave differently
+if invoked with a different name" behavior of things
+like mailq(1) should go away.
+
+BSD
+December 16, 1998 BSD

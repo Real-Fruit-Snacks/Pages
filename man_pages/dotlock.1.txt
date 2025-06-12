@@ -1,0 +1,107 @@
+NAME
+
+dotlock &minus;
+execute a command with a lock on a mailbox
+
+SYNOPSIS
+
+dotlock
+[&minus;LPW] mbox-file command [arg ...]
+
+DESCRIPTION
+
+dotlock
+acquires a lock on the mailbox file mbox-file using
+both flock and a lock file, then executes
+command with any arguments specified. When
+command exits, dotlock releases the lock.
+
+dotlock
+attempts to clean up stale lockfiles. If it succeeds in
+locking an mbox-file with flock, and roughly
+30 seconds elapse without there being any changes to
+mbox-file or the lockfile, then dotlock will delete
+the lockfile and try again.
+
+While it holds
+a lock, lockfile will keep updating the modification time of
+the lockfile every 15 seconds, to prevent the lock from
+getting cleaned up in the event that command is
+slow.
+
+OPTION
+
+&minus;&minus;noflock (&minus;L)
+
+Ordinarily, dotlock uses both
+flock and dotfile locking. (It uses flock first, but
+releases that lock in the even that dotfile locking fails,
+so as to avoid deadlocking with applications that proceed in
+the reverse order.) The &minus;L option disables
+flock locking, so that dotlock only uses dotfile
+locking.
+
+This is
+primarily useful as a wrapper around an application that
+already does flock locking, but to which you want to add
+dotfile locking. (Even if your mail delivery system
+doesn&rsquo;t use flock, flock actually improves the
+efficiency of dotlock, so there is no reason to disable
+it.)
+
+&minus;&minus;fcntl
+(&minus;P)
+
+This option enables fcntl
+(a.k.a. POSIX ) file locking of mail spools,
+in addition to flock and dotfile locking. The advantage of
+fcntl locking is that it may do the right thing over
+NFS. However, if either the
+NFS client or server does not properly
+support fcntl locking, or if the file system is not mounted
+with the appropriate options, fcntl locking can fail in one
+of several ways. It can allow different processes to lock
+the same file concurrently--even on the same machine. It can
+simply hang when trying to acquire a lock, even if no other
+process holds a lock on the file. Also, on some OSes it can
+interact badly with flock locking, because those OSes
+actually implement flock in terms of fcntl.
+
+&minus;&minus;nowait
+(&minus;W)
+
+With this option, dotlock
+simply exits non-zero and does not run command if it
+cannot immediately acquire the lock.
+
+SEE ALSO
+
+avenger(1),
+deliver(1), avenger.local(8)
+
+The Mail
+Avenger home page: http://www.mailavenger.org/&gt;.
+
+BUGS
+
+dotlock does
+not perform fcntl/lockf&minus;style locking by
+default. Thus, if your mail reader exclusively uses
+fcntl for locking, there will be race conditions
+unless you specify the &minus;&minus;fcntl
+option.
+
+flock
+does not work over network file systems. Thus, because of
+dotlock&rsquo;s mechanism for cleaning stale lock files,
+there is a possibility that a network outage could lead to a
+race condition where the lockfile is cleared before
+command finishes executing. If lockfile detects that
+the lock has been stolen, it prints a message to standard
+error, but does not do anything else (like try to kill
+command).
+
+AUTHOR
+
+David
+Mazieres

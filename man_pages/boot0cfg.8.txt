@@ -1,0 +1,187 @@
+BOOT0CFG(8) BSD System Manager&rsquo;s Manual
+BOOT0CFG(8)
+
+NAME
+
+boot0cfg &mdash; boot
+manager installation/configuration utility
+
+SYNOPSIS
+
+boot0cfg
+[&minus;Bv] [&minus;b boot0]
+[&minus;d drive]
+[&minus;f file]
+[&minus;m mask]
+[&minus;o options]
+[&minus;s slice]
+[&minus;t ticks] disk
+
+DESCRIPTION
+
+The FreeBSD &rsquo;boot0&rsquo;
+boot manager permits the operator to select from which disk
+and slice an i386 machine (PC) is booted.
+
+Note that what
+are referred to here as &rsquo;&rsquo;slices&rsquo;&rsquo;
+are typically called &rsquo;&rsquo;partitions&rsquo;&rsquo;
+in non-BSD documentation relating to the PC. Typically, only
+non-removable disks are sliced.
+
+The
+boot0cfg utility optionally installs the
+&rsquo;boot0&rsquo; boot manager on the specified
+disk; and allows various operational parameters to be
+configured.
+
+On PCs, a boot
+manager typically occupies sector 0 of a disk, which is
+known as the Master Boot Record (MBR). The MBR contains both
+code (to which control is passed by the PC BIOS) and data
+(an embedded table of defined slices).
+
+The options
+are:
+
+&minus;B
+
+Install the
+&rsquo;boot0&rsquo; boot manager. This option causes MBR
+code to be replaced, without affecting the embedded slice
+table.
+
+&minus;b boot0
+
+Specify which
+&rsquo;boot0&rsquo; image to use. The default is
+/boot/boot0 which will use the video card as output,
+alternatively /boot/boot0sio can be used for output
+to the COM1 port. (Be aware that nothing will be output to
+the COM1 port unless the modem signals DSR and CTS are
+active.)
+
+&minus;d drive
+
+Specify the drive number used
+by the PC BIOS in referencing the drive which contains the
+specified disk. Typically this will be 0x80 for the
+first hard drive, 0x81 for the second hard drive, and so on;
+however any integer between 0 and 0xff is acceptable
+here.
+
+&minus;f file
+
+Specify that a backup copy of
+the preexisting MBR should be written to file. This
+file is created if it does not exist, and replaced if it
+does.
+
+&minus;m mask
+
+Specify slices to be
+enabled/disabled, where mask is an integer between 0
+(no slices enabled) and 0xf (all four slices enabled).
+
+&minus;o
+options
+
+A comma-separated string of any
+of the following options may be specified (with
+&rsquo;&rsquo;no&rsquo;&rsquo; prepended as necessary):
+
+packet
+
+Use the disk
+packet (BIOS INT 0x13 extensions) interface, as opposed to
+the legacy (CHS) interface, when doing disk I/O. This allows
+booting above cylinder 1023, but requires specific BIOS
+support. The default is &rsquo;nopacket&rsquo;.
+
+setdrv
+
+Forces the
+drive containing the disk to be referenced using drive
+number definable by means of the -d option. The default is
+&rsquo;nosetdrv&rsquo;.
+
+update
+
+Allow the MBR
+to be updated by the boot manager. (The MBR may be updated
+to flag slices as &rsquo;active&rsquo;, and to save slice
+selection information.) This is the default; a
+&rsquo;noupdate&rsquo; option causes the MBR to be treated
+as read-only.
+
+&minus;s slice
+
+Set the default boot selection
+to slice. Values between 1 and 4 refer to slices; a
+value of 5 refers to the option of booting from a second
+disk.
+
+&minus;t ticks
+
+Set the timeout value to
+ticks. (There are approximately 18.2 ticks per
+second.)
+
+&minus;v
+
+Verbose:
+display information about the slices defined, etc.
+
+FILES 
+/boot/boot0
+
+The default
+&rsquo;boot0&rsquo; image
+
+/boot/boot0sio
+
+Image for
+serial consoles (COM1,9600,8,N,1,MODEM)
+
+EXAMPLES
+
+To boot slice 2 on the next
+boot:
+
+boot0cfg -s 2
+ad0
+
+To enable just
+slices 1 and 2 in the menu:
+
+boot0cfg -m 0x3
+ad0
+
+DIAGNOSTICS
+
+The boot0cfg utility
+exits 0 on success, and >0 if an error
+occurs.
+
+SEE ALSO
+
+boot(8), fdisk(8)
+
+AUTHORS
+
+Robert Nordier
+rnordier [AT] FreeBSD.org>.
+
+BUGS
+
+Use of the &rsquo;packet&rsquo;
+option may cause &rsquo;boot0&rsquo; to fail, depending on
+the nature of BIOS support.
+
+Use of the
+&rsquo;setdrv&rsquo; option with an incorrect -d operand may
+cause the MBR to be written to the wrong disk. Be
+careful!
+
+BSD
+February 21, 1999 BSD

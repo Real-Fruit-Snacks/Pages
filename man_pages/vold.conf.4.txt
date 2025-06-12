@@ -1,0 +1,264 @@
+NAME
+
+vold.conf
+&minus; Volume Management configuration file
+
+SYNOPSIS
+
+/etc/vold.conf
+
+DESCRIPTION
+
+The
+vold.conf file contains the Volume Management
+configuration information used by vold(1M). This
+information includes the database to use, labels that are
+supported, devices to use, actions to take when certain
+media events occur, and the list of file systems that are
+unsafe to eject without unmounting.
+
+Modify
+vold.conf to specify which program should be called
+when media events happen (actions) or when you need to add
+another device to your system. See the example section for
+more information on adding devices.
+
+If you modify
+vold.conf, you must tell vold to reread
+vold.conf by sending a HUP signal. Use
+
+# ps -ef |
+grep 
+vold 
+# kill -HUP vold_pid
+
+File
+Format 
+The syntax for the vold.conf file is shown here.
+# Database to use
+db database
+
+# Labels supported
+label label_type shared_object device
+
+# Devices to use
+use device type special shared_object symname [ options ]
+
+# Actions
+insert regex [ options ] program program args
+eject regex [ options ] program program args
+notify regex [ options ] program program args
+
+# List of file system types unsafe to eject
+unsafe fs_type fs_type
+
+Of these syntax
+fields, you can safely modify Devices to use and
+Actions.
+
+Devices to
+Use Field 
+All use device statements must be grouped
+together by device type. (For example, all use cdrom
+statements must be grouped together; and all use
+floppy statements must be grouped together.) Here are
+the explanations of the syntax for the Devices to use
+field. 
+device
+
+The type of removable media
+device to be used. Legal values are cdrom,
+floppy, pcmem and rmdisk.
+
+type
+
+The specific capabilities of the device. Legal value is
+drive. 
+
+special
+
+This sh(1) expression
+specifies the device or devices to be used. Path usually
+begins with /dev.
+
+shared_object
+
+The name of the program that
+manages this device. vold(1M) expects to find this
+program in /usr/lib/vold.
+
+symname
+
+The symbolic name that refers
+to this device. The symname is placed in the device
+directory.
+
+options
+
+The user, group, and mode
+permissions for the media inserted (optional).
+
+The
+special and symname parameters are related. If
+special contains any shell wildcard characters (i.e.,
+has one or more asterisks or question marks in it), then the
+syname must have a "%d" at its end. In this
+case, the devices that are found to match the regular
+expression are sorted, then numbered. The first device will
+have a zero filled in for the "%d", the second
+device found will have a one, and so on.
+
+If the
+special specification does not have any shell
+wildcard characters then the symname parameter must
+explicitly specify a number at its end (see EXAMPLES
+below).
+
+Actions
+Field 
+Here are the explanations of the syntax for the
+Actions field. 
+insert|eject|notify
+
+The media event prompting the
+event
+
+regex
+
+This sh(1) regular expression is matched against
+each entry in the /vol file system that is being
+affected by this event.
+
+options
+
+You can specify what user or
+group name that this event is to run as (optional).
+
+program
+
+The full path name of an
+executable program to be run when regex is
+matched.
+
+program args
+
+Arguments to the program.
+
+Default
+Values 
+The default vold.conf file is shown here.
+
+# 
+# Volume Daemon Configuration file 
+#
+
+# Database
+to use (must be first) 
+db db_mem.so
+
+# Labels
+supported 
+label dos label_dos.so floppy 
+label cdrom label_cdrom.so cdrom 
+label sun label_sun.so floppy
+
+# Devices to
+use 
+use cdrom drive /dev/dsk/c*s2 dev_cdrom.so cdrom%d 
+use floppy drive /dev/diskette[0-9] dev_floppy.so
+floppy%d
+
+# Actions
+
+insert /vol*/dev/fd[0-9]/* user=root /usr/sbin/rmmount 
+insert /vol*/dev/dsk/* user=root /usr/sbin/rmmount 
+eject /vol*/dev/fd[0-9]/* user=root /usr/sbin/rmmount 
+eject /vol*/dev/dsk/* user=root /usr/sbin/rmmount 
+notify /vol*/rdsk/* group=tty user=root
+/usr/lib/vold/volmissing -p
+
+# List of
+file system types unsafe to eject 
+unsafe ufs hsfs pcfs
+
+EXAMPLES
+
+Example 1: A
+sample vold.conf file.
+
+To add a
+CD-ROM drive to the vold.conf file that does
+not match the default regular expression
+(/dev/rdsk/c*s2), you must explicitly list its device
+path and what symbolic name (with %d) you want the
+device path to have. For example, to add a CD-ROM
+drive that has the path /dev/rdsk/my/cdroms?
+(where s? are the different slices), add the
+following line to vold.conf (all on one line):
+
+use cdrom
+drive /dev/rdsk/my/cdroms2 dev_cdrom.so cdrom%d
+
+Then, when a
+volume is inserted in this CD-ROM drive. volume management
+will assign it the next symbolic name. For example, if two
+CD-ROMs match the default regular expression, they would be
+named cdrom0 and cdrom1; and any that match
+the added regular expression would be named starting with
+cdrom2.
+
+For a diskette
+that does not match the vold.conf default regular
+expression (/dev/floppy[0-9]), a similar line would
+have to be added for the diskette. For example, to add a
+diskette whose path was /dev/my/fd0, you would add
+the following to vold.conf:
+
+use floppy
+drive /dev/my/fd0 dev_floppy.so floppy%d
+
+SEE ALSO
+
+sh(1),
+volcancel(1), volcheck(1),
+volmissing(1), rmmount(1M),
+rpc.smserverd(1M), vold(1M),
+rmmount.conf(4), volfs(7FS)
+
+NOTES
+
+Volume
+Management manages both the block and character device for
+CD-ROMs and floppy disks; but, to make the configuration
+file easier to set up and scan, only one of these devices
+needs to be specified. If you follow the conventions
+specified below, Volume Management figures out both device
+names if only one of them is specified. For example, if you
+specify the block device, it figures out the pathname to the
+character device; if you specify the pathname to the
+character device, it figures out the block device.
+
+CD-ROM
+Naming Conventions 
+The CD-ROM pathname must have a directory component of
+rdsk (for the character device) and dsk for
+the block device. For example, if you specify the character
+device using the line:
+
+use cdrom
+drive /dev/rdsk/my/cdroms2 dev_cdrom.so cdrom%d
+
+then it is
+assumed that the block device is at
+
+/dev/dsk/my/cdroms2
+
+Floppy Disk
+Naming Conventions 
+For floppy disks, Volume Management requires that the device
+pathnames end in either rfd[0-9] or
+rdiskette[0-9] for the character device, and
+fd[0-9] or diskette[0-9] for the block device.
+As with the other removable disks, it generates either the
+block name given the character name, or the character name
+given the block name.

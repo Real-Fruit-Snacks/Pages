@@ -1,0 +1,194 @@
+NAME
+
+pcp,
+pcp-summary - run a command or summarize an
+installation
+
+SYNOPSIS
+
+pcp [pcp
+options...] pcp-command [command options...] 
+pcp [-LPV?] [-a archive] [-h
+host] [-O origin] [-n
+pmnsfile]
+
+DESCRIPTION
+
+The pcp
+command is used in one of two modes. By default, it
+summarizes the Performance Co-Pilot (PCP) installation on
+the local host. This mode can also be used to summarize the
+installation from a remote host, or a historical
+installation from a set of PCP archives. This mode
+indirectly invokes the pcp-summary command (in
+the absence of any other requested command).
+
+Alternatively,
+a command can be passed to pcp to run, again
+possibly in the context of a remote host or set of
+historical archives.
+
+COMMAND MODE
+
+When pcp
+is invoked with a command to run, it will search for the
+named command in $PCP_BINADM_DIR and also
+$HOME/.pcp/bin (these are usually scripts, and are
+installed with a "pcp-" prefix). This mode of
+operation allows system performance tools to be implemented
+using PMAPI(3) services, while still preserving all
+of their usual command line options. These options are thus
+(indirectly) augmented with the standard PCP option set, as
+described in PCPIntro(1).
+
+This provides a
+convenient mechanism for obtaining retrospective or remote
+monitoring capabilities while preserving the behaviour of
+the system tools.
+
+For example,
+the pcp-free(1) utility can be invoked as follows,
+for recorded data from host munch:
+
+$ pcp -a
+$PCP_LOG_DIR/pmlogger/munch/20140317 -O 11:35:50am
+free -m 
+total used free shared buffers cached 
+Mem: 23960 14554 9406 0 176 2137 
+-/+ buffers/cache: 12240 11720 
+Swap 12047 0 12047
+
+A complete list
+of the available and installed tools is provided along with
+the pcp(1) usage message, but some examples include:
+pcp-free(1), pcp-uptime(1) and
+pcp-numastat(1).
+
+SUMMARY MODE
+
+The summary
+report includes: the OS version, a summary of the hardware
+inventory, the local timezone, the PCP software version, the
+state of the pmcd(1) process and associated
+Performance Metrics Domain Agents (PMDAs), as well as
+information about any PCP archivers (pmlogger(1)) and
+PCP inference engines (pmie(1)) that are running.
+
+All of the
+displayed values are performance metric values and
+further information for each can be obtained using the
+command:
+
+$ pminfo -dtT
+metric
+
+The complete
+set of metrics required by pcp to produce its
+output is contained in
+$PCP_VAR_DIR/config/pmlogconf/tools/pcp-summary.
+
+SUMMARY MODE OPTIONS
+
+With no
+arguments, pcp reports on the local host, however the
+following options are accepted: 
+-a archive, --archive=archive
+
+Report the PCP configuration as
+described in the set of PCP archives, archive, which
+is a comma-separated list of names, each of which may be the
+base name of an archive or the name of a directory
+containing one or more archives.
+
+-h host,
+--host=host
+
+Report the PCP configuration on
+host rather than the local host.
+
+-L,
+--local-PMDA
+
+Use a local context to collect
+metrics from DSO PMDAs on the local host without PMCD.
+
+-n pmnsfile,
+--namespace=pmnsfile
+
+Load an alternative Performance
+Metrics Name Space (PMNS(5)) from the file
+pmnsfile.
+
+-O origin,
+--origin=origin
+
+When reporting archived
+metrics, start reporting at origin within the time
+window.
+
+-P, --pmie
+
+Display pmie(1)
+performance information - counts of rules evaluating to
+true, false, or indeterminate, as well as the expected rate
+of rule calculation, for each pmie process running on
+the default host. Refer to the individual metric help text
+for full details on these values.
+
+-V, --version
+
+Display version number and
+exit.
+
+-?, --help
+
+Display usage message and
+exit.
+
+DIAGNOSTICS
+
+pcp will
+terminate with an exit status of 1 if pmcd on
+the target host could not be reached or the set of archives
+could not be opened, or 2 for any other error.
+
+FILES
+
+$HOME/.pcp/bin
+
+Per-user location for
+command scripts.
+
+$PCP_BINADM_DIR
+
+System location for installed
+command scripts.
+
+$PCP_VAR_DIR/config/pmlogconf/tools/pcp-summary
+
+pmlogconf(1)
+configuration file for collecting all of the metrics
+required by pcp
+
+PCP ENVIRONMENT
+
+Environment
+variables with the prefix PCP_ are used to
+parameterize the file and directory names used by PCP. On
+each installation, the file /etc/pcp.conf contains
+the local values for these variables. The $PCP_CONF
+variable may be used to specify an alternative configuration
+file, as described in pcp.conf(5).
+
+For environment
+variables affecting PCP tools, see
+pmGetOptions(3).
+
+SEE ALSO
+
+PCPIntro(1),
+pcp-free(1), pcp-numastat(1),
+pcp-python(1), pcp-uptime(1),
+pcp-verify(1), pmcd(1), pmie(1),
+pmlogconf(1), pmlogger(1), pcp.conf(5),
+pcp.env(5) and PMNS(5).

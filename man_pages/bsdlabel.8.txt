@@ -1,0 +1,397 @@
+BSDLABEL(8) BSD System Manager&rsquo;s Manual
+BSDLABEL(8)
+
+NAME
+
+bsdlabel &mdash; read and
+write disk pack label
+
+SYNOPSIS
+
+bsdlabel
+[&minus;A] disk | &minus;f file
+
+bsdlabel &minus;w [&minus;An]
+[&minus;B [&minus;b boot]]
+[&minus;m machine] disk |
+&minus;f file [type] 
+bsdlabel &minus;e [&minus;An]
+[&minus;B [&minus;b boot]]
+[&minus;m machine] disk |
+&minus;f file 
+bsdlabel &minus;R [&minus;An]
+[&minus;B [&minus;b boot]]
+[&minus;m machine] [&minus;f]
+disk | &minus;f file protofile
+
+DESCRIPTION
+
+The bsdlabel utility
+installs, examines or modifies the BSD label on a disk
+partition, or on a file containing a partition image. In
+addition, bsdlabel can install bootstrap code.
+
+Disk Device
+Name 
+When specifying the device (i.e., when the &minus;f
+option is not used), the /dev/ path prefix may be
+omitted; the bsdlabel utility will automatically
+prepend it.
+
+General
+Options 
+The &minus;A option enables processing of the
+historical parts of the BSD label. If the option is not
+given, suitable values are set for these fields.
+
+The
+&minus;f option tells bsdlabel that the
+program will operate on a file instead of a disk
+partition.
+
+The
+&minus;n option stops the bsdlabel program
+right before the disk would have been modified, and displays
+the result instead of writing it.
+
+The
+&minus;m machine argument instructs
+bsdlabel to use the layout suitable for the specified
+machine.
+
+Reading the
+Disk Label 
+To examine the label on a disk drive, use bsdlabel
+without options:
+
+bsdlabel
+[&minus;A] [&minus;m machine]
+disk
+
+disk
+represents the disk in question, and may be in the form
+da0 or /dev/da0. It will display the partition
+layout.
+
+Writing a
+Standard Label 
+To write a standard label, use the form
+
+bsdlabel
+&minus;w [&minus;An] [&minus;m
+machine] disk [type]
+
+If the drive
+type is specified, the entry of that name in the disktab(5)
+file is used; otherwise a default layout is used.
+
+Editing an
+Existing Disk Label 
+To edit an existing disk label, use the form
+
+bsdlabel
+&minus;e [&minus;An] [&minus;m
+machine] disk
+
+This command
+opens the disk label in the default editor, and when the
+editor exits, the label is validated and if OK written to
+disk.
+
+Restoring a
+Disk Label From a File 
+To restore a disk label from a file, use the form
+
+bsdlabel
+&minus;R [&minus;An] [&minus;m
+machine] disk protofile
+
+bsdlabel
+is capable of restoring a disk label that was previously
+saved in a file in ASCII format. The prototype file used to
+create the label should be in the same format as that
+produced when reading or editing a label. Comments are
+delimited by &rsquo;#&rsquo; and newline.
+
+Installing
+Bootstraps 
+If the &minus;B argument is specified, bootstrap code
+will be read from the file /boot/boot and written to
+the disk. The &minus;b boot argument allows a
+different file to be used.
+
+FILES 
+/boot/boot
+
+Default boot
+image.
+
+/etc/disktab
+
+Disk
+description file.
+
+SAVED FILE FORMAT
+
+The bsdlabel utility uses
+an ASCII version of the label when examining, editing, or
+restoring a disk label. The format is:
+
+8 partitions:
+
+# size offset fstype [fsize bsize bps/cpg] 
+a: 81920 0 4.2BSD 1024 8192 16 
+b: 160000 81920 swap 
+c: 1173930 0 unused 0 0 # "raw" part, don&rsquo;t
+edit
+
+If the
+&minus;A option is specified, the format is:
+
+# /dev/da1c:
+
+type: SCSI 
+disk: da0s1 
+label: 
+flags: 
+bytes/sector: 512 
+sectors/track: 51 
+tracks/cylinder: 19 
+sectors/cylinder: 969 
+cylinders: 1211 
+sectors/unit: 1173930 
+rpm: 3600 
+interleave: 1 
+trackskew: 0 
+cylinderskew: 0 
+headswitch: 0 # milliseconds 
+track-to-track seek: 0 # milliseconds 
+drivedata: 0
+
+8 partitions:
+
+# size offset fstype [fsize bsize bps/cpg] 
+a: 81920 0 4.2BSD 1024 8192 16 
+b: 160000 81920 swap 
+c: 1173930 0 unused 0 0 # "raw" part, don&rsquo;t
+edit
+
+Lines starting
+with a &rsquo;#&rsquo; mark are comments.
+
+The partition
+table can have up to 8 entries. It contains the following
+information:
+
+#
+
+The partition
+identifier is a single letter in the range &rsquo;a&rsquo;
+to &rsquo;h&rsquo;. By convention, partition &rsquo;c&rsquo;
+is reserved to describe the entire disk.
+
+size
+
+The size of the
+partition in sectors, K (kilobytes - 1024), M
+(megabytes - 1024*1024), G (gigabytes -
+1024*1024*1024), % (percentage of free space
+after removing any fixed-size partitions other than
+partition &rsquo;c&rsquo;), or * (all remaining free
+space after fixed-size and percentage partitions).
+For partition &rsquo;c&rsquo;, a size of * indicates
+the entire disk. Lowercase versions of K, M,
+and G are allowed. Size and type should be specified
+without any spaces between them.
+
+Example:
+2097152, 1G, 1024M and 1048576K are all the same size
+(assuming 512-byte sectors).
+
+offset
+
+The offset of
+the start of the partition from the beginning of the drive
+in sectors, or * to have bsdlabel calculate
+the correct offset to use (the end of the previous partition
+plus one, ignoring partition &rsquo;c&rsquo;. For partition
+&rsquo;c&rsquo;, * will be interpreted as an offset
+of 0.
+
+fstype
+
+Describes the
+purpose of the partition. The example shows all currently
+used partition types. For UFS file systems and ccd(4)
+partitions, use type 4.2BSD. For Vinum drives, use
+type vinum. Other common types are swap and
+unused. By convention, partition &rsquo;c&rsquo;
+represents the entire slice and should be of type
+unused, though bsdlabel does not enforce this
+convention. The bsdlabel utility also knows about a
+number of other partition types, none of which are in
+current use. (See the definitions starting with FS_UNUSED in
+sys/disklabel.h> for more details.)
+
+fsize
+
+For
+4.2BSD and LFS file systems only, the fragment size.
+Defaults to 1024 for partitions smaller than 1GB, 4096 for
+partitions 1GB or larger.
+
+bsize
+
+For
+4.2BSD and LFS file systems only, the block size.
+Defaults to 8192 for partitions smaller than 1GB, 16384 for
+partitions 1GB or larger.
+
+bps/cpg
+
+For 4.2BSD file systems,
+the number of cylinders in a cylinder group. For LFS file
+systems, the segment shift value. Defaults to 16 for
+partitions smaller than 1GB, 64 for partitions 1GB or
+larger.
+
+EXAMPLES
+
+bsdlabel da0s1
+
+Display the
+label for the first slice of the da0 disk, as
+obtained via /dev/da0s1.
+
+bsdlabel da0s1
+> savedlabel
+
+Save the in-core
+label for da0s1 into the file savedlabel. This
+file can be used with the &minus;R option to restore
+the label at a later date.
+
+bsdlabel -w
+/dev/da0s1
+
+Create a label
+for da0s1.
+
+bsdlabel -e
+da0s1
+
+Read the label
+for da0s1, edit it, and install the result.
+
+bsdlabel -e -n
+da0s1
+
+Read the on-disk
+label for da0s1, edit it, and display what the new
+label would be (in sectors). It does not install the
+new label either in-core or on-disk.
+
+bsdlabel -w
+da0s1
+
+Write a default
+label on da0s1. Use another bsdlabel &minus;e
+command to edit the partitioning and file system
+information.
+
+bsdlabel -R
+da0s1 savedlabel
+
+Restore the
+on-disk and in-core label for da0s1 from information
+in savedlabel.
+
+bsdlabel -R -n
+da0s1 label_layout
+
+Display what the
+label would be for da0s1 using the partition layout
+in label_layout. This is useful for determining how
+much space would be allotted for various partitions with a
+labeling scheme using %-based or * partition
+sizes.
+
+bsdlabel -B
+da0s1
+
+Install a new
+bootstrap on da0s1. The boot code comes from
+/boot/boot.
+
+bsdlabel -w -B
+-b newboot /dev/da0s1
+
+Install a new
+label and bootstrap. The bootstrap code comes from the file
+newboot in the current working directory.
+
+dd if=/dev/zero
+of=/dev/da0 bs=512 count=32 
+fdisk -BI da0 
+dd if=/dev/zero of=/dev/da0s1 bs=512 count=32 
+bsdlabel -w -B da0s1 
+bsdlabel -e da0s1
+
+Completely wipe
+any prior information on the disk, creating a new bootable
+disk with a DOS partition table containing one slice,
+covering the whole disk. Initialize the label on this slice,
+then edit it. The dd(1) commands are optional, but may be
+necessary for some BIOSes to properly recognize the
+disk.
+
+This is an
+example disk label that uses some of the new partition size
+types such as %, M, G, and *,
+which could be used as a source file for
+&rsquo;&rsquo;bsdlabel -R ad0s1c
+new_label_file&rsquo;&rsquo;:
+
+#
+/dev/ad0s1c:
+
+8 partitions:
+
+# size offset fstype [fsize bsize bps/cpg]
+
+a: 400M 0 4.2BSD 4096 16384 75
+
+# (Cyl. 0 - 812*)
+
+b: 1G * swap 
+c: * * unused 
+e: 204800 * 4.2BSD 
+f: 5g * 4.2BSD 
+g: * * 4.2BSD
+
+DIAGNOSTICS
+
+The kernel device drivers will
+not allow the size of a disk partition to be decreased or
+the offset of a partition to be changed while it is
+open.
+
+COMPATIBILITY
+
+Due to the use of an
+u_int32_t to store the number of sectors, bsdlabels
+are restricted to a maximum of 2^32-1 sectors. This usually
+means 2TB of disk space. Larger disks should be partitioned
+using another method such as gpt(8).
+
+The various BSDs
+all use slightly different versions of BSD labels and are
+not generally compatible.
+
+SEE ALSO
+
+ccd(4), geom(4), md(4),
+disktab(5), boot0cfg(8), fdisk(8), gpt(8)
+
+BSD
+March 15, 2003 BSD

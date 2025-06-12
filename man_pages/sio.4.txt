@@ -1,0 +1,412 @@
+SIO(4) BSD Kernel Interfaces Manual SIO(4)
+
+NAME
+
+sio &mdash; fast
+interrupt driven asynchronous serial communications
+interface
+
+SYNOPSIS
+
+For standard ISA ports:
+
+device sio
+
+In
+/boot/device.hints:
+
+hint.sio.0.at="isa"
+
+hint.sio.0.port="0x3f8" 
+hint.sio.0.flags="0x10" 
+hint.sio.0.irq="4" 
+hint.sio.1.at="isa" 
+hint.sio.1.port="0x2f8" 
+hint.sio.1.flags="0x0" 
+hint.sio.1.irq="3"
+
+For AST
+compatible multiport cards with 4 ports:
+
+options COM_MULTIPORT 
+device sio
+
+In
+/boot/device.hints:
+
+hint.sio.4.at="isa"
+
+hint.sio.4.port="0x2a0" 
+hint.sio.4.flags="0x701" 
+hint.sio.5.at="isa" 
+hint.sio.5.port="0x2a8" 
+hint.sio.5.flags="0x701" 
+hint.sio.6.at="isa" 
+hint.sio.6.port="0x2b0" 
+hint.sio.6.flags="0x701" 
+hint.sio.7.at="isa" 
+hint.sio.7.port="0x2b8" 
+hint.sio.7.flags="0x701" 
+hint.sio.7.irq="12"
+
+For Boca Board
+compatible multiport cards with 8 ports:
+
+options COM_MULTIPORT 
+device sio
+
+In
+/boot/device.hints:
+
+hint.sio.4.at="isa"
+
+hint.sio.4.port="0x100" 
+hint.sio.4.flags="0xb05" 
+... 
+hint.sio.11.at="isa" 
+hint.sio.11.port="0x138" 
+hint.sio.11.flags="0xb05" 
+hint.sio.11.irq="12"
+
+For Netmos
+Nm9845 multiport cards with 6 ports:
+
+options COM_MULTIPORT 
+device sio
+
+In
+/boot/device.hints:
+
+hint.sio.4.at="isa"
+
+hint.sio.4.port="0xb000" 
+hint.sio.4.flags="0x901" 
+hint.sio.5.at="isa" 
+hint.sio.5.port="0xb400" 
+hint.sio.5.flags="0x901" 
+hint.sio.6.at="isa" 
+hint.sio.6.port="0xb800" 
+hint.sio.6.flags="0x901" 
+hint.sio.7.at="isa" 
+hint.sio.7.port="0xbc00" 
+hint.sio.7.flags="0x901" 
+hint.sio.8.at="isa" 
+hint.sio.8.port="0xc000" 
+hint.sio.8.flags="0x901" 
+hint.sio.9.at="isa" 
+hint.sio.9.port="0xac00" 
+hint.sio.9.flags="0x901" 
+hint.sio.9.irq="12"
+
+For Hayes ESP
+cards:
+
+options COM_ESP 
+device sio 
+...
+
+For single port
+PCI and PCCARD cards:
+
+device sio
+
+No lines are
+required in /boot/device.hints for these cards.
+
+For dual port
+PCI cards that share an interrupt:
+
+device sio 
+options COM_MULTIPORT
+
+In
+/boot/device.hints:
+
+hint.sio.2.flags="0x201"
+
+hint.sio.3.flags="0x201"
+
+Meaning of
+flags:
+
+0x00001
+
+shared IRQs
+
+0x00002
+
+disable
+FIFO
+
+0x00004
+
+no AST/4
+compatible IRQ control register
+
+0x00008
+
+recover sooner
+from lost output interrupts
+
+0x00010
+
+device is
+potential system console
+
+0x00020
+
+device is
+forced to become system console
+
+0x00040
+
+device is
+reserved for low-level IO (e.g. for remote kernel
+debugging)
+
+0x00080
+
+use this port
+for remote kernel debugging
+
+0x0??00
+
+minor number of
+master port
+
+0x10000
+
+PPS
+timestamping on CTS instead of DCD
+
+0x20000
+
+device is
+assumed to use a 16650A-type (extended FIFO) chip
+
+DESCRIPTION
+
+The sio driver provides
+support for NS8250-, NS16450-, NS16550 and NS16550A-based
+EIA RS-232C (CCITT V.24) communications interfaces. The
+NS8250 and NS16450 have single character buffers, the
+NS16550A has 16 character FIFO input and output buffers.
+
+Input and output
+for each line may set to one of following baud rates; 50,
+75, 110, 134.5, 150, 300, 600, 1200, 1800, 2400, 4800, 9600,
+19200, 28800, 38400, 57600, or 115200. Your hardware may
+limit your baud rate choices.
+
+The driver
+supports &rsquo;multiport&rsquo; cards. Multiport cards are
+those that have one or more groups of ports that share an
+Interrupt Request (IRQ) line per group. Shared IRQs on
+different cards are not supported. Frequently 4 ports share
+1 IRQ; some 8 port cards have 2 groups of 4 ports, thus
+using 2 IRQs. Some cards allow the first 2 serial ports to
+have separate IRQs per port (as per DOS PC standard).
+
+Some cards have
+an IRQ control register for each group. Some cards require
+special initialization related to such registers. Only AST/4
+compatible IRQ control registers are supported. Some cards
+have an IRQ status register for each group. The driver does
+not require or use such registers yet. To work, the control
+and status registers for a group, if any, must be mapped to
+the scratch register (register 7) of a port in the group.
+Such a port is called a master port.
+
+The driver
+supports controller based PCI modems. The 3Com FaxModem PCI
+and the Advantec 56k Voice Messaging PCI FaxModem are the
+only cards supported. WinModems, softmodems, hfc modems and
+any other modems that are not controller based are not
+supported.
+
+The flags
+keyword may be used on each device sio line in the
+kernel configuration file to disable the FIFO on 16550A
+UARTs (see the synopsis). Disabling the FIFO should rarely
+be necessary.
+
+The flags
+keyword must be used for all ports that are part of
+an IRQ sharing group. One bit specifies IRQ sharing; another
+bit specifies whether the port does not require AST/4
+compatible initialization. The minor number of the device
+corresponding a master port for the group is encoded as a
+bitfield in the high byte. The same master port must be
+specified for all ports in a group.
+
+The irq
+specification must be given for master ports and for ports
+that are not part of an IRQ sharing group, and not for other
+ports.
+
+In the synopsis,
+flags 0x701 means that the 8th port (sio7) is the
+master port, and that the port is on a multiport card with
+shared IRQs and an AST/4 compatible IRQ control
+register.
+
+flags
+0xb05 means that the 12th port (sio11) is the master
+port, and that the port is on a multiport card with shared
+IRQs and no special IRQ control register.
+
+Which port is
+the master port depends on the card type. Consult the
+hardware documentation of your card. Since IRQ status
+registers are never used, and IRQ control registers are only
+used for AST/4 compatible cards, and some cards map the
+control/status registers to all ports in a group, any port
+in a group will sometimes do for the master port. Choose a
+port containing an IRQ status register for forwards
+compatibility, and the highest possible port for
+consistency.
+
+Serial ports
+controlled by the sio driver can be used for both
+&rsquo;callin&rsquo; and &rsquo;callout&rsquo;. For each
+port there is a callin device and a callout device. The
+minor number of the callout device is 128 higher than that
+of the corresponding callin port. The callin device is
+general purpose. Processes opening it normally wait for
+carrier and for the callout device to become inactive. The
+callout device is used to steal the port from processes
+waiting for carrier on the callin device. Processes opening
+it do not wait for carrier and put any processes waiting for
+carrier on the callin device into a deeper sleep so that
+they do not conflict with the callout session. The callout
+device is abused for handling programs that are supposed to
+work on general ports and need to open the port without
+waiting but are too stupid to do so.
+
+The sio
+driver also supports an initial-state and a lock-state
+control device for each of the callin and the callout
+"data" devices. The termios settings of a data
+device are copied from those of the corresponding
+initial-state device on first opens and are not inherited
+from previous opens. Use stty(1) in the normal way on the
+initial-state devices to program initial termios states
+suitable for your setup.
+
+The lock termios
+state acts as flags to disable changing the termios state.
+E.g., to lock a flag variable such as CRTSCTS, use stty
+crtscts on the lock-state device. Speeds and special
+characters may be locked by setting the corresponding value
+in the lock-state device to any nonzero value. E.g., to lock
+a speed to 115200, use &rsquo;&rsquo;stty
+115200&rsquo;&rsquo; on the initial-state device and
+&rsquo;&rsquo;stty 1&rsquo;&rsquo; on the lock-state
+device.
+
+Correct programs
+talking to correctly wired external devices work with almost
+arbitrary initial states and almost no locking, but other
+setups may benefit from changing some of the default initial
+state and locking the state. In particular, the initial
+states for non (POSIX) standard flags should be set to suit
+the devices attached and may need to be locked to prevent
+buggy programs from changing them. E.g., CRTSCTS should be
+locked on for devices that support RTS/CTS handshaking at
+all times and off for devices that do not support it at all.
+CLOCAL should be locked on for devices that do not support
+carrier. HUPCL may be locked off if you do not want to hang
+up for some reason. In general, very bad things happen if
+something is locked to the wrong state, and things should
+not be locked for devices that support more than one
+setting. The CLOCAL flag on callin ports should be locked
+off for logins to avoid certain security holes, but this
+needs to be done by getty if the callin port is used for
+anything else.
+
+FILES 
+/dev/ttyd?
+
+for callin
+ports
+
+/dev/ttyd?.init 
+/dev/ttyd?.lock
+
+corresponding
+callin initial-state and lock-state devices
+
+/dev/cuad?
+
+for callout
+ports
+
+/dev/cuad?.init 
+/dev/cuad?.lock
+
+corresponding
+callout initial-state and lock-state devices
+
+/etc/rc.d/serial
+
+examples of
+setting the initial-state and lock-state devices
+
+The device
+numbers are made from the set [0-9a-v] so that more than 10
+ports can be supported.
+
+DIAGNOSTICS
+
+sio%d: silo
+overflow.  Problem in the interrupt handler.
+
+sio%d:
+interrupt-level buffer overflow.  Problem in the
+bottom half of the driver.
+
+sio%d:
+tty-level buffer overflow.  Problem in the
+application. Input has arrived faster than the given module
+could process it and some has been lost.
+
+SEE ALSO
+
+stty(1), termios(4), tty(4),
+comcontrol(8)
+
+HISTORY
+
+The sio driver is derived
+from the HP9000/300 dca(4) driver and is currently under
+development.
+
+BUGS
+
+Data loss may occur at very high
+baud rates on slow systems, or with too many ports on any
+system, or on heavily loaded systems when crtscts cannot be
+used. The use of NS16550A&rsquo;s reduces system load and
+helps to avoid data loss.
+
+Stay away from
+plain NS16550&rsquo;s. These are early implementations of
+the chip with non-functional FIFO hardware.
+
+The constants
+which define the locations of the various serial ports are
+holdovers from DOS. As shown, hex addresses can be and for
+clarity probably should be used instead.
+
+Note that on the
+AST/4 the card&rsquo;s dipswitches should not be set
+to use interrupt sharing. AST/4-like interrupt sharing is
+only used when multiple AST/4 cards are installed in
+the same system. The sio driver does not support more
+than 1 AST/4 on one IRQ.
+
+The examples in
+the synopsis are too vendor-specific.
+
+BSD
+August 30, 2006 BSD

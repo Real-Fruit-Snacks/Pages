@@ -1,0 +1,505 @@
+NAME
+
+mhstore - store
+contents of nmh MIME messages into files
+
+SYNOPSIS
+
+mhstore
+
+[-help] [-version]
+[+folder] [msgs] [-file file]
+[-outfile 
+
+outfile] [-part
+number] ... [-type content] ...
+[-prefer content] ... [-noprefer]
+[-auto | -noauto] [-clobber
+always | auto | suffix | ask |
+never] [-verbose | -noverbose]
+
+DESCRIPTION
+
+The
+mhstore command allows you to store the contents of a
+collection of MIME (multi-media) messages into files or
+other messages.
+
+mhstore
+manipulates multi-media messages as specified in RFC 2045 to
+RFC 2049.
+
+By default,
+mhstore will store all the parts of each message.
+Each part will be stored in a separate file. The header
+fields of the message are not stored. By using the
+-part, -type, and -prefer switches, you
+may limit and reorder the set of parts to be stored, based
+on part number and/or content type.
+
+The
+-file file switch directs mhstore to
+use the specified file as the source message, rather than a
+message from a folder. If you specify this file as
+&ldquo;-&rdquo;, then mhstore will accept the source
+message on the standard input. Note that the file, or input
+from standard input, should be a validly formatted message,
+just like any other nmh message. It should not
+be in mail drop format (to convert a file in mail drop
+format to a folder of nmh messages, see
+inc(1)).
+
+A part
+specification consists of a series of numbers separated by
+dots. For example, in a multipart content containing three
+parts, these would be named as 1, 2, and 3, respectively. If
+part 2 was also a multipart content containing two parts,
+these would be named as 2.1 and 2.2, respectively. Note that
+the -part switch is effective only for messages
+containing a multipart content. If a message has some other
+kind of content, or if the part is itself another multipart
+content, the -part switch will not prevent the
+content from being acted upon.
+
+The
+-type switch can also be used to restrict (or, when
+used in conjunction with -part, to further restrict)
+the selection of parts according to content type. One or
+more -type switches part will only select the first
+match from a multipart/alternative, even if there is more
+than one subpart that matches (one of) the given content
+type(s).
+
+Using either
+-part or -type switches alone will cause
+either to select the part(s) they match. Using them together
+will select only the part(s) matched by both (sets of)
+switches. In other words, the result is the intersection,
+and not the union, of their separate match results.
+
+A content
+specification consists of a content type and a subtype. The
+initial list of &ldquo;standard&rdquo; content types and
+subtypes can be found in RFC 2046.
+
+A list of
+commonly used contents is briefly reproduced here:
+
+Type
+
+Subtypes
+
+----
+
+--------
+
+text
+
+plain, enriched
+
+multipart
+
+mixed, alternative, digest, parallel
+
+message
+
+rfc822, external-body
+
+application
+
+octet-stream, postscript
+
+image
+
+jpeg, gif, png
+
+audio
+
+basic
+
+video
+
+mpeg
+
+A legal MIME
+message must contain a subtype specification.
+
+To specify a
+content, regardless of its subtype, just use the name of the
+content, e.g., &ldquo;audio&rdquo;. To specify a specific
+subtype, separate the two with a slash, e.g.,
+&ldquo;audio/basic&rdquo;. Note that regardless of the
+values given to the -type switch, a multipart content
+(of any subtype listed above) is always acted upon. Further
+note that if the -type switch is used, and it is
+desirable to act on a message/external-body content, then
+the -type switch must be used twice: once for
+message/external-body and once for the content externally
+referenced.
+
+The
+-prefer switch will alter the part-ordering of
+multipart/alternative MIME sections in order to override the
+sender-imposed default ordering. The -prefer switch
+is functionally most important for mhshow, but is
+also implemented in mhlist and mhstore to make
+common part-numbering possible across all three programs.
+The last of multiple -prefer switches will have the
+highest priority. This allows the command line switches to
+override profile entries. See mhlist(1) and
+mhshow(1) for more information on -prefer.
+
+The
+-noprefer switch will cancel any previous
+-prefer switches.
+
+Storing the
+Contents 
+mhstore will store the contents of the named messages in
+&ldquo;native&rdquo; (decoded) format. Two things must be
+determined: the directory in which to store the content, and
+the filenames. Files are written in the directory given by
+the &ldquo;nmh-storage&rdquo; profile entry, e.g.,
+
+nmh-storage:
+/tmp
+
+If this entry
+isn&rsquo;t present, the current working directory is
+used.
+
+If the
+-outfile switch is given, its argument is used for
+the filename to store all of the content, with
+&ldquo;-&rdquo; indicating standard output. If the
+-auto switch is given, then mhstore will check
+if the message contains information indicating the filename
+that should be used to store the content. This information
+should be specified as the &ldquo;filename&rdquo; attribute
+in the &ldquo;Content-Disposition&rdquo; header or as the
+&ldquo;name&rdquo; attribute in the
+&ldquo;Content-Type&rdquo; header for the content you are
+storing. For security reasons, this filename will be ignored
+if it begins with the character &rsquo;/&rsquo;,
+&rsquo;.&rsquo;, &rsquo;|&rsquo;, or &rsquo;!&rsquo;, or if
+it contains the character &rsquo;%&rsquo;. We also recommend
+using a &ldquo;nmh-storage&rdquo; profile entry or a
+-clobber switch setting other than the default of
+&ldquo;always&rdquo; to avoid overwriting existing
+files.
+
+If the
+-auto switch is not given (or is being ignored for
+security reasons) then mhstore will look in the
+user&rsquo;s profile for a &ldquo;formatting string&rdquo;
+to determine how the different contents should be stored.
+First, mhstore will look for an entry of the
+form:
+
+mhstore-store-/
+
+to determine
+the formatting string. If this isn&rsquo;t found,
+mhstore will look for an entry of the form:
+
+mhstore-store-
+
+to determine
+the formatting string.
+
+If the
+formatting string starts with a &ldquo;+&rdquo; character,
+then content is stored in the named folder. A formatting
+string consisting solely of a &ldquo;+&rdquo; character is
+interpreted to be the current folder.
+
+If the
+formatting string consists solely of a &ldquo;-&rdquo;
+character, then the content is sent to the standard
+output.
+
+If the
+formatting string starts with a &rsquo;|&rsquo;, then it
+represents a command for mhstore to execute which
+should ultimately store the content. The content will be
+passed to the standard input of the command. Before the
+command is executed, mhstore will change to the
+appropriate directory, and any escapes (given below) in the
+formatting string will be expanded. The use of the
+&ldquo;%a&rdquo; sequence is not recommended because the
+user has no control over the Content-Type parameter
+data.
+
+Otherwise, the
+formatting string will represent a pathname in which to
+store the content. If the formatting string starts with a
+&rsquo;/&rsquo;, then the content will be stored in the full
+path given, else the file name will be relative to the value
+of &ldquo;nmh-storage&rdquo; or the current working
+directory. Any escapes (given below) will be expanded,
+except for the a-escape. Note that if
+&ldquo;nmh-storage&rdquo; is not an absolute path, it will
+be relative to the folder that contains the message(s).
+
+A command or
+pathname formatting string may contain the following
+escapes. If the content isn&rsquo;t part of a multipart (of
+any subtype listed above) content, the p-escapes are
+ignored.
+
+%a
+
+Parameters from Content-Type (only valid with
+command) 
+
+%m
+
+Insert message number
+
+%P
+
+Insert part number with leading dot
+
+%p
+
+Insert part number without leading dot
+
+%t
+
+Insert content type
+
+%s
+
+Insert content subtype
+
+%%
+
+Insert character %
+
+If no
+formatting string is found, mhstore will check to see
+if the content is application/octet-stream with parameter
+&ldquo;type=tar&rdquo;. If so, mhstore will choose an
+appropriate filename. If the content is not
+application/octet-stream, then mhstore will check to
+see if the content is a message. If so, mhstore will
+use the value &ldquo;+&rdquo;. As a last resort,
+mhstore will use the value &ldquo;%m%P.%s&rdquo;.
+
+Example profile
+entries might be:
+
+mhstore-store-text:
+%m%P.txt 
+mhstore-store-text: +inbox 
+mhstore-store-audio/basic: | raw2audio -e ulaw -s 8000 -c 1
+> %m%P.au 
+mhstore-store-image/jpeg: %m%P.jpg 
+mhstore-store-application/PostScript: %m%P.ps
+
+The
+-verbose switch directs mhstore to print out
+the names of files that it stores. For backward
+compatibility, it is the default. The -noverbose
+switch suppresses these printouts.
+
+Overwriting
+Existing Files 
+The -clobber switch controls whether mhstore
+should overwrite existing files. The allowed values for this
+switch and corresponding behavior when mhstore
+encounters an existing file are:
+
+always
+Overwrite existing file (default) 
+auto Create new file of form name-n.extension 
+suffix Create new file of form name.extension.n 
+ask Prompt the user to specify whether or not to overwrite
+
+the existing file 
+never Do not overwrite existing file
+
+With
+auto and suffix, n is the lowest unused
+number, starting from one, in the same form. If a filename
+does not have an extension (following a &rsquo;.&rsquo;),
+then auto and suffix create a new file of the
+form name-n and name.n, respectively. With
+never and ask, the exit status of
+mhstore will be the number of files that were
+requested but not stored.
+
+With
+ask, if standard input is connected to a terminal,
+the user is prompted to respond yes, no, or
+rename, to whether the file should be overwritten.
+The responses can be abbreviated. If the user responds with
+rename, then mhstore prompts the user for the
+name of the new file to be created. If it is a relative path
+name (does not begin with &rsquo;/&rsquo;), then it is
+relative to the current directory. If it is an absolute or
+relative path to a directory that does not exist, the user
+will be prompted whether to create the directory. If
+standard input is not connected to a terminal, ask
+behaves the same as always.
+
+External
+Access 
+For contents of type message/external-body, mhstore
+supports these access-types:
+
+&bull;
+
+afs
+
+&bull;
+
+anon-ftp
+
+&bull;
+
+ftp
+
+&bull;
+
+local-file
+
+&bull;
+
+mail-server
+
+&bull;
+
+url
+
+For the
+&ldquo;anon-ftp&rdquo; and &ldquo;ftp&rdquo; access types,
+mhstore will look for the
+&ldquo;nmh-access-ftp&rdquo; profile entry, e.g.,
+
+nmh-access-ftp:
+myftp.sh
+
+to determine
+the pathname of a program to perform the FTP retrieval. This
+program is invoked with these arguments:
+
+domain name of
+FTP-site 
+username 
+password 
+remote directory 
+remote filename 
+local filename 
+&ldquo;ascii&rdquo; or &ldquo;binary&rdquo;
+
+The program
+should terminate with an exit status of zero if the
+retrieval is successful, and a non-zero exit status
+otherwise.
+
+For the
+&ldquo;url&rdquo; access types, mhstore will look for
+the &ldquo;nmh-access-url&rdquo; profile entry, e.g.,
+
+nmh-access-url:
+curl -L
+
+to determine
+the program to use to perform the HTTP retrieval. This
+program is invoked with one argument: the URL of the content
+to retrieve. The program should write the content to
+standard out, and should terminate with a status of zero if
+the retrieval is successful and a non-zero exit status
+otherwise.
+
+User
+Environment 
+Because the environment in which mhstore operates may
+vary for different machines, mhstore will look for
+the environment variable MHSTORE . If present, this
+specifies the name of an additional user profile which
+should be read. Hence, when a user logs in on a particular
+machine, this environment variable should be set to refer to
+a file containing definitions useful for that machine.
+Finally, mhstore will attempt to consult
+
+/etc/nmh/mhn.defaults
+
+which is
+created automatically during nmh installation.
+
+See
+"Profile Lookup" in mh-profile(5) for the
+profile search order, and for how duplicate entries are
+treated.
+
+EXAMPLES
+
+Decoding RFC
+2047-encoded file names 
+The improper RFC 2047 encoding of file name parameters can
+be replaced with correct RFC 2231 encoding using
+mhfixmsg, either permanently or ephemerally,
+e.g.,
+
+mhfixmsg
+-outfile - | mhstore -auto -clobber ask -file -
+
+The
+-clobberask is not necessary, though
+recommended to avoid silently overwriting an existing
+file.
+
+FILES
+
+mhstore
+looks for additional profile files in multiple locations:
+absolute pathnames are accessed directly, tilde expansion is
+done on usernames, and files are searched for in the
+user&rsquo;s Mail directory as specified in their
+profile. If not found there, the directory
+&ldquo;/etc/nmh&rdquo; is checked.
+
+$HOME/.mh_profile
+The user profile 
+$MHSTORE Additional profile entries 
+/etc/nmh/mhn.defaults System default MIME profile
+entries
+
+PROFILE COMPONENTS
+
+Path: To
+determine the user&rsquo;s nmh directory 
+Current-Folder: To find the default current folder 
+nmh-access-ftp: Program to retrieve contents via FTP 
+nmh-access-url: Program to retrieve contents via HTTP 
+nmh-storage Directory to store contents 
+mhstore-store-*Template for storing contents
+
+SEE ALSO
+
+mhbuild(1),
+mhfixmsg(1), mhlist(1), mhshow(1),
+sendfiles(1)
+
+DEFAULTS
+
+&rsquo;+folder&rsquo;
+defaults to the current folder 
+&rsquo;msgs&rsquo; defaults to cur 
+&rsquo;-noauto&rsquo; 
+&rsquo;-clobber always&rsquo; 
+&rsquo;-verbose&rsquo;
+
+CONTEXT
+
+If a folder is
+given, it will become the current folder. The last message
+selected will become the current message.
+
+BUGS
+
+Partial
+messages contained within a multipart content are not
+reassembled.
