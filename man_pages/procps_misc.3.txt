@@ -1,54 +1,53 @@
 PROCPS_MISC(3)             Library Functions Manual             PROCPS_MISC(3)
 
-НАЗВА
-       procps_misc  —  програмний  інтерфейс до різноманітних даних у файловій
-       системі /proc
+NAME
+       procps_misc - API for miscellaneous information in the /proc filesystem
 
-КОРОТКИЙ ОПИС
+SYNOPSIS
        #include <libproc2/misc.h>
 
-       Подробиці щодо платформи
+       Platform Particulars
 
            long         procps_cpu_count (void);
            long         procps_hertz_get (void);
            unsigned int procps_pid_length (void);
            int          procps_linux_version (void);
 
-       Подробиці щодо середовища виконання
+       Runtime Particulars
 
            int   procps_loadavg (double *av1, double *av5, double *av15);
            int   procps_uptime (double *uptime_secs, double *idle_secs);
            char *procps_uptime_sprint (void);
            char *procps_uptime_sprint_short (void);
 
-       Подробиці щодо простору назв
+       Namespace Particulars
 
            int         procps_ns_get_id (const char *name);
            const char *procps_ns_get_name (int id);
            int         procps_ns_read_pid (int pid, struct procps_ns *nsp);
 
-       Компонувати з -lproc2.
+       Link with -lproc2.
 
-ОПИС
-       procps_cpu_count()   повертає   кількість   робочих    процесорів    як
-       sysconf(_SC_NPROCESSORS_ONLY) або типове значення 1.
+DESCRIPTION
+       procps_cpu_count() returns the number of CPUs that are currently online
+       as sysconf(_SC_NPROCESSORS_ONLY) or an assumed 1.
 
-       procps_hertz_get()  повертає  кількість  тактів годинника на секунду як
-       sysconf(_SC_CLK_TCK) або типове значення 100. Якщо поділити такти на це
-       значення, буде отримано секунди.
+       procps_hertz_get() returns the number of  clock  ticks  per  second  as
+       sysconf(_SC_CLK_TCK)  or  an  assumed 100.  Dividing tics by this value
+       yields seconds.
 
-       procps_pid_length()  повертає  максимальну  довжину  рядка  для  PID  у
-       системі. Наприклад, якщо найбільше можливе значення PID — 123, довжиною
-       буде  3.  Якщо  файл  /proc/sys/kernel/pid_max виявиться недоступним до
-       читання, типовим значенням буде 5.
+       procps_pid_length() returns the maximum string length for a PID on  the
+       system. For example, if the largest possible PID value on was 123, then
+       the  length  would  be  3.  If  the  file  /proc/sys/kernel/pid_max  is
+       unreadable, the value is assumed to be 5.
 
-       procps_linux_version() повертає версію поточної системи Linux у форматі
-       закодованого   цілого  числа.  У  системах,  відмінних  від  Linux,  із
-       імітацією файлової системи proc ця  функція  повертає  версію  емуляції
-       Linux.   Версія   складається   з   трьох  додатних  цілих  чисел,  які
-       відповідають  основній,  проміжній  частинам  і  частині   модифікації.
-       Передбачено  вказані  нижче  макроси для кодування заданої версії Linux
-       або окремого використання компонентів поточної версії.
+       procps_linux_version()  returns the current Linux version as an encoded
+       integer. On non-Linux systems that have  an  emulated  proc  filesystem
+       this  function returns the version of the Linux emulation instead.  The
+       version consists of three positive  integers  representing  the  major,
+       minor and patch levels.  The following macros are provided for encoding
+       a given Linux version or separating out the components of  the  current
+       version.
 
            LINUX_VERSION( major , minor , patch )
 
@@ -58,28 +57,27 @@ PROCPS_MISC(3)             Library Functions Manual             PROCPS_MISC(3)
 
            LINUX_VERSION_PATCH( ver )
 
-       procps_loadavg() отримує дані щодо середнього навантаження на систему і
-       записує  середні  значення  за  1,  5  і 15 хвилин у місця, які вказано
-       будь-яким вказівником, який не є порожнім (NULL).
+       procps_loadavg()  fetches the system load average and puts the 1, 5 and
+       15 minute averages into location(s) specified by any pointer  which  is
+       not NULL.
 
-       procps_uptime() повертає час роботи і/або бездіяльності  у  секундах  у
-       місця,  які  вказано  будь-яким вказівником, який не є порожнім (NULL).
-       Використання форматування sprint повертає рядок у зручному для  читання
-       форматі в одній із двох форм.
+       procps_uptime()  returns  uptime  and/or  idle seconds into location(s)
+       specified by any pointer which  is  not  NULL.   The  sprint  varieties
+       return a human-readable string in one of two forms.
 
-           ГГ:ХХ:СС up ГГ:ХХ, # users, load average: 1, 5, 15 MM averages
+           HH:MM:SS up HH:MM, # users, load average: 1, 5, 15 MM averages
 
-           up ГГ, ХХ
+           up HH, MM
 
-       procps_ns_get_id()    повертає    цілочисельний   ідентифікатор   (enum
-       namespace_type) простору назв для заданого простору назв name.
+       procps_ns_get_id()  returns the integer id (enum namespace_type) of the
+       namespace for the given namespace name.
 
-       procps_ns_get_name() повертає назву простора назв для заданого id (enum
-       namespace_type).
+       procps_ns_get_name() returns the name of the namespace for the given id
+       (enum namespace_type).
 
-       procps_ns_read_pid()  повертає  inode-и  для  просторів назв із заданим
-       процесом у структурі procps_ns на  яку  вказує  nsp.  Ці  inode-и  буде
-       виведено у порядку, який визначається переліком namespace_type.
+       procps_ns_read_pid() returns the inodes for the namespaces of the given
+       process in the procps_ns structure pointed to  by  nsp.   Those  inodes
+       will appear in the order proscribed by enum namespace_type.
 
            enum namespace_type {
                PROCPS_NS_CGROUP,
@@ -92,33 +90,34 @@ PROCPS_MISC(3)             Library Functions Manual             PROCPS_MISC(3)
                PROCPS_NS_UTS
            };
 
-ПОВЕРНУТЕ ЗНАЧЕННЯ
-   Функції, які повертають «int» або «long»
-       На  помилку  вказуватиме  від'ємне  число,  яке  є  завжди оберненим до
-       якогось відомого значення з errno.h.
+RETURN VALUE
+   Functions Returning an `int' or `long'
+       An  error  will  be  indicated  by a negative number that is always the
+       inverse of some well known errno.h value.
 
-   Функції, які повертають «address»
-       На помилку вказуватиме повернутий  NUL-вказівник  із  повідомлення  про
-       причину у формальному значенні errno.
+   Functions Returning an `address'
+       An error will be indicated by a NULL return  pointer  with  the  reason
+       found in the formal errno value.
 
-ФАЙЛИ
+FILES
        /proc/loadavg
-              Необроблені значення для середнього навантаження.
+              The raw values for load average.
 
        /proc/sys/kernel/osrelease
-              Містить версію випуску ядра Linux або файлової системи proc.
+              Contains  the  release  version  of  the  Linux  kernel  or proc
+              filesystem.
 
        /proc/sys/kernel/pid_max
-              Містить  значення,  на  якому  відбувається зациклювання PID, на
-              одиницю більше за максимальне значення PID.
+              Contains the value at which PIDs wrap around, one  greater  than
+              the maximum PID value.
 
        /proc/uptime
-              Необроблені значення для часу роботи та часу бездіяльності.
+              The raw values for uptime and idle time.
 
        /proc/<PID>/ns
-              містить набір просторів назв для певного PID.
+              contains the set of namespaces for a particular PID.
 
-ТАКОЖ ПЕРЕГЛЯНЬТЕ
+SEE ALSO
        procps(3), procps_pids(3), proc(5).
 
-libproc2                       серпень 2022 року                PROCPS_MISC(3)
+libproc2                          August 2022                   PROCPS_MISC(3)

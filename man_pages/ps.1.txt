@@ -1,748 +1,700 @@
-PS(1)                         Команди користувача                        PS(1)
+PS(1)                            User Commands                           PS(1)
 
-НАЗВА
-       ps — надає звіт щодо поточних процесів.
+NAME
+       ps - report a snapshot of the current processes.
 
-КОРОТКИЙ ОПИС
-       ps [параметри]
+SYNOPSIS
+       ps [options]
 
-ОПИС
-       ps показує відомості щодо вибраного набору активних процесів. Якщо вам
-       потрібне регулярне оновлення вибору та показаних даних, скористайтеся
-       замість цієї програми програмою top.
+DESCRIPTION
+       ps displays information about a selection of the active processes.  If
+       you want a repetitive update of the selection and the displayed
+       information, use top instead.
 
-       Ця версія ps приймає декілька типів параметрів:
+       This version of ps accepts several kinds of options:
 
-       1   Параметри UNIX, які може бути згруповано і яким має перебувати
-           дефіс.
-       2   Параметри BSD, які може бути згруповано і які не слід
-           використовувати з дефісом.
-       3   Довгі версії параметрів GNU, перед якими слід вказати два дефіси.
+       1   UNIX options, which may be grouped and must be preceded by a dash.
+       2   BSD options, which may be grouped and must not be used with a dash.
+       3   GNU long options, which are preceded by two dashes.
 
-       Параметри різних типів можна поєднувати довільним чином, але можуть
-       виникнути конфлікти. Існує декілька параметрів однакового призначення,
-       які є функціонально ідентичним. Причиною є одночасна наявність багатьох
-       стандартів і реалізацій ps, з якими є сумісною ця версія ps.
+       Options of different types may be freely mixed, but conflicts can
+       appear.  There are some synonymous options, which are functionally
+       identical, due to the many standards and ps implementations that this
+       ps is compatible with.
 
-       Зауважте, що ps -aux не є тим самим, що і ps aux. Стандарти POSIX і
-       UNIX вимагають, щоб команда ps -aux виводила список усіх процесів,
-       власником яких є користувач x, а також усіх процесів, які було б
-       вибрано у результаті використання параметра -a. Якщо запису користувача
-       x не існує, цей варіант ps може обробити команду як ps aux і вивести
-       попередження щодо цього. Так зроблено навмисне, щоб допомогти у
-       сумісності із застарілими скриптами та звичками. Така поведінка
-       програми не є сталою, може змінитися — не варто на неї покладатися.
+       Note that ps -aux is distinct from ps aux.  The POSIX and UNIX
+       standards require that ps -aux print all processes owned by a user
+       named x, as well as printing all processes that would be selected by
+       the -a option.  If the user named x does not exist, this ps may
+       interpret the command as ps aux instead and print a warning.  This
+       behavior is intended to aid in transitioning old scripts and habits.
+       It is fragile, subject to change, and thus should not be relied upon.
 
-       Типово, ps вибирає усі процеси із тим самим ідентифікатором ефективного
-       користувача (euid=EUID), що і у поточного користувача, а також ті
-       процеси, які пов'язано із тим самим терміналом, звідки викликано
-       програму. Програма виводить ідентифікатор процесу (pid=PID), термінал,
-       який пов'язано із процесом (tname=TTY), накопичений час процесора у
-       форматі [ДД-]гг:хх:сс (time=TIME) та назву виконуваного файла
-       (ucmd=CMD). Типово, виведені дані не упорядковуються.
+       By default, ps selects all processes with the same effective user ID
+       (euid=EUID) as the current user and associated with the same terminal
+       as the invoker.  It displays the process ID (pid=PID), the terminal
+       associated with the process (tname=TTY), the cumulated CPU time in
+       [DD-]hh:mm:ss format (time=TIME), and the executable name (ucmd=CMD).
+       Output is unsorted by default.
 
-       Використання параметрів у стилі BSD додасть стан процесу (stat=STAT) до
-       типового набору для показу і показ аргументів команди (args=COMMAND)
-       замість назви виконуваного файла. Ви можете перевизначити це за
-       допомогою змінної середовища PS_FORMAT. Використання параметрів у стилі
-       BSD також змінить вибір процесів — буде включено процеси з інших
-       терміналів (TTY), власником яких ви є; крім того, це може бути описано
-       як встановлення набору усіх процесів, які фільтровано для виключення
-       процесів, власником яких є інші користувачі або не у терміналі. Ці
-       ефекти не буде взято до уваги для параметрів, які описано нижче як
-       «тотожні», отже, -M вважатиметься тотожним до Z тощо.
+       The use of BSD-style options will add process state (stat=STAT) to the
+       default display and show the command args (args=COMMAND) instead of the
+       executable name.  You can override this with the PS_FORMAT environment
+       variable. The use of BSD-style options will also change the process
+       selection to include processes on other terminals (TTYs) that are owned
+       by you; alternately, this may be described as setting the selection to
+       be the set of all processes filtered to exclude processes owned by
+       other users or not on a terminal.  These effects are not considered
+       when options are described as being "identical" below, so -M will be
+       considered identical to Z and so on.
 
-       Окрім вказаних нижче випадків, параметри вибору процесів є адитивними.
-       Типовий вибір буде відкинуто, а потім вибрані процеси буде додано до
-       набору процесів, які слід показати. Таким чином, процес буде показано,
-       якщо він буде відповідати усім заданим критеріям.
+       Except as described below, process selection options are additive.  The
+       default selection is discarded, and then the selected processes are
+       added to the set of processes to be displayed.  A process will thus be
+       shown if it meets any of the given selection criteria.
 
-ПРИКЛАДИ
-       Перегляд усіх процесів системи з використанням стандартного синтаксису:
+EXAMPLES
+       To see every process on the system using standard syntax:
           ps -e
           ps -ef
           ps -eF
           ps -ely
 
-       Перегляд усіх процесів системи з використанням синтаксису BSD:
+       To see every process on the system using BSD syntax:
           ps ax
           ps axu
 
-       Виведення ієрархії процесів:
+       To print a process tree:
           ps -ejH
           ps axjf
 
-       Отримання відомостей щодо потоків обробки:
+       To get info about threads:
           ps -eLf
           ps axms
 
-       Отримання відомостей щодо захисту:
+       To get security info:
           ps -eo euser,ruser,suser,fuser,f,comm,label
           ps axZ
           ps -eM
 
-       Перегляд усіх процесів, які запущено від імені користувача root
-       (справжній і ефективний ідентифікатор) у форматі користувача:
+       To see every process running as root (real & effective ID) in user
+       format:
           ps -U root -u root u
 
-       Перегляд усіх процесів із визначеним користувачем форматом:
+       To see every process with a user-defined format:
           ps -eo pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,wchan:14,comm
           ps axo stat,euid,ruid,tty,tpgid,sess,pgrp,ppid,pid,pcpu,comm
           ps -Ao pid,tt,user,fname,tmout,f,wchan
 
-       Виведення лише ідентифікаторів процесів syslogd:
+       Print only the process IDs of syslogd:
           ps -C syslogd -o pid=
 
-       вивести лише назву PID 42:
+       Print only the name of PID 42:
           ps -q 42 -o comm=
 
-ПРОСТИЙ ВИБІР ПРОЦЕСУ
-       a      Використати обмеження «лише себе» у стилі BSD, яке буде
-              накладено на набір усіх процесів, якщо використано якісь
-              параметри у стилі BSD (без «-») або якщо особу користувача ps
-              встановлено у стилі BSD. Набір процесів, який вибрано у цей
-              спосіб, додається до набору процесів, які вибрано в інший
-              спосіб. Альтернативним описом є те, що цей параметр наказує ps
-              вивести список усіх процесів з терміналом (tty) або вивести
-              список усіх процесів, якщо використано разом із параметром x.
+SIMPLE PROCESS SELECTION
+       a      Lift the BSD-style "only yourself" restriction, which is imposed
+              upon the set of all processes when some BSD-style (without "-")
+              options are used or when the ps personality setting is BSD-like.
+              The set of processes selected in this manner is in addition to
+              the set of processes selected by other means.  An alternate
+              description is that this option causes ps to list all processes
+              with a terminal (tty), or to list all processes when used
+              together with the x option.
 
-       -A     Вибрати усі процеси. Те саме, що і -e.
+       -A     Select all processes.  Identical to -e.
 
-       -a     Вибрати усі процеси, окрім обох лідерів сеансів (див. getsid(2))
-              і процеси, які не пов'язано із терміналом.
+       -a     Select all processes except both session leaders (see getsid(2))
+              and processes not associated with a terminal.
 
-       -d     Вибрати усі процеси, окрім лідерів сеансів.
+       -d     Select all processes except session leaders.
 
        --deselect
-              Вибрати усі процеси, окрім тих, які задовольняють вказані умови
-              (інвертує вибір). Те саме, що і -N.
+              Select all processes except those that fulfill the specified
+              conditions (negates the selection).  Identical to -N.
 
-       -e     Вибрати усі процеси. Те саме, що і -A.
+       -e     Select all processes.  Identical to -A.
 
-       g      Справді всі, навіть лідери сеансу. Цей прапорець є застарілим, і
-              його може бути вилучено у майбутніх випусках. Зазвичай, неявно
-              встановлюється прапорцем a, і корисний лише для роботи із
-              особами sunos4.
+       g      Really all, even session leaders.  This flag is obsolete and may
+              be discontinued in a future release.  It is normally implied by
+              the a flag, and is only useful when operating in the sunos4
+              personality.
 
-       -N     Вибрати усі процеси, окрім тих, які задовольняють вказані умови
-              (інвертує вибір). Те саме, що і --deselect.
+       -N     Select all processes except those that fulfill the specified
+              conditions (negates the selection).  Identical to --deselect.
 
-       T      Вибрати усі процеси, які пов'язано із цим терміналом. Те саме,
-              що і параметр t без будь-яких аргументів.
+       T      Select all processes associated with this terminal.  Identical
+              to the t option without any argument.
 
-       r      Обмежити вибір лише процесами, які працюють.
+       r      Restrict the selection to only running processes.
 
-       x      Використати обмеження «повинен мати термінал» у стилі BSD, яке
-              буде накладено на набір усіх процесів, якщо використано якісь
-              параметри у стилі BSD (без «-») або якщо особу користувача ps
-              встановлено у стилі BSD. Набір процесів, який вибрано у цей
-              спосіб, додається до набору процесів, які вибрано в інший
-              спосіб. Альтернативним описом є те, що цей параметр наказує ps
-              вивести список усіх процесів, власником яких є ви (той самий
-              EUID, що і для ps) або вивести список усіх процесів, якщо
-              використано разом із параметром a.
+       x      Lift the BSD-style "must have a tty" restriction, which is
+              imposed upon the set of all processes when some BSD-style
+              (without "-") options are used or when the ps personality
+              setting is BSD-like.  The set of processes selected in this
+              manner is in addition to the set of processes selected by other
+              means.  An alternate description is that this option causes ps
+              to list all processes owned by you (same EUID as ps), or to list
+              all processes when used together with the a option.
 
-ВИБІР ПРОЦЕСУ ЗА СПИСКОМ
-       Ці параметри приймають один аргумент у формі списку відокремлених
-       пробілами або комами значень. Можна використовувати декілька разів в
-       одній команді. Приклад: ps -p "1 2" -p 3,4
+PROCESS SELECTION BY LIST
+       These options accept a single argument in the form of a blank-separated
+       or comma-separated list.  They can be used multiple times.  For
+       example: ps -p "1 2" -p 3,4
 
-       -123   Те саме, що і --pid 123.
+       -123   Identical to --pid 123.
 
-       123    Те саме, що і --pid 123.
+       123    Identical to --pid 123.
 
-       -C список_команд
-              Вибрати за назвою команди. Вибирає процеси, назвою виконуваного
-              файла у яких є назва, задана аргументом список_команд.
-              Зауваження: назва команди не є тим самим, що рядок команди. У
-              попередніх версіях procps і ядро обрізали цю назву команди до 15
-              символів. Це обмеження знято у нових версіях. Якщо ваш код
-              залежить від обмеження у 15 символів, він може не спрацювати.
+       -C cmdlist
+              Select by command name.  This selects the processes whose
+              executable name is given in cmdlist.  NOTE: The command name is
+              not the same as the command line. Previous versions of procps
+              and the kernel truncated this command name to 15 characters.
+              This limitation is no longer present in both. If you depended on
+              matching only 15 characters, you may no longer get a match.
 
-       -G список_груп
-              Вибрати за ідентифікатором справжньої групи (RGID) або назвою.
-              Вибирає процеси, назва або ідентифікатор справжньої групи яких є
-              у списку список_груп. Ідентифікатор справжньої групи визначає
-              групу користувача, який створив процес, див. getgid(2).
+       -G grplist
+              Select by real group ID (RGID) or name.  This selects the
+              processes whose real group name or ID is in the grplist list.
+              The real group ID identifies the group of the user who created
+              the process, see getgid(2).
 
        -g grplist
-              Вибрати за сеансом АБО за назвою ефективної групи. Вибір за
-              сеансом визначається багатьма стандартами, але вибір за
-              ефективною групою є логічною поведінкою, яку використано у
-              декількох інших операційних системах. Ця версія ps вибиратиме за
-              сеансом, якщо список є повністю числовим (як сеанси). Числові
-              ідентифікатори груп працюватимуть, лише якщо також вказано деякі
-              назви груп. Див. параметри -s і --group.
+              Select by session OR by effective group name.  Selection by
+              session is specified by many standards, but selection by
+              effective group is the logical behavior that several other
+              operating systems use.  This ps will select by session when the
+              list is completely numeric (as sessions are).  Group ID numbers
+              will work only when some group names are also specified.  See
+              the -s and --group options.
 
        --Group grplist
-              Вибрати за ідентифікатором справжньої групи (RGID) або назвою.
-              Те саме, що і -G.
+              Select by real group ID (RGID) or name.  Identical to -G.
 
        --group grplist
-              Вибрати за ідентифікатором ефективної групи (EGID) або назвою.
-              Вибирає процеси, чиї назви або ідентифікатори ефективних груп є
-              у список_груп. Ідентифікатор ефективної групи описує групу, чиї
-              права доступу до файлів використано процесом (див. getegid(2)).
-              Параметр -g часто є альтернативою --group.
+              Select by effective group ID (EGID) or name.  This selects the
+              processes whose effective group name or ID is in grplist.  The
+              effective group ID describes the group whose file access
+              permissions are used by the process (see getegid(2)).  The -g
+              option is often an alternative to --group.
 
-       p список_pid
-              Вибрати за ідентифікатором процесу. Те саме, що і -p та --pid.
+       p pidlist
+              Select by process ID.  Identical to -p and --pid.
 
-       -p список_pid
-              Вибрати за PID. Вибирає процеси, номери ідентифікаторів процесу
-              яких з'являються у pidlist. Те саме, що і p та --pid.
+       -p pidlist
+              Select by PID.  This selects the processes whose process ID
+              numbers appear in pidlist.  Identical to p and --pid.
 
-       --pid список_pid
-              Вибрати за ідентифікатором процесу. Те саме, що і -p та p.
+       --pid pidlist
+              Select by process ID.  Identical to -p and p.
 
-       --ppid список_pid
-              Вибрати за ідентифікатором батьківського процесу. Вибирає
-              процеси із ідентифікатором батьківського процесу зі списку
-              список_pid. Таким чином, програма вибирає процеси, які є
-              дочірніми щодо процесів зі списку список_pid.
+       --ppid pidlist
+              Select by parent process ID.  This selects the processes with a
+              parent process ID in pidlist.  That is, it selects processes
+              that are children of those listed in pidlist.
 
-       q список_pid
-              Вибрати за ідентифікатором процесу (швидкий режим). Те саме, що
-              і -q та --quick-pid.
+       q pidlist
+              Select by process ID (quick mode).  Identical to -q and
+              --quick-pid.
 
-       -q список_pid
-              Вибрати за PID (швидкий режим). Вибирає процеси, чиї числові
-              ідентифікатори процесу є у списку список_pid. Якщо вказано цей
-              параметр, ps прочитає потрібні дані лише для pid зі списку
-              список_pid і не застосовуватиме додаткових правил фільтрування.
-              Порядок pid без сортування зберігатиметься. У цьому режимі не
-              передбачено додаткових параметрів вибору, упорядковування та
-              списки типу «ліс». Те саме, що q і --quick-pid.
+       -q pidlist
+              Select by PID (quick mode).  This selects the processes whose
+              process ID numbers appear in pidlist.  With this option ps reads
+              the necessary info only for the pids listed in the pidlist and
+              doesn't apply additional filtering rules. The order of pids is
+              unsorted and preserved. No additional selection options, sorting
+              and forest type listings are allowed in this mode.  Identical to
+              q and --quick-pid.
 
-       --quick-pid список_pid
-              Вибрати за ідентифікатором процесу (швидкий режим). Те саме, що
-              і -q та q.
+       --quick-pid pidlist
+              Select by process ID (quick mode).  Identical to -q and q.
 
        -s sesslist
-              Вибрати за ідентифікатором сеансу. Вибирає процеси із
-              ідентифікатором сеансу, вказаним у sesslist.
+              Select by session ID.  This selects the processes with a session
+              ID specified in sesslist.
 
        --sid sesslist
-              Вибрати за ідентифікатором сеансу. Те саме, що і -s.
+              Select by session ID.  Identical to -s.
 
-       t список_терміналів
-              Вибрати за терміналом. Майже те саме, що і -t та --tty, але
-              можна використовувати із порожнім значенням список_терміналів,
-              щоб вказати на термінал, який пов'язано із ps. Використання
-              параметра T вважається пріоритетнішим варіантом за використання
-              t із порожнім значенням список_терміналів.
+       t ttylist
+              Select by tty.  Nearly identical to -t and --tty, but can also
+              be used with an empty ttylist to indicate the terminal
+              associated with ps.  Using the T option is considered cleaner
+              than using t with an empty ttylist.
 
-       -t список_терміналів
-              Вибрати за терміналом. Вибирає процеси, пов'язані із
-              терміналами, які задано списком список_терміналів. Термінали
-              (tty або екрани для текстового виведення) можна вказати у
-              декількох формах: /dev/ttyS1, ttyS1, S1. Можна скористатися
-              простим «-» для вибору процесів, які не пов'язано із будь-яким
-              терміналом.
+       -t ttylist
+              Select by tty.  This selects the processes associated with the
+              terminals given in ttylist.  Terminals (ttys, or screens for
+              text output) can be specified in several forms: /dev/ttyS1,
+              ttyS1, S1.  A plain "-" may be used to select processes not
+              attached to any terminal.
 
        --tty ttylist
-              Вибрати за терміналом. Те саме, що і -t та t.
+              Select by terminal.  Identical to -t and t.
 
-       U список_користувачів
-              Вибрати за ідентифікатором ефективного користувача (EUID) або
-              назвою. Вибирає процеси, чиї імена або ідентифікатори ефективних
-              користувачів є у список_користувачів. Ідентифікатор ефективного
-              користувача описує користувача, чиї права доступу до файлів
-              використано процесом (див. geteuid(2)). Параметр -u часто є
-              альтернативою --user.
+       U userlist
+              Select by effective user ID (EUID) or name.  This selects the
+              processes whose effective user name or ID is in userlist.  The
+              effective user ID describes the user whose file access
+              permissions are used by the process (see geteuid(2)).  Identical
+              to -u and --user.
 
-       -U список_користувачів
-              Вибрати за ідентифікатором справжнього користувача (RUID) або
-              назвою. Вибирає процеси, назва або ідентифікатор справжнього
-              користувача яких є у списку список_користувачів. Ідентифікатор
-              справжнього користувача визначає користувача, який створив
-              процес, див. getuid(2).
+       -U userlist
+              Select by real user ID (RUID) or name.  It selects the processes
+              whose real user name or ID is in the userlist list.  The real
+              user ID identifies the user who created the process, see
+              getuid(2).
 
-       -u список_користувачів
-              Вибрати за ідентифікатором ефективного користувача (EUID) або
-              назвою. Вибирає процеси, чия назва ефективного користувача або
-              ідентифікатор перебуває у списку список_користувачів.
+       -u userlist
+              Select by effective user ID (EUID) or name.  This selects the
+              processes whose effective user name or ID is in userlist.
 
-              Ідентифікатор ефективного користувача описує користувача, чиї
-              права доступу до файлів використано процесом (див. geteuid(2)).
-              Параметр U часто є альтернативою --user.
+              The effective user ID describes the user whose file access
+              permissions are used by the process (see geteuid(2)).  Identical
+              to U and --user.
 
-       --User список_користувачів
-              Вибрати ідентифікатор або ім'я справжнього користувача (RUID).
-              Тотожний до -U.
+       --User userlist
+              Select by real user ID (RUID) or name.  Identical to -U.
 
-       --user список користувачів
-              Вибрати за ідентифікатором або іменем ефективного користувача
-              (EUID). Те саме, що -u і U.
+       --user userlist
+              Select by effective user ID (EUID) or name.  Identical to -u and
+              U.
 
-КЕРУВАННЯ ФОРМАТОМ ВИВЕДЕННЯ
-       Ці параметри використовують для вибору даних, які буде показано ps.
-       Виведений результат може бути різним для різних користувачів.
+OUTPUT FORMAT CONTROL
+       These options are used to choose the information displayed by ps.  The
+       output may differ by personality.
 
-       -c     Показати різні дані планувальника для параметра -l.
+       -c     Show different scheduler information for the -l option.
 
        --context
-              Показати формат контексту захисту (для SELinux).
+              Display security context format (for SELinux).
 
-       -f     Виконати повноформатне виведення списку. Цей параметр можна
-              поєднувати із багатьма іншими параметрами у стилі UNIX для
-              додавання додаткових стовпчиків. Його використання також
-              призводить до виведення аргументів команди. Якщо використано
-              разом із -L, буде додано стовпчики NLWP (кількості потоків
-              обробки) та LWP (ідентифікатора потоку обробки). Див. параметр
-              c, ключове слово форматування args та ключове слово форматування
-              comm.
+       -f     Do full-format listing. This option can be combined with many
+              other UNIX-style options to add additional columns.  It also
+              causes the command arguments to be printed.  When used with -L,
+              the NLWP (number of threads) and LWP (thread ID) columns will be
+              added.  See the c option, the format keyword args, and the
+              format keyword comm.
 
-       -F     Надповний формат. Див. параметр -f, використання якого неявним
-              чином вмикає -F.
+       -F     Extra full format.  See the -f option, which -F implies.
 
-       --format формат
-              Визначений користувачем формат. Тотожній до -o і o.
+       --format format
+              user-defined format.  Identical to -o and o.
 
-       j      Формат керування завданнями BSD.
+       j      BSD job control format.
 
-       -j     Формат завдань.
+       -j     Jobs format.
 
-       l      Вивести дані у довгому форматі BSD.
+       l      Display BSD long format.
 
-       -l     Довгий формат. Разом із цим параметром часто корисним є параметр
-              -y.
+       -l     Long format.  The -y option is often useful with this.
 
-       -M     Додати стовпчик даних щодо захисту. Те саме, що і Z (для
-              SELinux).
+       -M     Add a column of security data.  Identical to Z (for SELinux).
 
-       O формат
-              Є попередньо завантаженим o (перезавантаженим). Параметр O BSD
-              може працювати як -O (визначений користувачем формат виведення з
-              деякими попередньо визначеними типовими полями) або бути
-              використаним для визначення упорядкування. Для визначення
-              поведінки цього параметра буде використано евристику. Для
-              забезпечення бажаної поведінки (упорядкування або форматування)
-              вкажіть параметр у якийсь інший спосіб (наприклад, з -O або
-              --sort). Якщо використано як параметр форматування, є ідентичним
-              до -O із особливостями BSD.
+       O format
+              is preloaded o (overloaded).  The BSD O option can act like -O
+              (user-defined output format with some common fields predefined)
+              or can be used to specify sort order.  Heuristics are used to
+              determine the behavior of this option.  To ensure that the
+              desired behavior is obtained (sorting or formatting), specify
+              the option in some other way (e.g.  with -O or --sort).  When
+              used as a formatting option, it is identical to -O, with the BSD
+              personality.
 
-       -O формат
-              Подібний до -o, але із попереднім завантаженням деяких типових
-              стовпчиків. Ідентичний до -o pid,формат,state,tname,time,command
-              або -o pid,формат,tname,time,cmd, див. -o нижче.
+       -O format
+              Like -o, but preloaded with some default columns.  Identical to
+              -o pid,format,state,tname,time,command or -o pid,format,tname,
+              time,cmd, see -o below.
 
-       o формат
-              Вказати визначений користувачем формат. Те саме, що і -o і
-              --format.
+       o format
+              Specify user-defined format.  Identical to -o and --format.
 
-       -o формат
-              Визначений користувачем формат. Значення формат є єдиним
-              аргументом у формі списку відокремлених пробілами або комами
-              значень, за його допомогою можна вказати окремі стовпчики
-              виведення даних. Визначені ключові слова описано у розділі
-              СТАНДАРТНІ СПЕЦИФІКАТОРИ ФОРМАТІВ нижче. Заголовки, якщо
-              потрібно, може бути перейменовано (ps -o pid,ruser=RealUser -o
-              comm=Command). Якщо усі заголовки стовпчиків порожні (ps -o pid=
-              -o comm=), рядок заголовків не буде виведено. Для широких
-              заголовків буде збільшено ширину стовпчика; цим можна
-              скористатися для збільшення ширити стовпчиків, подібних до WCHAN
-              (ps -o pid,wchan=WIDE-WCHAN-COLUMN -o comm). Також можна
-              скористатися явним визначенням ширини (ps opid,wchan:42,cmd).
-              Поведінка ps -o pid=X,comm=Y є різною у різних системах; дані
-              може бути виведено в один стовпчик із назвою «X,comm=Y» або у
-              два стовпчики із назвами «X» та «Y». Скористайтеся декількома
-              параметрами -o, якщо не певні щодо результатів. Скористайтеся
-              змінною середовища PS_FORMAT для визначення бажаного типового
-              варіанта; DefSysV і DefBSD є макросами, якими можна скористатися
-              для вибору типових стовпчиків UNIX або BSD.
+       -o format
+              User-defined format.  format is a single argument in the form of
+              a blank-separated or comma-separated list, which offers a way to
+              specify individual output columns.  The recognized keywords are
+              described in the STANDARD FORMAT SPECIFIERS section below.
+              Headers may be renamed (ps -o pid,ruser=RealUser -o
+              comm=Command) as desired.  If all column headers are empty (ps
+              -o pid= -o comm=) then the header line will not be output.
+              Column width will increase as needed for wide headers; this may
+              be used to widen up columns such as WCHAN (ps -o pid,wchan=WIDE-
+              WCHAN-COLUMN -o comm).  Explicit width control (ps opid,
+              wchan:42,cmd) is offered too.  The behavior of ps -o pid=X,
+              comm=Y varies with personality; output may be one column named
+              "X,comm=Y" or two columns named "X" and "Y".  Use multiple -o
+              options when in doubt.  Use the PS_FORMAT environment variable
+              to specify a default as desired; DefSysV and DefBSD are macros
+              that may be used to choose the default UNIX or BSD columns.
 
-       -P     Додати стовпчик із для показу psr.
+       -P     Add a column showing psr.
 
-       s      Формат показу сигналів.
+       s      Display signal format.
 
-       u      Формат показу, орієнтований на користувача.
+       u      Display user-oriented format.
 
-       v      Формат показу віртуальної пам'яті.
+       v      Display virtual memory format.
 
-       X      Формат регістрів.
+       X      Register format.
 
-       -y     Не показувати прапорці, показувати rss замість addr. Цим
-              параметром можна користуватися лише разом із -l.
+       -y     Do not show flags; show rss in place of addr.  This option can
+              only be used with -l.
 
-       Z      Додати стовпчик даних щодо захисту. Те саме, що і -M (для
-              SELinux).
+       Z      Add a column of security data.  Identical to -M (for SELinux).
 
-МОДИФІКАТОРИ ВИВЕДЕННЯ
-       c      Показати справжню назву команди. Ця назва є похідною від назви
-              виконуваного файла, а не від значення argv. Таким чином,
-              аргументи команди та усі внесені до них зміни показано не буде.
-              Цей параметр, фактично, перетворює ключове слово форматування
-              args на ключове слово форматування comm. Він корисний у
-              поєднанні із параметром форматування -f та різноманітними
-              параметрами форматування у стилі BSD, які, зазвичай, призводять
-              до показу аргументів команди. Див. параметр -f, ключове слово
-              форматування args та ключове слово форматування comm.
+OUTPUT MODIFIERS
+       c      Show the true command name.  This is derived from the name of
+              the executable file, rather than from the argv value.  Command
+              arguments and any modifications to them are thus not shown.
+              This option effectively turns the args format keyword into the
+              comm format keyword; it is useful with the -f format option and
+              with the various BSD-style format options, which all normally
+              display the command arguments.  See the -f option, the format
+              keyword args, and the format keyword comm.
 
        --cols n
-              Встановити ширину екрана.
+              Set screen width.
 
        --columns n
-              Встановити ширину екрана.
+              Set screen width.
 
        --cumulative
-              Включити деякі дані завершених дочірніх процесів (як суму із
-              батьківським).
+              Include some dead child process data (as a sum with the parent).
 
-       e      Показати середовище після команди.
+       e      Show the environment after the command.
 
-       f      Вивести ієрархію (ліс) процесів у форматі рисунка ASCII.
+       f      ASCII art process hierarchy (forest).
 
        --forest
-              Дерево процесів у форматі рисунка ASCII.
+              ASCII art process tree.
 
-       h      Без заголовка (боа один заголовок на екран у випадку BSD).
-              Параметр h може спричиняти проблеми. У стандартній ps для BSD
-              цей параметр використано для виведення заголовка на кожній
-              сторінці виведених даних, але у старому ps для Linux цей
-              параметр повністю вимикає заголовок. У цій версії ps реалізовано
-              версію для Linux — не виводити заголовок, якщо не вибрано
-              варіант для BSD, для якого буде виведено один заголовок на
-              кожній сторінці виведених даних. Незалежно від поточного
-              варіанта, ви можете скористатися довгими версіями параметрів,
-              --headers і --no-headers, щоб увімкнути виведення заголовків на
-              кожній сторінці або вимкнути заголовки взагалі, відповідно.
+       h      No header.  (or, one header per screen in the BSD personality).
+              The h option is problematic.  Standard BSD ps uses this option
+              to print a header on each page of output, but older Linux ps
+              uses this option to totally disable the header.  This version of
+              ps follows the Linux usage of not printing the header unless the
+              BSD personality has been selected, in which case it prints a
+              header on each page of output.  Regardless of the current
+              personality, you can use the long options --headers and
+              --no-headers to enable printing headers each page or disable
+              headers entirely, respectively.
 
-       -H     Показати ієрархію процесів (ліс).
+       -H     Show process hierarchy (forest).
 
        --headers
-              Повторювати рядки заголовка, по одному на виведену сторінку.
+              Repeat header lines, one per page of output.
 
-       k специфікація
-              Вказати варіант упорядкування. Синтаксис запису такий:
-              [+|-]ключ[,[+|-]ключ[,...]]. Багатолітерний ключ можна вибрати
-              зі списку у розділі СТАНДАРТНІ СПЕЦИФІКАТОРИ ФОРМАТІВ. Символ
-              «+» є необов'язковим, оскільки типовим порядком є порядок за
-              зростанням числових або лексикографічних значень. Те саме, що і
-              --sort.
+       k spec Specify sorting order.  Sorting syntax is
+              [+|-]key[,[+|-]key[,...]].  Choose a multi-letter key from the
+              STANDARD FORMAT SPECIFIERS section.  The "+" is optional since
+              default direction is increasing numerical or lexicographic
+              order.  Identical to --sort.
 
-                      Приклади:
+                      Examples:
                       ps jaxkuid,-ppid,+pid
                       ps axk comm o comm,args
                       ps kstart_time -ef
 
        --lines n
-              Встановити висоту екрана.
+              Set screen height.
 
-       n      Числове виведення для WCHAN і USER (включно із усіма типами UID
-              і GID).
+       n      Numeric output for WCHAN and USER (including all types of UID
+              and GID).
 
        --no-headers
-              Не виводити рядок заголовка взагалі. --no-heading є
-              альтернативою для цього параметра.
+              Print no header line at all.  --no-heading is an alias for this
+              option.
 
-       O порядок
-              Варіант упорядкування (перевантажений). Параметр O BSD може
-              працювати як --sort (визначений користувачем формат виведення з
-              деякими попередньо визначеними типовими полями) або бути
-              використаним для визначення упорядкування. Для визначення
-              поведінки цього параметра буде використано евристику. Для
-              забезпечення бажаної поведінки (упорядкування або форматування)
-              вкажіть параметр у якийсь інший спосіб (наприклад, з -O або
-              --sort).
+       O order
+              Sorting order (overloaded).  The BSD O option can act like -O
+              (user-defined output format with some common fields predefined)
+              or can be used to specify sort order.  Heuristics are used to
+              determine the behavior of this option.  To ensure that the
+              desired behavior is obtained (sorting or formatting), specify
+              the option in some other way (e.g.  with -O or --sort).
 
-              Для упорядковування, застарілим синтаксисом параметра O BSD є
-              такий: O[+|-]k1[,[+|-]k2[,...]]. Він упорядковує список процесів
-              за багаторівневим правилом, яке визначає послідовність
-              однолітерних коротких ключів k1, k2, ..., які описано у розділі
-              ЗАСТАРІЛІ КЛЮЧІ УПОРЯКОВУВАННЯ нижче. У поточній версії «+» є
-              необов'язковим, оскільки просто повторює типовий напрямок
-              упорядковування, але він може допомогти відрізнити упорядкування
-              O від формату O. Символ «-» змінює напрямок упорядковування лише
-              для ключа, перед яким його вказано.
+              For sorting, obsolete BSD O option syntax is
+              O[+|-]k1[,[+|-]k2[,...]].  It orders the processes listing
+              according to the multilevel sort specified by the sequence of
+              one-letter short keys k1,k2, ...  described in the OBSOLETE SORT
+              KEYS section below.  The "+" is currently optional, merely
+              re-iterating the default direction on a key, but may help to
+              distinguish an O sort from an O format.  The "-" reverses
+              direction only on the key it precedes.
 
        --rows n
-              Встановити висоту екрана.
+              Set screen height.
 
-       S      Підсумувати дані, зокрема використання процесора, від завершених
-              дочірніх процесів до батьківського процесу. Корисно для аналізу
-              системи, де батьківський процес періодично відгалужує
-              короткотривалі дочірні процеси для виконання певних завдань.
+       S      Sum up some information, such as CPU usage, from dead child
+              processes into their parent.  This is useful for examining a
+              system where a parent process repeatedly forks off short-lived
+              children to do work.
 
-       --sort специфікація
-              Вказати варіант упорядкування Синтаксис запису такий:
-              [+|-]ключ[,[+|-]ключ[,...]]. Багатолітерний ключ можна вибрати
-              зі списку у розділі СТАНДАРТНІ СПЕЦИФІКАТОРИ ФОРМАТІВ. Символ
-              «+» є необов'язковим, оскільки типовим порядком є порядок за
-              зростанням числових або лексикографічних значень. Те саме, що і
-              k. Приклад: ps jax --sort=uid,-ppid,+pid
+       --sort spec
+              Specify sorting order.  Sorting syntax is
+              [+|-]key[,[+|-]key[,...]].  Choose a multi-letter key from the
+              STANDARD FORMAT SPECIFIERS section.  The "+" is optional since
+              default direction is increasing numerical or lexicographic
+              order.  Identical to k.  For example: ps jax --sort=uid,-ppid,
+              +pid
 
-       w      Широке виведення. Скористайтеся цим параметром двічі, щоб
-              встановити необмежену ширину.
+       w      Wide output.  Use this option twice for unlimited width.
 
-       -w     Широке виведення. Скористайтеся цим параметром двічі, щоб
-              встановити необмежену ширину.
+       -w     Wide output.  Use this option twice for unlimited width.
 
        --width n
-              Встановити ширину екрана.
+              Set screen width.
 
-ПОКАЗ ПОТОКІВ ОБРОБКИ
-       H      Показати потоки обробки так, наче вони є процесами.
+THREAD DISPLAY
+       H      Show threads as if they were processes.
 
-       -L     Показати потоки, можливо, зі стовпчиками LWP і NLWP.
+       -L     Show threads, possibly with LWP and NLWP columns.
 
-       m      Показати потоки обробки після процесів.
+       m      Show threads after processes.
 
-       -m     Показати потоки обробки після процесів.
+       -m     Show threads after processes.
 
-       -T     Показати потоки обробки, можливо, зі стовпчиком SPID.
+       -T     Show threads, possibly with SPID column.
 
-ІНШІ ВІДОМОСТІ
-       --help розділ
-              Вивести довідкове повідомлення. Аргументом розділ може бути одна
-              з літер simple (просте), list (список), output (виведення),
-              threads (потоки), misc (різне) або all (усе). Аргумент можна
-              скоротити до однієї з підкреслених літер, ось так: s|l|o|t|m|a.
+OTHER INFORMATION
+       --help section
+              Print a help message.  The section argument can be one of
+              simple, list, output, threads, misc, or all.  The argument can
+              be shortened to one of the underlined letters as in:
+              s|l|o|t|m|a.
 
-       --info Вивести діагностичні дані.
+       --info Print debugging info.
 
-       L      Список усіх специфікаторів формату.
+       L      List all format specifiers.
 
-       V      Вивести версію procps-ng.
+       V      Print the procps-ng version.
 
-       -V     Вивести версію procps-ng.
+       -V     Print the procps-ng version.
 
        --version
-              Вивести версію procps-ng.
+              Print the procps-ng version.
 
-ЗАУВАЖЕННЯ
-       Ця версія ps працює на основі читання віртуальних файлів у /proc. Ця
-       версія ps не потребує налаштування setuid kmem або інших привілеїв для
-       запуску. Не надавайте цій версії ps ніяких додаткових прав доступу.
+NOTES
+       This ps works by reading the virtual files in /proc.  This ps does not
+       need to be setuid kmem or have any privileges to run.  Do not give this
+       ps any special permissions.
 
-       Використання процесора у цій версії буде показано у відсотках часу,
-       який витрачено на виконання програми під час повного часу життя
-       процесу. Це не ідеально, і це не узгоджується із стандартами, з якими
-       узгоджується ps у інших аспектах. При цьому, загальне число
-       використання процесора навряд чи точно дорівнюватиме 100%.
+       CPU usage is currently expressed as the percentage of time spent
+       running during the entire lifetime of a process.  This is not ideal,
+       and it does not conform to the standards that ps otherwise conforms to.
+       CPU usage is unlikely to add up to exactly 100%.
 
-       Поля SIZE і RSS не враховують деякі частини процесу, зокрема таблиці
-       сторінок, стек ядра, структуру thread_info та структуру task_struct.
-       Це, зазвичай, принаймні 20 КіБ пам'яті, яка завжди є резидентною. SIZE
-       є віртуальним розміром процесу (код+дані+стек).
+       The SIZE and RSS fields don't count some parts of a process including
+       the page tables, kernel stack, struct thread_info, and struct
+       task_struct.  This is usually at least 20 KiB of memory that is always
+       resident.  SIZE is the virtual size of the process (code+data+stack).
 
-       Процеси, які позначено як <defunct>, є мертвими процесами (так званими
-       «зомбі»), які лишаються, оскільки їхній батьківський процес не завершив
-       їхню роботу належним чином. Ці процеси буде знижено init(8), якщо
-       завершить роботу батьківський процес.
+       Processes marked <defunct> are dead processes (so-called "zombies")
+       that remain because their parent has not destroyed them properly.
+       These processes will be destroyed by init(8) if the parent process
+       exits.
 
-       Якщо довжина імені користувача перевищує довжину стовпчика на дисплеї,
-       ім'я користувача буде обрізано. Для налаштовування довжини
-       скористайтеся параметрами форматування -o і -O.
+       If the length of the username is greater than the length of the display
+       column, the username will be truncated.  See the -o and -O formatting
+       options to customize length.
 
-       Не рекомендуємо користуватися параметрами команд, зокрема ps -aux,
-       оскільки це призводить до неузгодженості у двох різних стандартах.
-       Відповідно до стандартів POSIX і UNIX, наведена команда просить
-       програму показати усі процеси з терміналом (загалом, команд, які
-       запущено користувачами) і усі процеси, власником яких є користувач із
-       іменем x. Якщо цього користувача не існує, ps припускатиме, що ви
-       наказали виконати ps aux.
+       Commands options such as ps -aux are not recommended as it is a
+       confusion of two different standards.  According to the POSIX and UNIX
+       standards, the above command asks to display all processes with a TTY
+       (generally the commands users are running) plus all processes owned by
+       a user named x.  If that user doesn't exist, then ps will assume you
+       really meant ps aux.
 
-ПРАПОРЦІ ПРОЦЕСУ
-       Суму цих значень буде показано у стовпчику «F», який надається
-       специфікатором виведення flags:
+PROCESS FLAGS
+       The sum of these values is displayed in the "F" column, which is
+       provided by the flags output specifier:
 
-               1    відгалужено, але не виконано
-               4    використано права доступу суперкористувача
+               1    forked but didn't exec
+               4    used super-user privileges
 
-КОДИ СТАНУ ПРОЦЕСІВ
-       Тут наведено різні значення, які показують специфікатори виведення s,
-       stat і state (заголовок «STAT» або «S»), для опису стану процесу:
+PROCESS STATE CODES
+       Here are the different values that the s, stat and state output
+       specifiers (header "STAT" or "S") will display to describe the state of
+       a process:
 
-               D    непридатний до переривання сон (зазвичай,
-                    введення-виведення)
-               I    Бездіяльний потік обробки ядра
-               R    запущено або може бути запущено (у черзі запуску)
-               S    придатний до переривання сон (очікування на завершення
-                    події)
-               T    зупинено сигналом керування завданнями
-               t    зупинено засобом діагностики під час трасування
-               W    поділ на сторінки (не є чинним з часу ядер 2.6.xx)
-               X    мертвий (таке не має бути показано)
-               Z    неробочий процес («зомбі»), перерваний, але не вилучений
-                    його батьківським процесом
+               D    uninterruptible sleep (usually IO)
+               I    Idle kernel thread
+               R    running or runnable (on run queue)
+               S    interruptible sleep (waiting for an event to complete)
+               T    stopped by job control signal
+               t    stopped by debugger during the tracing
+               W    paging (not valid since the 2.6.xx kernel)
+               X    dead (should never be seen)
+               Z    defunct ("zombie") process, terminated but not reaped by
+                    its parent
 
-       Для форматів BSD, якщо використано ключове слово stat, може бути
-       показано додаткові символи:
+       For BSD formats and when the stat keyword is used, additional
+       characters may be displayed:
 
-               <    високопріоритетний (нелояльний до інших користувачів)
-               N    низькопріоритетний (лояльний до інших користувачів)
-               L    має заблоковані у пам'яті сторінки (для ідентифікаторів
-                    реального часу та нетипових ідентифікаторів)
-               s    є лідером сеансу
-               l    є багатопотоковим (використовує CLONE_THREAD, подібно до
-                    того, як це роблять pthreads NPTL)
-               +    перебуває у групі процесів переднього плану
+               <    high-priority (not nice to other users)
+               N    low-priority (nice to other users)
+               L    has pages locked into memory (for real-time and custom IO)
+               s    is a session leader
+               l    is multi-threaded (using CLONE_THREAD, like NPTL pthreads
+                    do)
+               +    is in the foreground process group
 
-ЗАСТАРІЛІ КЛЮЧІ УПОРЯДКОВУВАННЯ
-       Ці ключі використовують разом із параметром O BSD (якщо його
-       використовують для упорядковування). Параметр --sort GNU не
-       використовує ці ключі, але описані нижче специфікатори з розділу
-       СТАНДАРТНІ СПЕЦИФІКАТОРИ ФОРМАТІВ. Зауважте, що значення, які
-       використано в упорядковуванні, є внутрішніми значеннями, які
-       використовує ps, а не «оброблені» значення, які використовують у деяких
-       полях форматування виведення (наприклад, у полі термінала
-       упорядковування виконується за номером пристрою, а не за показаною
-       назвою термінала). Передайте каналом виведені ps дані до програми
-       sort(1), якщо вам хочеться упорядкувати дані за обробленими значеннями.
+OBSOLETE SORT KEYS
+       These keys are used by the BSD O option (when it is used for sorting).
+       The GNU --sort option doesn't use these keys, but the specifiers
+       described below in the STANDARD FORMAT SPECIFIERS section.  Note that
+       the values used in sorting are the internal values ps uses and not the
+       "cooked" values used in some of the output format fields (e.g.  sorting
+       on tty will sort into device number, not according to the terminal name
+       displayed).  Pipe ps output into the sort(1) command if you want to
+       sort the cooked values.
 
-       КЛЮЧ   ДОВГИЙ       ОПИС
-       c      cmd          проста назва виконуваного файла
-       C      pcpu         використання процесора
-       f      flags        прапорці, як у довгому форматі поля F
-       g      pgrp         ідентифікатор групи процесів
-       G      tpgid        ідентифікатор групи процесів керівного термінала
-       j      cutime       накопичувальний час користувача
-       J      cstime       накопичувальний час системи
-       k      utime        час користувача
-       m      min_flt      кількість вторинних помилок сторінок
-       M      maj_flt      кількість первинних помилок сторінок
-       n      cmin_flt     накопичені вторинні помилки сторінок
-       N      cmaj_flt     накопичені основні помилки сторінок
-       o      session      ідентифікатор сеансу
-       p      pid          ідентифікатор процесу
-       P      ppid         ідентифікатор батьківського процесу
-       r      rss          розмір оперативного набору
-       R      resident     сторінки у резидентній пам'яті
-       s      size         розмір пам'яті у кілобайтах
-       S      share        кількість сторінок спільного використання
+       KEY   LONG         DESCRIPTION
+       c     cmd          simple name of executable
+       C     pcpu         cpu utilization
+       f     flags        flags as in long format F field
+       g     pgrp         process group ID
+       G     tpgid        controlling tty process group ID
+       j     cutime       cumulative user time
+       J     cstime       cumulative system time
+       k     utime        user time
+       m     min_flt      number of minor page faults
+       M     maj_flt      number of major page faults
+       n     cmin_flt     cumulative minor page faults
+       N     cmaj_flt     cumulative major page faults
+       o     session      session ID
+       p     pid          process ID
+       P     ppid         parent process ID
+       r     rss          resident set size
+       R     resident     resident pages
+       s     size         memory size in kilobytes
+       S     share        amount of shared pages
+       t     tty          the device number of the controlling tty
+       T     start_time   time process was started
+       U     uid          user ID number
+       u     user         user name
+       v     vsize        total VM size in KiB
+       y     priority     kernel scheduling priority
 
-       t      tty          номер пристрою керівного термінала
-       T      start_time   момент часу, коли процес було запущено
-       U      uid          номер ідентифікатора користувача
-       u      користувач   ім’я користувача
-       v      vsize        загальний розмір ВМ у КіБ
-       y      priority     пріоритетність планування у ядрі
+AIX FORMAT DESCRIPTORS
+       This ps supports AIX format descriptors, which work somewhat like the
+       formatting codes of printf(1) and printf(3).  For example, the normal
+       default output can be produced with this: ps -eo "%p %y %x %c".  The
+       NORMAL codes are described in the next section.
 
-ДЕСКРИПТОРИ ФОРМАТУ AIX
-       У цій версії ps передбачено підтримку дескрипторів форматів AIX, які
-       працюють дещо подібно до кодів форматування printf(1) і printf(3).
-       Наприклад, звичайне типове виведення можна отримати ось так: ps -eo "%p
-       %y %x %c". Коди NORMAL описано у наступному розділі.
+       CODE   NORMAL   HEADER
+       %C     pcpu     %CPU
+       %G     group    GROUP
+       %P     ppid     PPID
+       %U     user     USER
+       %a     args     COMMAND
+       %c     comm     COMMAND
+       %g     rgroup   RGROUP
+       %n     nice     NI
+       %p     pid      PID
+       %r     pgid     PGID
+       %t     etime    ELAPSED
+       %u     ruser    RUSER
+       %x     time     TIME
+       %y     tty      TTY
+       %z     vsz      VSZ
 
-       CODE   NORMAL       HEADER
-       %C     pcpu         %CPU
-       %G     group        GROUP
-       %P     ppid         PPID
-       %U     користувач   USER
-       %a     args         КОМАНДА
-       %c     comm         КОМАНДА
-       %g     rgroup       RGROUP
-       %n     nice         NI
-       %p     pid          PID
-       %r     pgid         PGID
-       %t     etime        ELAPSED
-       %u     ruser        RUSER
-       %x     time         TIME
-       %y     tty          TTY
-       %z     vsz          VSZ
+STANDARD FORMAT SPECIFIERS
+       Here are the different keywords that may be used to control the output
+       format (e.g. with option -o) or to sort the selected processes with the
+       GNU-style --sort option.
 
-СТАНДАРТНІ СПЕЦИФІКАТОРИ ФОРМАТІВ
-       Нижче наведено різні ключові слова, якими можна скористатися для
-       керування форматом виведення (наприклад, з параметром -o) або
-       упорядковування вибраних процесів за допомогою параметра --sort у стилі
-       GNU.
+       For example: ps -eo pid,user,args --sort user
 
-       Приклад: ps -eo pid,user,args --sort user
+       This version of ps tries to recognize most of the keywords used in
+       other implementations of ps.
 
-       У цій версії ps виконано спробу реалізувати розпізнавання більшості
-       ключових слів, які використовують у інших реалізаціях ps.
+       The following user-defined format specifiers may contain spaces:
+       args, cmd, comm, command, fname, ucmd, ucomm, lstart, bsdstart, start.
 
-       Пробіли можуть міститися у таких визначених користувачем специфікаторах
-       форматів: args, cmd, comm, command, fname, ucmd, ucomm,
-       lstart, bsdstart, start.
+       Some keywords may not be available for sorting.
 
-       Деякими ключовими словами не можна скористатися для упорядковування.
+       CODE        HEADER    DESCRIPTION
 
-       CODE        HEADER    ОПИС
+       %cpu        %CPU      cpu utilization of the process in "##.#" format.
+                             Currently, it is the CPU time used divided by the
+                             time the process has been running
+                             (cputime/realtime ratio), expressed as a
+                             percentage.  It will not add up to 100% unless
+                             you are lucky.  (alias pcpu).
 
-       %cpu        %CPU      використання процесом процесора у форматі «##.#».
-                             У поточній версії це частка від ділення
-                             витраченого на виконання процесу часу на час,
-                             протягом якого процес працює (відношення «час
-                             процесора/справжній час»), виражене у відсотках.
-                             Дуже часто загальна сума таких значень є меншою
-                             за 100% (альтернатива — pcpu).
+       %mem        %MEM      ratio of the process's resident set size  to the
+                             physical memory on the machine, expressed as a
+                             percentage.  (alias pmem).
 
-       %mem        %MEM      відношення розміру резидентного набору процесу до
-                             фізичної пам'яті комп'ютера, виражене у відсотках
-                             (альтернатива — pmem).
+       ag_id       AGID      The autogroup identifier associated with a
+                             process which operates in conjunction with the
+                             CFS scheduler to improve interactive desktop
+                             performance.
 
-       ag_id       AGID      Ідентифікатор автогрупи, який пов'язано із
-                             процесом, що працює у поєднанні із планувальником
-                             CFS для удосконалення швидкодії інтерактивної
-                             стільниці.
+       ag_nice     AGNI      The autogroup nice value which affects scheduling
+                             of all processes in that group.
 
-       ag_nice     AGNI      Значення пріоритетності автогрупи, яке стосується
-                             планування усіх процесів у цій групі.
+       args        COMMAND   command with all its arguments as a string.
+                             Modifications to the arguments may be shown.  The
+                             output in this column may contain spaces.  A
+                             process marked <defunct> is partly dead, waiting
+                             to be fully destroyed by its parent.  Sometimes
+                             the process args will be unavailable; when this
+                             happens, ps will instead print the executable
+                             name in brackets.  (alias cmd, command).  See
+                             also the comm format keyword, the -f option, and
+                             the c option.
+                             When specified last, this column will extend to
+                             the edge of the display.  If ps can not determine
+                             display width, as when output is redirected
+                             (piped) into a file or another command, the
+                             output width is undefined (it may be 80,
+                             unlimited, determined by the TERM variable, and
+                             so on).  The COLUMNS environment variable or
+                             --cols option may be used to exactly determine
+                             the width in this case.  The w or -w option may
+                             be also be used to adjust width.
 
-       args        КОМАНДА   команда із усіма аргументами як рядок.  Може бути
-                             показано зміни у аргументах.  Виведені до цього
-                             стовпчика дані можуть містити пробіли.  Процес,
-                             який позначено записом <defunct> є частково
-                             мертвим, таким, що очікує на повне знищення
-                             батьківським процесом.  Іноді аргументи процесу
-                             можуть виявитися недоступними. Коли таке
-                             трапляється, ps виведе назву виконуваного файла у
-                             квадратних дужках (альтернатива – cmd, command).
-                             Див. також ключове слово форматування comm,
-                             параметр -f та параметр c.
-                             Якщо вказано останнім, цей стовпчик буде
-                             розтягнуто до краю дисплея. Якщо ps не вдасться
-                             визначити ширину дисплея, наприклад, коли
-                             виведені дані буде переспрямовано (каналом) до
-                             файла або іншої програми, ширина виведення
-                             залишиться невизначеною (вона може дорівнювати
-                             80, бути необмеженою, визначатися змінною TERM
-                             тощо). У цьому випадку для точного визначення
-                             ширини показу можна скористатися змінною
-                             середовища COLUMNS або параметром --cols. Для
-                             коригування ширини також можна скористатися
-                             параметром w або -w.
+       blocked     BLOCKED   mask of the blocked signals, see signal(7).
+                             According to the width of the field, a 32 or
+                             64-bit mask in hexadecimal format is displayed.
+                             (alias sig_block, sigmask).
 
-       blocked     BLOCKED   маска блокованих сигналів, див. signal(7).
-                             Відповідно до ширини поля, буде показано 32- або
-                             64-бітову маску у шістнадцятковому форматі
-                             (альтернатива – sig_block, sigmask).
+       bsdstart    START     time the command started.  If the process was
+                             started less than 24 hours ago, the output format
+                             is " HH:MM", else it is " Mmm:SS" (where Mmm is
+                             the three letters of the month).  See also
+                             lstart, start, start_time, and stime.
 
-       bsdstart    START     час запуску команди Якщо процес було запущено
-                             менше ніж 24 години тому, буде виведено дані у
-                             форматі «ГГ:ХХ», інакше, дані буде виведено у
-                             форматі « Ммм дд» (де «Ммм» — трилітерне
-                             скорочення назви місяця). Див. також lstart,
-                             start, start_time і stime.
+       bsdtime     TIME      accumulated cpu time, user + system.  The display
+                             format is usually "MMM:SS", but can be shifted to
+                             the right if the process used more than 999
+                             minutes of cpu time.
 
-       bsdtime     TIME      накопичувальний час процесора, користувач +
-                             система. Форматом показу, зазвичай, є «ХХХ:СС»,
-                             але його можна посунути праворуч, якщо процес
-                             використав понад 999 хвилин часу процесора.
+       c           C         processor utilization. Currently, this is the
+                             integer value of the percent usage over the
+                             lifetime of the process.  (see %cpu).
 
-       c           C         використання процесора. У поточній версії це ціле
-                             значення у відсотках використання процесора до
-                             часу життя процесу (див. %cpu).
+       caught      CAUGHT    mask of the caught signals, see signal(7).
+                             According to the width of the field, a 32 or 64
+                             bits mask in hexadecimal format is displayed.
+                             (alias sig_catch, sigcatch).
 
-       caught      CAUGHT    маска перехоплених, див. signal(7). Відповідно до
-                             ширини поля, буде показано 32- або 64-бітову
-                             маску у шістнадцятковому форматі (альтернатива –
-                             sig_catch, sigcatch).
+       cgname      CGNAME    display name of control groups to which the
+                             process belongs.
 
-       cgname      CGNAME    назва керівних груп дисплея, до яких належить
-                             процес.
+       cgroup      CGROUP    display control groups to which the process
+                             belongs.
 
-       cgroup      CGROUP    керівні групи дисплея, до яких належить процес.
+       cgroupns    CGROUPNS  Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       cgroupns    CGROUPNS  Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       class       CLS       scheduling class of the process.  (alias
+                             policy, cls).  Field's possible values are:
 
-       class       CLS       клас планування процесу. (альтернатива — policy,
-                             cls). Можливими значеннями поля є такі:
-
-                                      -   не повідомлено
+                                      -   not reported
                                       TS  SCHED_OTHER
                                       FF  SCHED_FIFO
                                       RR  SCHED_RR
@@ -750,12 +702,12 @@ PS(1)                         Команди користувача             
                                       ISO SCHED_ISO
                                       IDL SCHED_IDLE
                                       DLN SCHED_DEADLINE
-                                      ?   невідоме значення
+                                      ?   unknown value
 
-       cls         CLS       клас планування процесу. (альтернатива — policy,
-                             cls). Можливими значеннями поля є такі:
+       cls         CLS       scheduling class of the process.  (alias
+                             policy, cls).  Field's possible values are:
 
-                                      -   не повідомлено
+                                      -   not reported
                                       TS  SCHED_OTHER
                                       FF  SCHED_FIFO
                                       RR  SCHED_RR
@@ -763,235 +715,209 @@ PS(1)                         Команди користувача             
                                       ISO SCHED_ISO
                                       IDL SCHED_IDLE
                                       DLN SCHED_DEADLINE
-                                      ?   невідоме значення
+                                      ?   unknown value
 
-       cmd         CMD       див. args. (альтернатива – args, command).
+       cmd         CMD       see args.  (alias args, command).
 
-       comm        КОМАНДА   назва команди (лише назва виконуваного файла).
-                             Зміни у назві команди показано не буде. Процес,
-                             який позначено записом <defunct> є частково
-                             мертвим, таким, що очікує на повне знищення
-                             батьківським процесом. Виведені до цього
-                             стовпчика дані можуть містити пробіли.
-                             (альтернативи – ucmd, ucomm). Див. також ключове
-                             слово форматування args, параметр -f та параметр
-                             c.
-                             Якщо вказано останнім, цей стовпчик буде
-                             розтягнуто до краю дисплея. Якщо ps не вдасться
-                             визначити ширину дисплея, наприклад, коли
-                             виведені дані буде переспрямовано (каналом) до
-                             файла або іншої програми, ширина виведення
-                             залишиться невизначеною (вона може дорівнювати
-                             80, бути необмеженою, визначатися змінною TERM
-                             тощо). У цьому випадку для точного визначення
-                             ширини показу можна скористатися змінною
-                             середовища COLUMNS або параметром --cols. Для
-                             коригування ширини також можна скористатися
-                             параметром w або -w.
+       comm        COMMAND   command name (only the executable name).
+                             Modifications to the command name will not be
+                             shown.  A process marked <defunct> is partly
+                             dead, waiting to be fully destroyed by its
+                             parent.  The output in this column may contain
+                             spaces.  (alias ucmd, ucomm).  See also the args
+                             format keyword, the -f option, and the c option.
+                             When specified last, this column will extend to
+                             the edge of the display.  If ps can not determine
+                             display width, as when output is redirected
+                             (piped) into a file or another command, the
+                             output width is undefined (it may be 80,
+                             unlimited, determined by the TERM variable, and
+                             so on).  The COLUMNS environment variable or
+                             --cols option may be used to exactly determine
+                             the width in this case.  The w or -w option may
+                             be also be used to adjust width.
 
-       command     КОМАНДА   Див. args. (альтернатива – args, command).
+       command     COMMAND   See args.  (alias args, command).
 
-       cp          CP        використання процесора у проміле (десятих
-                             відсотка) (див. %cpu).
+       cp          CP        per-mill (tenths of a percent) CPU usage.  (see
+                             %cpu).
 
-       cputime     TIME      накопичувальний час процесора у форматі
-                             «[ДД-]гг:хх:сс» (альтернатива — time).
+       cputime     TIME      cumulative CPU time, "[DD-]hh:mm:ss" format.
+                             (alias time).
 
-       cputimes    TIME      накопичувальний час процесора у секундах
-                             (альтернатива – times).
+       cputimes    TIME      cumulative CPU time in seconds (alias times).
 
-       cuc         %CUC      Використання процесора процесом, включно із
-                             завершеними дочірніми процесами, у розширеному
-                             форматі «##.###».  (див. також %cpu, c, cp, cuu,
+       cuc         %CUC      The CPU utilization of a process, including dead
+                             children, in an extended "##.###" format.  (see
+                             also %cpu, c, cp, cuu, pcpu).
+
+       cuu         %CUU      The CPU utilization of a process in an extended
+                             "##.###" format.  (see also %cpu, c, cp, cuc,
                              pcpu).
 
-       cuu         %CUU      Використання процесора процесом, у розширеному
-                             форматі «##.###».  (див. також %cpu, c, cp, cuc,
-                             pcpu).
+       drs         DRS       data resident set size, the amount of physical
+                             memory devoted to other than executable code.
 
-       drs         DRS       розмір резидентного набору даних, обсяг фізичної
-                             пам'яті, яку використано для даних, відмінних від
-                             виконуваного коду.
+       egid        EGID      effective group ID number of the process as a
+                             decimal integer.  (alias gid).
 
-       egid        EGID      числовий ідентифікатор ефективної групи процесу у
-                             форматі десяткового цілого числа (альтернатива –
-                             gid).
+       egroup      EGROUP    effective group ID of the process.  This will be
+                             the textual group ID, if it can be obtained and
+                             the field width permits, or a decimal
+                             representation otherwise.  (alias group).
 
-       egroup      EGROUP    ідентифікатор ефективної групи процесу. Це буде
-                             текстовий ідентифікатор групи, якщо його можна
-                             отримати, і поле є достатньо широким, або числове
-                             представлення, якщо це не так. (альтернатива –
-                             group).
+       eip         EIP       instruction pointer. As of kernel 4.9.xx will be
+                             zeroed out unless task is exiting or being core
+                             dumped.
 
-       eip         EIP       вказівник на інструкцію. З часу появи ядра 4.9.xx
-                             буде занулено, якщо завдання не завершує роботу
-                             або система створює дамп ядра для нього.
+       esp         ESP       stack pointer. As of kernel 4.9.xx will be zeroed
+                             out unless task is exiting or being core dumped.
 
-       esp         ESP       вказівник на стек. З часу появи ядра 4.9.xx буде
-                             занулено, якщо завдання не завершує роботу або
-                             система створює дамп ядра для нього.
+       etime       ELAPSED   elapsed time since the process was started, in
+                             the form [[DD-]hh:]mm:ss.
 
-       etime       ELAPSED   Час, що сплинув з часу запуску процесу у формі
-                             [[ДД-]гг:]хх:сс.
+       etimes      ELAPSED   elapsed time since the process was started, in
+                             seconds.
 
-       etimes      ELAPSED   час, що минув з моменту запуску процесу, у
-                             секундах.
+       euid        EUID      effective user ID (alias uid).
 
-       euid        EUID      ідентифікатор ефективного користувача
-                             (альтернатива – uid).
+       euser       EUSER     effective user name.  This will be the textual
+                             user ID, if it can be obtained and the field
+                             width permits, or a decimal representation
+                             otherwise.  The n option can be used to force the
+                             decimal representation.  (alias uname, user).
 
-       euser       EUSER     ефективне ім'я користувача. Це буде текстовий
-                             ідентифікатор користувача, якщо його можна
-                             отримати і поле є достатньо широким, або числове
-                             представлення, якщо це не так. Для примусового
-                             визначення десяткового представлення можна
-                             скористатися параметром n. (альтернатива – uname,
-                             user).
+       exe         EXE       path to the executable. Useful if path cannot be
+                             printed via cmd, comm or args format options.
 
-       exe         EXE       шлях до виконуваного файла. Корисно, якщо шлях не
-                             може бути виведено за допомогою параметрів
-                             форматування cmd, comm або args.
+       f           F         flags associated with the process, see the
+                             PROCESS FLAGS section.  (alias flag, flags).
 
-       f           F         прапорці, які пов'язано із процесом, Див. розділ
-                             ПРАПОРЦІ ПРОЦЕСУ. (альтернатива – flag, flags).
+       fgid        FGID      filesystem access group ID.  (alias fsgid).
 
-       fgid        FGID      ідентифікатор групи для доступу до файлової
-                             системи (альтернатива – fsgid).
+       fgroup      FGROUP    filesystem access group ID.  This will be the
+                             textual group ID, if it can be obtained and the
+                             field width permits, or a decimal representation
+                             otherwise.  (alias fsgroup).
 
-       fgroup      FGROUP    ідентифікатор групи для доступу до файлової
-                             системи. Це буде текстовий ідентифікатор групи,
-                             якщо його можна отримати, і поле є достатньо
-                             широким, або числове представлення, якщо це не
-                             так. (альтернатива – fsgroup).
+       flag        F         see f.  (alias f, flags).
 
-       flag        F         див. f (альтернатива – f, flags).
+       flags       F         see f.  (alias f, flag).
 
-       flags       F         див. f (альтернатива – f, flag).
+       fname       COMMAND   first 8 bytes of the base name of the process's
+                             executable file.  The output in this column may
+                             contain spaces.
 
-       fname       КОМАНДА   перші 8 байтів базової назви виконуваного файла
-                             процесу. Виведені дані у цьому стовпчику можуть
-                             містити пробіли.
+       fuid        FUID      filesystem access user ID.  (alias fsuid).
 
-       fuid        FUID      ідентифікатор користувача для доступу до файлової
-                             системи (альтернатива – fsuid).
+       fuser       FUSER     filesystem access user ID.  This will be the
+                             textual user ID, if it can be obtained and the
+                             field width permits, or a decimal representation
+                             otherwise.
 
-       fuser       FUSER     ідентифікатор користувача для доступу до файлової
-                             системи. Це буде текстовий ідентифікатор
-                             користувача, якщо його можна отримати і поле є
-                             достатньо широким, або числове представлення,
-                             якщо це не так.
+       gid         GID       see egid.  (alias egid).
 
-       gid         GID       див. egid (альтернатива egid).
+       group       GROUP     see egroup.  (alias egroup).
 
-       group       GROUP     див. egroup (альтернатива – egroup).
+       ignored     IGNORED   mask of the ignored signals, see signal(7).
+                             According to the width of the field, a 32 or 64
+                             bits mask in hexadecimal format is displayed.
+                             (alias sig_ignore, sigignore).
 
-       ignored     IGNORED   маска ігнорованих сигналів, див. signal(7).
-                             Відповідно до ширини поля, буде показано 32- або
-                             64-бітову маску у шістнадцятковому форматі
-                             (альтернатива – sig_ignore, sigignore).
+       ipcns       IPCNS     Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       ipcns       IPCNS     Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       label       LABEL     security label, most commonly used for SELinux
+                             context data.  This is for the Mandatory Access
+                             Control ("MAC") found on high-security systems.
 
-       label       LABEL     мітка захисту, здебільшого використовують для
-                             даних контексту SELinux. Призначено для Mandatory
-                             Access Control («MAC») у високозахищених
-                             системах.
+       lstart      STARTED   time the command started.  See also
+                             bsdstart, start, start_time, and stime.
 
-       lstart      STARTED   момент часу, коли запущено команду. Див. також
-                             bsdstart, start, start_time і stime.
+       lsession    SESSION   displays the login session identifier of a
+                             process, if systemd support has been included.
 
-       lsession    SESSION   показує ідентифікатор сеансу входу процесу, якщо
-                             було включено підтримку systemd.
+       luid        LUID      displays Login ID associated with a process.
 
-       luid        LUID      показує ідентифікатор входу, який пов'язано із
-                             процесом.
+       lwp         LWP       light weight process (thread) ID of the
+                             dispatchable entity (alias spid, tid).  See tid
+                             for additional information.
 
-       lwp         LWP       ідентифікаторів легких процесів (потоків)
-                             розподілюваного запису (альтернатива – spid,
-                             tid). Див. tid, щоб дізнатися більше.
+       lxc         LXC       The name of the lxc container within which a task
+                             is running.  If a process is not running inside a
+                             container, a dash ('-') will be shown.
 
-       lxc         LXC       Назва контейнера LXC, у якому запущено завдання.
-                             Якщо процес не запущено у контейнері, буде
-                             показано дефіс («-»).
+       machine     MACHINE   displays the machine name for processes assigned
+                             to VM or container, if systemd support has been
+                             included.
 
-       machine     MACHINE   показує назву комп'ютера для процесів, які
-                             пов'язано із віртуальною машиною або контейнером,
-                             якщо було включено підтримку systemd.
+       maj_flt     MAJFLT    The number of major page faults that have
+                             occurred with this process.
 
-       maj_flt     MAJFLT    Кількість основних помилок сторінок, які сталися
-                             із цим процесом.
+       min_flt     MINFLT    The number of minor page faults that have
+                             occurred with this process.
 
-       min_flt     MINFLT    Кількість вторинних помилок сторінок, які сталися
-                             із цим процесом.
+       mntns       MNTNS     Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       mntns       MNTNS     Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       netns       NETNS     Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       netns       NETNS     Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       ni          NI        nice value. This ranges from 19 (nicest) to -20
+                             (not nice to others), see nice(1).  (alias nice).
 
-       ni          NI        значення nice. Діапазон значення — від 19
-                             (найнижча пріоритетність) до -20 (найвища
-                             пріоритетність щодо інших), див. nice(1)
-                             (альтернатива – nice).
+       nice        NI        see ni.(alias ni).
 
-       nice        NI        див.  ni. (альтернатива ni).
+       nlwp        NLWP      number of lwps (threads) in the process.  (alias
+                             thcount).
 
-       nlwp        NLWP      кількість lwps (потоків обробки) у процесі
-                             (альтернатива – thcount).
+       numa        NUMA      The node associated with the most recently used
+                             processor.  A -1 means that NUMA information is
+                             unavailable.
 
-       numa        NUMA      Вузол, з яким пов'язано останній використаний
-                             процесор. Якщо тут показано -1, дані щодо NUMA є
-                             недоступними.
+       nwchan      WCHAN     address of the kernel function where the process
+                             is sleeping (use wchan if you want the kernel
+                             function name).
 
-       nwchan      WCHAN     адреса функції ядра, де спить процес
-                             (скористайтеся, wchan, якщо вам потрібна назва
-                             функції).
+       oom         OOM       Out of Memory Score. The value, ranging from 0 to
+                             +1000, used to select task(s) to kill when memory
+                             is exhausted.
 
-       oom         OOM       Оцінка виходу за межі доступної пам'яті. Значення
-                             у діапазоні від 0 до +1000, яке буде використано
-                             для вибору завдань, виконання яких слід
-                             припинити, якщо буде вичерпано пам'ять.
+       oomadj      OOMADJ    Out of Memory Adjustment Factor. The value is
+                             added to the current out of memory score which is
+                             then used to determine which task to kill when
+                             memory is exhausted.
 
-       oomadj      OOMADJ    Коефіцієнт коригування виходу за межі доступної
-                             пам'яті. Значення, яке буде додано до поточного
-                             рахунку виходу за межі пам'яті (OOM), яке потім
-                             буде використано для визначення того, виконання
-                             якого завдання слід припинити, якщо пам'ять буде
-                             вичерпано.
+       ouid        OWNER     displays the Unix user identifier of the owner of
+                             the session of a process, if systemd support has
+                             been included.
 
-       ouid        OWNER     показує ідентифікатор користувача Unix власника
-                             сеансу процесу, якщо було включено підтримку
-                             systemd.
+       pcpu        %CPU      see %cpu.  (alias %cpu).
 
-       pcpu        %CPU      див. %cpu (альтернатива – %cpu).
+       pending     PENDING   mask of the pending signals. See signal(7).
+                             Signals pending on the process are distinct from
+                             signals pending on individual threads.  Use the m
+                             option or the -m option to see both.  According
+                             to the width of the field, a 32 or 64 bits mask
+                             in hexadecimal format is displayed.  (alias sig).
 
-       pending     PENDING   маска сигналів черги. Див. signal(7). Черга
-                             сигналів процесу відрізняється від черги сигналів
-                             потоків обробки. Скористайтеся параметрами m і -m
-                             для перегляду обох. Відповідно до ширини поля,
-                             буде показано 32- або 64-бітову маску у
-                             шістнадцятковому форматі (альтернатива – sig).
+       pgid        PGID      process group ID or, equivalently, the process ID
+                             of the process group leader.  (alias pgrp).
 
-       pgid        PGID      ідентифікатор групи процесів або, що те саме,
-                             ідентифікатор процесу лідера групи процесів
-                             (альтернатива – pgrp).
+       pgrp        PGRP      see pgid.  (alias pgid).
 
-       pgrp        PGRP      див. pgid (альтернатива – pgid).
+       pid         PID       a number representing the process ID (alias
+                             tgid).
 
-       pid         PID       число, що відповідає ідентифікатору процесу
-                             (альтернатива – tgid).
+       pidns       PIDNS     Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       pidns       PIDNS     Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       pmem        %MEM      see %mem.  (alias %mem).
 
-       pmem        %MEM      див. %mem (альтернатива – %mem).
+       policy      POL       scheduling class of the process.  (alias
+                             class, cls).  Possible values are:
 
-       policy      POL       клас планування процесу. (альтернатива — class,
-                             cls). Можливими значеннями поля є такі:
-
-                                      -   не повідомлено
+                                      -   not reported
                                       TS  SCHED_OTHER
                                       FF  SCHED_FIFO
                                       RR  SCHED_RR
@@ -999,350 +925,333 @@ PS(1)                         Команди користувача             
                                       ISO SCHED_ISO
                                       IDL SCHED_IDLE
                                       DLN SCHED_DEADLINE
-                                      ?   невідоме значення
+                                      ?   unknown value
 
-       ppid        PPID      ідентифікатор батьківського процесу.
+       ppid        PPID      parent process ID.
 
-       pri         PRI       пріоритетність процесу. Більше число — вища
-                             пріоритетність.
+       pri         PRI       priority of the process.  Higher number means
+                             higher priority.
 
-       psr         PSR       процесор, а якому востаннє виконувався процес.
+       psr         PSR       processor that process last executed on.
 
-       pss         PSS       Пропорційний розмір спільного користування,
-                             нерезервована фізична пам'ять із пам'яттю
-                             спільного використання, яку пропорційно враховано
-                             для усіх завдань, які виконують її прив'язування.
+       pss         PSS       Proportional share size, the non-swapped physical
+                             memory, with shared memory proportionally
+                             accounted to all tasks mapping it.
 
-       rbytes      RBYTES    Кількість байтів, отримання яких з шару сховища
-                             даних було насправді спричинено цим процесом.
+       rbytes      RBYTES    Number of bytes which this process really did
+                             cause to be fetched from the storage layer.
 
-       rchars      RCHARS    Кількість байтів, читання яких зі сховища даних
-                             було спричинено цим завданням.
+       rchars      RCHARS    Number of bytes which this task has caused to be
+                             read from storage.
 
-       rgid        RGID      справжній ідентифікатор групи.
+       rgid        RGID      real group ID.
 
-       rgroup      RGROUP    назва справжньої групи. Це буде текстовий
-                             ідентифікатор групи, якщо його можна отримати і
-                             поле є достатньо широким, або числове
-                             представлення, якщо це не так.
+       rgroup      RGROUP    real group name.  This will be the textual group
+                             ID, if it can be obtained and the field width
+                             permits, or a decimal representation otherwise.
 
-       rops        ROPS      Number of read I/O operationsâthat is, system
+       rops        ROPS      Number of read I/O operations--that is, system
                              calls such as read(2) and pread(2).
 
-       rss         RSS       розмір резидентного набору, нерезервована фізична
-                             пам'ять, яку використано завданням (у кілобайтах)
-                             (альтернатива – rssize, rsz).
+       rss         RSS       resident set size, the non-swapped physical
+                             memory that a task has used (in kiloBytes).
+                             (alias rssize, rsz).
 
-       rssize      RSS       див. rss (альтернатива – rss, rsz).
+       rssize      RSS       see rss.  (alias rss, rsz).
 
-       rsz         RSZ       див. rss (альтернатива – rss, rssize).
+       rsz         RSZ       see rss.  (alias rss, rssize).
 
-       rtprio      RTPRIO    пріоритетність справжнього часу.
+       rtprio      RTPRIO    realtime priority.
 
-       ruid        RUID      справжній ідентифікатор користувача.
+       ruid        RUID      real user ID.
 
-       ruser       RUSER     справжній ідентифікатор користувача. Це буде
-                             текстовий ідентифікатор користувача, якщо його
-                             можна отримати і поле є достатньо широким, або
-                             числове представлення, якщо це не так.
+       ruser       RUSER     real user ID.  This will be the textual user ID,
+                             if it can be obtained and the field width
+                             permits, or a decimal representation otherwise.
 
-       s           S         мінімальний показ стану (один символ). Див.
-                             розділ КОДИ СТАНІВ ПРОЦЕСУ для різних значень.
-                             Див. також stat, якщо вам потрібен показ
-                             додаткових відомостей (альтернатива – state).
+       s           S         minimal state display (one character).  See
+                             section PROCESS STATE CODES for the different
+                             values.  See also stat if you want additional
+                             information displayed.  (alias state).
 
-       sched       SCH       правила планування для процесу. Для правил
+       sched       SCH       scheduling policy of the process.  The policies
                              SCHED_OTHER (SCHED_NORMAL), SCHED_FIFO, SCHED_RR,
-                             SCHED_BATCH, SCHED_ISO, SCHED_IDLE і
-                             SCHED_DEADLINE, відповідно, буде показано як 0,
-                             1, 2, 3, 4, 5 і 6.
+                             SCHED_BATCH, SCHED_ISO, SCHED_IDLE and
+                             SCHED_DEADLINE are respectively displayed as 0,
+                             1, 2, 3, 4, 5 and 6.
 
-       сидіння     SEAT      показує ідентифікатор, який пов'язано із усіма
-                             призначеними до певного робочого місця апаратними
-                             пристроями, якщо було включено підтримку systemd.
+       seat        SEAT      displays the identifier associated with all
+                             hardware devices assigned to a specific
+                             workplace, if systemd support has been included.
 
-       sess        SESS      ідентифікатор сеансу або, що те саме,
-                             ідентифікатор процесу лідера сеансу.
-                             (альтернатива session, sid).
+       sess        SESS      session ID or, equivalently, the process ID of
+                             the session leader.  (alias session, sid).
 
-       sgi_p       P         процесор, на якому виконується процес. Буде
-                             показано «*», якщо процес не працює або не є
-                             придатним до запуску.
+       sgi_p       P         processor that the process is currently executing
+                             on.  Displays "*" if the process is not currently
+                             running or runnable.
 
-       sgid        SGID      ідентифікатор збереженої групи. (альтернатива
-                             svgid).
+       sgid        SGID      saved group ID.  (alias svgid).
 
-       sgroup      SGROUP    назва збереженої групи. Це буде текстовий
-                             ідентифікатор групи, якщо його можна отримати і
-                             поле є достатньо широким, або числове
-                             представлення, якщо це не так.
+       sgroup      SGROUP    saved group name.  This will be the textual group
+                             ID, if it can be obtained and the field width
+                             permits, or a decimal representation otherwise.
 
-       sid         SID       див.  sess.  (альтернатива sess, session).
+       sid         SID       see sess.  (alias sess, session).
 
-       sig         PENDING   див.  pending.  (альтернатива pending, sig_pend).
+       sig         PENDING   see pending.  (alias pending, sig_pend).
 
-       sigcatch    CAUGHT    див.  caught.  (альтернатива caught, sig_catch).
+       sigcatch    CAUGHT    see caught.  (alias caught, sig_catch).
 
-       sigignore   IGNORED   див.  ignored.  (альтернатива ignored,
-                             sig_ignore).
+       sigignore   IGNORED   see ignored.  (alias ignored, sig_ignore).
 
-       sigmask     BLOCKED   див.  blocked.  (альтернатива blocked,
-                             sig_block).
+       sigmask     BLOCKED   see blocked.  (alias blocked, sig_block).
 
-       size        SIZE      приблизний обсяг простору резервної пам'яті, який
-                             знадобиться, якщо процес зіпсує усі записувані
-                             сторінки з наступним витісненням до резервної
-                             пам'яті. Це числове значення обчислено досить
-                             грубо!
+       size        SIZE      approximate amount of swap space that would be
+                             required if the process were to dirty all
+                             writable pages and then be swapped out.  This
+                             number is very rough!
 
-       slice       SLICE     показує модуль зрізу, до якого належить процес,
-                             якщо було включено підтримку systemd.
+       slice       SLICE     displays the slice unit which a process belongs
+                             to, if systemd support has been included.
 
-       spid        SPID      див.  lwp.  (альтернативи lwp, tid).
+       spid        SPID      see lwp.  (alias lwp, tid).
 
-       stackp      STACKP    адреса низу (початку) стека для процесу.
+       stackp      STACKP    address of the bottom (start) of stack for the
+                             process.
 
-       start       STARTED   час запуску команди. Якщо процес було запущено
-                             менше ніж 24 години тому, буде виведено дані у
-                             форматі «ГГ:ХХ:СС», інакше, дані буде виведено у
-                             форматі «  Ммм дд» (де «Ммм» — трилітерне
-                             скорочення назви місяця). Див. також lstart,
-                             bsdstart, start_time і stime.
+       start       STARTED   time the command started.  If the process was
+                             started less than 24 hours ago, the output format
+                             is "HH:MM:SS", else it is "  Mmm dd" (where Mmm
+                             is a three-letter month name).  See also
+                             lstart, bsdstart, start_time, and stime.
 
-       start_time  START     час або дата запуску процесу. Якщо процес не було
-                             запущено року, коли було викликано ps, буде
-                             показано лише рік або «МммДД», якщо процес не
-                             було запущено у той самий день, або «ГГ:ХХ» у
-                             інших випадках. Див. також bsdstart, start,
-                             lstart і stime.
+       start_time  START     starting time or date of the process.  Only the
+                             year will be displayed if the process was not
+                             started the same year ps was invoked, or "MmmDD"
+                             if it was not started the same day, or "HH:MM"
+                             otherwise.  See also bsdstart, start, lstart,
+                             and stime.
 
-       stat        STAT      багатосимвольний стан процесу. Див. розділ КОДИ
-                             СТАНІВ ПРОЦЕСУ, щоб дізнатися про призначення
-                             різних значень. Див. також s і state, якщо ви
-                             просто хочете бачити перший символ.
+       stat        STAT      multi-character process state.  See section
+                             PROCESS STATE CODES for the different values
+                             meaning.  See also s and state if you just want
+                             the first character displayed.
 
-       state       S         див.  s. (альтернатива  s).
+       state       S         see s. (alias s).
 
-       stime       STIME     див. start_time. (альтернатива start_time).
+       stime       STIME     see start_time. (alias start_time).
 
-       suid        SUID      збережений ідентифікатор користувача
-                             (альтернатива – svuid).
+       suid        SUID      saved user ID.  (alias svuid).
 
-       supgid      SUPGID    ідентифікатори груп для допоміжних груп, якщо
-                             такі є. Див. getgroups(2).
-
-       supgrp      SUPGRP    назви груп для допоміжних груп, якщо такі є. Див.
+       supgid      SUPGID    group ids of supplementary groups, if any.  See
                              getgroups(2).
 
-       suser       SUSER     збережене ім'я користувача. Це буде текстовий
-                             ідентифікатор користувача, якщо його можна
-                             отримати і поле є достатньо широким, або числове
-                             представлення, якщо це не так (альтернатива –
-                             svuser).
+       supgrp      SUPGRP    group names of supplementary groups, if any.  See
+                             getgroups(2).
 
-       svgid       SVGID     див. sgid (альтернатива – sgid).
+       suser       SUSER     saved user name.  This will be the textual user
+                             ID, if it can be obtained and the field width
+                             permits, or a decimal representation otherwise.
+                             (alias svuser).
 
-       svuid       SVUID     див.  suid.  (альтернатива suid).
+       svgid       SVGID     see sgid.  (alias sgid).
 
-       sz          SZ        розмір у фізичних сторінках образу ядра процесу.
-                             Це включає текст, дані та стек. У поточній версії
-                             прив'язки до пристроїв виключено; це може
-                             змінитися. Див. vsz і rss.
+       svuid       SVUID     see suid.  (alias suid).
 
-       tgid        TGID      число, яке відповідає групі потоків обробки, яким
-                             належить завдання (альтернатива – pid). Це
-                             ідентифікатор процесу лідера групи потоків
-                             обробки.
+       sz          SZ        size in physical pages of the core image of the
+                             process.  This includes text, data, and stack
+                             space.  Device mappings are currently excluded;
+                             this is subject to change.  See vsz and rss.
 
-       thcount     THCNT     див. nlwp (альтернатива – nlwp), кількість
-                             потоків обробки ядра, власником яких є процес.
+       tgid        TGID      a number representing the thread group to which a
+                             task belongs (alias pid).  It is the process ID
+                             of the thread group leader.
 
-       tid         TID       унікальне число, що відповідає розподілюваному
-                             запису (альтернатива – lwp, spid). Це значення
-                             може також бути показано як ідентифікатор процесу
-                             (pid); ідентифікатор групи процесів (pgrp);
-                             ідентифікатор сеансу для лідера сеансу (sid);
-                             ідентифікатор групи потоків для лідера групи
-                             потоків (tgid) та ідентифікатор групи процесів
-                             термінала для лідера групи процесів (tpgid).
+       thcount     THCNT     see nlwp.  (alias nlwp).  number of kernel
+                             threads owned by the process.
 
-       time        TIME      накопичувальний час процесора у форматі
-                             «[ДД-]ГГ:ХХ:СС» (альтернатива — cputime).
+       tid         TID       the unique number representing a dispatchable
+                             entity (alias lwp, spid).  This value may also
+                             appear as: a process ID (pid); a process group ID
+                             (pgrp); a session ID for the session leader
+                             (sid); a thread group ID for the thread group
+                             leader (tgid); and a tty process group ID for the
+                             process group leader (tpgid).
 
-       timens      TIMENS    Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       time        TIME      cumulative CPU time, "[DD-]HH:MM:SS" format.
+                             (alias cputime).
 
-       times       TIME      накопичувальний час процесора у секундах
-                             (альтернатива – cputimes).
+       timens      TIMENS    Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       tname       TTY       керівний tty (термінал) (альтернатива – tt, tty).
+       times       TIME      cumulative CPU time in seconds (alias cputimes).
 
-       tpgid       TPGID     ідентифікатор основної групи процесів на tty
-                             (термінала), з яким з'єднано процес, або -1, якщо
-                             процес не з'єднано з терміналом.
+       tname       TTY       controlling tty (terminal).  (alias tt, tty).
 
-       trs         TRS       розмір резидентного набору текстових даних, обсяг
-                             фізичної пам'яті, яку використано для даних
-                             виконуваного коду.
+       tpgid       TPGID     ID of the foreground process group on the tty
+                             (terminal) that the process is connected to, or
+                             -1 if the process is not connected to a tty.
 
-       tt          TT        керівний tty (термінал) (альтернатива – tt, tty).
+       trs         TRS       text resident set size, the amount of physical
+                             memory devoted to executable code.
 
-       tty         TT        керівний tty (термінал) (альтернатива – tt, tty).
+       tt          TT        controlling tty (terminal).  (alias tname, tty).
 
-       ucmd        CMD       див. comm (альтернатива – comm, ucomm).
+       tty         TT        controlling tty (terminal).  (alias tname, tt).
 
-       ucomm       КОМАНДА   див.  comm.  (альтернативи comm, ucmd).
+       ucmd        CMD       see comm.  (alias comm, ucomm).
 
-       uid         UID       див.  euid.  (альтернатива euid).
+       ucomm       COMMAND   see comm.  (alias comm, ucmd).
 
-       uname       USER      див.  euser.  (альтернативи euser, user).
+       uid         UID       see euid.  (alias euid).
 
-       unit        UNIT      показує модуль, до якого належить процес, якщо
-                             було включено підтримку systemd.
+       uname       USER      see euser.  (alias euser, user).
 
-       користувач  USER      див.  euser.  (альтернативи euser, uname).
+       unit        UNIT      displays unit which a process belongs to, if
+                             systemd support has been included.
 
-       userns      USERNS    Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       user        USER      see euser.  (alias euser, uname).
 
-       uss         USS       Розмір унікального набору, нерезервована фізична
-                             пам'ять, яку не використано спільно з іншими
-                             завданнями.
+       userns      USERNS    Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       utsns       UTSNS     Унікальний номер inode, що описує простір назв,
-                             до якого належить процес. Див. namespaces(7).
+       uss         USS       Unique set size, the non-swapped physical memory,
+                             which is not shared with an another task.
 
-       uunit       UUNIT     показує модуль користувача, до якого належить
-                             процес, якщо було включено підтримку systemd.
+       utsns       UTSNS     Unique inode number describing the namespace the
+                             process belongs to.  See namespaces(7).
 
-       vsize       VSZ       див.  vsz.  (альтернатива vsz).
+       uunit       UUNIT     displays user unit which a process belongs to, if
+                             systemd support has been included.
 
-       vsz         VSZ       розмір віртуальної пам'яті процесу у КіБ
-                             (1024-байтових одиницях). У поточній версії
-                             прив'язки до пристроїв буде виключено; це може
-                             бути змінено у майбутніх версіях (альтернатива –
+       vsize       VSZ       see vsz.  (alias vsz).
+
+       vsz         VSZ       virtual memory size of the process in KiB
+                             (1024-byte units).  Device mappings are currently
+                             excluded; this is subject to change.  (alias
                              vsize).
 
-       wbytes      WBYTES    Кількість байтів, які було надіслано до шару
-                             сховища завдяки цьому процесу.
+       wbytes      WBYTES    Number of bytes which this process caused to be
+                             sent to the storage layer.
 
-       wcbytes     WCBYTES   Кількість байтів, запис яких скасовано.
+       wcbytes     WCBYTES   Number of cancelled write bytes.
 
-       wchan       WCHAN     назва функції ядра, у який спить процес.
+       wchan       WCHAN     name of the kernel function in which the process
+                             is sleeping.
 
-       wchars      WCHARS    Кількість байтів, запис на диск яких було
-                             спричинено або буде спричинено цим завданням.
+       wchars      WCHARS    Number of bytes which this task has caused, or
+                             shall cause to be written to disk.
 
-       wops        WOPS      Number of write I/O operationsâthat is, system
+       wops        WOPS      Number of write I/O operations--that is, system
                              calls such as write(2) and pwrite(2).
 
-ЗМІННІ СЕРЕДОВИЩА
-       На роботу ps можуть впливати такі змінні середовища:
+ENVIRONMENT VARIABLES
+       The following environment variables could affect ps:
 
        COLUMNS
-          Перевизначити типову ширину дисплея.
+          Override default display width.
 
        LINES
-          Перевизначити типову висоту дисплея.
+          Override default display height.
 
        PS_PERSONALITY
-          Встановлюють одне зі значень: posix, old, linux, bsd, sun,
-          digital... (див. розділ УОСОБЛЕННЯ нижче).
+          Set to one of posix, old, linux, bsd, sun, digital...  (see section
+          PERSONALITY below).
 
        CMD_ENV
-          Встановлюють одне зі значень: posix, old, linux, bsd, sun,
-          digital... (див. розділ УОСОБЛЕННЯ нижче).
+          Set to one of posix, old, linux, bsd, sun, digital...  (see section
+          PERSONALITY below).
 
        I_WANT_A_BROKEN_PS
-          Примусово використатися застарілу інтерпретацію рядка команди.
+          Force obsolete command line interpretation.
 
        LC_TIME
-          Формат дати.
+          Date format.
 
        LIBPROC_HIDE_KERNEL
-          Встановіть будь-яке значення, щоб приховати потоки обробки ядра, які
-          зазвичай буде показано при використанні параметра -e. Еквівалент
-          вибору --ppid 2 -p 2 --deselect. Також працює у режимі BSD.
+          Set this to any value to hide kernel threads normally displayed with
+          the -e option. This is equivalent to selecting --ppid 2 -p 2
+          --deselect instead. Also works in BSD mode.
 
        PS_COLORS
-          У поточній версії підтримки не передбачено.
+          Not currently supported.
 
        PS_FORMAT
-          Перевизначення типового формату виведення. Ви можете встановити для
-          цієї змінної рядок форматування типу, який використовують для
-          параметра -o. Зокрема, корисними будуть значення DefSysV і DefBSD.
+          Default output format override. You may set this to a format string
+          of the type used for the -o option.  The DefSysV and DefBSD values
+          are particularly useful.
 
        POSIXLY_CORRECT
-          Не шукати виправдань ігнорування помилкових «можливостей».
+          Don't find excuses to ignore bad "features".
 
        POSIX2
-          Якщо встановлено «on», працює як POSIXLY_CORRECT.
+          When set to "on", acts as POSIXLY_CORRECT.
 
        UNIX95
-          Не шукати виправдань ігнорування помилкових «можливостей».
+          Don't find excuses to ignore bad "features".
 
        _XPG
-          Скасувати нестандартну поведінку CMD_ENV=irix.
+          Cancel CMD_ENV=irix non-standard behavior.
 
-       Загалом, не варто встановлювати значення для цих змінних. Єдиним
-       виключенням є CMD_ENV або PS_PERSONALITY, для яких можна встановити
-       значення Linux для звичайних систем. Без встановлення цього значення ps
-       виконуватиме непотрібні і неякісні частини стандарту Unix98.
+       In general, it is a bad idea to set these variables.  The one exception
+       is CMD_ENV or PS_PERSONALITY, which could be set to Linux for normal
+       systems.  Without that setting, ps follows the useless and bad parts of
+       the Unix98 standard.
 
-УОСОБЛЕННЯ
-       390        подібний до ps для OS/390 OpenEdition
-       aix        подібно до ps в AIX
-       bsd        подібний до ps для FreeBSD (повністю нестандартний)
-       compaq     подібний до ps для Digital Unix
-       debian     подібний до ps для старого Debian
-       digital    подібний до ps для Tru64 (раніше Digital Unix, раніше OSF/1)
-       gnu        подібний до ps для старого Debian
-       к.с.       подібно до ps в HP-UX
-       hpux       подібно до ps в HP-UX
-       irix       подібно до ps в Irix
-       linux      ***** рекомендовано *****
-       old        подібний до початкового ps для Linux (повністю нестандартний)
-       os390      подібний до ps в OS/390 Open Edition
+PERSONALITY
+       390        like the OS/390 OpenEdition ps
+       aix        like AIX ps
+       bsd        like FreeBSD ps (totally non-standard)
+       compaq     like Digital Unix ps
+       debian     like the old Debian ps
+       digital    like Tru64 (was Digital Unix, was OSF/1) ps
+       gnu        like the old Debian ps
+       hp         like HP-UX ps
+       hpux       like HP-UX ps
+       irix       like Irix ps
+       linux      ***** recommended *****
+       old        like the original Linux ps (totally non-standard)
+       os390      like OS/390 Open Edition ps
        posix      standard
-       s390       подібний до ps в OS/390 Open Edition
-       sco        подібний до ps для SCO
-       sgi        подібно до ps в Irix
-       solaris2   подібний до ps для Solaris 2+ (SunOS 5)
-       sunos4     подібний до  ps для SunOS 4 (Solaris 1) (повністю нестандартний)
+       s390       like OS/390 Open Edition ps
+       sco        like SCO ps
+       sgi        like Irix ps
+       solaris2   like Solaris 2+ (SunOS 5) ps
+       sunos4     like SunOS 4 (Solaris 1) ps (totally non-standard)
        svr4       standard
        sysv       standard
-       tru64      подібний до ps для Tru64 (раніше Digital Unix, раніше OSF/1)
+       tru64      like Tru64 (was Digital Unix, was OSF/1) ps
        unix       standard
        unix95     standard
        unix98     standard
 
-ТАКОЖ ПЕРЕГЛЯНЬТЕ
+SEE ALSO
        pgrep(1), pstree(1), top(1), proc(5).
 
-СТАНДАРТИ
-       ps є сумісним із такими стандартами:
+STANDARDS
+       This ps conforms to:
 
-       1   Версією 2 Single Unix Specification
-       2   The Open Group Technical Standard Base Specifications, випуск 6
+       1   Version 2 of the Single Unix Specification
+       2   The Open Group Technical Standard Base Specifications, Issue 6
        3   IEEE Std 1003.1, 2004 Edition
        4   X/Open System Interfaces Extension [UP XSI]
        5   ISO/IEC 9945:2003
 
-АВТОР
-       Першу версію ps було написано Branko Lankester ⟨lankeste@fwi.uva.nl⟩.
-       Michael K. Johnson ⟨johnsonm@redhat.com⟩ значно переписав програму для
-       використання файлової системи proc, змінивши декілька речей у процесі.
-       Michael Shields ⟨mjshield@nyx.cs.du.edu⟩ додав можливість списку pid.
-       Charles Blake ⟨cblake@bbn.com⟩ додав багаторівневе упорядковування,
-       бібліотеку у стилі dirent, базу даних із прив'язкою назв пристроїв до
-       чисел, приблизний двійковий пошук безпосередньо у System.map, а також
-       виконав багато упорядкування коду та документації. David Moss‐
-       berger-Tang написав загальну підтримку BFD для psupdate.  Albert
-       Cahalan ⟨albert@users.sf.net⟩ переписав ps з метою повної підтримки
-       стандартів Unix98 та BSD, додавши деякий обхідний код для застарілого і
-       стороннього синтаксису.
+AUTHOR
+       ps was originally written by Branko Lankester <lankeste@fwi.uva.nl>.
+       Michael K. Johnson <johnsonm@redhat.com> re-wrote it significantly to
+       use the proc filesystem, changing a few things in the process.  Michael
+       Shields <mjshield@nyx.cs.du.edu> added the pid-list feature.  Charles
+       Blake <cblake@bbn.com> added multi-level sorting, the dirent-style li-
+       brary, the device name-to-number mmaped database, the approximate bi-
+       nary search directly on System.map, and many code and documentation
+       cleanups.  David Mossberger-Tang wrote the generic BFD support for
+       psupdate.  Albert Cahalan <albert@users.sf.net> rewrote ps for full
+       Unix98 and BSD support, along with some ugly hacks for obsolete and
+       foreign syntax.
 
-       Про вади, будь ласка, повідомляйте на адресу ⟨procps@freelists.org⟩.
-       Підписка не є обов'язковою.
+       Please send bug reports to <procps@freelists.org>.  No subscription is
+       required or suggested.
 
-procps-ng                     11 травня 2022 року                        PS(1)
+procps-ng                         2022-05-11                             PS(1)

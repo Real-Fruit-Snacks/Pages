@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Linux Man Pages is a fully self-contained, offline-capable web application for searching and viewing Linux manual pages. Designed for static hosting on GitHub Pages or GitLab Pages, it provides instant access to 1,838 official Linux man pages and TLDR summaries without requiring any internet connection after deployment.
+Linux Man Pages is a fully self-contained, offline-capable web application for searching and viewing Linux manual pages. Designed for static hosting on GitHub Pages or GitLab Pages, it provides instant access to 8,121 official Linux man pages (English only) and TLDR summaries without requiring any internet connection after deployment.
 
 ## Key Architecture
 
@@ -20,7 +20,7 @@ data/
 ├── index.js         # Search index (window.searchIndex)
 └── tldr_index.js    # TLDR pages index
 
-man_pages/           # 1,838 man page files
+man_pages/           # 8,121 man page files (English only)
 ├── [command].[section].txt
 
 tldr_pages/          # TLDR summaries

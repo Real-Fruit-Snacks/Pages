@@ -1,0 +1,168 @@
+PASSWD(1)                          用户命令                          PASSWD(1)
+
+名称
+       passwd - 更改用户密码
+
+大纲
+       passwd [选项] [登录]
+
+描述
+       The passwd command changes passwords for user accounts. A normal user
+       may only change the password for their own account, while the superuser
+       may change the password for any account.  passwd also changes the
+       account or associated password validity period.
+
+   密码更改
+       如果有旧密码，首先提示用户输入旧密码。加密这个密码然后和存储的密码进行比较。用户只有一次机会输入正确密码。允许超级用户略过这个步骤，以便更改忘记了的密码。
+
+       After the password has been entered, password aging information is
+       checked to see if the user is permitted to change the password at this
+       time. If not, passwd refuses to change the password and exits.
+
+       提示用户输入两次新密码。第二次和第一次进行比较，并且需要相同才能更改密码。
+
+       然后，测试密码的负责程度。一般来讲，密码应该包含 6 到 8
+       位字符，从下边的一个或多个集合中选择：
+
+       •   小写字母
+
+       •   数字 0 到 9
+
+       •   标点符号
+
+       Care must be taken not to include the system default erase or kill
+       characters.  passwd will reject any password which is not suitably
+       complex.
+
+   关于用户密码的提示
+       The security of a password depends upon the strength of the encryption
+       algorithm and the size of the key space. The legacy UNIX System
+       encryption method is based on the NBS DES algorithm. More recent
+       methods are now recommended (see ENCRYPT_METHOD). The size of the key
+       space depends upon the randomness of the password which is selected.
+
+       由于粗心地或处理选择密码，会危及密码的安全。由于这个原因，您不应该选择出现在词典中或者必须要写下来才能记住的密码。密码也不应该是一个名字、许可证号、生日或者街道号。所有这些可以用于猜测来损害系统安全。
+
+       You can find advice on how to choose a strong password on
+       http://en.wikipedia.org/wiki/Password_strength
+
+选项
+       The options which apply to the passwd command are:
+
+       -a, --all
+           This option can be used only with -S and causes show status for all
+           users.
+
+       -d, --delete
+           删除用户密码(让它为空)。这是禁用一个用户密码的快速方法。它将设置给出名称的账户。
+
+       -e, --expire
+           让一个账户的密码立即过期。这可以强制一个用户下次登录时更改密码。
+
+       -h, --help
+           显示帮助信息并退出。
+
+       -i, --inactive INACTIVE
+           This option is used to disable an account after the password has
+           been expired for a number of days. After a user account has had an
+           expired password for INACTIVE days, the user may no longer sign on
+           to the account.
+
+       -k, --keep-tokens
+           表示密码更改只应该因为认证口令(密码)过期更改。用户希望保持他们尚未过期的口令。
+
+       -l, --lock
+           锁定指定账户的密码。此选项通过将密码更改为一个不可能与加密值匹配的值来禁用(它在密码开头添加一个“!”)。
+
+           Note that this does not disable the account. The user may still be
+           able to login using another authentication token (e.g. an SSH key).
+           To disable the account, administrators should use usermod
+           --expiredate 1 (this set the account's expire date to Jan 2, 1970).
+
+           被锁定了密码的用户不允许更改密码。
+
+       -n, --mindays MIN_DAYS
+           Set the minimum number of days between password changes to
+           MIN_DAYS. A value of zero for this field indicates that the user
+           may change their password at any time.
+
+       -q, --quiet
+           安静模式。
+
+       -r, --repository REPOSITORY
+           change password in REPOSITORY repository
+
+       -R, --root CHROOT_DIR
+           Apply changes in the CHROOT_DIR directory and use the configuration
+           files from the CHROOT_DIR directory. Only absolute paths are
+           supported.
+
+       -S, --status
+           显示账户状态信息。状态信息包含 7
+           个字段。首个字段是用户的登录名，第二个字段表示用户账户是否已经锁定密码(L)、没有密码
+           (NP)或者密码可用(P)，第三个字段给出最后一次更改密码的日期。接下来的四个字段分别是密码的最小年龄、最大年龄、警告期和禁用期。这些年龄以天为单位计算。
+
+       -u, --unlock
+           Unlock the password of the named account. This option re-enables a
+           password by changing the password back to its previous value (to
+           the value before using the -l option).
+
+       -w, --warndays WARN_DAYS
+           Set the number of days of warning before a password change is
+           required. The WARN_DAYS option is the number of days prior to the
+           password expiring that a user will be warned that their password is
+           about to expire.
+
+       -x, --maxdays MAX_DAYS
+           Set the maximum number of days a password remains valid. After
+           MAX_DAYS, the password is required to be changed.
+
+           Passing the number -1 as MAX_DAYS will remove checking a password's
+           validity.
+
+CAVEATS
+       密码复杂性检查在每台机器间不同。用户应该选择适合的尽量复杂的密码。
+
+       在启动了 NIS 的系统上，如果没有登录 NIS
+       服务器，用户或许不能更改自己的密码。
+
+       passwd uses PAM to authenticate users and to change their passwords.
+
+文件
+       /etc/passwd
+           用户账户信息。
+
+       /etc/shadow
+           安全用户账户信息。
+
+       /etc/pam.d/passwd
+           PAM configuration for passwd.
+
+退出值
+       The passwd command exits with the following values:
+
+       0
+           success
+
+       1
+           permission denied
+
+       2
+           invalid combination of options
+
+       3
+           unexpected failure, nothing done
+
+       4
+           unexpected failure, passwd file missing
+
+       5
+           passwd file busy, try again
+
+       6
+           invalid argument to option
+
+参见
+       chpasswd(8), passwd(5), shadow(5), usermod(8).
+
+shadow-utils 4.13                 2025-04-07                         PASSWD(1)

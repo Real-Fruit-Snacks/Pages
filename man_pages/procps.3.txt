@@ -1,15 +1,14 @@
 PROCPS(3)                  Library Functions Manual                  PROCPS(3)
 
-НАЗВА
-       procps  —  програмний інтерфейс для доступу до даних системного рівня у
-       файловій системі /proc
+NAME
+       procps - API to access system level information in the /proc filesystem
 
-КОРОТКИЙ ОПИС
-       У цьому короткому описі  представлено  п'ять  різних  інтерфейсів,  які
-       названо  за  файлами,  до яких вони надають доступ у фіктивній файловій
-       системі /proc: diskstats, meminfo, slabinfo, stat та vmstat.
+SYNOPSIS
+       Five  distinct  interfaces  are  represented in this synopsis and named
+       after the files they access in the /proc pseudo filesystem:  diskstats,
+       meminfo, slabinfo, stat and vmstat.
 
-           #include <libproc2/іменований_інтерфейс.h>
+           #include <libproc2/named_interface.h>
 
            int procps_new   (struct info **info);
            int procps_ref   (struct info  *info);
@@ -17,18 +16,18 @@ PROCPS(3)                  Library Functions Manual                  PROCPS(3)
 
            struct result *procps_get (
                struct info *info,
-           [   const char *name,      ]   лише програмний інтерфейс diskstats
+           [   const char *name,      ]   diskstats api only
                enum item item);
 
            struct stack *procps_select (
                struct info *info,
-           [   const char *name,      ]   лише програмний інтерфейс diskstats
+           [   const char *name,      ]   diskstats api only
                enum item *items,
                int numitems);
 
            struct reaped *procps_reap (
                struct info *info,
-           [   enum reap_type what,   ]   лише програмний інтерфейс stat
+           [   enum reap_type what,   ]   stat api only
                enum item *items,
                int numitems);
 
@@ -39,118 +38,116 @@ PROCPS(3)                  Library Functions Manual                  PROCPS(3)
                enum item sortitem,
                enum sort_order order);
 
-           Наведені вище  функції  і  структури  є  загальними,  але  частиною
-           будь-якого   ідентифікатора   може  також  бути  специфічний  запис
-           іменований_інтерфейс. Наприклад, «procps_new» може  бути  насправді
-           «procps_meminfo_new», а «info» може бути насправді «diskstats_info»
-           тощо.
+           The  above  functions  and  structures are generic but the specific
+           named_interface  would  also  be  part  of  any  identifiers.   For
+           example,  `procps_new'  would  actually be `procps_meminfo_new' and
+           `info' would really be `diskstats_info', etc.
 
-           Той самий іменований_інтерфейс буде використано  у  кожній  з  назв
-           файлів заголовків, назви яких формуються додаванням суфікса «.h».
+           The same named_interface is used in each header file name  with  an
+           appended `.h' suffix.
 
-           Компонувати з -lproc2.
+           Link with -lproc2.
 
-ОПИС
-   Огляд
-       Центральною  для  цих  інтерфейсів  є  проста  структура  «result», яка
-       визначає «item» і його значення (в об'єднання  зі  стандартними  типами
-       мови  C,  як  учасниками).  Усі  структури  «result»  буде  автоматично
-       розподілено і надано бібліотекою.
+DESCRIPTION
+   Overview
+       Central  to  these interfaces is a simple `result' structure reflecting
+       an `item' plus its value (in a union with standard C language types  as
+       members).   All  `result'  structures  are  automatically allocated and
+       provided by the library.
 
-       Заданням масиву значень  «item»  ці  структури  можна  упорядкувати  як
-       «стек»  із  потенційним  отримання  багатьох результатів одним викликом
-       функції. Таким чином, «стек» можна розглядати як запис змінної довжини,
-       вміст якого та порядок записів у якому визначаються лише користувачем.
+       By specifying an array of `items', these structures can be organized as
+       a  `stack',  potentially  yielding  many results with a single function
+       call.  Thus, a `stack' can be viewed as a variable length record  whose
+       content and order is determined solely by the user.
 
-       Частиною кожного інтерфейсу є два унікальних лічильники. Для зберігання
-       їхніх значень передбачено  записи  «noop»  та  «extra».  Їхні  значення
-       ніколи  не  встановлюються  бібліотекою,  але  результат  «extra»  буде
-       занулено на початку кожної взаємодії із бібліотекою.
+       As part of each interface there are two unique enumerators.  The `noop'
+       and `extra' items exist to hold user values.  They are never set by the
+       library,  but  the  `extra'  result  will  be  zeroed with each library
+       interaction.
 
-       Базовим документом  при  розробці  користувацької  програми  буде  файл
-       заголовків  іменованого інтерфейсу. Там ви знайдете усі доступні записи
-       (item), тип, який вони повертають (назву члена  структури  «result»)  і
-       джерело  для  таких  значень.  Також  там  наведено  документацію  щодо
-       додаткових лічильників та структур.
+       The named_interface header file will be an  essential  document  during
+       user  program  development.  There you will find available items, their
+       return type (the `result' struct member name) and the source  for  such
+       values.   Additional  enumerators  and  structures  are also documented
+       there.
 
-   Користування
-       Нижче наведено типову послідовність викликів цих інтерфейсів.
+   Usage
+       The following would be a typical sequence of calls to these interfaces.
 
        1. procps_new()
-       2. procps_get(), procps_select() або procps_reap()
+       2. procps_get(), procps_select() or procps_reap()
        3. procps_unref()
 
-       Функцію get призначено для отримання структури  «result»  для  окремого
-       «item».  Крім того, можна скористатися макросом GET, якщо потрібне лише
-       значення, яке повертає функція.
+       The get function is used to retrieve a `result' structure for a  single
+       `item'.   Alternatively,  a GET macro is available when only the return
+       value is of interest.
 
-       Функція select може отримувати  декілька  структур  «result»  в  одному
-       значенні «stack».
+       The select function can retrieve  multiple  `result'  structures  in  a
+       single `stack'.
 
-       Для  непередбачуваних  результатів  для  змінних  інтерфейси diskstats,
-       slabinfo  і  stat  експортують  функцію  reap.  Її  використовують  для
-       отримання  декількох  «стеків»,  кожен з яких містить декілька структур
-       «result». Крім того, користувач може наказати  упорядкувати  (sort)  ці
-       результати.
+       For  unpredictable  variable outcomes, the diskstats, slabinfo and stat
+       interfaces export a reap function.  It is  used  to  retrieve  multiple
+       `stacks'  each  containing multiple `result' structures.  Optionally, a
+       user may choose to sort those results.
 
-       Щоб  скористатися  будь-яким  «stack»  і  отримати  доступ  до  окремих
-       структур «result», потрібен relative_enum, як  це  показано  у  макросі
-       VAL,   який   визначено   у   файлі   заголовка.  ТАкі  значення  можна
-       запрограмувати як: значення від  0  до  numitems-1.  Втім,  цю  потребу
-       типово  можна  задовольнити  створенням  ваших власних лічильників, які
-       відповідають порядку у масиві «items».
+       To exploit any `stack', and access individual  `result'  structures,  a
+       relative_enum  is  required  as  shown  in the VAL macro defined in the
+       header file.  Such values could be hard coded as: 0 through numitems-1.
+       However,  this  need  is  typically  satisfied  by  creating  your  own
+       enumerators corresponding to the order of the `items' array.
 
-   Застереження
-       Функціями new, ref, unref, get та  select  можна  скористатися  в  усіх
-       п'яти інтерфейсах.
+   Caveats
+       The new, ref, unref, get and select functions are available in all five
+       interfaces.
 
-       Для  функцій  new  і  unref  має бути надано адресу вказівник структури
-       info. Із new її має бути ініціалізовано значенням  NULL.  Із  unref  її
-       буде скинуто до NULL, якщо контрольний відлік дійде до нуля.
+       For  the new and unref functions, the address of an info struct pointer
+       must be supplied.  With new it must  have  been  initialized  to  NULL.
+       With  unref  it  will  be  reset to NULL if the reference count reaches
+       zero.
 
-       У  випадку  інтерфейсу  diskstats параметр name у функціях get і select
-       вказує на диск або назву розділу
+       In the case of the diskstats interface, a name parameter on the get and
+       select functions identifies a disk or partition name
 
-       Для інтерфейсу stat параметр what функції reap вказує на  те,  чи  слід
-       збирати дані лише для процесорів або процесорів і вузлів NUMA.
+       For  the  stat  interface,  a  what  parameter  on  the  reap  function
+       identifies whether data for just CPUs or both CPUs and NUMA nodes is to
+       be gathered.
 
-       Якщо  використано  функцію  sort,  зазвичай,  буде  повернуто параметри
-       stacks і numstacked у структурі «reaped».
+       When  using  the  sort  function,  the parameters stacks and numstacked
+       would normally be those returned in the `reaped' structure.
 
-ПОВЕРНУТЕ ЗНАЧЕННЯ
-   Функції, які повертають «int»
-       На помилку вказуватиме  від'ємне  число,  яке  є  завжди  оберненим  до
-       якогось відомого значення з errno.h.
+RETURN VALUE
+   Functions Returning an `int'
+       An error will be indicated by a negative  number  that  is  always  the
+       inverse of some well known errno.h value.
 
-       На  успіх  вказує  нульовий  стан повернення. Втім, функції ref і unref
-       повертають поточний контрольний відлік структури info.
+       Success  is  indicated  by  a  zero return value.  However, the ref and
+       unref functions return the current info structure reference count.
 
-   Функції, які повертають «address»
-       На помилку вказуватиме повернутий  NUL-вказівник  із  повідомлення  про
-       причину у формальному значенні errno.
+   Functions Returning an `address'
+       An error will be indicated by a NULL return  pointer  with  the  reason
+       found in the formal errno value.
 
-       На успіх вказує повернення вказівника на іменовану структуру.
+       Success is indicated by a pointer to the named structure.
 
-ДІАГНОСТИКА
-       Щоб  допомогти  у  розробці  програм,  передбачено  функцію,  яка  може
-       допомогти  забезпечити  узгодженість  посилань  на  члени  «result»  із
-       очікуваннями бібліотеки. У цій функції передбачено, що наданий макрос у
-       файлі заголовків буде використано для доступу до значення «result».
+DEBUGGING
+       To  aid  in  program  development,  there  is a provision that can help
+       ensure `result' member references agree with library expectations.   It
+       assumes  that a supplied macro in the header file is used to access the
+       `result' value.
 
-       Цю можливість можна активувати за допомогою будь-якого з вказаних нижче
-       методів, а усі розбіжності буде записано до stderr.
+       This feature can be activated through either of the  following  methods
+       and any discrepancies will be written to stderr.
 
-       1) Додайте CFLAGS='-DXTRA_PROCPS_DEBUG' до будь-яких інших застосованих
-          параметрів ./configure.
+       1) Add  CFLAGS='-DXTRA_PROCPS_DEBUG'  to  any other ./configure options
+          employed.
 
-       2) Додайте  #include  <procps/xtra-procps-debug.h>  у  програму   після
-          команд включення іменованих інтерфейсів.
+       2) Add #include <procps/xtra-procps-debug.h> to any program  after  the
+          named interface includes.
 
-       Використання   цієї   можливості   перевірки   призводить  до  суттєвих
-       обчислювальних  витрат.  Через  це,  важливо  не  вмикати  її  під  час
-       остаточного збирання або збирання програми для випуску.
+       This  verification  feature incurs substantial overhead.  Therefore, it
+       is important that it not be activated for a production/release build.
 
-ТАКОЖ ПЕРЕГЛЯНЬТЕ
+SEE ALSO
        procps_misc(3), procps_pids(3), proc(5).
 
-libproc2                       серпень 2022 року                     PROCPS(3)
+libproc2                          August 2022                        PROCPS(3)

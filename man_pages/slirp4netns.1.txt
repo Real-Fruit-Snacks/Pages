@@ -7,7 +7,7 @@ SYNOPSIS
        slirp4netns [OPTION]... PID|PATH [TAPNAME]
 
 DESCRIPTION
-       slirp4netns  provides  user-mode networking ("slirp") for network name‐
+       slirp4netns  provides  user-mode networking ("slirp") for network name-
        spaces.
 
        Unlike veth(4), slirp4netns does not require the root privileges on the
@@ -15,23 +15,23 @@ DESCRIPTION
 
        Default configuration:
 
-              • MTU:               1500
+              o MTU:               1500
 
-              • CIDR:              10.0.2.0/24
+              o CIDR:              10.0.2.0/24
 
-              • Gateway/Host:      10.0.2.2    (network address + 2)
+              o Gateway/Host:      10.0.2.2    (network address + 2)
 
-              • DNS:               10.0.2.3    (network address + 3)
+              o DNS:               10.0.2.3    (network address + 3)
 
-              • DHCP begin:        10.0.2.15   (network address + 15)
+              o DHCP begin:        10.0.2.15   (network address + 15)
 
-              • DHCP end:          10.0.2.30   (network address + 30)
+              o DHCP end:          10.0.2.30   (network address + 30)
 
-              • IPv6 CIDR:         fd00::/64
+              o IPv6 CIDR:         fd00::/64
 
-              • IPv6 Gateway/Host: fd00::2
+              o IPv6 Gateway/Host: fd00::2
 
-              • IPv6 DNS:          fd00::3
+              o IPv6 DNS:          fd00::3
 
 OPTIONS
        -c,  --configure  bring  up  the  TAP  interface.  IP  will  be  set to
@@ -86,7 +86,7 @@ OPTIONS
        --outbound-addr=IPv6 (since v1.1.0, EXPERIMENTAL) specify outbound ipv6
        address slirp should bind to
 
-       --outbound-addr6=INTERFACE  (since  v1.1.0,  EXPERIMENTAL) specify out‐
+       --outbound-addr6=INTERFACE  (since  v1.1.0,  EXPERIMENTAL) specify out-
        bound interface slirp should bind to (ipv6 traffic only)
 
        --disable-dns (since v1.1.0) disable built-in DNS (10.0.2.3 by default)
@@ -114,7 +114,7 @@ EXAMPLE
        In this documentation, we use (host)$ as the prompt of the host  shell,
        (namespace)$ as the prompt of the shell running in the namespaces.
 
-       If unshare fails, try the following commands (known to be needed on De‐
+       If unshare fails, try the following commands (known to be needed on De-
        bian, Arch, and old CentOS 7.X):
 
               (host)$ sudo sh -c 'echo "user.max_user_namespaces=28633" >> /etc/sysctl.d/userns.conf'
@@ -143,13 +143,13 @@ EXAMPLE
 
        Bind-mounting /etc/resolv.conf is only needed when /etc/resolv.conf  on
        the  host refers to loopback addresses (127.0.0.X, typically dnsmasq(8)
-       or systemd-resolved.service(8)) that cannot be accessed from the  name‐
+       or systemd-resolved.service(8)) that cannot be accessed from the  name-
        space.
 
        If your /etc/resolv.conf on the host is managed by networkmanager(8) or
        systemd-resolved.service(8), you might need to mount a  new  filesystem
        on  /etc  instead, so as to prevent the new /etc/resolv.conf from being
-       unmounted unexpectedly when /etc/resolv.conf on the  host  is  regener‐
+       unmounted unexpectedly when /etc/resolv.conf on the  host  is  regener-
        ated.
 
               (namespace)$ mkdir /tmp/a /tmp/b
@@ -163,7 +163,7 @@ EXAMPLE
               (namespace)$ echo "nameserver 10.0.2.3" > resolv.conf
               (namespace)$ curl https://example.com
 
-       These  steps can be simplified with rootlesskit --copy-up=/etc if root‐
+       These  steps can be simplified with rootlesskit --copy-up=/etc if root-
        lesskit is installed:
 
               (host)$ rootlesskit --net=slirp4netns --copy-up=/etc bash
@@ -207,7 +207,7 @@ API SOCKET
 
        If host_addr is not specified, then it defaults to "0.0.0.0".
 
-       If  guest_addr is not specified, then it will be set to the default ad‐
+       If  guest_addr is not specified, then it will be set to the default ad-
        dress that corresponds to --configure.
 
        list_hostfwd: List exposed ports
@@ -224,15 +224,15 @@ API SOCKET
 
        Remarks:
 
-              • Client needs to shutdown(2)  the  socket  with  SHUT_WR  after
+              o Client needs to shutdown(2)  the  socket  with  SHUT_WR  after
                 sending  every  request.   i.e.  No support for keep-alive and
                 timeout.
 
-              • slirp4netns "stops the world" during processing API requests.
+              o slirp4netns "stops the world" during processing API requests.
 
-              • A request must be less than 4096 bytes.
+              o A request must be less than 4096 bytes.
 
-              • JSON responses may contain error instead of return.
+              o JSON responses may contain error instead of return.
 
 DEFINED NAMESPACE PATHS
        A user can define a network namespace path as opposed  to  the  default
@@ -259,7 +259,7 @@ OUTBOUND ADDRESSES
               (host)$ slirp4netns --outbound-addr=eth0 --outbound-addr6=eth0 ...
 
 INTER-NAMESPACE COMMUNICATION
-       The easiest way to allow inter-namespace communication is to nest  net‐
+       The easiest way to allow inter-namespace communication is to nest  net-
        work namespaces inside the slirp4netns's network namespace.
 
               (host)$ nsenter -t $(cat /tmp/pid) -U --preserve-credentials -n -m
@@ -319,17 +319,17 @@ BESS MODE (FOR USER MODE LINUX)
        Currently,  only  a single instance of User Mode Linux can be connected
        to the slirp4netns BESS server.
 
-       See   also   User   Mode    Linux    documentation:    https://www.ker‐
-       nel.org/doc/html/lat‐
+       See   also   User   Mode    Linux    documentation:    https://www.ker-
+       nel.org/doc/html/lat-
        est/virt/uml/user_mode_linux_howto_v2.html#bess-socket-transport
 
 BUGS
        Kernel 4.20 bumped up the default value of  /proc/sys/net/ipv4/tcp_rmem
-       from 87380 to 131072.  This is known to slow down slirp4netns port for‐
+       from 87380 to 131072.  This is known to slow down slirp4netns port for-
        warding: https://github.com/rootless-containers/slirp4netns/issues/128.
 
        As    a    workaround,    you    can    adjust     the     value     of
-       /proc/sys/net/ipv4/tcp_rmem  inside the namespace.  No real root privi‐
+       /proc/sys/net/ipv4/tcp_rmem  inside the namespace.  No real root privi-
        lege is needed to modify the file since kernel 4.15.
 
               (host)$ nsenter -t $(cat /tmp/pid) -U --preserve-credentials -n -m
@@ -339,7 +339,7 @@ SEE ALSO
        network_namespaces(7), user_namespaces(7), veth(4)
 
 AVAILABILITY
-       The slirp4netns  command  is  available  from  https://github.com/root‐
+       The slirp4netns  command  is  available  from  https://github.com/root-
        less-containers/slirp4netns  under GNU GENERAL PUBLIC LICENSE Version 2
        (or later).
 

@@ -23,14 +23,14 @@ DESCRIPTION
        superset of its functionality.
 
        The openat2() system call opens the file specified by pathname.  If the
-       specified file does not exist, it may optionally (if O_CREAT is  speci‐
+       specified file does not exist, it may optionally (if O_CREAT is  speci-
        fied in how.flags) be created.
 
-       As  with  openat(2), if pathname is a relative pathname, then it is in‐
+       As  with  openat(2), if pathname is a relative pathname, then it is in-
        terpreted relative to the directory referred to by the file  descriptor
        dirfd  (or  the  current  working  directory of the calling process, if
-       dirfd is the special value AT_FDCWD).  If pathname is an absolute path‐
-       name,   then   dirfd   is  ignored  (unless  how.resolve  contains  RE‐
+       dirfd is the special value AT_FDCWD).  If pathname is an absolute path-
+       name,   then   dirfd   is  ignored  (unless  how.resolve  contains  RE-
        SOLVE_IN_ROOT, in which case pathname is resolved relative to dirfd).
 
        Rather than taking a single flags  argument,  an  extensible  structure
@@ -45,7 +45,7 @@ DESCRIPTION
        Any future extensions to openat2() will be implemented  as  new  fields
        appended  to  the  open_how structure, with a zero value in a new field
        resulting in the kernel behaving as though that extension field was not
-       present.   Therefore,  the caller must zero-fill this structure on ini‐
+       present.   Therefore,  the caller must zero-fill this structure on ini-
        tialization.  (See the "Extensibility" section of the  NOTES  for  more
        detail on why this is necessary.)
 
@@ -70,42 +70,42 @@ DESCRIPTION
 
        resolve
               This is a bit-mask of flags that modify the  way  in  which  all
-              components  of  pathname  will  be  resolved.  (See path_resolu‐
+              components  of  pathname  will  be  resolved.  (See path_resolu-
               tion(7) for background information.)
 
-              The primary use case for these flags is to  allow  trusted  pro‐
+              The primary use case for these flags is to  allow  trusted  pro-
               grams to restrict how untrusted paths (or paths inside untrusted
               directories) are resolved.  The full list of resolve flags is as
               follows:
 
               RESOLVE_BENEATH
-                     Do  not permit the path resolution to succeed if any com‐
-                     ponent of the resolution is not a descendant of  the  di‐
-                     rectory  indicated  by  dirfd.  This causes absolute sym‐
-                     bolic links (and absolute values of pathname) to  be  re‐
+                     Do  not permit the path resolution to succeed if any com-
+                     ponent of the resolution is not a descendant of  the  di-
+                     rectory  indicated  by  dirfd.  This causes absolute sym-
+                     bolic links (and absolute values of pathname) to  be  re-
                      jected.
 
                      Currently,  this flag also disables magic-link resolution
                      (see below).  However, this may  change  in  the  future.
                      Therefore,  to  ensure that magic links are not resolved,
-                     the caller  should  explicitly  specify  RESOLVE_NO_MAGI‐
+                     the caller  should  explicitly  specify  RESOLVE_NO_MAGI-
                      CLINKS.
 
               RESOLVE_IN_ROOT
-                     Treat  the directory referred to by dirfd as the root di‐
+                     Treat  the directory referred to by dirfd as the root di-
                      rectory  while  resolving  pathname.   Absolute  symbolic
                      links  are  interpreted  relative  to dirfd.  If a prefix
-                     component of pathname equates to dirfd, then  an  immedi‐
+                     component of pathname equates to dirfd, then  an  immedi-
                      ately  following  ..  component likewise equates to dirfd
-                     (just as /.. is traditionally equivalent to /).  If path‐
+                     (just as /.. is traditionally equivalent to /).  If path-
                      name is an absolute path, it is also interpreted relative
                      to dirfd.
 
                      The effect of this flag is as though the calling  process
-                     had  used  chroot(2) to (temporarily) modify its root di‐
-                     rectory (to the directory referred to  by  dirfd).   How‐
+                     had  used  chroot(2) to (temporarily) modify its root di-
+                     rectory (to the directory referred to  by  dirfd).   How-
                      ever, unlike chroot(2) (which changes the filesystem root
-                     permanently for a process), RESOLVE_IN_ROOT allows a pro‐
+                     permanently for a process), RESOLVE_IN_ROOT allows a pro-
                      gram  to  efficiently  restrict path resolution on a per-
                      open basis.
 
@@ -115,30 +115,30 @@ DESCRIPTION
                      should explicitly specify RESOLVE_NO_MAGICLINKS.
 
               RESOLVE_NO_MAGICLINKS
-                     Disallow  all  magic-link  resolution during path resolu‐
+                     Disallow  all  magic-link  resolution during path resolu-
                      tion.
 
                      Magic links are symbolic link-like objects that are  most
                      notably  found in proc(5); examples include /proc/pid/exe
                      and /proc/pid/fd/*.  (See symlink(7) for more details.)
 
-                     Unknowingly opening magic links can be risky for some ap‐
-                     plications.   Examples  of such risks include the follow‐
+                     Unknowingly opening magic links can be risky for some ap-
+                     plications.   Examples  of such risks include the follow-
                      ing:
 
-                     •  If the process opening a  pathname  is  a  controlling
+                     o  If the process opening a  pathname  is  a  controlling
                         process  that  currently  has  no controlling terminal
                         (see credentials(7)), then opening a magic link inside
                         /proc/pid/fd that happens to refer to a terminal would
                         cause the process to acquire a controlling terminal.
 
-                     •  In a containerized environment, a  magic  link  inside
+                     o  In a containerized environment, a  magic  link  inside
                         /proc  may  refer  to an object outside the container,
-                        and thus may provide a means to escape from  the  con‐
+                        and thus may provide a means to escape from  the  con-
                         tainer.
 
-                     Because  of such risks, an application may prefer to dis‐
-                     able magic link  resolution  using  the  RESOLVE_NO_MAGI‐
+                     Because  of such risks, an application may prefer to dis-
+                     able magic link  resolution  using  the  RESOLVE_NO_MAGI-
                      CLINKS flag.
 
                      If the trailing component (i.e., basename) of pathname is
@@ -148,11 +148,11 @@ DESCRIPTION
                      be returned.
 
               RESOLVE_NO_SYMLINKS
-                     Disallow resolution of symbolic links during path resolu‐
+                     Disallow resolution of symbolic links during path resolu-
                      tion.  This option implies RESOLVE_NO_MAGICLINKS.
 
                      If the trailing component (i.e., basename) of pathname is
-                     a  symbolic  link,  how.resolve  contains RESOLVE_NO_SYM‐
+                     a  symbolic  link,  how.resolve  contains RESOLVE_NO_SYM-
                      LINKS, and how.flags contains both O_PATH and O_NOFOLLOW,
                      then  an  O_PATH file descriptor referencing the symbolic
                      link will be returned.
@@ -167,53 +167,53 @@ DESCRIPTION
                      Applications that employ the RESOLVE_NO_SYMLINKS flag are
                      encouraged to make its use  configurable  (unless  it  is
                      used  for a specific security purpose), as symbolic links
-                     are very widely used by end-users.  Setting this flag in‐
-                     discriminately—i.e.,  for  purposes  not specifically re‐
-                     lated to security—for all uses of openat2() may result in
-                     spurious  errors  on previously functional systems.  This
-                     may occur if, for example, a system pathname that is used
-                     by  an  application is modified (e.g., in a new distribu‐
-                     tion release) so that a pathname component (now) contains
-                     a symbolic link.
+                     are very widely used by end-users.  Setting this flag in-
+                     discriminately--i.e.,  for  purposes not specifically re-
+                     lated to security--for all uses of openat2()  may  result
+                     in  spurious  errors  on  previously  functional systems.
+                     This may occur if, for example, a system pathname that is
+                     used  by  an application is modified (e.g., in a new dis-
+                     tribution release) so that  a  pathname  component  (now)
+                     contains a symbolic link.
 
               RESOLVE_NO_XDEV
                      Disallow traversal of mount points during path resolution
                      (including all bind mounts).  Consequently, pathname must
                      either  be on the same mount as the directory referred to
-                     by dirfd, or on the same mount as the current working di‐
+                     by dirfd, or on the same mount as the current working di-
                      rectory if dirfd is specified as AT_FDCWD.
 
-                     Applications that employ the RESOLVE_NO_XDEV flag are en‐
+                     Applications that employ the RESOLVE_NO_XDEV flag are en-
                      couraged to make its use configurable (unless it is  used
                      for  a  specific  security  purpose),  as bind mounts are
-                     widely used by end-users.  Setting this flag  indiscrimi‐
-                     nately—i.e., for purposes not specifically related to se‐
-                     curity—for all uses of openat2() may result  in  spurious
-                     errors  on previously functional systems.  This may occur
-                     if, for example, a system pathname that is used by an ap‐
-                     plication  is  modified  (e.g., in a new distribution re‐
-                     lease) so that a pathname component (now) contains a bind
-                     mount.
+                     widely used by end-users.  Setting this flag  indiscrimi-
+                     nately--i.e.,  for  purposes  not specifically related to
+                     security--for all uses of openat2() may result in  spuri-
+                     ous  errors  on  previously functional systems.  This may
+                     occur if, for example, a system pathname that is used  by
+                     an  application  is modified (e.g., in a new distribution
+                     release) so that a pathname component  (now)  contains  a
+                     bind mount.
 
               RESOLVE_CACHED
                      Make  the  open operation fail unless all path components
                      are already present in the kernel's lookup cache.  If any
                      kind  of  revalidation  or  I/O  is needed to satisfy the
                      lookup, openat2() fails with the error EAGAIN .  This  is
-                     useful  in  providing  a  fast-path open that can be per‐
+                     useful  in  providing  a  fast-path open that can be per-
                      formed without resorting  to  thread  offload,  or  other
                      mechanisms  that  an  application  might  use  to offload
                      slower operations.
 
-              If any bits other than those listed above  are  set  in  how.re‐
+              If any bits other than those listed above  are  set  in  how.re-
               solve, an error is returned.
 
 RETURN VALUE
-       On  success,  a  new  file descriptor is returned.  On error, -1 is re‐
+       On  success,  a  new  file descriptor is returned.  On error, -1 is re-
        turned, and errno is set to indicate the error.
 
 ERRORS
-       The set of errors returned by openat2() includes all of the errors  re‐
+       The set of errors returned by openat2() includes all of the errors  re-
        turned by openat(2), as well as the following additional errors:
 
        E2BIG  An  extension that this kernel does not support was specified in
@@ -221,11 +221,11 @@ ERRORS
               on how extensions are handled.)
 
        EAGAIN how.resolve  contains either RESOLVE_IN_ROOT or RESOLVE_BENEATH,
-              and the kernel could not ensure that a ".." component didn't es‐
+              and the kernel could not ensure that a ".." component didn't es-
               cape  (due to a race condition or potential attack).  The caller
               may choose to retry the openat2() call.
 
-       EAGAIN RESOLVE_CACHED was set, and the open operation  cannot  be  per‐
+       EAGAIN RESOLVE_CACHED was set, and the open operation  cannot  be  per-
               formed  using  only cached information.  The caller should retry
               without RESOLVE_CACHED set in how.resolve .
 
@@ -254,7 +254,7 @@ VERSIONS
 STANDARDS
        This system call is Linux-specific.
 
-       The  semantics  of  RESOLVE_BENEATH  were modeled after FreeBSD's O_BE‐
+       The  semantics  of  RESOLVE_BENEATH  were modeled after FreeBSD's O_BE-
        NEATH.
 
 NOTES
@@ -264,7 +264,7 @@ NOTES
        that it is passing.  By providing this information, it is possible  for
        openat2()  to  provide both forwards- and backwards-compatibility, with
        size acting as an implicit  version  number.   (Because  new  extension
-       fields  will  always  be  appended,  the structure size will always in‐
+       fields  will  always  be  appended,  the structure size will always in-
        crease.)  This extensibility design is very  similar  to  other  system
        calls such as sched_setattr(2), perf_event_open(2), and clone3(2).
 
@@ -272,17 +272,17 @@ NOTES
        space application, and ksize be the size of  the  structure  which  the
        kernel supports, then there are three cases to consider:
 
-       •  If ksize equals usize, then there is no version mismatch and how can
+       o  If ksize equals usize, then there is no version mismatch and how can
           be used verbatim.
 
-       •  If ksize is larger than usize, then there are some extension  fields
+       o  If ksize is larger than usize, then there are some extension  fields
           that the kernel supports which the user-space application is unaware
           of.  Because a zero value in any added extension field  signifies  a
           no-op, the kernel treats all of the extension fields not provided by
           the user-space application as having  zero  values.   This  provides
           backwards-compatibility.
 
-       •  If ksize is smaller than usize, then there are some extension fields
+       o  If ksize is smaller than usize, then there are some extension fields
           which the user-space application is aware of but  which  the  kernel
           does  not  support.   Because any extension field must have its zero
           values signify a no-op, the kernel can safely ignore the unsupported
@@ -292,8 +292,8 @@ NOTES
 
        Because  the  definition  of  struct  open_how may change in the future
        (with new fields being added when system headers  are  updated),  user-
-       space  applications should zero-fill struct open_how to ensure that re‐
-       compiling the program with new headers will not result in spurious  er‐
+       space  applications should zero-fill struct open_how to ensure that re-
+       compiling the program with new headers will not result in spurious  er-
        rors at runtime.  The simplest way is to use a designated initializer:
 
            struct open_how how = { .flags = O_RDWR,

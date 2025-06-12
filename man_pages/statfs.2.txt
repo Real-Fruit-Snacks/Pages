@@ -1,5 +1,7 @@
 statfs(2)                     System Calls Manual                    statfs(2)
 
+
+
 NAME
        statfs, fstatfs - get filesystem statistics
 
@@ -9,13 +11,16 @@ LIBRARY
 SYNOPSIS
        #include <sys/vfs.h>    /* or <sys/statfs.h> */
 
-       [[deprecated]] int statfs(const char *path, struct statfs *buf);
-       [[deprecated]] int fstatfs(int fd, struct statfs *buf);
+       int statfs(const char *path, struct statfs *buf);
+       int fstatfs(int fd, struct statfs *buf);
+
+       Unless  you  need  the  f_type  field,  you  should  use  the  standard
+       statvfs(3) interface instead.
 
 DESCRIPTION
-       The  statfs()  system call returns information about a mounted filesys‐
-       tem.  path is the pathname of any file within the  mounted  filesystem.
-       buf  is  a  pointer to a statfs structure defined approximately as fol‐
+       The statfs() system call returns information about a  mounted  filesys‐
+       tem.   path  is the pathname of any file within the mounted filesystem.
+       buf is a pointer to a statfs structure defined  approximately  as  fol‐
        lows:
 
            struct statfs {
@@ -125,10 +130,10 @@ DESCRIPTION
            XFS_SUPER_MAGIC       0x58465342
            _XIAFS_SUPER_MAGIC    0x012fd16d /* Linux 2.0 and earlier */
 
-       Most   of   these   MAGIC   constants   are   defined    in    /usr/in‐
+       Most    of    these   MAGIC   constants   are   defined   in   /usr/in‐
        clude/linux/magic.h, and some are hardcoded in kernel sources.
 
-       The  f_flags  field  is  a  bit  mask  indicating mount options for the
+       The f_flags field is a  bit  mask  indicating  mount  options  for  the
        filesystem.  It contains zero or more of the following bits:
 
        ST_MANDLOCK
@@ -157,11 +162,11 @@ DESCRIPTION
               Update atime relative to mtime/ctime; see mount(2).
 
        ST_SYNCHRONOUS
-              Writes  are  synched  to the filesystem immediately (see the de‐
+              Writes are synched to the filesystem immediately  (see  the  de‐
               scription of O_SYNC in open(2)).
 
        ST_NOSYMFOLLOW (since Linux 5.10)
-              Symbolic links  are  not  followed  when  resolving  paths;  see
+              Symbolic  links  are  not  followed  when  resolving  paths; see
               mount(2).
 
        Nobody knows what f_fsid is supposed to contain (but see below).
@@ -172,11 +177,11 @@ DESCRIPTION
        descriptor fd.
 
 RETURN VALUE
-       On success, zero is returned.  On error, -1 is returned, and  errno  is
+       On  success,  zero is returned.  On error, -1 is returned, and errno is
        set to indicate the error.
 
 ERRORS
-       EACCES (statfs())  Search  permission  is denied for a component of the
+       EACCES (statfs()) Search permission is denied for a  component  of  the
               path prefix of path.  (See also path_resolution(7).)
 
        EBADF  (fstatfs()) fd is not a valid open file descriptor.
@@ -200,40 +205,14 @@ ERRORS
        ENOSYS The filesystem does not support this call.
 
        ENOTDIR
-              (statfs())  A  component of the path prefix of path is not a di‐
+              (statfs()) A component of the path prefix of path is not  a  di‐
               rectory.
 
        EOVERFLOW
-              Some values were too large to be  represented  in  the  returned
+              Some  values  were  too  large to be represented in the returned
               struct.
 
-STANDARDS
-       Linux-specific.  The Linux statfs() was inspired by the 4.4BSD one (but
-       they do not use the same structure).
-
-NOTES
-       The __fsword_t type used for various fields  in  the  statfs  structure
-       definition is a glibc internal type, not intended for public use.  This
-       leaves the programmer in a bit of a conundrum when trying  to  copy  or
-       compare  these  fields  to  local  variables  in  a program.  Using un‐
-       signed int for such variables suffices on most systems.
-
-       The original Linux statfs() and fstatfs() system  calls  were  not  de‐
-       signed  with  extremely  large file sizes in mind.  Subsequently, Linux
-       2.6 added new statfs64() and fstatfs64() system calls that employ a new
-       structure, statfs64.  The new structure contains the same fields as the
-       original statfs structure, but the sizes  of  various  fields  are  in‐
-       creased,  to  accommodate large file sizes.  The glibc statfs() and fs‐
-       tatfs() wrapper functions transparently deal with  the  kernel  differ‐
-       ences.
-
-       Some   systems   have   only   <sys/vfs.h>,  other  systems  also  have
-       <sys/statfs.h>, where the former includes the latter.  So it seems  in‐
-       cluding the former is the best choice.
-
-       LSB  has  deprecated the library calls statfs() and fstatfs() and tells
-       us to use statvfs(3) and fstatvfs(3) instead.
-
+VERSIONS
    The f_fsid field
        Solaris, Irix, and POSIX have a system call statvfs(2) that  returns  a
        struct statvfs (defined in <sys/statvfs.h>) containing an unsigned long
@@ -253,11 +232,43 @@ NOTES
        Under  some operating systems, the fsid can be used as the second argu‐
        ment to the sysfs(2) system call.
 
+STANDARDS
+       Linux.
+
+HISTORY
+       The Linux statfs() was inspired by the 4.4BSD one (but they do not  use
+       the same structure).
+
+       The  original  Linux  statfs()  and fstatfs() system calls were not de‐
+       signed with extremely large file sizes in  mind.   Subsequently,  Linux
+       2.6 added new statfs64() and fstatfs64() system calls that employ a new
+       structure, statfs64.  The new structure contains the same fields as the
+       original  statfs  structure,  but  the  sizes of various fields are in‐
+       creased, to accommodate large file sizes.  The glibc statfs()  and  fs‐
+       tatfs()  wrapper  functions  transparently deal with the kernel differ‐
+       ences.
+
+       LSB has deprecated the library calls statfs() and fstatfs()  and  tells
+       us to use statvfs(3) and fstatvfs(3) instead.
+
+NOTES
+       The  __fsword_t  type  used  for various fields in the statfs structure
+       definition is a glibc internal type, not intended for public use.  This
+       leaves  the  programmer  in a bit of a conundrum when trying to copy or
+       compare these fields to  local  variables  in  a  program.   Using  un‐
+       signed int for such variables suffices on most systems.
+
+       Some   systems   have   only   <sys/vfs.h>,  other  systems  also  have
+       <sys/statfs.h>, where the former includes the latter.  So it seems  in‐
+       cluding the former is the best choice.
+
 BUGS
-       From Linux 2.6.38 up to and including Linux 3.1, fstatfs() failed  with
+       From  Linux 2.6.38 up to and including Linux 3.1, fstatfs() failed with
        the error ENOSYS for file descriptors created by pipe(2).
 
 SEE ALSO
        stat(2), statvfs(3), path_resolution(7)
 
-Linux man-pages 6.03              2022-10-30                         statfs(2)
+
+
+Linux man-pages 6.05.01           2023-07-18                         statfs(2)

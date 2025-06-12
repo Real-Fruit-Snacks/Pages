@@ -1,5 +1,7 @@
 udp(7)                 Miscellaneous Information Manual                 udp(7)
 
+
+
 NAME
        udp - User Datagram Protocol for IPv4
 
@@ -124,6 +126,34 @@ DESCRIPTION
               the option is disabled.  This option should not be used in  code
               intended to be portable.
 
+       UDP_SEGMENT (since Linux 4.18)
+              Enables  UDP segmentation offload.  Segmentation offload reduces
+              send(2) cost by transferring multiple datagrams worth of data as
+              a  single  large  packet  through the kernel transmit path, even
+              when that exceeds MTU.  As late as possible, the large packet is
+              split  by segment size into a series of datagrams.  This segmen‐
+              tation offload step is deferred to hardware if  supported,  else
+              performed  in  software.  This option takes a value in the range
+              [0, USHRT_MAX] that sets the segment size: the size of  datagram
+              payload,  excluding  the  UDP  header.  The segment size must be
+              chosen such that at most 64 datagrams are sent in a single  call
+              and  that  the  datagrams  after  segmentation meet the same MTU
+              rules that apply to datagrams sent without this option.  Segmen‐
+              tation  offload  depends on checksum offload, as datagram check‐
+              sums are computed after segmentation.  The option  may  also  be
+              set  for individual sendmsg(2) calls by passing it as a cmsg(3).
+              A value of zero disables the feature.  This option should not be
+              used in code intended to be portable.
+
+       UDP_GRO (since Linux 5.0)
+              Enables UDP receive offload.  If enabled, the socket may receive
+              multiple datagrams worth of data as a single large  buffer,  to‐
+              gether  with a cmsg(3) that holds the segment size.  This option
+              is the inverse of segmentation offload.  It reduces receive cost
+              by  handling  multiple datagrams worth of data as a single large
+              packet in the kernel receive path, even when that  exceeds  MTU.
+              This option should not be used in code intended to be portable.
+
    Ioctls
        These ioctls can be accessed using ioctl(2).  The correct syntax is:
 
@@ -166,4 +196,6 @@ SEE ALSO
        RFC 1122 for the host requirements.
        RFC 1191 for a description of path MTU discovery.
 
-Linux man-pages 6.03              2022-12-04                            udp(7)
+
+
+Linux man-pages 6.05.01           2023-07-15                            udp(7)

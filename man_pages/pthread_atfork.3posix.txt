@@ -7,7 +7,7 @@ PROLOG
        not be implemented on Linux.
 
 NAME
-       pthread_atfork — register fork handlers
+       pthread_atfork -- register fork handlers
 
 SYNOPSIS
        #include <pthread.h>
@@ -18,31 +18,31 @@ SYNOPSIS
 DESCRIPTION
        The pthread_atfork() function shall declare fork handlers to be  called
        before  and  after  fork(),  in  the  context of the thread that called
-       fork().  The prepare fork handler shall be called  before  fork()  pro‐
+       fork().  The prepare fork handler shall be called  before  fork()  pro-
        cessing  commences. The parent fork handle shall be called after fork()
        processing completes in the parent  process.  The  child  fork  handler
        shall be called after fork() processing completes in the child process.
        If no handling is desired at one or more of  these  three  points,  the
        corresponding fork handler address(es) may be set to NULL.
 
-       If a fork() call in a multi-threaded process leads to a child fork han‐
+       If a fork() call in a multi-threaded process leads to a child fork han-
        dler calling any function that is not async-signal-safe,  the  behavior
        is undefined.
 
        The  order  of calls to pthread_atfork() is significant. The parent and
-       child fork handlers shall be called in the order in which they were es‐
+       child fork handlers shall be called in the order in which they were es-
        tablished  by  calls  to  pthread_atfork().   The prepare fork handlers
        shall be called in the opposite order.
 
 RETURN VALUE
        Upon successful completion, pthread_atfork() shall return  a  value  of
-       zero;  otherwise, an error number shall be returned to indicate the er‐
+       zero;  otherwise, an error number shall be returned to indicate the er-
        ror.
 
 ERRORS
        The pthread_atfork() function shall fail if:
 
-       ENOMEM Insufficient table space exists to record the fork  handler  ad‐
+       ENOMEM Insufficient table space exists to record the fork  handler  ad-
               dresses.
 
        The  pthread_atfork()  function  shall  not  return  an  error  code of
@@ -55,26 +55,26 @@ EXAMPLES
 
 APPLICATION USAGE
        The original usage pattern envisaged for pthread_atfork() was  for  the
-       prepare  fork handler to lock mutexes and other locks, and for the par‐
-       ent and child handlers to unlock them. However, since all of the  rele‐
+       prepare  fork handler to lock mutexes and other locks, and for the par-
+       ent and child handlers to unlock them. However, since all of the  rele-
        vant unlocking functions, except sem_post(), are not async-signal-safe,
        this usage results in undefined behavior in the  child  process  unless
        the only such unlocking function it calls is sem_post().
 
 RATIONALE
        There are at least two serious problems with the semantics of fork() in
-       a multi-threaded program. One problem has to do with state  (for  exam‐
+       a multi-threaded program. One problem has to do with state  (for  exam-
        ple, memory) covered by mutexes. Consider the case where one thread has
        a mutex locked and the state covered  by  that  mutex  is  inconsistent
        while  another  thread calls fork().  In the child, the mutex is in the
-       locked state (locked by a nonexistent thread and thus can never be  un‐
-       locked).  Having the child simply reinitialize the mutex is unsatisfac‐
+       locked state (locked by a nonexistent thread and thus can never be  un-
+       locked).  Having the child simply reinitialize the mutex is unsatisfac-
        tory since this approach does not resolve the  question  about  how  to
        correct or otherwise deal with the inconsistent state in the child.
 
        It  is  suggested  that  programs that use fork() call an exec function
        very soon afterwards in the child process, thus resetting  all  states.
-       In  the  meantime,  only a short list of async-signal-safe library rou‐
+       In  the  meantime,  only a short list of async-signal-safe library rou-
        tines are promised to be available.
 
        Unfortunately, this solution does  not  address  the  needs  of  multi-
@@ -87,7 +87,7 @@ RATIONALE
 
        On the other hand, the multi-threaded library needs a  way  to  protect
        its  internal state during fork() in case it is re-entered later in the
-       child process. The problem arises especially in multi-threaded I/O  li‐
+       child process. The problem arises especially in multi-threaded I/O  li-
        braries,  which  are  almost  sure to be invoked between the fork() and
        exec calls to effect I/O redirection. The solution may require  locking
        mutex  variables  during  fork(), or it may entail simply resetting the
@@ -110,10 +110,10 @@ RATIONALE
        theory, but in reality not practical. Each and every mutex and lock  in
        the  process  must  be located and locked. Every component of a program
        including third-party components must participate and they  must  agree
-       who is responsible for which mutex or lock. This is especially problem‐
+       who is responsible for which mutex or lock. This is especially problem-
        atic for mutexes and locks in dynamically allocated memory. All mutexes
-       and locks internal to the implementation must be locked, too. This pos‐
-       sibly delays the thread calling fork() for a long time or even  indefi‐
+       and locks internal to the implementation must be locked, too. This pos-
+       sibly delays the thread calling fork() for a long time or even  indefi-
        nitely  since  uses  of  these synchronization objects may not be under
        control of the application. A final problem  to  mention  here  is  the
        problem  of  locking streams. At least the streams under control of the
@@ -123,7 +123,7 @@ RATIONALE
        process will deadlock.
 
        Alternatively,  some  libraries  might  have been able to supply just a
-       child routine that reinitializes the mutexes in the library and all as‐
+       child routine that reinitializes the mutexes in the library and all as-
        sociated  states to some known value (for example, what it was when the
        image was originally executed). This approach is not possible,  though,
        because  implementations  are  allowed to fail *_init() and *_destroy()
@@ -135,21 +135,21 @@ RATIONALE
        child  process.   Synchronization variables remain in the same state in
        the child as they were in the parent at the  time  fork()  was  called.
        Thus,  for  example,  mutex locks may be held by threads that no longer
-       exist in the child process, and any associated states may be  inconsis‐
+       exist in the child process, and any associated states may be  inconsis-
        tent. The intention was that the parent process could have avoided this
        by explicit code that acquires and releases locks critical to the child
        via  pthread_atfork().   In  addition,  any critical threads would have
        needed to be recreated and reinitialized to the  proper  state  in  the
        child (also via pthread_atfork()).
 
-       A higher-level package may acquire locks on its own data structures be‐
+       A higher-level package may acquire locks on its own data structures be-
        fore invoking lower-level packages.  Under  this  scenario,  the  order
        specified for fork handler calls allows a simple rule of initialization
        for avoiding package deadlock: a package initializes  all  packages  on
-       which  it depends before it calls the pthread_atfork() function for it‐
+       which  it depends before it calls the pthread_atfork() function for it-
        self.
 
-       As explained, there is no suitable solution for functionality which re‐
+       As explained, there is no suitable solution for functionality which re-
        quires non-atomic operations to be protected through mutexes and locks.
        This is why the POSIX.1 standard since the 1996 release  requires  that
        the  child  process after fork() in a multi-threaded process only calls
@@ -162,12 +162,12 @@ FUTURE DIRECTIONS
 SEE ALSO
        atexit(), exec, fork()
 
-       The Base Definitions volume of POSIX.1‐2017, <pthread.h>, <sys_types.h>
+       The Base Definitions volume of POSIX.1-2017, <pthread.h>, <sys_types.h>
 
 COPYRIGHT
        Portions  of  this text are reprinted and reproduced in electronic form
-       from IEEE Std 1003.1-2017, Standard for Information Technology --  Por‐
-       table  Operating System Interface (POSIX), The Open Group Base Specifi‐
+       from IEEE Std 1003.1-2017, Standard for Information Technology --  Por-
+       table  Operating System Interface (POSIX), The Open Group Base Specifi-
        cations Issue 7, 2018 Edition, Copyright (C) 2018 by the  Institute  of
        Electrical  and  Electronics Engineers, Inc and The Open Group.  In the
        event of any discrepancy between this version and the original IEEE and
@@ -177,7 +177,7 @@ COPYRIGHT
 
        Any  typographical  or  formatting  errors that appear in this page are
        most likely to have been introduced during the conversion of the source
-       files  to  man page format. To report such errors, see https://www.ker‐
+       files  to  man page format. To report such errors, see https://www.ker-
        nel.org/doc/man-pages/reporting_bugs.html .
 
 IEEE/The Open Group                  2017               PTHREAD_ATFORK(3POSIX)

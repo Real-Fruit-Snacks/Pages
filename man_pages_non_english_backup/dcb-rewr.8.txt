@@ -1,0 +1,150 @@
+DCB-REWR(8)                          Linux                         DCB-REWR(8)
+
+NAME
+       dcb-rewr  - show / manipulate the rewrite table of the DCB (Data Center
+       Bridging) subsystem
+
+SYNOPSIS
+       dcb [ OPTIONS ] rewr { COMMAND | help }
+
+       dcb rewr  {  show  |  flush  }  dev DEV [ prio-dscp ] [ prio-pcp ]
+
+       dcb rewr  {  add  |  del  |  replace  }  dev DEV [ prio-dscp DSCP-MAP ]
+               [ prio-pcp PCP-MAP ]
+
+       DSCP-MAP := [ DSCP-MAP ] DSCP-MAPPING
+
+       DSCP-MAPPING := PRIO:{ DSCP | all }
+
+       PCP-MAP := [ PCP-MAP ] PCP-MAPPING
+
+       PCP-MAPPING := PRIO:PCP
+
+       DSCP := { 0 .. 63 }
+
+       PCP := { 0(nd/de) .. 7(nd/de) }
+
+       PRIO := { 0 .. 7 }
+
+DESCRIPTION
+       dcb rewr is used to configure the rewrite table, in the DCB (Data Cen-
+       ter Bridging) subsystem.  The rewrite table is used to rewrite certain
+       values in the packet headers, based on packet priority.
+
+       DCB rewrite entries are, like DCB APP entries, 3-tuples of selector,
+       protocol ID, and priority. Selector is an enumeration that picks one of
+       the prioritization namespaces. Currently, only the DSCP and PCP selec-
+       tor namespaces are supported by dcb rewr.
+
+       The rewrite table is a list of DCB rewrite rules, that applies to pack-
+       ets with matching priority.  Notably, it is valid to have conflicting
+       rewrite assignment for the same selector and priority. For example, the
+       set of two rewrite entries (DSCP, 10, 1) and (DSCP, 11, 1), where pack-
+       ets with priority 1 should have its DSCP value rewritten to both 10 and
+       11, form a well-defined rewrite table.  dcb rewr tool allows low-level
+       management of the rewrite table by adding and deleting individual re-
+       write 3-tuples through add and del commands. On the other hand, the
+       command replace does what one would typically want in this situa-
+       tion--first adds the new configuration, and then removes the obsolete
+       one, so that only one rewrite rule is in effect for a given selector
+       and priority.
+
+COMMANDS
+       show   Display all entries with a given selector. When no selector is
+              given, shows all rewrite table entries categorized per selector.
+
+       flush  Remove all entries with a given selector. When no selector is
+              given, removes all rewrite table entries.
+
+       add
+       del    Add and, respectively, remove individual rewrite 3-tuples to and
+              from the DCB rewrite table.
+
+       replace
+              Take the list of entries mentioned as parameter, and add those
+              that are not present in the rewrite table yet. Then remove those
+              entries, whose selector and priority have been mentioned as pa-
+              rameter, but not with the exact same protocol ID. This has the
+              effect of, for the given selector and priority, causing that the
+              table only contains the protocol ID (or ID's) given as parame-
+              ter.
+
+PARAMETERS
+       The following table shows parameters in a way that they would be used
+       with add, del and replace commands. For show and flush, the parameter
+       name is to be used as a simple keyword without further arguments.
+
+       prio-dscp DSCP-MAP
+              DSCP-MAP uses the array parameter syntax, see dcb(8) for de-
+              tails. Keys are priorities, values are DSCP points for traffic
+              with matching priority. DSCP points can be written either di-
+              rectly as numeric values, or using symbolic names specified in
+              /etc/iproute2/rt_dsfield (however note that the file specifies
+              full 8-bit dsfield values, whereas dcb rewr will only use the
+              higher six bits).  dcb rewr show will similarly format DSCP val-
+              ues as symbolic names if possible. The command line option -N
+              turns the show translation off.
+
+       prio-pcp PCP-MAP
+              PCP-MAP uses the array parameter syntax, see dcb(8) for details.
+              Keys are priorities. Values are PCP/DEI for traffic with match-
+              ing priority. PCP/DEI values are written as a combination of nu-
+              meric- and symbolic values, to accommodate for both. PCP always
+              in numeric form e.g 0 ..  7 and DEI in symbolic form e.g 'de'
+              (drop-eligible), indicating that the DEI bit is 1 or 'nd' (not-
+              drop-eligible), indicating that the DEI bit is 0.  In combina-
+              tion 1:2de translates to a mapping of priority 1 to PCP=2 and
+              DEI=1.
+
+EXAMPLE & USAGE
+       Add a rule to rewrite DSCP to 0, 24 and 48 for traffic with priority 0,
+       3 and 6, respectively:
+
+       # dcb rewr add dev eth0 prio-dscp 0:0 3:24 6:48
+
+       Add a rule to rewrite DSCP to 25 for traffic with priority 3:
+
+       # dcb rewr add dev eth0 prio-dscp 3:25
+       # dcb rewr show dev eth0 prio-dscp
+       prio-dscp 0:0 3:CS3 3:25 6:CS6
+       # dcb -N rewr show dev eth0 prio-dscp
+       prio-dscp 0:0 3:24 3:25 6:48
+
+       Reconfigure the table so that only one rule exists for rewriting traf-
+       fic with priority 3.
+
+       # dcb rewr replace dev eth0 prio-dscp 3:26
+       # dcb rewr -N show dev eth0 prio-dscp
+       prio-dscp 0:0 3:26 6:48
+
+       Flush all DSCP rules:
+
+       # dcb rewr flush dev eth0 prio-dscp
+       # dcb rewr show dev eth0 prio-dscp
+       (nothing)
+
+       Add a rule to rewrite PCP to 1 and DEI to 0 for traffic with priority 1
+       and a rule to rewrite PCP to 2 and DEI to 1 for traffic with priority
+       2:
+
+       # dcb rewr add dev eth0 prio-pcp 1:1nd 2:2de
+       # dcb rewr show dev eth0 prio-pcp
+       prio-pcp 1:1nd 2:2de
+
+EXIT STATUS
+       Exit status is 0 if command was successful or a positive integer upon
+       failure.
+
+SEE ALSO
+       dcb(8) dcb-app(8) dcb-apptrust(8)
+
+REPORTING BUGS
+       Report any bugs to the Network Developers mailing list <net-
+       dev@vger.kernel.org> where the development and maintenance is primarily
+       done.  You do not have to be subscribed to the list to send a message
+       there.
+
+AUTHOR
+       Daniel Machon <daniel.machon@microchip.com>
+
+iproute2                          15 may 2023                      DCB-REWR(8)

@@ -1,80 +1,103 @@
-PASSWD(5)                        File formats                        PASSWD(5)
+passwd(5)                     File Formats Manual                    passwd(5)
 
-NAME 名稱
-       passwd - 密碼檔案
 
-描述
-       Passwd              是個純文字檔,             它包含了一個系統帳戶列表,
-       給出每個帳戶一些有用的信息，比如使用者  ID,組  ID,  家目錄,   shell,等.
-       通常它也包含了每個使用者經過加密的密碼.
-       它通常應該是可讀的（許\[u591A]命令，工具程式，像 ls(1) 用它做使用者  Id
-       到使用者名稱的映射）,但是只允許\[u8D85]級使用者有寫方式權限.
 
-       在過去美好的日子裏，這種一般的讀許\[u53EF]沒有什麼大問題.
-       每個人都能讀到加密了的密碼，因為硬體太慢以至於不能解開一個
-       精選的密碼，另外，這基本假定是為友好的使用團體使用的.
-       現在，許\[u591A]人運行一些版本的影子密碼套件，它們在        /etc/passwd
-       的密碼域裏是    *，而不再是加密的口令，    加密的口令放在   /etc/shadow
-       中，那個檔案只有超級使用者能讀．
+NAME
+       passwd - password file
 
-       不管是否使用了影子密碼，許\[u591A]系統管理員使用一個星號在加密的密碼字段
-       以確保使用者不能鑒別他（她）自己的密碼. (見下面的注意)
+DESCRIPTION
+       The  /etc/passwd file is a text file that describes user login accounts
+       for the system.  It should have read permission allowed for  all  users
+       (many  utilities,  like ls(1) use it to map user IDs to usernames), but
+       write access only for the superuser.
 
-       如果你建立了一個新的登入，首先放個星號在密碼字段,   然後使用  passwd(1)
-       設置它.
+       In the good old days there was no great problem with this general  read
+       permission.   Everybody  could  read  the  encrypted passwords, but the
+       hardware was too slow to crack a well-chosen password, and moreover the
+       basic  assumption  used to be that of a friendly user-community.  These
+       days many people run some version of the shadow password  suite,  where
+       /etc/passwd  has  an  'x'  character in the password field, and the en‐
+       crypted passwords are in /etc/shadow, which is readable  by  the  supe‐
+       ruser only.
 
-       （密碼檔案）裏每行一條記錄，並且每行有這樣的格式：
+       If the encrypted password, whether in /etc/passwd or in /etc/shadow, is
+       an empty string, login is allowed without even asking for  a  password.
+       Note  that this functionality may be intentionally disabled in applica‐
+       tions, or configurable (for example using the "nullok" or "nonull"  ar‐
+       guments to pam_unix(8)).
 
-              account:password:UID:GID:GECOS:directory:shell
-              （帳號:密碼:使用者ID:組ID:一般的信息:目錄:shell）
+       If  the  encrypted  password  in  /etc/passwd  is  "*NP*"  (without the
+       quotes), the shadow record should be obtained from an NIS+ server.
 
-       字段描述如下:
+       Regardless of whether shadow passwords are used, many  system  adminis‐
+       trators  use  an  asterisk  (*) in the encrypted password field to make
+       sure that this user can not authenticate  themself  using  a  password.
+       (But see NOTES below.)
 
-              account   使用者在系統中的名字，它不能包含大寫字母.
+       If  you  create  a new login, first put an asterisk (*) in the password
+       field, then use passwd(1) to set it.
 
-              password  加密的使用者密碼，或者星號。
+       Each line of the file describes  a  single  user,  and  contains  seven
+       colon-separated fields:
 
-              UID       使用者 ID 數。
+           name:password:UID:GID:GECOS:directory:shell
 
-              GID       使用者的主要組 ID 數。
+       The field are as follows:
 
-              GECOS     這字段是可選的，通常為了存放信息目的而設的．
-                        通常，它包含了使用者的全名.                      GECOS
-                        意思是通用電氣綜合作業系統（General  Electric  Compre‐
-                        hensive      Operating      System）,      當       GE
-                        的大型系統部分割售賣給 Honeywell 時它被改為 GCOS. Den‐
-                        nis Ritchie  作過報告："有時我們發送印刷品或批道作業到
-                        GCOS機器時，gcos           字段打斷了           $IDENT
-                        卡的信息，不太美觀。"（譯者：我想是太長吧）
+       name        This is the user's login name.  It should not contain capi‐
+                   tal letters.
 
-              directory 使用者的 $HOME 目錄.
+       password    This is either the encrypted  user  password,  an  asterisk
+                   (*),  or the letter 'x'.  (See pwconv(8) for an explanation
+                   of 'x'.)
 
-              shell     登入時運行的程式（如果空的，使用             /bin/sh).
-                        如果設為不存在的執行（程式），使用者不能通過  login(1)
-                        登入.
+       UID         The privileged root login account (superuser) has the  user
+                   ID 0.
 
-注意
-       如果你想建立使用者組，他們的          GID          必須相等並且一定是在
-       /etc/group的一條記錄, 要不然組就不存在．
+       GID         This is the numeric primary group ID for this user.  (Addi‐
+                   tional groups for the user are defined in the system  group
+                   file; see group(5)).
 
-       如果加密密碼設成星號，使用者將不能用   login(1)   來登入,  但依然可以用
-       rlogin(1)  登入,  通過  rsh(1)  或者  cron(1)  或者  at(1)  或者   mail
-       過濾器等程式運行已有的進程和開始新的等.      試圖通過簡單改變     shell
-       字段鎖住一個使用者結果是一樣的， 而且還附上了使用 su(1) 的權限．
+       GECOS       This  field  (sometimes  called the "comment field") is op‐
+                   tional and used only for informational purposes.   Usually,
+                   it contains the full username.  Some programs (for example,
+                   finger(1)) display information from this field.
 
-相關檔案
+                   GECOS stands for "General Electric Comprehensive  Operating
+                   System",  which was renamed to GCOS when GE's large systems
+                   division was sold to Honeywell.   Dennis  Ritchie  has  re‐
+                   ported:  "Sometimes we sent printer output or batch jobs to
+                   the GCOS machine.  The gcos field in the password file  was
+                   a  place  to stash the information for the $IDENTcard.  Not
+                   elegant."
+
+       directory   This is the user's home directory:  the  initial  directory
+                   where  the  user  is placed after logging in.  The value in
+                   this field is used to set the HOME environment variable.
+
+       shell       This is  the  program  to  run  at  login  (if  empty,  use
+                   /bin/sh).   If  set  to  a nonexistent executable, the user
+                   will be unable to login through  login(1).   The  value  in
+                   this field is used to set the SHELL environment variable.
+
+FILES
        /etc/passwd
 
-又見
-       passwd(1), login(1), su(1), group(5), shadow(5)
+NOTES
+       If  you  want  to  create  user  groups,  there  must  be  an  entry in
+       /etc/group, or no group will exist.
 
-[中文版維護人]
-       Scorpio <rawk@chinese.com>
+       If the encrypted password is set to an asterisk (*), the user  will  be
+       unable  to  login  using login(1), but may still login using rlogin(1),
+       run existing processes and initiate new ones through  rsh(1),  cron(8),
+       at(1),  or  mail  filters,  etc.   Trying  to lock an account by simply
+       changing the shell field yields the same result and additionally allows
+       the use of su(1).
 
-[中文版最新更新]
-       2000/11/26
+SEE ALSO
+       chfn(1),  chsh(1),  login(1),  passwd(1), su(1), crypt(3), getpwent(3),
+       getpwnam(3), group(5), shadow(5), vipw(8)
 
-《中國linux論壇man手冊頁翻譯計劃》:
-       http://cmpp.linuxforum.net
 
-                                January 5, 1998                      PASSWD(5)
+
+Linux man-pages 6.05.01           2023-02-05                         passwd(5)

@@ -1,0 +1,124 @@
+PROCPS_MISC(3)             Library Functions Manual             PROCPS_MISC(3)
+
+НАЗВА
+       procps_misc  —  програмний  інтерфейс до різноманітних даних у файловій
+       системі /proc
+
+КОРОТКИЙ ОПИС
+       #include <libproc2/misc.h>
+
+       Подробиці щодо платформи
+
+           long         procps_cpu_count (void);
+           long         procps_hertz_get (void);
+           unsigned int procps_pid_length (void);
+           int          procps_linux_version (void);
+
+       Подробиці щодо середовища виконання
+
+           int   procps_loadavg (double *av1, double *av5, double *av15);
+           int   procps_uptime (double *uptime_secs, double *idle_secs);
+           char *procps_uptime_sprint (void);
+           char *procps_uptime_sprint_short (void);
+
+       Подробиці щодо простору назв
+
+           int         procps_ns_get_id (const char *name);
+           const char *procps_ns_get_name (int id);
+           int         procps_ns_read_pid (int pid, struct procps_ns *nsp);
+
+       Компонувати з -lproc2.
+
+ОПИС
+       procps_cpu_count()   повертає   кількість   робочих    процесорів    як
+       sysconf(_SC_NPROCESSORS_ONLY) або типове значення 1.
+
+       procps_hertz_get()  повертає  кількість  тактів годинника на секунду як
+       sysconf(_SC_CLK_TCK) або типове значення 100. Якщо поділити такти на це
+       значення, буде отримано секунди.
+
+       procps_pid_length()  повертає  максимальну  довжину  рядка  для  PID  у
+       системі. Наприклад, якщо найбільше можливе значення PID — 123, довжиною
+       буде  3.  Якщо  файл  /proc/sys/kernel/pid_max виявиться недоступним до
+       читання, типовим значенням буде 5.
+
+       procps_linux_version() повертає версію поточної системи Linux у форматі
+       закодованого   цілого  числа.  У  системах,  відмінних  від  Linux,  із
+       імітацією файлової системи proc ця  функція  повертає  версію  емуляції
+       Linux.   Версія   складається   з   трьох  додатних  цілих  чисел,  які
+       відповідають  основній,  проміжній  частинам  і  частині   модифікації.
+       Передбачено  вказані  нижче  макроси для кодування заданої версії Linux
+       або окремого використання компонентів поточної версії.
+
+           LINUX_VERSION( major , minor , patch )
+
+           LINUX_VERSION_MAJOR( ver )
+
+           LINUX_VERSION_MINOR( ver )
+
+           LINUX_VERSION_PATCH( ver )
+
+       procps_loadavg() отримує дані щодо середнього навантаження на систему і
+       записує  середні  значення  за  1,  5  і 15 хвилин у місця, які вказано
+       будь-яким вказівником, який не є порожнім (NULL).
+
+       procps_uptime() повертає час роботи і/або бездіяльності  у  секундах  у
+       місця,  які  вказано  будь-яким вказівником, який не є порожнім (NULL).
+       Використання форматування sprint повертає рядок у зручному для  читання
+       форматі в одній із двох форм.
+
+           ГГ:ХХ:СС up ГГ:ХХ, # users, load average: 1, 5, 15 MM averages
+
+           up ГГ, ХХ
+
+       procps_ns_get_id()    повертає    цілочисельний   ідентифікатор   (enum
+       namespace_type) простору назв для заданого простору назв name.
+
+       procps_ns_get_name() повертає назву простора назв для заданого id (enum
+       namespace_type).
+
+       procps_ns_read_pid()  повертає  inode-и  для  просторів назв із заданим
+       процесом у структурі procps_ns на  яку  вказує  nsp.  Ці  inode-и  буде
+       виведено у порядку, який визначається переліком namespace_type.
+
+           enum namespace_type {
+               PROCPS_NS_CGROUP,
+               PROCPS_NS_IPC,
+               PROCPS_NS_MNT,
+               PROCPS_NS_NET,
+               PROCPS_NS_PID,
+               PROCPS_NS_TIME,
+               PROCPS_NS_USER,
+               PROCPS_NS_UTS
+           };
+
+ПОВЕРНУТЕ ЗНАЧЕННЯ
+   Функції, які повертають «int» або «long»
+       На  помилку  вказуватиме  від'ємне  число,  яке  є  завжди оберненим до
+       якогось відомого значення з errno.h.
+
+   Функції, які повертають «address»
+       На помилку вказуватиме повернутий  NUL-вказівник  із  повідомлення  про
+       причину у формальному значенні errno.
+
+ФАЙЛИ
+       /proc/loadavg
+              Необроблені значення для середнього навантаження.
+
+       /proc/sys/kernel/osrelease
+              Містить версію випуску ядра Linux або файлової системи proc.
+
+       /proc/sys/kernel/pid_max
+              Містить  значення,  на  якому  відбувається зациклювання PID, на
+              одиницю більше за максимальне значення PID.
+
+       /proc/uptime
+              Необроблені значення для часу роботи та часу бездіяльності.
+
+       /proc/<PID>/ns
+              містить набір просторів назв для певного PID.
+
+ТАКОЖ ПЕРЕГЛЯНЬТЕ
+       procps(3), procps_pids(3), proc(5).
+
+libproc2                       серпень 2022 року                PROCPS_MISC(3)

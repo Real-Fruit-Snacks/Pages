@@ -20,21 +20,21 @@ SYNOPSIS
 
 DESCRIPTION
        userfaultfd()  creates  a  new  userfaultfd object that can be used for
-       delegation of page-fault handling to a user-space application, and  re‐
-       turns  a  file descriptor that refers to the new object.  The new user‐
+       delegation of page-fault handling to a user-space application, and  re-
+       turns  a  file descriptor that refers to the new object.  The new user-
        faultfd object is configured using ioctl(2).
 
        Once the userfaultfd object is  configured,  the  application  can  use
-       read(2)  to  receive  userfaultfd  notifications.  The reads from user‐
+       read(2)  to  receive  userfaultfd  notifications.  The reads from user-
        faultfd may be blocking or non-blocking,  depending  on  the  value  of
        flags  used  for the creation of the userfaultfd or subsequent calls to
        fcntl(2).
 
-       The following values may be bitwise ORed in flags to change the  behav‐
+       The following values may be bitwise ORed in flags to change the  behav-
        ior of userfaultfd():
 
        O_CLOEXEC
-              Enable  the  close-on-exec flag for the new userfaultfd file de‐
+              Enable  the  close-on-exec flag for the new userfaultfd file de-
               scriptor.  See the description of the O_CLOEXEC flag in open(2).
 
        O_NONBLOCK
@@ -44,13 +44,13 @@ DESCRIPTION
        UFFD_USER_MODE_ONLY
               This  is  an  userfaultfd-specific  flag  that was introduced in
               Linux 5.11.  When set, the userfaultfd object will only be  able
-              to handle page faults originated from the user space on the reg‐
+              to handle page faults originated from the user space on the reg-
               istered regions.  When a kernel-originated fault  was  triggered
               on  the  registered range with this userfaultfd, a SIGBUS signal
               will be delivered.
 
        When the last file descriptor referring  to  a  userfaultfd  object  is
-       closed,  all memory ranges that were registered with the object are un‐
+       closed,  all memory ranges that were registered with the object are un-
        registered and unread events are flushed.
 
        Userfaultfd supports three modes of registration:
@@ -73,8 +73,8 @@ DESCRIPTION
        UFFDIO_REGISTER_MODE_WP (since Linux 5.7)
               When  registered  with  UFFDIO_REGISTER_MODE_WP mode, user-space
               will receive a page-fault notification  when  a  write-protected
-              page is written.  The faulted thread will be stopped from execu‐
-              tion until user-space write-unprotects the page  using  an  UFF‐
+              page is written.  The faulted thread will be stopped from execu-
+              tion until user-space write-unprotects the page  using  an  UFF-
               DIO_WRITEPROTECT ioctl.
 
        Multiple  modes  can  be  enabled  at the same time for the same memory
@@ -82,17 +82,17 @@ DESCRIPTION
 
        Since Linux 4.14, a userfaultfd page-fault notification can selectively
        embed  faulting thread ID information into the notification.  One needs
-       to enable this feature explicitly using the UFFD_FEATURE_THREAD_ID fea‐
+       to enable this feature explicitly using the UFFD_FEATURE_THREAD_ID fea-
        ture bit when initializing the userfaultfd context.  By default, thread
        ID reporting is disabled.
 
    Usage
-       The userfaultfd mechanism is designed to allow a  thread  in  a  multi‐
+       The userfaultfd mechanism is designed to allow a  thread  in  a  multi-
        threaded  program to perform user-space paging for the other threads in
-       the process.  When a page fault occurs for one of  the  regions  regis‐
+       the process.  When a page fault occurs for one of  the  regions  regis-
        tered  to  the  userfaultfd object, the faulting thread is put to sleep
-       and an event is generated that can be read via the userfaultfd file de‐
-       scriptor.   The  fault-handling  thread reads events from this file de‐
+       and an event is generated that can be read via the userfaultfd file de-
+       scriptor.   The  fault-handling  thread reads events from this file de-
        scriptor  and  services  them  using  the   operations   described   in
        ioctl_userfaultfd(2).  When servicing the page fault events, the fault-
        handling thread can trigger a wake-up for the sleeping thread.
@@ -115,7 +115,7 @@ DESCRIPTION
        with  the userfault objects created for the child process, which allows
        the userfaultfd monitor to perform  user-space  paging  for  the  child
        process.   Unlike  page faults which have to be synchronous and require
-       an explicit or implicit wakeup, all other events  are  delivered  asyn‐
+       an explicit or implicit wakeup, all other events  are  delivered  asyn-
        chronously and the non-cooperative process resumes execution as soon as
        the userfaultfd manager  executes  read(2).   The  userfaultfd  manager
        should  carefully  synchronize calls to UFFDIO_COPY with the processing
@@ -130,14 +130,14 @@ DESCRIPTION
        this feature.  Similar to the original userfaultfd  missing  mode,  the
        write-protect  mode  will  generate a userfaultfd notification when the
        protected page is written.  The user needs to resolve the page fault by
-       unprotecting  the  faulted  page and kicking the faulted thread to con‐
+       unprotecting  the  faulted  page and kicking the faulted thread to con-
        tinue.  For more information, please refer to the  "Userfaultfd  write-
        protect mode" section.
 
    Userfaultfd operation
-       After  the userfaultfd object is created with userfaultfd(), the appli‐
+       After  the userfaultfd object is created with userfaultfd(), the appli-
        cation must enable it using the UFFDIO_API  ioctl(2)  operation.   This
-       operation  allows  a handshake between the kernel and user space to de‐
+       operation  allows  a handshake between the kernel and user space to de-
        termine the API version and supported features.  This operation must be
        performed  before  any of the other ioctl(2) operations described below
        (or those operations fail with the EINVAL error).
@@ -147,18 +147,18 @@ DESCRIPTION
        After successful completion of  a  UFFDIO_REGISTER  operation,  a  page
        fault  occurring in the requested memory range, and satisfying the mode
        defined at the registration time, will be forwarded by  the  kernel  to
-       the  user-space  application.   The  application  can then use the UFF‐
+       the  user-space  application.   The  application  can then use the UFF-
        DIO_COPY , UFFDIO_ZEROPAGE , or UFFDIO_CONTINUE ioctl(2) operations  to
        resolve the page fault.
 
-       Since  Linux 4.14, if the application sets the UFFD_FEATURE_SIGBUS fea‐
+       Since  Linux 4.14, if the application sets the UFFD_FEATURE_SIGBUS fea-
        ture bit using the UFFDIO_API ioctl(2), no page-fault notification will
        be  forwarded  to  user space.  Instead a SIGBUS signal is delivered to
        the faulting process.  With this feature, userfaultfd can be  used  for
-       robustness purposes to simply catch any access to areas within the reg‐
+       robustness purposes to simply catch any access to areas within the reg-
        istered address range that do not have pages allocated, without  having
-       to  listen  to  userfaultfd events.  No userfaultfd monitor will be re‐
-       quired for dealing with such memory accesses.  For example,  this  fea‐
+       to  listen  to  userfaultfd events.  No userfaultfd monitor will be re-
+       quired for dealing with such memory accesses.  For example,  this  fea-
        ture  can  be  useful  for applications that want to prevent the kernel
        from automatically allocating pages and filling holes in  sparse  files
        when the hole is accessed through a memory mapping.
@@ -166,10 +166,10 @@ DESCRIPTION
        The UFFD_FEATURE_SIGBUS feature is implicitly inherited through fork(2)
        if used in combination with UFFD_FEATURE_FORK.
 
-       Details of the various ioctl(2) operations can be found in  ioctl_user‐
+       Details of the various ioctl(2) operations can be found in  ioctl_user-
        faultfd(2).
 
-       Since  Linux 4.11, events other than page-fault may enabled during UFF‐
+       Since  Linux 4.11, events other than page-fault may enabled during UFF-
        DIO_API operation.
 
        Up to Linux 4.11, userfaultfd can be used only with  anonymous  private
@@ -178,27 +178,27 @@ DESCRIPTION
 
    Userfaultfd write-protect mode (since Linux 5.7)
        Since Linux 5.7, userfaultfd supports write-protect mode for  anonymous
-       memory.  The user needs to first check availability of this feature us‐
-       ing  UFFDIO_API  ioctl  against  the  feature  bit   UFFD_FEATURE_PAGE‐
+       memory.  The user needs to first check availability of this feature us-
+       ing  UFFDIO_API  ioctl  against  the  feature  bit   UFFD_FEATURE_PAGE-
        FAULT_FLAG_WP before using this feature.
 
        Since Linux 5.19, the write-protection mode was also supported on shmem
        and hugetlbfs memory types.  It can be detected with  the  feature  bit
        UFFD_FEATURE_WP_HUGETLBFS_SHMEM.
 
-       To register with userfaultfd write-protect mode, the user needs to ini‐
+       To register with userfaultfd write-protect mode, the user needs to ini-
        tiate the UFFDIO_REGISTER ioctl with mode UFFDIO_REGISTER_MODE_WP  set.
        Note  that  it  is legal to monitor the same memory range with multiple
        modes.  For example, the user can do UFFDIO_REGISTER with the mode  set
        to  UFFDIO_REGISTER_MODE_MISSING | UFFDIO_REGISTER_MODE_WP.  When there
        is only UFFDIO_REGISTER_MODE_WP registered, user-space will not receive
        any  notification  when a missing page is written.  Instead, user-space
-       will receive a write-protect page-fault notification only when  an  ex‐
+       will receive a write-protect page-fault notification only when  an  ex-
        isting but write-protected page got written.
 
        After  the UFFDIO_REGISTER ioctl completed with UFFDIO_REGISTER_MODE_WP
        mode set, the user can write-protect any  existing  memory  within  the
-       range   using  the  ioctl  UFFDIO_WRITEPROTECT  where  uffdio_writepro‐
+       range   using  the  ioctl  UFFDIO_WRITEPROTECT  where  uffdio_writepro-
        tect.mode should be set to UFFDIO_WRITEPROTECT_MODE_WP.
 
        When a write-protect event happens, user-space  will  receive  a  page-
@@ -208,7 +208,7 @@ DESCRIPTION
        UFFD_PAGEFAULT_FLAG_WRITE bit set along with the UFFD_PAGEFAULT_FLAG_WP
        bit.
 
-       To  resolve a write-protection page fault, the user should initiate an‐
+       To  resolve a write-protection page fault, the user should initiate an-
        other UFFDIO_WRITEPROTECT ioctl, whose uffd_msg.pagefault.flags  should
        have the flag UFFDIO_WRITEPROTECT_MODE_WP cleared upon the faulted page
        or range.
@@ -220,19 +220,19 @@ DESCRIPTION
        cache,  but the page table entries are not yet present.  The user needs
        to first check availability of this feature using the UFFDIO_API  ioctl
        with  the  appropriate  feature  bits  set  before  using this feature:
-       UFFD_FEATURE_MINOR_HUGETLBFS  since  Linux  5.13,  or  UFFD_FEATURE_MI‐
+       UFFD_FEATURE_MINOR_HUGETLBFS  since  Linux  5.13,  or  UFFD_FEATURE_MI-
        NOR_SHMEM since Linux 5.14.
 
-       To register with userfaultfd minor fault mode, the user needs to initi‐
+       To register with userfaultfd minor fault mode, the user needs to initi-
        ate the UFFDIO_REGISTER ioctl with mode UFFD_REGISTER_MODE_MINOR set.
 
-       When a minor fault occurs, user-space will receive a page-fault notifi‐
-       cation   whose   uffd_msg.pagefault.flags   will  have  the  UFFD_PAGE‐
+       When a minor fault occurs, user-space will receive a page-fault notifi-
+       cation   whose   uffd_msg.pagefault.flags   will  have  the  UFFD_PAGE-
        FAULT_FLAG_MINOR flag set.
 
        To resolve a minor page fault, the handler should decide whether or not
        the  existing  page  contents  need  to be modified first.  If so, this
-       should be done in-place via a second,  non-userfaultfd-registered  map‐
+       should be done in-place via a second,  non-userfaultfd-registered  map-
        ping  to the same backing page (e.g., by mapping the shmem or hugetlbfs
        file twice).  Once the page is considered "up to date", the  fault  can
        be  resolved by initiating an UFFDIO_CONTINUE ioctl, which installs the
@@ -280,7 +280,7 @@ DESCRIPTION
            } __packed;
 
        If  multiple  events  are  available  and  the supplied buffer is large
-       enough, read(2) returns as many events as will fit in the supplied buf‐
+       enough, read(2) returns as many events as will fit in the supplied buf-
        fer.  If the buffer supplied to read(2) is smaller than the size of the
        uffd_msg structure, the read(2) fails with the error EINVAL.
 
@@ -289,7 +289,7 @@ DESCRIPTION
        event  The type of event.   Depending  of  the  event  type,  different
               fields of the arg union represent details required for the event
               processing.  The non-page-fault events are generated  only  when
-              appropriate  feature  is  enabled during API handshake with UFF‐
+              appropriate  feature  is  enabled during API handshake with UFF-
               DIO_API ioctl(2).
 
               The following values can appear in the event field:
@@ -309,7 +309,7 @@ DESCRIPTION
 
               UFFD_EVENT_REMOVE (since Linux 4.11)
                      Generated when the faulting  process  invokes  madvise(2)
-                     with  MADV_DONTNEED or MADV_REMOVE advice.  The event de‐
+                     with  MADV_DONTNEED or MADV_REMOVE advice.  The event de-
                      tails are available in the remove field.
 
               UFFD_EVENT_UNMAP (since Linux 4.11)
@@ -358,22 +358,22 @@ DESCRIPTION
               mremap(2).
 
        remove.start
-              The start address of the memory range that was freed using  mad‐
+              The start address of the memory range that was freed using  mad-
               vise(2) or unmapped
 
        remove.end
-              The  end  address  of the memory range that was freed using mad‐
+              The  end  address  of the memory range that was freed using mad-
               vise(2) or unmapped
 
        A read(2) on a userfaultfd file descriptor can fail with the  following
        errors:
 
-       EINVAL The  userfaultfd  object has not yet been enabled using the UFF‐
+       EINVAL The  userfaultfd  object has not yet been enabled using the UFF-
               DIO_API ioctl(2) operation
 
-       If the O_NONBLOCK flag is enabled in the associated open file  descrip‐
+       If the O_NONBLOCK flag is enabled in the associated open file  descrip-
        tion,  the  userfaultfd  file descriptor can be monitored with poll(2),
-       select(2), and epoll(7).  When events are available, the file  descrip‐
+       select(2), and epoll(7).  When events are available, the file  descrip-
        tor indicates as readable.  If the O_NONBLOCK flag is not enabled, then
        poll(2) (always) indicates the file as having a POLLERR condition,  and
        select(2) indicates the file descriptor as both readable and writable.
@@ -396,7 +396,7 @@ ERRORS
 
        EPERM (since Linux 5.2)
               The  caller  is not privileged (does not have the CAP_SYS_PTRACE
-              capability in the initial user namespace), and  /proc/sys/vm/un‐
+              capability in the initial user namespace), and  /proc/sys/vm/un-
               privileged_userfaultfd has the value 0.
 
 VERSIONS
@@ -406,20 +406,20 @@ VERSIONS
        events was added in Linux 4.11
 
 STANDARDS
-       userfaultfd() is Linux-specific and should not be used in programs  in‐
+       userfaultfd() is Linux-specific and should not be used in programs  in-
        tended to be portable.
 
 NOTES
        The  userfaultfd mechanism can be used as an alternative to traditional
        user-space paging techniques based on the use of the SIGSEGV signal and
-       mmap(2).   It  can  also  be  used to implement lazy restore for check‐
+       mmap(2).   It  can  also  be  used to implement lazy restore for check-
        point/restore mechanisms, as  well  as  post-copy  migration  to  allow
        (nearly) uninterrupted execution when transferring virtual machines and
        Linux containers from one host to another.
 
 BUGS
        If the UFFD_FEATURE_EVENT_FORK is enabled and a system  call  from  the
-       fork(2)  family  is  interrupted  by  a signal or failed, a stale user‐
+       fork(2)  family  is  interrupted  by  a signal or failed, a stale user-
        faultfd  descriptor  might  be  created.   In  this  case,  a  spurious
        UFFD_EVENT_FORK will be delivered to the userfaultfd monitor.
 
@@ -430,7 +430,7 @@ EXAMPLES
        created using mmap(2).
 
        The program takes one command-line argument, which  is  the  number  of
-       pages  that will be created in a mapping whose page faults will be han‐
+       pages  that will be created in a mapping whose page faults will be han-
        dled via userfaultfd.  After creating a userfaultfd object, the program
        then  creates  an  anonymous  private mapping of the specified size and
        registers the address range of that mapping using  the  UFFDIO_REGISTER
@@ -438,7 +438,7 @@ EXAMPLES
        perform the task of handling page faults.
 
        The main thread then walks through the pages of  the  mapping  fetching
-       bytes  from  successive pages.  Because the pages have not yet been ac‐
+       bytes  from  successive pages.  Because the pages have not yet been ac-
        cessed, the first access of a byte in each page will  trigger  a  page-
        fault event on the userfaultfd file descriptor.
 

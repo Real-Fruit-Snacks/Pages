@@ -188,7 +188,7 @@
 
         /* Section navigation sidebar */
         .section-nav {
-            width: 280px;
+            width: 220px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -198,6 +198,7 @@
             max-height: calc(100vh - 100px);
             overflow-y: auto;
             overflow-x: hidden;
+            flex-shrink: 0;
         }
         
         /* Custom scrollbar for section nav */
@@ -362,7 +363,10 @@
             border-radius: 0;
             box-shadow: none;
             overflow: visible;
-            padding: 16px;
+            padding: 8px 16px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         .man-page-header {
@@ -453,13 +457,15 @@
         }
 
         .man-page-content {
-            padding: 24px;
+            padding: 20px 30px;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.4;
+            white-space: normal;
+            word-wrap: break-word;
             color: #333;
             position: relative;
+            max-width: 100%;
         }
         
         /* Remove default container styling when displaying sections */
@@ -471,11 +477,36 @@
             font-family: inherit;
             font-size: inherit;
             line-height: inherit;
-            white-space: pre-wrap;
+            white-space: normal;
+            word-wrap: break-word;
             margin: 0;
             background: transparent;
             border: none;
             padding: 0;
+            overflow-x: auto;
+        }
+        
+        /* Handle code blocks and examples differently */
+        .man-page-content .code-block,
+        .man-page-content pre code {
+            white-space: pre;
+            background: #f6f8fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: block;
+            margin: 8px 0;
+            overflow-x: auto;
+        }
+        
+        /* Better paragraph spacing */
+        .man-page-content p {
+            margin: 0.5em 0;
+            white-space: normal;
+        }
+        
+        /* Indented content */
+        .man-page-content .indent {
+            margin-left: 2em;
         }
         
         /* Collapsible sections for multiple man pages */
@@ -1218,13 +1249,20 @@
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             width: 90%;
-            max-width: 1000px;
-            max-height: 85vh;
+            max-width: 1200px;
+            max-height: 90vh;
             z-index: 500;
             display: none;
             overflow: hidden;
             color: #333;
             border: none;
+        }
+        
+        /* Responsive sizing for very long commands */
+        @media (min-width: 1400px) {
+            .command-explainer-modal {
+                max-width: 1400px;
+            }
         }
 
         .command-explainer-header {
@@ -1246,7 +1284,7 @@
         .command-explainer-content {
             padding: 20px;
             overflow-y: auto;
-            max-height: calc(85vh - 80px);
+            max-height: calc(90vh - 80px);
             background: white;
         }
 
@@ -1265,6 +1303,13 @@
             transition: border-color 0.2s;
             background: #f8f9fa;
             color: #333;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            min-height: 50px;
+            max-height: 150px;
+            overflow-y: auto;
+            resize: vertical;
         }
 
         .command-input:focus {
@@ -1323,9 +1368,15 @@
             color: #555;
             cursor: pointer;
             transition: all 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
         
         .history-item:hover {
+            white-space: normal;
+            word-break: break-all;
             background: #e8f0fe;
             color: #1a73e8;
             border-color: #1a73e8;
@@ -1338,10 +1389,46 @@
             margin-bottom: 20px;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             min-height: 60px;
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: auto;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             flex-wrap: wrap;
             gap: 8px;
+        }
+        
+        .command-flow {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border: 1px solid #b8daff;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .command-flow-title {
+            font-weight: 600;
+            color: #004085;
+            margin-bottom: 10px;
+        }
+        
+        .command-flow-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .command-flow-arrow {
+            color: #e65100;
+            margin: 0 8px;
+            font-weight: bold;
         }
 
         .command-token {
@@ -1354,11 +1441,19 @@
             position: relative;
             cursor: help;
             transition: all 0.2s;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .command-token:hover {
             transform: translateY(-2px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: none;
+            white-space: normal;
+            word-break: break-all;
+            z-index: 10;
         }
 
         .command-token.command {
@@ -1386,16 +1481,59 @@
             border: 1px solid #c8e6c9;
         }
 
-        .command-token.pipe {
+        .command-token.pipe,
+        .command-token.pipe-both,
+        .command-token.and,
+        .command-token.or,
+        .command-token.semicolon,
+        .command-token.background,
+        .command-token.case-end {
             background: #fff3e0;
             color: #e65100;
             border: 1px solid #ffe0b2;
         }
 
-        .command-token.redirect {
+        .command-token.redirect,
+        .command-token.redirect-out,
+        .command-token.redirect-in,
+        .command-token.redirect-append,
+        .command-token.redirect-err,
+        .command-token.redirect-err-append,
+        .command-token.redirect-err-to-out,
+        .command-token.redirect-both,
+        .command-token.redirect-both-append,
+        .command-token.here-doc,
+        .command-token.here-doc-indent,
+        .command-token.here-string {
             background: #fce4ec;
             color: #c2185b;
             border: 1px solid #f8bbd0;
+        }
+        
+        .command-token.keyword {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            font-weight: 600;
+        }
+        
+        .command-token.process-substitution {
+            background: #f3e5f5;
+            color: #5e35b1;
+            border: 1px solid #d1c4e9;
+        }
+        
+        .command-token.substitution {
+            background: #e0f2f1;
+            color: #00695c;
+            border: 1px solid #b2dfdb;
+        }
+        
+        .command-token.special {
+            background: #fafafa;
+            color: #424242;
+            border: 1px solid #e0e0e0;
+            font-weight: 600;
         }
 
         .command-token.unknown {
@@ -1414,14 +1552,27 @@
             padding: 8px 12px;
             border-radius: 4px;
             font-size: 12px;
-            white-space: nowrap;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s;
             margin-bottom: 8px;
-            max-width: 300px;
+            max-width: 400px;
             white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.4;
             z-index: 1000;
+        }
+        
+        /* Adjust tooltip position if it would go off-screen */
+        .command-token:first-child .token-tooltip {
+            left: 0;
+            transform: none;
+        }
+        
+        .command-token:last-child .token-tooltip {
+            left: auto;
+            right: 0;
+            transform: none;
         }
 
         .command-token:hover .token-tooltip {
@@ -1479,13 +1630,15 @@
         .explanation-content {
             padding: 16px;
             max-height: 500px;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: auto;
             transition: max-height 0.3s ease;
         }
 
         .explanation-section.collapsed .explanation-content {
             max-height: 0;
             padding: 0 16px;
+            overflow: hidden;
         }
 
         .option-item {
@@ -1502,12 +1655,14 @@
             font-weight: 600;
             color: #6a1b9a;
             margin-bottom: 4px;
+            word-break: break-all;
         }
 
         .option-description {
             color: #666;
             font-size: 14px;
             line-height: 1.5;
+            word-wrap: break-word;
         }
 
         .example-command {
@@ -1518,6 +1673,9 @@
             font-size: 14px;
             margin-top: 12px;
             border: 1px solid #e0e0e0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .no-explanation {
@@ -1682,9 +1840,9 @@
         </div>
         <div class="command-explainer-content">
             <div class="command-input-container">
-                <input type="text" class="command-input" id="commandInput" 
+                <textarea class="command-input" id="commandInput" 
                        placeholder="Enter a command to explain (e.g., ls -la /home)" 
-                       autocomplete="off">
+                       autocomplete="off" rows="1"></textarea>
             </div>
             
             <div class="command-breakdown" id="commandBreakdown">
@@ -1788,7 +1946,7 @@
         // Process pre-formatted .txt man pages
         function processTextManPage(content) {
             // .txt files are already formatted, just need to:
-            // 1. Preserve formatting with proper line breaks
+            // 1. Reformat to reduce excessive spacing
             // 2. Make section headers recognizable
             // 3. Add syntax highlighting
             
@@ -1796,6 +1954,13 @@
             content = content.replace(/&/g, '&amp;')
                             .replace(/</g, '&lt;')
                             .replace(/>/g, '&gt;');
+            
+            // Remove multiple consecutive blank lines (keep max 1 blank line)
+            content = content.replace(/\n\s*\n\s*\n+/g, '\n\n');
+            
+            // Join lines that are continuations (lines that don't end with period/colon)
+            // This helps with wrapped text in man pages
+            content = content.replace(/([^\.\:\n])\n\s+([a-z])/g, '$1 $2');
             
             // Convert section headers (lines that are all caps at the start)
             content = content.replace(/^([A-Z][A-Z\s]+)$/gm, '<span class="section-header">$1</span>');
@@ -1809,6 +1974,10 @@
             });
             
             // Convert line breaks to <br> for proper formatting
+            // But first, wrap option descriptions in divs for better formatting
+            content = content.replace(/^(\s+)(-{1,2}[^<\n]+)$/gm, '<div class="indent">$2</div>');
+            
+            // Convert remaining line breaks
             content = content.replace(/\n/g, '<br>\n');
             
             return content;
@@ -3549,180 +3718,738 @@
             };
         }
 
-        // Command parser
+        // Improved Command Parser for complex Linux commands
         class CommandParser {
             constructor() {
                 this.tokens = [];
+                this.commandOptions = window.commandOptions || {};
             }
 
             parse(input) {
                 this.tokens = [];
-                const parts = this.tokenize(input);
                 
-                if (parts.length === 0) return this.tokens;
-
-                let currentCommand = null;
-                let expectCommand = true;
-
-                for (let i = 0; i < parts.length; i++) {
-                    const token = parts[i];
-                    
-                    if (token === '|') {
-                        this.tokens.push({
-                            value: token,
-                            type: 'pipe',
-                            description: 'Pipe output to next command'
-                        });
-                        expectCommand = true;
-                        currentCommand = null;
-                    } else if (token === '>' || token === '>>' || token === '<') {
-                        this.tokens.push({
-                            value: token,
-                            type: 'redirect',
-                            description: token === '>' ? 'Redirect output to file' : 
-                                        token === '>>' ? 'Append output to file' : 
-                                        'Read input from file'
-                        });
-                        expectCommand = false; // Next token is a filename
-                    } else if (expectCommand && !token.startsWith('-')) {
-                        // This is a command
-                        currentCommand = token;
-                        const commandInfo = window.commandOptions?.[token] || hardcodedCommandOptions()?.[token];
-                        this.tokens.push({
-                            value: token,
-                            type: 'command',
-                            description: commandInfo?.description || 'Unknown command'
-                        });
-                        expectCommand = false;
-                        
-                        // Check if next token might be a subcommand
-                        if (i + 1 < parts.length && !parts[i + 1].startsWith('-') && 
-                            parts[i + 1] !== '|' && parts[i + 1] !== '>' && 
-                            parts[i + 1] !== '>>' && parts[i + 1] !== '<') {
-                            
-                            // Check if this command commonly has subcommands
-                            const subcommandCommands = ['git', 'docker', 'npm', 'yarn', 'cargo', 
-                                                       'kubectl', 'aws', 'az', 'gcloud', 'apt', 
-                                                       'apt-get', 'systemctl', 'ip', 'nmcli'];
-                            
-                            if (subcommandCommands.includes(token)) {
-                                i++; // Move to next token
-                                const subcommand = parts[i];
-                                currentCommand = `${token}_${subcommand}`; // Use underscore for lookup
-                                
-                                // Try to find info for the subcommand combination
-                                const subcommandInfo = window.commandOptions?.[currentCommand] || 
-                                                     hardcodedCommandOptions()?.[currentCommand];
-                                
-                                this.tokens.push({
-                                    value: subcommand,
-                                    type: 'subcommand',
-                                    description: subcommandInfo?.description || 
-                                               this.getSubcommandDescription(token, subcommand)
-                                });
-                            }
-                        }
-                    } else if (token.startsWith('--') && currentCommand) {
-                        // Long option
-                        const optionName = token.split('=')[0];
-                        const optionValue = token.includes('=') ? token.split('=')[1] : null;
-                        
-                        const optionInfo = this.findOptionByLongName(currentCommand, optionName);
-                        this.tokens.push({
-                            value: token,
-                            type: 'option',
-                            description: optionInfo?.description || 'Unknown option',
-                            optionValue: optionValue
-                        });
-                    } else if (token.startsWith('-') && token.length > 1 && token[1] !== '-' && currentCommand) {
-                        // Short option(s)
-                        const options = token.substring(1).split('');
-                        const combinedDescriptions = [];
-                        
-                        const commandOptions = window.commandOptions || hardcodedCommandOptions();
-                        
-                        for (const opt of options) {
-                            const optionKey = '-' + opt;
-                            const optionInfo = commandOptions[currentCommand]?.options?.[optionKey];
-                            if (optionInfo) {
-                                combinedDescriptions.push(`-${opt}: ${optionInfo.description}`);
-                            }
-                        }
-                        
-                        this.tokens.push({
-                            value: token,
-                            type: 'option',
-                            description: combinedDescriptions.length > 0 ? 
-                                        combinedDescriptions.join('; ') : 
-                                        'Unknown option(s)'
-                        });
-                    } else {
-                        // Check if this is an argument to a previous option
-                        const prevToken = this.tokens[this.tokens.length - 1];
-                        if (prevToken && prevToken.type === 'option' && currentCommand) {
-                            // Check if previous option expects an argument
-                            const optionKey = prevToken.value.startsWith('--') ? 
-                                            prevToken.value.split('=')[0] : 
-                                            prevToken.value;
-                            
-                            const optionInfo = this.getOptionInfo(currentCommand, optionKey);
-                            if (optionInfo && (optionInfo.argType === 'required' || optionInfo.argType === 'optional')) {
-                                this.tokens.push({
-                                    value: token,
-                                    type: 'argument',
-                                    description: `Argument for ${optionKey}`
-                                });
-                                continue;
-                            }
-                        }
-                        
-                        // Otherwise, it's a regular argument
-                        this.tokens.push({
-                            value: token,
-                            type: 'argument',
-                            description: 'File, directory, or pattern'
-                        });
-                    }
-                }
+                // First, tokenize the input properly
+                const rawTokens = this.advancedTokenize(input);
+                
+                // Then, parse the tokens into semantic units
+                this.parseTokens(rawTokens);
                 
                 return this.tokens;
             }
 
-            tokenize(input) {
+            // Advanced tokenizer that handles complex shell syntax
+            advancedTokenize(input) {
                 const tokens = [];
                 let current = '';
-                let inQuotes = false;
-                let quoteChar = '';
+                let i = 0;
                 
-                for (let i = 0; i < input.length; i++) {
+                while (i < input.length) {
                     const char = input[i];
+                    const nextChar = input[i + 1];
+                    const prevChar = input[i - 1];
                     
-                    if ((char === '"' || char === "'") && !inQuotes) {
-                        inQuotes = true;
-                        quoteChar = char;
-                    } else if (char === quoteChar && inQuotes) {
-                        inQuotes = false;
-                        quoteChar = '';
-                    } else if (char === ' ' && !inQuotes) {
+                    // Handle quotes
+                    if ((char === '"' || char === "'") && prevChar !== '\\') {
+                        const quote = char;
+                        let quoted = '';
+                        i++; // Skip opening quote
+                        
+                        while (i < input.length && input[i] !== quote) {
+                            if (input[i] === '\\' && input[i + 1] === quote) {
+                                quoted += quote;
+                                i += 2;
+                            } else {
+                                quoted += input[i];
+                                i++;
+                            }
+                        }
+                        
                         if (current) {
-                            tokens.push(current);
+                            tokens.push({ type: 'word', value: current });
                             current = '';
                         }
-                    } else {
-                        current += char;
+                        tokens.push({ type: 'quoted', value: quoted, quote: quote });
+                        i++; // Skip closing quote
+                        continue;
                     }
+                    
+                    // Handle command substitution
+                    if (char === '$' && nextChar === '(') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        
+                        let depth = 1;
+                        let substitution = '';
+                        i += 2; // Skip $(
+                        
+                        while (i < input.length && depth > 0) {
+                            if (input[i] === '(') depth++;
+                            else if (input[i] === ')') depth--;
+                            
+                            if (depth > 0) substitution += input[i];
+                            i++;
+                        }
+                        
+                        tokens.push({ type: 'substitution', value: substitution });
+                        continue;
+                    }
+                    
+                    // Handle backticks (old-style command substitution)
+                    if (char === '`') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        
+                        let substitution = '';
+                        i++; // Skip opening backtick
+                        
+                        while (i < input.length && input[i] !== '`') {
+                            substitution += input[i];
+                            i++;
+                        }
+                        
+                        tokens.push({ type: 'substitution', value: substitution });
+                        i++; // Skip closing backtick
+                        continue;
+                    }
+                    
+                    // Handle process substitution
+                    if ((char === '<' || char === '>') && nextChar === '(') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        
+                        const direction = char; // < or >
+                        let depth = 1;
+                        let substitution = '';
+                        i += 2; // Skip <( or >(
+                        
+                        while (i < input.length && depth > 0) {
+                            if (input[i] === '(') depth++;
+                            else if (input[i] === ')') depth--;
+                            
+                            if (depth > 0) substitution += input[i];
+                            i++;
+                        }
+                        
+                        tokens.push({ 
+                            type: 'process-substitution', 
+                            value: substitution,
+                            direction: direction
+                        });
+                        continue;
+                    }
+                    
+                    // Handle operators (order matters - longer operators first)
+                    const operators = [
+                        { op: '<<<', type: 'here-string' },
+                        { op: '<<-', type: 'here-doc-indent' },
+                        { op: '<<', type: 'here-doc' },
+                        { op: '&&', type: 'and' },
+                        { op: '||', type: 'or' },
+                        { op: ';;', type: 'case-end' },
+                        { op: ';', type: 'semicolon' },
+                        { op: '|&', type: 'pipe-both' },
+                        { op: '|', type: 'pipe' },
+                        { op: '&>>', type: 'redirect-both-append' },
+                        { op: '&>', type: 'redirect-both' },
+                        { op: '>>', type: 'redirect-append' },
+                        { op: '>', type: 'redirect-out' },
+                        { op: '2>>', type: 'redirect-err-append' },
+                        { op: '2>&1', type: 'redirect-err-to-out' },
+                        { op: '2>', type: 'redirect-err' },
+                        { op: '<', type: 'redirect-in' },
+                        { op: '&', type: 'background' }
+                    ];
+                    
+                    let foundOperator = false;
+                    for (const { op, type } of operators) {
+                        if (input.substr(i, op.length) === op) {
+                            if (current) {
+                                tokens.push({ type: 'word', value: current });
+                                current = '';
+                            }
+                            tokens.push({ type: type, value: op });
+                            i += op.length;
+                            foundOperator = true;
+                            break;
+                        }
+                    }
+                    
+                    if (foundOperator) continue;
+                    
+                    // Handle whitespace
+                    if (char === ' ' || char === '\t' || char === '\n') {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle special single characters
+                    if ('(){}[]'.includes(char)) {
+                        if (current) {
+                            tokens.push({ type: 'word', value: current });
+                            current = '';
+                        }
+                        tokens.push({ type: 'special', value: char });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Regular character
+                    current += char;
+                    i++;
                 }
                 
+                // Don't forget the last token
                 if (current) {
-                    tokens.push(current);
+                    tokens.push({ type: 'word', value: current });
                 }
                 
                 return tokens;
             }
 
+            // Parse tokens into semantic units
+            parseTokens(rawTokens) {
+                let i = 0;
+                let currentCommand = null;
+                let expectingCommand = true;
+                let lastOperator = null;
+                
+                while (i < rawTokens.length) {
+                    const token = rawTokens[i];
+                    
+                    // Skip special tokens for now
+                    if (token.type === 'special') {
+                        this.tokens.push({
+                            value: token.value,
+                            type: 'special',
+                            description: this.getSpecialDescription(token.value)
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle operators
+                    if (this.isOperator(token.type)) {
+                        this.tokens.push({
+                            value: token.value,
+                            type: token.type,
+                            description: this.getOperatorDescription(token.type)
+                        });
+                        
+                        // After operators, we usually expect a new command
+                        if (['pipe', 'pipe-both', 'and', 'or', 'semicolon', 'background'].includes(token.type)) {
+                            expectingCommand = true;
+                            currentCommand = null;
+                        }
+                        
+                        lastOperator = token.type;
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle command substitution
+                    if (token.type === 'substitution') {
+                        this.tokens.push({
+                            value: `$(${token.value})`,
+                            type: 'substitution',
+                            description: 'Command substitution - execute command and use its output'
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle process substitution
+                    if (token.type === 'process-substitution') {
+                        const desc = token.direction === '<' ? 
+                            'Process substitution - use command output as input file' :
+                            'Process substitution - use command input as output file';
+                        this.tokens.push({
+                            value: `${token.direction}(${token.value})`,
+                            type: 'process-substitution',
+                            description: desc
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle quoted strings
+                    if (token.type === 'quoted') {
+                        this.tokens.push({
+                            value: `${token.quote}${token.value}${token.quote}`,
+                            type: 'argument',
+                            description: token.quote === '"' ? 
+                                'Double-quoted string (variables expanded)' : 
+                                'Single-quoted string (literal)'
+                        });
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle words (commands, options, arguments)
+                    if (token.type === 'word') {
+                        const word = token.value;
+                        
+                        // Check if it's a variable assignment
+                        if (word.includes('=') && !word.startsWith('-') && expectingCommand) {
+                            const [varName, varValue] = word.split('=', 2);
+                            if (varName.match(/^[A-Za-z_][A-Za-z0-9_]*$/)) {
+                                this.tokens.push({
+                                    value: word,
+                                    type: 'variable',
+                                    description: `Set environment variable ${varName}`
+                                });
+                                i++;
+                                continue;
+                            }
+                        }
+                        
+                        // Check if it's a shell keyword
+                        if (this.isShellKeyword(word)) {
+                            this.tokens.push({
+                                value: word,
+                                type: 'keyword',
+                                description: this.getShellKeywordDescription(word)
+                            });
+                            
+                            // Some keywords expect commands after them
+                            if (['do', 'then', 'else', 'elif'].includes(word)) {
+                                expectingCommand = true;
+                                currentCommand = null;
+                            }
+                        }
+                        // Check if we're expecting a command
+                        else if (expectingCommand && !word.startsWith('-')) {
+                            currentCommand = word;
+                            const commandInfo = this.commandOptions[word];
+                            
+                            this.tokens.push({
+                                value: word,
+                                type: 'command',
+                                description: commandInfo?.description || this.getCommandDescription(word)
+                            });
+                            
+                            expectingCommand = false;
+                            
+                            // Check for subcommands
+                            if (this.hasSubcommands(word) && i + 1 < rawTokens.length) {
+                                const nextToken = rawTokens[i + 1];
+                                if (nextToken.type === 'word' && !nextToken.value.startsWith('-')) {
+                                    i++;
+                                    const subcommand = nextToken.value;
+                                    
+                                    this.tokens.push({
+                                        value: subcommand,
+                                        type: 'subcommand',
+                                        description: this.getSubcommandDescription(word, subcommand)
+                                    });
+                                    
+                                    // Update current command context for options
+                                    currentCommand = `${word}_${subcommand}`;
+                                }
+                            }
+                        }
+                        // Check if it's an option
+                        else if (word.startsWith('-') && currentCommand) {
+                            const optionInfo = this.parseOption(word, currentCommand);
+                            // Add the command context to the option token
+                            optionInfo.command = currentCommand;
+                            this.tokens.push(optionInfo);
+                            
+                            // Check if this option expects an argument
+                            if (optionInfo.expectsArg && i + 1 < rawTokens.length) {
+                                const nextToken = rawTokens[i + 1];
+                                if (nextToken.type === 'word' && !nextToken.value.startsWith('-')) {
+                                    i++;
+                                    this.tokens.push({
+                                        value: nextToken.value,
+                                        type: 'argument',
+                                        description: `Argument for ${word}`
+                                    });
+                                }
+                            }
+                        }
+                        // Otherwise it's an argument
+                        else {
+                            // Special handling for filenames after redirections
+                            if (lastOperator && lastOperator.includes('redirect')) {
+                                this.tokens.push({
+                                    value: word,
+                                    type: 'filename',
+                                    description: this.getRedirectionTargetDescription(lastOperator)
+                                });
+                                lastOperator = null;
+                            } else {
+                                this.tokens.push({
+                                    value: word,
+                                    type: 'argument',
+                                    description: this.getArgumentDescription(word, currentCommand)
+                                });
+                            }
+                        }
+                    }
+                    
+                    i++;
+                }
+            }
+
+            // Helper methods
+            isOperator(type) {
+                return [
+                    'pipe', 'pipe-both', 'and', 'or', 'semicolon',
+                    'redirect-out', 'redirect-append', 'redirect-in',
+                    'redirect-err', 'redirect-err-append', 'redirect-err-to-out',
+                    'redirect-both', 'redirect-both-append', 'background',
+                    'here-doc', 'here-doc-indent', 'here-string', 'case-end'
+                ].includes(type);
+            }
+
+            getOperatorDescription(type) {
+                const descriptions = {
+                    'pipe': 'Pipe - send output to next command',
+                    'pipe-both': 'Pipe both stdout and stderr',
+                    'and': 'AND - run next command only if previous succeeds',
+                    'or': 'OR - run next command only if previous fails',
+                    'semicolon': 'Command separator - run commands sequentially',
+                    'redirect-out': 'Redirect output to file (overwrite)',
+                    'redirect-append': 'Redirect output to file (append)',
+                    'redirect-in': 'Read input from file',
+                    'redirect-err': 'Redirect error output to file',
+                    'redirect-err-append': 'Redirect error output to file (append)',
+                    'redirect-err-to-out': 'Redirect stderr to stdout',
+                    'redirect-both': 'Redirect both stdout and stderr to file',
+                    'redirect-both-append': 'Redirect both stdout and stderr (append)',
+                    'background': 'Run command in background',
+                    'here-doc': 'Here document - multi-line input',
+                    'here-doc-indent': 'Here document - ignore leading tabs',
+                    'here-string': 'Here string - single line input',
+                    'case-end': 'End of case pattern'
+                };
+                return descriptions[type] || 'Unknown operator';
+            }
+
+            getSpecialDescription(char) {
+                const descriptions = {
+                    '(': 'Start subshell or command group',
+                    ')': 'End subshell or command group',
+                    '{': 'Start command block',
+                    '}': 'End command block',
+                    '[': 'Start test expression or array index',
+                    ']': 'End test expression or array index'
+                };
+                return descriptions[char] || 'Special character';
+            }
+
+            getRedirectionTargetDescription(redirectType) {
+                if (redirectType.includes('err')) return 'Error output file';
+                if (redirectType.includes('in')) return 'Input file';
+                return 'Output file';
+            }
+
+            parseOption(option, command) {
+                // Handle long options with values
+                if (option.startsWith('--') && option.includes('=')) {
+                    const [optName, optValue] = option.split('=', 2);
+                    const optionInfo = this.findOption(command, optName);
+                    
+                    return {
+                        value: option,
+                        type: 'option',
+                        description: optionInfo?.description || `Long option with value: ${optValue}`,
+                        expectsArg: false
+                    };
+                }
+                
+                // Handle long options
+                if (option.startsWith('--')) {
+                    const optionInfo = this.findOption(command, option);
+                    return {
+                        value: option,
+                        type: 'option',
+                        description: optionInfo?.description || 'Unknown long option',
+                        expectsArg: optionInfo?.argType === 'required'
+                    };
+                }
+                
+                // Handle short options (can be combined)
+                if (option.startsWith('-') && option.length > 1) {
+                    const options = option.substring(1).split('');
+                    const descriptions = [];
+                    let expectsArg = false;
+                    
+                    for (let i = 0; i < options.length; i++) {
+                        const opt = '-' + options[i];
+                        const optionInfo = this.findOption(command, opt);
+                        
+                        if (optionInfo) {
+                            descriptions.push(`${opt}: ${optionInfo.description}`);
+                            // Only the last option in a group can take an argument
+                            if (i === options.length - 1 && optionInfo.argType === 'required') {
+                                expectsArg = true;
+                            }
+                        } else {
+                            descriptions.push(`${opt}: Unknown option`);
+                        }
+                    }
+                    
+                    return {
+                        value: option,
+                        type: 'option',
+                        description: descriptions.join('; '),
+                        expectsArg: expectsArg
+                    };
+                }
+                
+                return {
+                    value: option,
+                    type: 'option',
+                    description: 'Unknown option',
+                    expectsArg: false
+                };
+            }
+
+            findOption(command, option) {
+                const cmdOptions = this.commandOptions[command]?.options || {};
+                
+                // Direct lookup
+                if (cmdOptions[option]) {
+                    return cmdOptions[option];
+                }
+                
+                // Check if it's a long option matching a short option
+                for (const [key, value] of Object.entries(cmdOptions)) {
+                    if (value.long === option) {
+                        return value;
+                    }
+                }
+                
+                return null;
+            }
+            
+            hasSubcommands(command) {
+                const subcommandCommands = [
+                    'git', 'docker', 'npm', 'yarn', 'cargo', 'pip', 'gem',
+                    'kubectl', 'aws', 'az', 'gcloud', 'apt', 'apt-get', 
+                    'systemctl', 'journalctl', 'ip', 'nmcli', 'snap', 'flatpak',
+                    'brew', 'sudo', 'virsh', 'podman', 'buildah', 'skopeo'
+                ];
+                return subcommandCommands.includes(command);
+            }
+
+            getCommandDescription(command) {
+                // Common commands not in database
+                const commonDescriptions = {
+                    'cd': 'Change directory',
+                    'pwd': 'Print working directory',
+                    'echo': 'Display a line of text',
+                    'export': 'Set environment variable',
+                    'source': 'Execute commands from file in current shell',
+                    'alias': 'Create command alias',
+                    'unalias': 'Remove command alias',
+                    'history': 'Display command history',
+                    'which': 'Locate a command',
+                    'type': 'Display command type',
+                    'eval': 'Execute arguments as shell command',
+                    'exec': 'Replace shell with command',
+                    'exit': 'Exit the shell',
+                    'test': 'Evaluate conditional expression',
+                    '[': 'Evaluate conditional expression (synonym for test)'
+                };
+                
+                return commonDescriptions[command] || 'Unknown command';
+            }
+            
+            isShellKeyword(word) {
+                const keywords = [
+                    'if', 'then', 'else', 'elif', 'fi',
+                    'for', 'in', 'do', 'done',
+                    'while', 'until',
+                    'case', 'esac',
+                    'function',
+                    'select',
+                    'time',
+                    'coproc'
+                ];
+                return keywords.includes(word);
+            }
+            
+            getShellKeywordDescription(keyword) {
+                const descriptions = {
+                    'if': 'Conditional statement start',
+                    'then': 'Execute commands if condition is true',
+                    'else': 'Execute commands if condition is false',
+                    'elif': 'Else-if condition',
+                    'fi': 'End of if statement',
+                    'for': 'Loop over items',
+                    'in': 'Specify items to iterate over',
+                    'do': 'Start loop body',
+                    'done': 'End loop body',
+                    'while': 'Loop while condition is true',
+                    'until': 'Loop until condition is true',
+                    'case': 'Pattern matching statement',
+                    'esac': 'End of case statement',
+                    'function': 'Define shell function',
+                    'select': 'Generate menu',
+                    'time': 'Time command execution',
+                    'coproc': 'Create coprocess'
+                };
+                return descriptions[keyword] || 'Shell keyword';
+            }
+            
+            getSubcommandDescription(command, subcommand) {
+                // Extended subcommand descriptions
+                const descriptions = {
+                    'git': {
+                        'add': 'Add file contents to the index',
+                        'commit': 'Record changes to the repository',
+                        'push': 'Update remote refs along with associated objects',
+                        'pull': 'Fetch from and integrate with another repository',
+                        'clone': 'Clone a repository into a new directory',
+                        'checkout': 'Switch branches or restore working tree files',
+                        'branch': 'List, create, or delete branches',
+                        'merge': 'Join two or more development histories together',
+                        'status': 'Show the working tree status',
+                        'log': 'Show commit logs',
+                        'diff': 'Show changes between commits',
+                        'reset': 'Reset current HEAD to the specified state',
+                        'stash': 'Stash changes in a dirty working directory',
+                        'fetch': 'Download objects and refs from another repository',
+                        'rebase': 'Reapply commits on top of another base tip',
+                        'tag': 'Create, list, delete or verify tags',
+                        'remote': 'Manage set of tracked repositories',
+                        'config': 'Get and set repository or global options',
+                        'init': 'Create an empty Git repository',
+                        'mv': 'Move or rename a file or directory',
+                        'rm': 'Remove files from the working tree and index'
+                    },
+                    'docker': {
+                        'run': 'Run a command in a new container',
+                        'build': 'Build an image from a Dockerfile',
+                        'pull': 'Pull an image or repository from a registry',
+                        'push': 'Push an image or repository to a registry',
+                        'ps': 'List containers',
+                        'images': 'List images',
+                        'exec': 'Run a command in a running container',
+                        'stop': 'Stop one or more running containers',
+                        'start': 'Start one or more stopped containers',
+                        'restart': 'Restart one or more containers',
+                        'rm': 'Remove one or more containers',
+                        'rmi': 'Remove one or more images',
+                        'logs': 'Fetch the logs of a container',
+                        'inspect': 'Return low-level information',
+                        'network': 'Manage networks',
+                        'volume': 'Manage volumes',
+                        'compose': 'Docker Compose operations',
+                        'cp': 'Copy files between containers and filesystem',
+                        'commit': 'Create a new image from container changes',
+                        'tag': 'Create a tag for an image',
+                        'save': 'Save images to a tar archive',
+                        'load': 'Load images from a tar archive'
+                    },
+                    'kubectl': {
+                        'get': 'Display one or many resources',
+                        'describe': 'Show details of a specific resource',
+                        'create': 'Create a resource from a file or stdin',
+                        'apply': 'Apply a configuration to a resource',
+                        'delete': 'Delete resources',
+                        'edit': 'Edit a resource on the server',
+                        'scale': 'Set a new size for a deployment',
+                        'expose': 'Expose a resource as a new service',
+                        'run': 'Run a particular image on the cluster',
+                        'set': 'Set specific features on objects',
+                        'rollout': 'Manage the rollout of a resource',
+                        'logs': 'Print the logs for a container',
+                        'exec': 'Execute a command in a container',
+                        'port-forward': 'Forward ports to a pod',
+                        'proxy': 'Run a proxy to the Kubernetes API server',
+                        'version': 'Print client and server version',
+                        'config': 'Modify kubeconfig files',
+                        'cluster-info': 'Display cluster info'
+                    },
+                    'systemctl': {
+                        'start': 'Start (activate) one or more units',
+                        'stop': 'Stop (deactivate) one or more units',
+                        'restart': 'Restart one or more units',
+                        'reload': 'Reload one or more units',
+                        'status': 'Show runtime status of units',
+                        'enable': 'Enable one or more unit files',
+                        'disable': 'Disable one or more unit files',
+                        'is-active': 'Check if units are active',
+                        'is-enabled': 'Check if unit files are enabled',
+                        'list-units': 'List loaded units',
+                        'list-unit-files': 'List installed unit files',
+                        'daemon-reload': 'Reload systemd manager configuration',
+                        'mask': 'Mask one or more units',
+                        'unmask': 'Unmask one or more units',
+                        'show': 'Show properties of units',
+                        'cat': 'Show unit file contents',
+                        'edit': 'Edit unit files',
+                        'kill': 'Send signal to processes of a unit'
+                    },
+                    'npm': {
+                        'install': 'Install a package',
+                        'uninstall': 'Remove a package',
+                        'update': 'Update a package',
+                        'run': 'Run a script defined in package.json',
+                        'start': 'Start a package',
+                        'test': 'Test a package',
+                        'init': 'Create a package.json file',
+                        'publish': 'Publish a package',
+                        'list': 'List installed packages',
+                        'audit': 'Run a security audit',
+                        'ci': 'Install a project with a clean slate'
+                    },
+                    'apt': {
+                        'install': 'Install new packages',
+                        'remove': 'Remove packages',
+                        'update': 'Update package list',
+                        'upgrade': 'Upgrade all upgradable packages',
+                        'search': 'Search for packages',
+                        'show': 'Show package details',
+                        'list': 'List packages based on package names',
+                        'autoremove': 'Remove automatically all unused packages',
+                        'purge': 'Remove packages and config files'
+                    }
+                };
+                
+                return descriptions[command]?.[subcommand] || 
+                       `${command} ${subcommand} - ${subcommand} operation`;
+            }
+
+            getArgumentDescription(arg, command) {
+                // Pattern-based descriptions
+                if (arg.match(/^[~\/].*$/)) return 'File or directory path';
+                if (arg.match(/^\*\.(.*?)$/)) return 'Wildcard pattern';
+                if (arg.match(/^[0-9]+$/)) return 'Numeric value';
+                if (arg.match(/^[A-Z_]+=/)) return 'Environment variable';
+                if (arg.match(/^-?[0-9]+$/)) return 'Integer value';
+                if (arg.match(/^[a-zA-Z0-9\-\_]+@[a-zA-Z0-9\-\_]+:/)) return 'Remote host specification';
+                if (arg.match(/^https?:\/\//)) return 'URL';
+                
+                // Command-specific patterns
+                if (command === 'chmod' && arg.match(/^[0-7]{3,4}$/)) {
+                    return 'Octal permission mode';
+                }
+                if (command === 'chown' && arg.includes(':')) {
+                    return 'User:group specification';
+                }
+                if ((command === 'find' || command === 'grep') && arg.match(/^[+-]\d+$/)) {
+                    return 'Numeric comparison value';
+                }
+                
+                return 'Argument';
+            }
+
             findOptionByLongName(command, longName) {
-                const commandOptions = window.commandOptions || hardcodedCommandOptions();
-                const options = commandOptions[command]?.options;
+                const options = this.commandOptions[command]?.options;
                 if (!options) return null;
                 
                 for (const [key, value] of Object.entries(options)) {
@@ -3734,8 +4461,7 @@
             }
 
             getOptionInfo(command, option) {
-                const commandOptions = window.commandOptions || hardcodedCommandOptions();
-                const options = commandOptions[command]?.options;
+                const options = this.commandOptions[command]?.options;
                 if (!options) return null;
                 
                 // Direct lookup
@@ -3751,83 +4477,6 @@
                 }
                 
                 return null;
-            }
-            
-            getSubcommandDescription(command, subcommand) {
-                // Common subcommand descriptions
-                const descriptions = {
-                    'git': {
-                        'add': 'Add file contents to the index',
-                        'commit': 'Record changes to the repository',
-                        'push': 'Update remote refs along with associated objects',
-                        'pull': 'Fetch from and integrate with another repository',
-                        'clone': 'Clone a repository into a new directory',
-                        'checkout': 'Switch branches or restore working tree files',
-                        'branch': 'List, create, or delete branches',
-                        'merge': 'Join two or more development histories together',
-                        'status': 'Show the working tree status',
-                        'log': 'Show commit logs',
-                        'diff': 'Show changes between commits, commit and working tree, etc',
-                        'reset': 'Reset current HEAD to the specified state',
-                        'stash': 'Stash the changes in a dirty working directory away',
-                        'fetch': 'Download objects and refs from another repository',
-                        'rebase': 'Reapply commits on top of another base tip'
-                    },
-                    'docker': {
-                        'run': 'Run a command in a new container',
-                        'build': 'Build an image from a Dockerfile',
-                        'pull': 'Pull an image or a repository from a registry',
-                        'push': 'Push an image or a repository to a registry',
-                        'ps': 'List containers',
-                        'images': 'List images',
-                        'exec': 'Run a command in a running container',
-                        'stop': 'Stop one or more running containers',
-                        'start': 'Start one or more stopped containers',
-                        'rm': 'Remove one or more containers',
-                        'rmi': 'Remove one or more images',
-                        'logs': 'Fetch the logs of a container',
-                        'compose': 'Docker Compose subcommand'
-                    },
-                    'npm': {
-                        'install': 'Install a package',
-                        'uninstall': 'Remove a package',
-                        'update': 'Update a package',
-                        'run': 'Run a script defined in package.json',
-                        'start': 'Start a package',
-                        'test': 'Test a package',
-                        'init': 'Create a package.json file',
-                        'publish': 'Publish a package',
-                        'list': 'List installed packages',
-                        'audit': 'Run a security audit',
-                        'ci': 'Install a project with a clean slate'
-                    },
-                    'systemctl': {
-                        'start': 'Start (activate) one or more units',
-                        'stop': 'Stop (deactivate) one or more units',
-                        'restart': 'Restart one or more units',
-                        'status': 'Show runtime status of one or more units',
-                        'enable': 'Enable one or more unit files',
-                        'disable': 'Disable one or more unit files',
-                        'reload': 'Reload one or more units',
-                        'daemon-reload': 'Reload systemd manager configuration',
-                        'list-units': 'List units',
-                        'is-active': 'Check whether units are active',
-                        'is-enabled': 'Check whether unit files are enabled'
-                    },
-                    'apt': {
-                        'install': 'Install new packages',
-                        'remove': 'Remove packages',
-                        'update': 'Update package list',
-                        'upgrade': 'Upgrade all upgradable packages',
-                        'search': 'Search for packages',
-                        'show': 'Show package details',
-                        'list': 'List packages based on package names',
-                        'autoremove': 'Remove automatically all unused packages',
-                        'purge': 'Remove packages and config files'
-                    }
-                };
-                
-                return descriptions[command]?.[subcommand] || `${command} ${subcommand} subcommand`;
             }
         }
 
@@ -3860,41 +4509,71 @@
         function displayExplanations(tokens) {
             commandExplanations.innerHTML = '';
             
-            const commandToken = tokens.find(t => t.type === 'command');
-            if (!commandToken) return;
+            // Get all unique commands
+            const commandTokens = tokens.filter(t => t.type === 'command');
+            if (commandTokens.length === 0) return;
             
-            const commandName = commandToken.value;
             const commandOptions = window.commandOptions || hardcodedCommandOptions();
-            const commandInfo = commandOptions[commandName];
             
-            if (!commandInfo) {
-                commandExplanations.innerHTML = `
-                    <div class="explanation-section">
-                        <div class="explanation-header">Command Not Found</div>
-                        <div class="explanation-content">
-                            <p>The command "${commandName}" is not in our database yet.</p>
-                            <button class="action-button" onclick="searchInput.value='${commandName}'; searchInput.dispatchEvent(new Event('input')); commandExplainerModal.style.display='none'; overlay.style.display='none';">
-                                Search in man pages
-                            </button>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            // Command overview
+            // Command overview section
             const overviewSection = document.createElement('div');
             overviewSection.className = 'explanation-section';
-            overviewSection.innerHTML = `
-                <div class="explanation-header">Command Overview</div>
-                <div class="explanation-content">
-                    <h4>${commandName}</h4>
-                    <p>${commandInfo.description}</p>
-                    <button class="action-button" onclick="displayManPage('${commandName}', '1'); commandExplainerModal.style.display='none'; overlay.style.display='none';">
-                        View full man page
-                    </button>
-                </div>
-            `;
+            let overviewHtml = '<div class="explanation-header">Command Overview</div><div class="explanation-content">';
+            
+            // Add command flow visualization if multiple commands
+            if (commandTokens.length > 1) {
+                overviewHtml += '<div class="command-flow">';
+                overviewHtml += '<div class="command-flow-title">Command Flow:</div>';
+                
+                for (let i = 0; i < tokens.length; i++) {
+                    const token = tokens[i];
+                    if (token.type === 'command') {
+                        overviewHtml += `<span class="command-flow-item"><strong>${token.value}</strong></span>`;
+                    } else if (token.type === 'pipe' || token.type === 'pipe-both') {
+                        overviewHtml += '<span class="command-flow-arrow">→</span>';
+                    } else if (token.type === 'and') {
+                        overviewHtml += '<span class="command-flow-arrow">&&</span>';
+                    } else if (token.type === 'or') {
+                        overviewHtml += '<span class="command-flow-arrow">||</span>';
+                    } else if (token.type === 'semicolon') {
+                        overviewHtml += '<span class="command-flow-arrow">;</span>';
+                    } else if (token.type === 'background') {
+                        overviewHtml += '<span class="command-flow-arrow">&</span>';
+                    }
+                }
+                
+                overviewHtml += '</div>';
+            }
+            
+            commandTokens.forEach((commandToken, index) => {
+                const commandName = commandToken.value;
+                const commandInfo = commandOptions[commandName];
+                
+                if (index > 0) {
+                    overviewHtml += '<hr style="margin: 15px 0; border: none; border-top: 1px solid #e0e0e0;">';
+                }
+                
+                if (!commandInfo) {
+                    overviewHtml += `
+                        <h4>${commandName}</h4>
+                        <p style="color: #666;">Command not in database</p>
+                        <button class="action-button" onclick="searchInput.value='${commandName}'; searchInput.dispatchEvent(new Event('input')); commandExplainerModal.style.display='none'; overlay.style.display='none';">
+                            Search in man pages
+                        </button>
+                    `;
+                } else {
+                    overviewHtml += `
+                        <h4>${commandName}</h4>
+                        <p>${commandInfo.description}</p>
+                        <button class="action-button" onclick="displayManPage('${commandName}', '1'); commandExplainerModal.style.display='none'; overlay.style.display='none';">
+                            View full man page
+                        </button>
+                    `;
+                }
+            });
+            
+            overviewHtml += '</div>';
+            overviewSection.innerHTML = overviewHtml;
             commandExplanations.appendChild(overviewSection);
 
             // Used options
@@ -3903,39 +4582,61 @@
                 const usedSection = document.createElement('div');
                 usedSection.className = 'explanation-section';
                 
+                // Group options by command
+                const optionsByCommand = {};
+                usedOptions.forEach(optionToken => {
+                    const cmd = optionToken.command || commandName;
+                    if (!optionsByCommand[cmd]) {
+                        optionsByCommand[cmd] = [];
+                    }
+                    optionsByCommand[cmd].push(optionToken);
+                });
+                
                 let optionsHtml = '<div class="explanation-header">Options Used</div><div class="explanation-content">';
                 
-                usedOptions.forEach(optionToken => {
-                    const optionValue = optionToken.value;
+                // Check if we have multiple commands
+                const commandCount = Object.keys(optionsByCommand).length;
+                
+                Object.entries(optionsByCommand).forEach(([cmd, options]) => {
+                    // Add command label if multiple commands
+                    if (commandCount > 1) {
+                        optionsHtml += `<div style="font-weight: bold; margin-top: 10px; color: #00bfa5;">${cmd} options:</div>`;
+                    }
                     
-                    if (optionValue.startsWith('--')) {
-                        // Long option
-                        const optionName = optionValue.split('=')[0];
-                        const optionData = commandParser.findOptionByLongName(commandName, optionName);
-                        if (optionData) {
-                            optionsHtml += `
-                                <div class="option-item">
-                                    <div class="option-name">${optionName}</div>
-                                    <div class="option-description">${optionData.description}</div>
-                                </div>
-                            `;
-                        }
-                    } else if (optionValue.startsWith('-')) {
-                        // Short option(s)
-                        const options = optionValue.substring(1).split('');
-                        options.forEach(opt => {
-                            const optionKey = '-' + opt;
-                            const optionData = commandInfo.options[optionKey];
+                    const optionCommandInfo = commandOptions[cmd];
+                    
+                    options.forEach(optionToken => {
+                        const optionValue = optionToken.value;
+                        
+                        if (optionValue.startsWith('--')) {
+                            // Long option
+                            const optionName = optionValue.split('=')[0];
+                            const optionData = commandParser.findOptionByLongName(cmd, optionName);
                             if (optionData) {
                                 optionsHtml += `
                                     <div class="option-item">
-                                        <div class="option-name">${optionKey}${optionData.long ? ' / ' + optionData.long : ''}</div>
+                                        <div class="option-name">${optionName}</div>
                                         <div class="option-description">${optionData.description}</div>
                                     </div>
                                 `;
                             }
-                        });
-                    }
+                        } else if (optionValue.startsWith('-')) {
+                            // Short option(s)
+                            const options = optionValue.substring(1).split('');
+                            options.forEach(opt => {
+                                const optionKey = '-' + opt;
+                                const optionData = optionCommandInfo?.options?.[optionKey];
+                                if (optionData) {
+                                    optionsHtml += `
+                                        <div class="option-item">
+                                            <div class="option-name">${optionKey}${optionData.long ? ' / ' + optionData.long : ''}</div>
+                                            <div class="option-description">${optionData.description}</div>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        }
+                    });
                 });
                 
                 optionsHtml += '</div>';
@@ -3960,10 +4661,29 @@
             
             commandExplanations.appendChild(exampleSection);
             
-            // Load examples asynchronously
-            getCommandExamples(commandName).then(examples => {
-                exampleSection.querySelector('.explanation-content').innerHTML = examples;
+            // Load examples for all commands asynchronously
+            const commandNames = commandTokens.map(t => t.value);
+            getAllCommandExamples(commandNames).then(examplesHtml => {
+                exampleSection.querySelector('.explanation-content').innerHTML = examplesHtml;
             });
+        }
+
+        // Get examples for multiple commands
+        async function getAllCommandExamples(commandNames) {
+            const examplePromises = commandNames.map(cmd => getCommandExamples(cmd));
+            const allExamples = await Promise.all(examplePromises);
+            
+            let combinedHtml = '';
+            commandNames.forEach((cmd, index) => {
+                if (index > 0) {
+                    combinedHtml += '<hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">';
+                }
+                
+                combinedHtml += `<h4 style="color: #00bfa5; margin-bottom: 10px;">${cmd} examples:</h4>`;
+                combinedHtml += allExamples[index] || '<p style="color: #666;">No examples available</p>';
+            });
+            
+            return combinedHtml;
         }
 
         // Get command examples (integrates with TLDR)

@@ -1,10 +1,9 @@
 PROCPS_PIDS(3)             Library Functions Manual             PROCPS_PIDS(3)
 
-НАЗВА
-       procps_pids  —  програмний  інтерфейс  для  доступу до даних процесів у
-       файловій системі /proc
+NAME
+       procps_pids - API to access process information in the /proc filesystem
 
-КОРОТКИЙ ОПИС
+SYNOPSIS
        #include <libproc2/pids.h>
 
        int procps_pids_new   (struct pids_info **info, enum pids_item *items, int numitems);
@@ -41,142 +40,135 @@ PROCPS_PIDS(3)             Library Functions Manual             PROCPS_PIDS(3)
            struct pids_info *info,
            int return_self);
 
-       Компонувати з -lproc2.
+       Link with -lproc2.
 
-ОПИС
-   Огляд
-       Центральною для цього  інтерфейсу  є  проста  структура  «result»,  яка
-       визначає  «item»  і  його значення (в об'єднання зі стандартними типами
-       мови  C,  як  учасниками).  Усі  структури  «result»  буде  автоматично
-       розподілено і надано бібліотекою.
+DESCRIPTION
+   Overview
+       Central  to this interface is a simple `result' structure reflecting an
+       `item' plus its value (in a union with standard  C  language  types  as
+       members).   All  `result'  structures  are  automatically allocated and
+       provided by the library.
 
-       Заданням  масиву  значень  «item»  ці  структури  можна упорядкувати як
-       «стек» із потенційним отримання  багатьох  результатів  одним  викликом
-       функції. Таким чином, «стек» можна розглядати як запис змінної довжини,
-       вміст якого та порядок записів у якому визначаються лише користувачем.
+       By specifying an array of `items', these structures can be organized as
+       a  `stack',  potentially  yielding  many results with a single function
+       call.  Thus, a `stack' can be viewed as a variable length record  whose
+       content and order is determined solely by the user.
 
-       Частиною цього інтерфейсу є два унікальних лічильники.  Для  зберігання
-       їхніх  значень  передбачено  записи  «noop»  та  «extra». Їхні значення
-       ніколи  не  встановлюються  бібліотекою,  але  результат  «extra»  буде
-       занулено на початку кожної взаємодії із бібліотекою.
+       As part of this interface there are two unique enumerators.  The `noop'
+       and `extra' items exist to hold user values.  They are never set by the
+       library,  but  the  `extra'  result  will  be  zeroed with each library
+       interaction.
 
-       Базовим  документом  при  розробці  користувацької  програми  буде файл
-       заголовків pids.h. Там ви знайдете усі  доступні  записи  (item),  тип,
-       який  вони  повертають  (назву  члена структури «result») і джерело для
-       таких  значень.  Також  там  наведено  документацію   щодо   додаткових
-       лічильників та структур.
+       The pids.h file will be  an  essential  document  during  user  program
+       development.   There  you  will find available items, their return type
+       (the `result' struct member name)  and  the  source  for  such  values.
+       Additional enumerators and structures are also documented there.
 
-   Користування
-       Нижче наведено типову послідовність викликів цього інтерфейсу.
+   Usage
+       The following would be a typical sequence of calls to this interface.
 
        1. fatal_proc_unmounted()
        2. procps_pids_new()
-       3. procps_pids_get(), procps_pids_reap() або procps_pids_select()
+       3. procps_pids_get(), procps_pids_reap() or procps_pids_select()
        4. procps_pids_unref()
 
-       Функція  get  є  ітератором  для  послідовних  PID/TID,  що повертає ці
-       «items», раніше вказані за допомогою new або reset.
+       The  get  function  is  an iterator for successive PIDs/TIDs, returning
+       those `items' previously identified via new or reset.
 
-       Для непередбачуваних результатів для змінних передбачено  дві  функції.
-       Функція  reap збирає дані для усіх процесів, а функція select працює зі
-       специфічними PID та UID. Обидві  можуть  повертати  декілька  «стеків»,
-       кожне  з яких містить декілька структур «result». Крім того, користувач
-       може наказати упорядкувати (sort) ці результати.
+       Two  functions  support  unpredictable  variable  outcomes.   The  reap
+       function gathers data for all processes while the select function deals
+       with specific PIDs or UIDs.  Both can  return  multiple  `stacks'  each
+       containing multiple `result' structures.  Optionally, a user may choose
+       to sort such results
 
-       Щоб  скористатися  будь-яким  «stack»  і  отримати  доступ  до  окремих
-       структур  «result»,  потрібен  relative_enum,  як це показано у макросі
-       VAL,  який  визначено  у   файлі   заголовка.   ТАкі   значення   можна
-       запрограмувати  як:  значення  від  0  до  numitems-1. Втім, цю потребу
-       типово можна задовольнити створенням  ваших  власних  лічильників,  які
-       відповідають порядку у масиві «items».
+       To exploit any `stack', and access individual  `result'  structures,  a
+       relative_enum  is  required  as  shown  in the VAL macro defined in the
+       header file.  Such values could be hard coded as: 0 through numitems-1.
+       However,  this  need  is  typically  satisfied  by  creating  your  own
+       enumerators corresponding to the order of the `items' array.
 
-   Застереження
-       Програмний  інтерфейс  <pids>  відрізняється від інших тим, що потрібні
-       записи має бути надано  під  час  виконання  new  або  reset,  останній
-       варіант  є  унікальним для цього програмного інтерфейсу. Якщо якийсь із
-       параметрів, items або numitems, є нульовим  на  час  new,  обов'язковим
-       перед надсиланням будь-якого іншого виклику стає reset.
+   Caveats
+       The <pids> API differs from others in that those items of interest must
+       be  provided at new or reset time, the latter being unique to this API.
+       If either the items or numitems parameter is zero  at  new  time,  then
+       reset becomes mandatory before issuing any other call.
 
-       Для  функцій  new  і  unref  має бути надано адресу вказівник структури
-       info. Із new її має бути ініціалізовано значенням  NULL.  Із  unref  її
-       буде скинуто до NULL, якщо контрольний відлік дійде до нуля.
+       For  the new and unref functions, the address of an info struct pointer
+       must be supplied.  With new it must  have  been  initialized  to  NULL.
+       With  unref  it  will  be  reset to NULL if the reference count reaches
+       zero.
 
-       Функції  get  і reap використовують параметр which для визначення того,
-       слід отримувати дані лише для завдань чи для завдань і потоків обробки.
+       The get and reap functions use the which parameter to  specify  whether
+       just tasks or both tasks and threads are to be fetched.
 
-       Функція select потребує масиву PID або UID, як these разом із numthese,
-       для визначення того, дані яких процесів слід отримати. Далі, ця функція
-       працює із підмножиною reap.
+       The  select  function  requires an array of PIDs or UIDs as these along
+       with numthese to identify which processes  are  to  be  fetched.   This
+       function then operates as a subset of reap.
 
-       Якщо використано  функцію  sort,  зазвичай,  буде  повернуто  параметри
-       stacks і numstacked у структурі «pids_fetch».
+       When  using  the  sort  function,  the parameters stacks and numstacked
+       would normally be those returned in the `pids_fetch' structure.
 
-       Нарешті,  можна  викликати  функцію  fatal_proc_unmounted  до будь-якої
-       іншої функції для забезпечення монтування каталогу /proc/. Якщо каталог
-       змонтовано,  параметр info матиме значення NULL, а параметр return_self
-       матиме нульове значення. Якщо, втім, деякі записи потрібні для  запуску
-       програми  (return_self  відмінне  від  нуля), виклик new має передувати
-       виклику цієї функції для того, щоб вказати items і  отримати  потрібний
-       вказівник info.
+       Lastly, a fatal_proc_unmounted function may be called before any  other
+       function  to ensure that the /proc/ directory is mounted.  As such, the
+       info parameter would be NULL and the return_self parameter  zero.   If,
+       however,  some items are desired for the issuing program (a return_self
+       other than zero) then the new call must  precede  it  to  identify  the
+       items and obtain the required info pointer.
 
-ПОВЕРНУТЕ ЗНАЧЕННЯ
-   Функції, які повертають «int»
-       На  помилку  вказуватиме  від'ємне  число,  яке  є  завжди оберненим до
-       якогось відомого значення з errno.h.
+RETURN VALUE
+   Functions Returning an `int'
+       An  error  will  be  indicated  by a negative number that is always the
+       inverse of some well known errno.h value.
 
-       На успіх вказує нульовий стан повернення. Втім,  функції  ref  і  unref
-       повертають поточний контрольний відлік структури info.
+       Success is indicated by a zero return  value.   However,  the  ref  and
+       unref functions return the current info structure reference count.
 
-   Функції, які повертають «address»
-       На  помилку  вказуватиме  повернутий  NUL-вказівник із повідомлення про
-       причину у формальному значенні errno.
+   Functions Returning an `address'
+       An  error  will  be  indicated by a NULL return pointer with the reason
+       found in the formal errno value.
 
-       На успіх вказує повернення вказівника  на  іменовану  структуру.  Втім,
-       якщо  щось  переживе  виклик  fatal_proc_unmounted,  NULL  завжди  буде
-       повернуто, якщо значенням return_self є нуль.
+       Success is indicated by a pointer to the named structure.  However,  if
+       one  survives  the  fatal_proc_unmounted  call, NULL is always returned
+       when return_self is zero.
 
-ДІАГНОСТИКА
-       Щоб полегшити розробку програм, передбачено дві  можливості  procps-ng,
-       якими можна скористатися.
+DEBUGGING
+       To aid in program development, there are two procps-ng provisions  that
+       can be exploited.
 
-       Першою  є  файл  із  назвою «libproc.supp», яким можна скористатися при
-       розробці багатопотокової програми. Якщо скористатися ним у поєднанні із
-       параметром   valgrind   «--suppressions=»,   можна  уникнути  виведення
-       попереджень, які пов'язано із самою бібліотекою procps.
+       The  first  is a supplied file named `libproc.supp' which may be useful
+       when developing a  multi-threaded  application.   When  used  with  the
+       valgrind  `--suppressions=' option, warnings associated with the procps
+       library itself are avoided.
 
-       Такі попередження виникають через те, що бібліотека обробляє  засновані
-       на  «купі»  функції  отримання пам'яті у безпечний щодо потоків обробки
-       спосіб.  Однопотокові  програми  не  призводитимуть  до   появи   таких
-       попереджень.
+       Such warnings arise because the library handles heap based  allocations
+       in  a  thread-safe  manner.   A  single-threaded  application  will not
+       receive those warnings.
 
-       Друга функція може допомогти забезпечити узгодженість посилань на члени
-       «result» із очікуваннями бібліотеки.  У  цій  функції  передбачено,  що
-       наданий  макрос  у  файлі  заголовків  буде  використано для доступу до
-       значення «result».
+       The second provision can help ensure `result' member  references  agree
+       with  library  expectations.   It  assumes that a supplied macro in the
+       header file is used to access the `result' value.
 
-       Цю можливість можна активувати за допомогою будь-якого з вказаних нижче
-       методів, а усі розбіжності буде записано до stderr.
+       This feature can be activated through either of the  following  methods
+       and any discrepancies will be written to stderr.
 
-       1) Додайте CFLAGS='-DXTRA_PROCPS_DEBUG' до будь-яких інших застосованих
-          у вашому проєкті параметрів ./configure.
+       1) Add  CFLAGS='-DXTRA_PROCPS_DEBUG'  to  any other ./configure options
+          your project may employ.
 
-       2) Додайте  #include  <procps/xtra-procps-debug.h>  у  програму   після
+       2) Add #include <procps/xtra-procps-debug.h> to any program  after  the
           #include <procps/pids.h>.
 
-       Використання   цієї   можливості   перевірки   призводить  до  суттєвих
-       обчислювальних  витрат.  Через  це,  важливо  не  вмикати  її  під  час
-       остаточного збирання або збирання програми для випуску.
+       This  verification  feature incurs substantial overhead.  Therefore, it
+       is important that it not be activated for a production/release build.
 
-ЗМІННІ СЕРЕДОВИЩА
-       Встановлене  значення  є  несуттєвим,  достатнього  самого  факту  його
-       встановлення.
+ENVIRONMENT VARIABLE(S)
+       The value set for the following is unimportant, just its presence.
 
        LIBPROC_HIDE_KERNEL
-              Призведе до приховування потоків обробки ядра, які інакше було б
-              повернуто   викликом   procps_pids_get,  procps_pids_select  або
-              procps_pids_reap.
+              This will hide kernel threads which would otherwise be  returned
+              with  a  procps_pids_get, procps_pids_select or procps_pids_reap
+              call.
 
-ТАКОЖ ПЕРЕГЛЯНЬТЕ
+SEE ALSO
        procps(3), procps_misc(3), proc(5).
 
-libproc2                       серпень 2022 року                PROCPS_PIDS(3)
+libproc2                          August 2022                   PROCPS_PIDS(3)

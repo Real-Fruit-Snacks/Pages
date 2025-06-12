@@ -1,5 +1,7 @@
 mount_namespaces(7)    Miscellaneous Information Manual    mount_namespaces(7)
 
+
+
 NAME
        mount_namespaces - overview of Linux mount namespaces
 
@@ -586,11 +588,11 @@ SHARED SUBTREES
        the  peer  group with the ID 102 (corresponding to the /mnt mount point
        before the chroot(1) was performed).
 
-VERSIONS
-       Mount namespaces first appeared in Linux 2.4.19.
-
 STANDARDS
-       Namespaces are a Linux-specific feature.
+       Linux.
+
+HISTORY
+       Linux 2.4.19.
 
 NOTES
        The propagation type assigned to a new mount depends on the propagation
@@ -608,69 +610,69 @@ NOTES
 
        Since,  when  one uses unshare(1) to create a mount namespace, the goal
        is commonly to provide full isolation of the mounts in  the  new  name‐
-       space, unshare(1) (since util-linux
-        2.27) in turn reverses the step performed by systemd(1), by making all
-       mounts private in the new namespace.  That is, unshare(1) performs  the
-       equivalent of the following in the new mount namespace:
+       space,  unshare(1)  (since  util-linux  2.27) in turn reverses the step
+       performed by systemd(1), by making all mounts private in the new  name‐
+       space.  That is, unshare(1) performs the equivalent of the following in
+       the new mount namespace:
 
            mount --make-rprivate /
 
-       To  prevent this, one can use the --propagation unchanged option to un‐
+       To prevent this, one can use the --propagation unchanged option to  un‐
        share(1).
 
-       An application that  creates  a  new  mount  namespace  directly  using
-       clone(2)  or  unshare(2)  may  desire  to  prevent propagation of mount
-       events to other mount namespaces (as is done by unshare(1)).  This  can
+       An  application  that  creates  a  new  mount  namespace directly using
+       clone(2) or unshare(2) may  desire  to  prevent  propagation  of  mount
+       events  to other mount namespaces (as is done by unshare(1)).  This can
        be done by changing the propagation type of mounts in the new namespace
        to either MS_SLAVE or MS_PRIVATE, using a call such as the following:
 
            mount(NULL, "/", MS_SLAVE | MS_REC, NULL);
 
-       For a discussion of propagation types when moving mounts (MS_MOVE)  and
-       creating  bind  mounts (MS_BIND), see Documentation/filesystems/shared‐
+       For  a discussion of propagation types when moving mounts (MS_MOVE) and
+       creating bind mounts (MS_BIND),  see  Documentation/filesystems/shared‐
        subtree.rst.
 
    Restrictions on mount namespaces
        Note the following points with respect to mount namespaces:
 
-       [1] Each mount namespace has an owner  user  namespace.   As  explained
-           above,  when  a  new  mount namespace is created, its mount list is
+       [1] Each  mount  namespace  has  an owner user namespace.  As explained
+           above, when a new mount namespace is created,  its  mount  list  is
            initialized as a copy of the mount list of another mount namespace.
-           If  the  new  namespace and the namespace from which the mount list
-           was copied are owned by different user  namespaces,  then  the  new
+           If the new namespace and the namespace from which  the  mount  list
+           was  copied  are  owned  by different user namespaces, then the new
            mount namespace is considered less privileged.
 
-       [2] When  creating a less privileged mount namespace, shared mounts are
-           reduced to slave mounts.  This ensures that mappings  performed  in
-           less  privileged mount namespaces will not propagate to more privi‐
+       [2] When creating a less privileged mount namespace, shared mounts  are
+           reduced  to  slave mounts.  This ensures that mappings performed in
+           less privileged mount namespaces will not propagate to more  privi‐
            leged mount namespaces.
 
-       [3] Mounts that come as a single unit  from  a  more  privileged  mount
-           namespace  are  locked  together and may not be separated in a less
-           privileged mount namespace.  (The unshare(2) CLONE_NEWNS  operation
-           brings  across  all of the mounts from the original mount namespace
+       [3] Mounts  that  come  as  a  single unit from a more privileged mount
+           namespace are locked together and may not be separated  in  a  less
+           privileged  mount namespace.  (The unshare(2) CLONE_NEWNS operation
+           brings across all of the mounts from the original  mount  namespace
            as a single unit, and recursive mounts that propagate between mount
            namespaces propagate as a single unit.)
 
-           In  this  context, "may not be separated" means that the mounts are
-           locked so that they may not be  individually  unmounted.   Consider
+           In this context, "may not be separated" means that the  mounts  are
+           locked  so  that  they may not be individually unmounted.  Consider
            the following example:
 
                $ sudo sh
                # mount --bind /dev/null /etc/shadow
                # cat /etc/shadow       # Produces no output
 
-           The  above  steps,  performed in a more privileged mount namespace,
-           have created a bind mount that obscures the contents of the  shadow
+           The above steps, performed in a more  privileged  mount  namespace,
+           have  created a bind mount that obscures the contents of the shadow
            password file, /etc/shadow.  For security reasons, it should not be
-           possible to umount(2) that mount in a less privileged  mount  name‐
+           possible  to  umount(2) that mount in a less privileged mount name‐
            space, since that would reveal the contents of /etc/shadow.
 
-           Suppose  we  now  create  a new mount namespace owned by a new user
-           namespace.  The new mount namespace will inherit copies of  all  of
-           the  mounts  from  the  previous  mount  namespace.  However, those
+           Suppose we now create a new mount namespace owned  by  a  new  user
+           namespace.   The  new mount namespace will inherit copies of all of
+           the mounts from  the  previous  mount  namespace.   However,  those
            mounts will be locked because the new mount namespace is less priv‐
-           ileged.   Consequently,  an attempt to umount(2) the mount fails as
+           ileged.  Consequently, an attempt to umount(2) the mount  fails  as
            show in the following step:
 
                # unshare --user --map-root-user --mount \
@@ -680,13 +682,13 @@ NOTES
                # grep '^umount' /tmp/log
                umount2("/etc/shadow", 0)     = -1 EINVAL (Invalid argument)
 
-           The error message from mount(8) is  a  little  confusing,  but  the
+           The  error  message  from  mount(8)  is a little confusing, but the
            strace(1) output reveals that the underlying umount2(2) system call
-           failed with the error EINVAL, which is the error  that  the  kernel
+           failed  with  the  error EINVAL, which is the error that the kernel
            returns to indicate that the mount is locked.
 
-           Note,  however,  that it is possible to stack (and unstack) a mount
-           on top of one of the inherited locked mounts in a  less  privileged
+           Note, however, that it is possible to stack (and unstack)  a  mount
+           on  top  of one of the inherited locked mounts in a less privileged
            mount namespace:
 
                # echo 'aaaaa' > /tmp/a    # File to mount onto /etc/shadow
@@ -695,18 +697,18 @@ NOTES
                aaaaa
                # umount /etc/shadow
 
-           The  final  umount(8) command above, which is performed in the ini‐
+           The final umount(8) command above, which is performed in  the  ini‐
            tial mount namespace, makes the original /etc/shadow file once more
            visible in that namespace.
 
-       [4] Following  on from point [3], note that it is possible to umount(2)
-           an entire subtree of mounts that propagated as a unit into  a  less
-           privileged  mount  namespace, as illustrated in the following exam‐
+       [4] Following on from point [3], note that it is possible to  umount(2)
+           an  entire  subtree of mounts that propagated as a unit into a less
+           privileged mount namespace, as illustrated in the  following  exam‐
            ple.
 
-           First, we create new user and mount  namespaces  using  unshare(1).
-           In  the  new mount namespace, the propagation type of all mounts is
-           set to private.  We then create a shared bind mount at /mnt, and  a
+           First,  we  create  new user and mount namespaces using unshare(1).
+           In the new mount namespace, the propagation type of all  mounts  is
+           set  to private.  We then create a shared bind mount at /mnt, and a
            small hierarchy of mounts underneath that mount.
 
                $ PS1='ns1# ' sudo unshare --user --map-root-user \
@@ -734,12 +736,12 @@ NOTES
                1240 1239 0:56 / /mnt/x rw,relatime
                1241 1240 0:57 / /mnt/x/y rw,relatime
 
-           Of  note  in  the  above output is that the propagation type of the
-           mount /mnt has been reduced to slave, as explained  in  point  [2].
+           Of note in the above output is that the  propagation  type  of  the
+           mount  /mnt  has  been reduced to slave, as explained in point [2].
            This means that submount events will propagate from the master /mnt
            in "ns1", but propagation will not occur in the opposite direction.
 
-           From a separate terminal window, we then use  nsenter(1)  to  enter
+           From  a  separate  terminal window, we then use nsenter(1) to enter
            the mount and user namespaces corresponding to "ns1".  In that ter‐
            minal window, we then recursively bind mount /mnt/x at the location
            /mnt/ppp.
@@ -755,7 +757,7 @@ NOTES
 
            Because the propagation type of the parent mount, /mnt, was shared,
            the recursive bind mount propagated a small subtree of mounts under
-           the  slave  mount  /mnt into "ns2", as can be verified by executing
+           the slave mount /mnt into "ns2", as can be  verified  by  executing
            the following command in that shell session:
 
                ns2# grep /mnt /proc/self/mountinfo | sed 's/ - .*//'
@@ -766,7 +768,7 @@ NOTES
                1245 1244 0:57 / /mnt/ppp/y rw,relatime master:518
 
            While it is not possible to umount(2) a part of the propagated sub‐
-           tree  (/mnt/ppp/y) in "ns2", it is possible to umount(2) the entire
+           tree (/mnt/ppp/y) in "ns2", it is possible to umount(2) the  entire
            subtree, as shown by the following commands:
 
                ns2# umount /mnt/ppp/y
@@ -779,14 +781,14 @@ NOTES
 
        [5] The mount(2) flags MS_RDONLY, MS_NOSUID, MS_NOEXEC, and the "atime"
            flags  (MS_NOATIME,  MS_NODIRATIME,  MS_RELATIME)  settings  become
-           locked when propagated from a more privileged to a less  privileged
-           mount  namespace,  and  may  not  be changed in the less privileged
+           locked  when propagated from a more privileged to a less privileged
+           mount namespace, and may not be  changed  in  the  less  privileged
            mount namespace.
 
            This point is illustrated in the following example where, in a more
-           privileged  mount  namespace, we create a bind mount that is marked
-           as read-only.  For security reasons, it should not be  possible  to
-           make  the  mount writable in a less privileged mount namespace, and
+           privileged mount namespace, we create a bind mount that  is  marked
+           as  read-only.   For security reasons, it should not be possible to
+           make the mount writable in a less privileged mount  namespace,  and
            indeed the kernel prevents this:
 
                $ sudo mkdir /mnt/dir
@@ -795,30 +797,32 @@ NOTES
                               mount -o remount,rw /mnt/dir
                mount: /mnt/dir: permission denied.
 
-       [6] A file or directory that is a mount point in one namespace that  is
-           not  a  mount point in another namespace, may be renamed, unlinked,
-           or removed (rmdir(2)) in the mount namespace in which it is  not  a
-           mount  point  (subject  to  the  usual  permission checks).  Conse‐
+       [6] A  file or directory that is a mount point in one namespace that is
+           not a mount point in another namespace, may be  renamed,  unlinked,
+           or  removed  (rmdir(2)) in the mount namespace in which it is not a
+           mount point (subject  to  the  usual  permission  checks).   Conse‐
            quently, the mount point is removed in the mount namespace where it
            was a mount point.
 
-           Previously  (before  Linux  3.18), attempting to unlink, rename, or
-           remove a file or directory that was a mount point in another  mount
+           Previously (before Linux 3.18), attempting to  unlink,  rename,  or
+           remove  a file or directory that was a mount point in another mount
            namespace would result in the error EBUSY.  That behavior had tech‐
            nical problems of enforcement (e.g., for NFS) and permitted denial-
-           of-service  attacks against more privileged users (i.e., preventing
-           individual files from being updated by  bind  mounting  on  top  of
+           of-service attacks against more privileged users (i.e.,  preventing
+           individual  files  from  being  updated  by bind mounting on top of
            them).
 
 EXAMPLES
        See pivot_root(2).
 
 SEE ALSO
-       unshare(1),   clone(2),   mount(2),   mount_setattr(2),  pivot_root(2),
-       setns(2), umount(2),  unshare(2),  proc(5),  namespaces(7),  user_name‐
-       spaces(7),   findmnt(8),   mount(8),  pam_namespace(8),  pivot_root(8),
+       unshare(1),  clone(2),   mount(2),   mount_setattr(2),   pivot_root(2),
+       setns(2),  umount(2),  unshare(2),  proc(5),  namespaces(7), user_name‐
+       spaces(7),  findmnt(8),  mount(8),   pam_namespace(8),   pivot_root(8),
        umount(8)
 
        Documentation/filesystems/sharedsubtree.rst in the kernel source tree.
 
-Linux man-pages 6.03              2023-02-10               mount_namespaces(7)
+
+
+Linux man-pages 6.05.01           2023-05-03               mount_namespaces(7)

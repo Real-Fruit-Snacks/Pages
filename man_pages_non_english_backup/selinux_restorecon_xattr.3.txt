@@ -1,0 +1,97 @@
+selinux_restorecon_xattr(3)SELinux API documentatioselinux_restorecon_xattr(3)
+
+NAME
+       selinux_restorecon_xattr  - manage default security.sehash extended at‐
+       tribute entries added by selinux_restorecon(3), setfiles(8) or restore‐
+       con(8).
+
+SYNOPSIS
+       #include <selinux/restorecon.h>
+
+       int selinux_restorecon_xattr(const char *pathname,
+                              unsigned int xattr_flags,
+                              struct dir_xattr ***xattr_list);
+
+DESCRIPTION
+       selinux_restorecon_xattr()  returns  a  linked list of dir_xattr struc‐
+       tures containing information described below based on:
+
+              pathname containing a directory tree to be  searched  for  secu‐
+              rity.sehash extended attribute entries.
+
+              xattr_flags contains options as follows:
+
+                     SELINUX_RESTORECON_XATTR_RECURSE  recursively descend di‐
+                     rectories.
+
+                     SELINUX_RESTORECON_XATTR_DELETE_NONMATCH_DIGESTS   delete
+                     non-matching digests from each directory in pathname.
+
+                     SELINUX_RESTORECON_XATTR_DELETE_ALL_DIGESTS   delete  all
+                     digests from each directory in pathname.
+
+                     SELINUX_RESTORECON_XATTR_IGNORE_MOUNTS   do   not    read
+                     /proc/mounts  to  obtain a list of non-seclabel mounts to
+                     be excluded from the search.
+                     Setting SELINUX_RESTORECON_XATTR_IGNORE_MOUNTS is  useful
+                     where  there is a non-seclabel fs mounted with a seclabel
+                     fs mounted on a directory below this.
+
+              xattr_list is the returned pointer to a linked list of dir_xattr
+              structures, each containing the following information:
+
+                     struct dir_xattr {
+                         char *directory;
+                         char *digest;    /* Printable hex encoded string */
+                         enum digest_result result;
+                         struct dir_xattr *next;
+                     };
+
+              The result entry is enumerated as follows:
+                     enum digest_result {
+                         MATCH = 0,
+                         NOMATCH,
+                         DELETED_MATCH,
+                         DELETED_NOMATCH,
+                         ERROR
+                     };
+
+              xattr_list  must  be set to NULL before calling selinux_restore‐
+              con_xattr(3).  The caller is responsible  for  freeing  the  re‐
+              turned xattr_list entries in the linked list.
+
+       See the NOTES section for more information.
+
+RETURN VALUE
+       On  success,  zero  is returned.  On error, -1 is returned and errno is
+       set appropriately.
+
+NOTES
+       1.  By default selinux_restorecon_xattr(3) will use the default set  of
+           specfiles  described in files_contexts(5) to calculate the SHA1 di‐
+           gests to be used for comparison.  To change this  default  behavior
+           selabel_open(3)  must  be  called  specifying  the  required  SELA‐
+           BEL_OPT_PATH and setting the SELABEL_OPT_DIGEST option  to  a  non-
+           NULL  value.   selinux_restorecon_set_sehandle(3) is then called to
+           set the handle to be used by selinux_restorecon_xattr(3).
+
+       2.  By default selinux_restorecon_xattr(3) reads /proc/mounts to obtain
+           a  list  of non-seclabel mounts to be excluded from searches unless
+           the SELINUX_RESTORECON_XATTR_IGNORE_MOUNTS flag has been set.
+
+       3.  RAMFS and TMPFS filesystems do not support the security.sehash  ex‐
+           tended attribute and are automatically excluded from searches.
+
+       4.  By  default  stderr is used to log output messages and errors. This
+           may  be  changed  by  calling  selinux_set_callback(3)   with   the
+           SELINUX_CB_LOG type option.
+
+SEE ALSO
+       selinux_restorecon(3)
+       selinux_restorecon_set_sehandle(3),
+       selinux_restorecon_default_handle(3),
+       selinux_restorecon_set_exclude_list(3),
+       selinux_restorecon_set_alt_rootpath(3),
+       selinux_set_callback(3)
+
+                                 30 July 2016      selinux_restorecon_xattr(3)

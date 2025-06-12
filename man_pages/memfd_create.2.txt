@@ -15,11 +15,11 @@ SYNOPSIS
 DESCRIPTION
        memfd_create()  creates an anonymous file and returns a file descriptor
        that refers to it.  The file behaves like a regular file, and so can be
-       modified, truncated, memory-mapped, and so on.  However, unlike a regu‐
+       modified, truncated, memory-mapped, and so on.  However, unlike a regu-
        lar file, it lives in RAM and has a volatile backing storage.  Once all
        references  to  the  file  are  dropped,  it is automatically released.
        Anonymous memory is used for all backing pages of the file.  Therefore,
-       files created by memfd_create() have the same semantics as other anony‐
+       files created by memfd_create() have the same semantics as other anony-
        mous memory allocations such as those allocated using mmap(2) with  the
        MAP_ANONYMOUS flag.
 
@@ -34,11 +34,11 @@ DESCRIPTION
        of  the  file  descriptor, and as such multiple files can have the same
        name without any side effects.
 
-       The following values may be bitwise ORed in flags to change the  behav‐
+       The following values may be bitwise ORed in flags to change the  behav-
        ior of memfd_create():
 
        MFD_CLOEXEC
-              Set the close-on-exec (FD_CLOEXEC) flag on the new file descrip‐
+              Set the close-on-exec (FD_CLOEXEC) flag on the new file descrip-
               tor.  See the description of the O_CLOEXEC flag in  open(2)  for
               reasons why this may be useful.
 
@@ -46,12 +46,12 @@ DESCRIPTION
               Allow  sealing  operations  on this file.  See the discussion of
               the F_ADD_SEALS and F_GET_SEALS operations in fcntl(2), and also
               NOTES,  below.  The initial set of seals is empty.  If this flag
-              is not set, the initial set of seals will be F_SEAL_SEAL,  mean‐
+              is not set, the initial set of seals will be F_SEAL_SEAL,  mean-
               ing that no other seals can be set on the file.
 
        MFD_HUGETLB (since Linux 4.14)
               The  anonymous  file will be created in the hugetlbfs filesystem
-              using huge pages.  See the Linux kernel source  file  Documenta‐
+              using huge pages.  See the Linux kernel source  file  Documenta-
               tion/admin-guide/mm/hugetlbpage.rst  for  more information about
               hugetlbfs.  Specifying both MFD_HUGETLB and MFD_ALLOW_SEALING in
               flags is supported since Linux 4.16.
@@ -74,9 +74,9 @@ DESCRIPTION
        descriptor.
 
        With  respect  to  fork(2) and execve(2), the usual semantics apply for
-       the file descriptor created by memfd_create().  A copy of the file  de‐
+       the file descriptor created by memfd_create().  A copy of the file  de-
        scriptor  is  inherited  by the child produced by fork(2) and refers to
-       the same file.  The file descriptor is preserved across execve(2),  un‐
+       the same file.  The file descriptor is preserved across execve(2),  un-
        less the close-on-exec flag has been set.
 
 RETURN VALUE
@@ -88,7 +88,7 @@ ERRORS
 
        EINVAL flags included unknown bits.
 
-       EINVAL name was too long.  (The limit is 249 bytes, excluding the  ter‐
+       EINVAL name was too long.  (The limit is 249 bytes, excluding the  ter-
               minating null byte.)
 
        EINVAL Both MFD_HUGETLB and MFD_ALLOW_SEALING were specified in flags.
@@ -102,22 +102,22 @@ ERRORS
        ENOMEM There was insufficient memory to create a new anonymous file.
 
 VERSIONS
-       The memfd_create() system call first appeared in Linux 3.17; glibc sup‐
+       The memfd_create() system call first appeared in Linux 3.17; glibc sup-
        port was added in glibc 2.27.
 
-       EPERM  The MFD_HUGETLB flag was specified, but the caller was not priv‐
+       EPERM  The MFD_HUGETLB flag was specified, but the caller was not priv-
               ileged  (did  not have the CAP_IPC_LOCK capability) and is not a
-              member of the sysctl_hugetlb_shm_group group; see  the  descrip‐
+              member of the sysctl_hugetlb_shm_group group; see  the  descrip-
               tion of /proc/sys/vm/sysctl_hugetlb_shm_group in proc(5).
 
 STANDARDS
        The memfd_create() system call is Linux-specific.
 
 NOTES
-       The  memfd_create()  system call provides a simple alternative to manu‐
+       The  memfd_create()  system call provides a simple alternative to manu-
        ally mounting a tmpfs(5) filesystem and creating and opening a file  in
        that  filesystem.   The  primary purpose of memfd_create() is to create
-       files and associated file descriptors that are used with the file-seal‐
+       files and associated file descriptors that are used with the file-seal-
        ing APIs provided by fcntl(2).
 
        The  memfd_create()  system  call  also  has  uses without file sealing
@@ -130,10 +130,10 @@ NOTES
    File sealing
        In the absence of file sealing, processes that communicate  via  shared
        memory  must either trust each other, or take measures to deal with the
-       possibility that an untrusted peer may manipulate the shared memory re‐
+       possibility that an untrusted peer may manipulate the shared memory re-
        gion  in problematic ways.  For example, an untrusted peer might modify
        the contents of the shared memory at any time,  or  shrink  the  shared
-       memory region.  The former possibility leaves the local process vulner‐
+       memory region.  The former possibility leaves the local process vulner-
        able to time-of-check-to-time-of-use race conditions  (typically  dealt
        with  by copying data from the shared memory region before checking and
        using it).  The latter possibility leaves the local process  vulnerable
@@ -141,7 +141,7 @@ NOTES
        location in the shared memory region.  (Dealing with  this  possibility
        necessitates the use of a handler for the SIGBUS signal.)
 
-       Dealing  with untrusted peers imposes extra complexity on code that em‐
+       Dealing  with untrusted peers imposes extra complexity on code that em-
        ploys shared memory.  Memory sealing enables that extra  complexity  to
        be eliminated, by allowing a process to operate secure in the knowledge
        that its peer can't modify the shared memory in an undesired fashion.
@@ -151,47 +151,47 @@ NOTES
        (1)  The first process creates a tmpfs(5)  file  using  memfd_create().
             The call yields a file descriptor used in subsequent steps.
 
-       (2)  The  first process sizes the file created in the previous step us‐
+       (2)  The  first process sizes the file created in the previous step us-
             ing ftruncate(2), maps it using mmap(2), and populates the  shared
             memory with the desired data.
 
        (3)  The first process uses the fcntl(2) F_ADD_SEALS operation to place
-            one or more seals on the file, in order to restrict further  modi‐
+            one or more seals on the file, in order to restrict further  modi-
             fications on the file.  (If placing the seal F_SEAL_WRITE, then it
-            will be necessary to first unmap the shared writable mapping  cre‐
+            will be necessary to first unmap the shared writable mapping  cre-
             ated  in  the  previous  step.   Otherwise,  behavior  similar  to
             F_SEAL_WRITE can be achieved by using  F_SEAL_FUTURE_WRITE,  which
-            will  prevent future writes via mmap(2) and write(2) from succeed‐
+            will  prevent future writes via mmap(2) and write(2) from succeed-
             ing while keeping existing shared writable mappings).
 
        (4)  A second process obtains a file descriptor for the  tmpfs(5)  file
             and  maps  it.  Among the possible ways in which this could happen
             are the following:
 
-            •  The process that called memfd_create() could transfer  the  re‐
+            o  The process that called memfd_create() could transfer  the  re-
                sulting file descriptor to the second process via a UNIX domain
                socket (see unix(7) and cmsg(3)).  The second process then maps
                the file using mmap(2).
 
-            •  The  second  process  is created via fork(2) and thus automati‐
+            o  The  second  process  is created via fork(2) and thus automati-
                cally inherits the file descriptor and mapping.  (Note that  in
                this  case  and the next, there is a natural trust relationship
                between the two processes, since they  are  running  under  the
                same  user  ID.   Therefore, file sealing would not normally be
                necessary.)
 
-            •  The second process opens the  file  /proc/<pid>/fd/<fd>,  where
+            o  The second process opens the  file  /proc/<pid>/fd/<fd>,  where
                <pid>  is  the  PID  of  the first process (the one that called
                memfd_create()), and <fd> is the number of the file  descriptor
                returned  by  the  call to memfd_create() in that process.  The
                second process then maps the file using mmap(2).
 
-       (5)  The second process uses the fcntl(2) F_GET_SEALS operation to  re‐
+       (5)  The second process uses the fcntl(2) F_GET_SEALS operation to  re-
             trieve  the  bit  mask of seals that has been applied to the file.
             This bit mask can be inspected in order to determine what kinds of
             restrictions  have been placed on file modifications.  If desired,
             the second process can apply further seals  to  impose  additional
-            restrictions (so long as the F_SEAL_SEAL seal has not yet been ap‐
+            restrictions (so long as the F_SEAL_SEAL seal has not yet been ap-
             plied).
 
 EXAMPLES
@@ -199,11 +199,11 @@ EXAMPLES
        memfd_create() and the file sealing API.
 
        The  first  program,  t_memfd_create.c,  creates  a tmpfs(5) file using
-       memfd_create(), sets a size for the file, maps it into memory, and  op‐
+       memfd_create(), sets a size for the file, maps it into memory, and  op-
        tionally  places  some  seals  on  the file.  The program accepts up to
        three command-line arguments, of which the first two are required.  The
-       first argument is the name to associate with the file, the second argu‐
-       ment is the size to be set for the file, and the optional  third  argu‐
+       first argument is the name to associate with the file, the second argu-
+       ment is the size to be set for the file, and the optional  third  argu-
        ment  is  a  string  of  characters that specify seals to be set on the
        file.
 
@@ -218,7 +218,7 @@ EXAMPLES
            [1] 11775
            PID: 11775; fd: 3; /proc/11775/fd/3
 
-       At this point, the t_memfd_create program continues to run in the back‐
+       At this point, the t_memfd_create program continues to run in the back-
        ground.  From another program, we can obtain a file descriptor for  the
        file  created  by  memfd_create() by opening the /proc/pid/fd file that
        corresponds to the file descriptor  opened  by  memfd_create().   Using

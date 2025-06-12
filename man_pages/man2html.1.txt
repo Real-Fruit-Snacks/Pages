@@ -1,26 +1,25 @@
 man2html(1)                 General Commands Manual                man2html(1)
 
-ΟΝΟΜΑ
-       man2html - μορφοποιεί μιά σελίδα εγχειριδίου σε html
+NAME
+       man2html - format a manual page in html
 
-ΣΥΝΟΨΗ
-       man2html [επιλογή] [αρχείο]
+SYNOPSIS
+       man2html [options] [file]
 
-ΠΕΡΙΓΡΑΦΗ
-       man2html  μετατρέπει  μιά σελίδα εγχειριδίου όπως βρέθηκε στο αρχείο (ή
-       στην τυπική είσοδο, αν δώθηκε το όρισμα «-» ή  κανένα  όρισμα)  από  το
-       συνηθισμένη μορφή nroff σε html, κι εμφανίζει το αποτέλεσμα στην τυπική
-       έξοδο.  Διαθέτει υποστήριξη του προεπεξεργαστή tbl  αλλά  όχι  και  του
-       eqn.   Η  κανονική  τιμή  επιστροφής  εξόδου είναι 0. Αν όμως κάτι πάει
-       στραβά, εμφανίζεται στη τυπική έξοδο μιά σελίδα σφάλματος.   Μπορεί  να
-       χρησιμοποιηθεί  ως  αυτοτελής  υπηρεσία,  αλλά  προορίζεται  κυρίως  ως
-       επιβοηθητική, που επιτρέπει στους χρήστες  την  πλοήγηση  στις  σελίδες
-       εγχειριδίου με ένα φυλλομετρητή html όπως οι lynx(1), xmosaic(1) ή net‐
-       scape(1).
+DESCRIPTION
+       man2html  converts a manual page as found in file (or stdin, in case no
+       file argument, or the argument "-", is given) from man-style nroff into
+       html,  and  prints  the result on stdout.  It does support tbl but does
+       not know about eqn.  The exit status is 0. If something goes wrong,  an
+       error page is printed on stdout.
 
-       Το βασικό κομμάτι της man2html είναι η μηχανή troff-to-html του Richard
-       Verhoeven   (rcb5@win.tue.nl)  που  προσθέτει  υπερσυνδέσμους  για  τις
-       παρακάτω δομές:
+       This can be used as a stand-alone utility, but is mainly intended as an
+       auxiliary, to enable users to browse  their  man  pages  using  a  html
+       browser like lynx(1), xmosaic(1) or netscape(1).
+
+       The  main  part  of  man2html  is  the  troff-to-html engine written by
+       Richard Verhoeven (rcb5@win.tue.nl).  It adds hyperlinks for  the  fol-
+       lowing constructs:
 
        foo(3x)           "http://localhost/cgi-bin/man/man2html?3x+foo"
        method://string   "method://string"
@@ -29,92 +28,86 @@ man2html(1)                 General Commands Manual                man2html(1)
        name@host         "mailto:name@host"
        <string.h>        "file:/usr/include/string.h"
 
-       (Η πρώτη μπορεί να ρυθμιστεί λεπτομερώς με επιλογές - βλέπε  παρακάτω.)
-       Δε γίνεται έλεγχος - οι δημιουργούμενοι σύνδεσμοι δεν είναι κατ' ανάγκη
-       υπαρκτοί.   Επίσης   δημιουργείται   ένα   ευρετήριο   με   εσωτερικούς
-       υπερσυνδέσμους  προς τις διάφορες παραγράφους, ώστε να είναι ευκολότερο
-       να βρει κανείς το δρόμο του μέσα  σε  εκτεταμένες  σελίδες  εγχειριδίου
-       όπως η bash(1).
+       (The first of these can be tuned by options - see below.)  No lookup is
+       done - the links generated need not exist.  Also an index with internal
+       hyperlinks  to  the various sections is generated, so that it is easier
+       to find one's way in large man pages like bash(1).
 
-ΕΠΙΛΟΓΕΣ
-       Κατά την ανάγνωση από την τυπική είσοδο, δεν είναι πάντοτε ξεκάθαρο πώς
-       να γίνει το ταίριασμα ονόματος αρχείου.  Η επιλογή -D επιτρέπει σ'  ένα
-       σενάριο να ορίσει τον τρέχοντα κατάλογο.
+OPTIONS
+       When reading from stdin, it is not always clear how to  do  .so  expan-
+       sion. The -D option allows a script to define the working directory.
 
-       -D όνομα_διαδρομής
-              Απαλείφει  τα  δύο τελευταία τμήματα από το όνομα διαδρομής, και
-              κάνει ένα chdir(dir) πριν αρχίσει τη μετατροπή.
+       -D pathname
+              Strip  the last two parts from the pathname, and do a chdir(dir)
+              before starting the conversion.
 
-       Η επιλογή -E επιτρέπει την εύκολη δημιουργία μηνυμάτων λάθους  από  ένα
-       σενάριο cgi.
+       The -E option allows the easy generation of error messages from  a  cgi
+       script.
 
-       -E συμβολοσειρά
-              Βγάζει  μιά  σελίδα  σφάλματος  που  περιέχει το δεδομένο μήνυμα
-              σφάλματος.
+       -E string
+              Output an error page containing the given error message.
 
-       Η  γενική  μορφή  ενός  υπερσυνδέσμου  δημιουργημένου  για  μιά  σελίδα
-       εγχειριδίου είναι
+       The general form of a hyperlink generated for a man page reference is
 
-       <μέθοδος:διαδ/μή_cgi><διαδ/μή_man2html><διαχ/στής><σελίδα_man>
+              <method:cgipath><man2htmlpath><separator><manpage>
 
-       με   προεπιλογή   ως   ανωτέρω.  Τα  τμήματα  αυτού  του  υπερσυνδέσμου
-       ρυθμίζονται με τις διάφορες επιλογές.
+       with  a default as shown above. The parts of this hyperlink are set us-
+       ing the various options.
 
-       -h     Ορίζει τη μέθοδο:διαδρομή_cgi σε http://localhost  που  είναι  η
-              προεπιλογή.
+       -h     Set method:cgipath to http://localhost.
 
-       -H υπολογιστής_υπηρεσίας[.δικτυακός_τόπος][:θύρα]
-              Ορίζει            τη            μέθοδο:διαδρομή_cgi           σε
-              http://υπολογιστής_υπηρεσίας.δικτυακός_τόπος:θύρα.
+       -H host[.domain][:port]
+              Set method:cgipath to http://host.domain:port.
 
-       -l     Ορίζει τη μέθοδο:διαδρομή_cgi σε lynxcgi:/home/httpd.
+       -l     Set method:cgipath to lynxcgi:/usr/lib.
 
-       -L dir Ορίζει τη μέθοδο:διαδρομή_cgi σε lynxcgi:dir.
+       -L dir Set method:cgipath to lynxcgi:dir.
 
-       -M διαδρομή_man2html
-              Ορίζει ποιά διαδρομή_man2html θα  χρησιμοποιηθεί.  Η  προεπιλογή
-              είναι /cgi-bin/man/man2html.
+       -M man2htmlpath
+              Set  the   man2htmlpath   to   use.   The   default   is   /cgi-
+              bin/man/man2html.
 
-       -p     Ορισμός διαχωριστή σε «/».
+       -p     Set separator to '/'.
 
-       -q     Ορισμός διαχωριστή σε «?». Αυτό είναι η προεπιλογή.
+       -q     Set separator to '?'. This is the default.
 
-       -r     Χρήση σχετικών διαδρομών html, αντί των διαδρομών cgi-bin.
+       -r     Use relative html paths, instead of cgi-bin paths.
 
-       Σ'  ένα  μηχάνημα  που  δεν τρέχει ένας httpd, μπορεί να χρησιμοποιήσει
-       κανείς το lynx για πλοήγηση στις σελίδες  εγχειριδίου,  χρησιμοποιώντας
-       τη  μέθοδο  lynxcgi.   Αν  τρέχει κάποιος δαίμονας http, τότε ο lynx, ή
-       όποιος άλλος φυλλομετρητής, μπορεί να χρησιμοποιηθεί για πλοήγηση  στις
-       σελίδες εγχειριδίου, χρησιμοποιώντας τη μέθοδο http.  Η επιλογή -l (από
-       το « lynxcgi ») διαλέγει  τον  πρώτο  τρόπο.   Με  αυτό  τον  τρόπο,  η
-       προεπιλεγμένη διαδρομή_cgip είναι /home/httpd.
+       On  a machine without running httpd, one can use lynx to browse the man
+       pages, using the lynxcgi method.  When some  http  daemon  is  running,
+       lynx,  or any other browser, can be used to browse the man pages, using
+       the http method.  The option -l (for `lynxcgi') selects the former  be-
+       haviour.  With it, the default cgipath is /usr/lib.
 
-       Γενικώς, ένα σενάριο cgi μπορεί να κληθεί από τη
+       In general, a cgi script can be called by
 
-       <διαδρομή_προς_το_σενάριο>/<επί_πλέον_διαδρομή>?<ερώτηση>
+              <path_to_script>/<more_path>?<query>
 
-       και  οι μεταβλητές περιβάλλοντος PATH_INFO και QUERY_STRING θα οριστούν
-       σε <επί_πλέον_διαδρομή> και <ερώτηση>, αντιστοίχως.  Αφού η lynxcgi δεν
-       ανακατεύεται  με  το τμήμα PATH_INFO, δημιουργούμε υπερσυνδέσμους με το
-       «?» ως προεπιλεγμένο διαχωριστή.  Η  επιλογή  -p  (από  το  «  path  »)
-       διαλέγει  τη  «/»  ως  διαχωριστή,  ενώ η επιλογή -q (από το « query »)
-       διαλέγει το «?».
+       and the environment variables PATH_INFO and QUERY_STRING will be set to
+       <more_path> and <query>, respectively.  Since lynxcgi does  not  handle
+       the  PATH_INFO  part, we generate hyperlinks with `?' as a separator by
+       default.  The option -p (for `path') selects '/' as a separator,  while
+       the option -q (for `query') selects '?' as a separator.
 
-       Η επιλογή  -H  υπολογιστής_υπηρεσίας,  θα  ορίσει  το  χρησιμοποιούμενο
-       υπολογιστή υπηρεσίας (αντί του localhost).  Ένα σενάριο cgi θα μπορούσε
-       να χρησιμοποιήσει τη
+       The option -H host will specify the host to use (instead of localhost).
+       A cgi script could use
 
               man2html -H $SERVER_NAME
 
-       αν είχε οριστεί η μεταβλητή SERVER_NAME.  Αυτό θα επέτρεπε στο μηχάνημά
-       σου να λειτουργεί ως εξυπηρετητής, και να εξάγει σελίδες εγχειριδίου.
+       if the variable SERVER_NAME is set.  This would allow your  machine  to
+       act as a server and export man pages.
 
-ΣΦΑΛΜΑΤΑ
-       Υπάρχουν  πολλές  ιδιοκατασκευές. Η έξοδος δεν θα είναι πάντοτε τέλεια.
-       Η μέθοδος lynxcgi δε θα δουλέψει αν το lynx είχε  μεταγλωττιστεί  χωρίς
-       υποστήριξη γιαυτήν. Μπορεί να υπάρξουν προβλήματα ασφαλείας.
+BUGS
+       There are many heuristics.  The output will not always be perfect.  The
+       lynxcgi method will not work if lynx  was  compiled  without  selecting
+       support for it.  There may be problems with security.
 
-ΒΛΕΠΕ ΕΠΙΣΗΣ
-       lynx(1), man(1)
+AUTHOR
+       Richard  Verhoeven was the original author of man2html.  Michael Hamil-
+       ton and Andries Brouwer subsequently  improved  on  it.   Federico  Lu-
+       cifredi <flucifredi@acm.org> is the current maintainer.
 
-                               1 Ιανουαρίου 1998                   man2html(1)
+SEE ALSO
+       lynx(1), man(1), hman(1)
+
+                                1 January 1998                     man2html(1)

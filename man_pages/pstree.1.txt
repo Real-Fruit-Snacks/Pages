@@ -1,133 +1,122 @@
-PSTREE(1)                     Команди користувача                    PSTREE(1)
+PSTREE(1)                        User Commands                       PSTREE(1)
 
-НАЗВА
-       pstree — програма для показу ієрархії процесів
+NAME
+       pstree - display a tree of processes
 
-КОРОТКИЙ ОПИС
-       pstree [-a, --arguments] [-c, --compact-not] [-C, --color атрибут]
+SYNOPSIS
+       pstree [-a, --arguments] [-c, --compact-not] [-C, --color attr]
        [-g, --show-pgids] [-h, --highlight-all, -H pid, --highlight-pid pid]
-       [-l, --long] [-n, --numeric-sort] [-N, --ns-sort чу] [-p, --show-pids]
+       [-l, --long] [-n, --numeric-sort] [-N, --ns-sort ns] [-p, --show-pids]
        [-s, --show-parents] [-S, --ns-changes] [-t, --thread-names]
        [-T, --hide-threads] [-u, --uid-changes] [-Z, --security-context]
-       [-A, --ascii, -G, --vt100, -U, --unicode] [pid, користувач]
+       [-A, --ascii, -G, --vt100, -U, --unicode] [pid, user]
        pstree -V, --version
 
-ОПИС
-       pstree   показує   ієрархію   запущених   процесів.   Коренем    дерева
-       вважатиметься  pid  або  init,  якщо  pid не вказано. Якщо вказано ім'я
-       користувача,  усі  ієрархії  процесів  матимуть  корінь   у   процесах,
-       власником яких є вказаний користувач.
+DESCRIPTION
+       pstree shows running processes as a tree.  The tree is rooted at either
+       pid  or  init  if  pid  is  omitted.   If a user name is specified, all
+       process trees rooted at processes owned by that user are shown.
 
-       pstree  візуально  об'єднує  ідентичні  гілки,  беручи  їхні  записи  у
-       квадратні дужки і додаючи лічильник повторень. Приклад:
+       pstree visually merges identical branches by  putting  them  in  square
+       brackets and prefixing them with the repetition count, e.g.
 
            init-+-getty
                 |-getty
                 |-getty
                 `-getty
 
-       перетворюється на
+       becomes
 
            init---4*[getty]
 
-       Дочірні гілки процесу буде показано під батьківським процесом із назвою
-       процесу у фігурних дужках. Приклад:
+       Child  threads  of a process are found under the parent process and are
+       shown with the process name in curly braces, e.g.
 
            icecast2---13*[{icecast2}]
 
-       Якщо  pstree викликано як pstree.x11, програма наприкінці рядка надішле
-       користувачеві  запит  щодо  натискання  клавіші  Enter  і  не   поверне
-       керування,  доки  цього  не станеться. Такий варіант роботи є корисним,
-       якщо pstree запущено у графічному терміналі.
+       If pstree is called as pstree.x11 then it will prompt the user  at  the
+       end of the line to press return and will not return until that has hap-
+       pened.  This is useful for when pstree is run in a xterminal.
 
-       Використання певних ядер та параметрів  монтування,  зокрема  параметра
-       hidepid  для  procfs,  може призвести до приховування даних щодо деяких
-       процесів. У таких випадках pstree  намагатиметься  побудувати  ієрархію
-       без  цих  даних,  показуючи  назви процесів за допомогою символів знаку
-       питання.
+       Certain kernel or mount parameters, such  as  the  hidepid  option  for
+       procfs,  will  hide information for some processes. In these situations
+       pstree will attempt to build the tree without this information, showing
+       process names as question marks.
 
-ПАРАМЕТРИ
-       -a     Показувати аргументи рядка команди. Якщо рядок  команди  процесу
-              вивантажено,  запису процесу буде показано у дужках.  -a неявним
-              чином вимикає ущільнення для процесів, але не для гілок.
+OPTIONS
+       -a     Show  command  line arguments.  If the command line of a process
+              is swapped out, that process is shown in  parentheses.   -a  im-
+              plicitly disables compaction for processes but not threads.
 
-       -A     Використовувати для малювання ієрархії символи ASCII.
+       -A     Use ASCII characters to draw the tree.
 
-       -c     Вимкнути  ущільнення  для  ідентичних  гілок  ієрархії.  Типово,
-              програма ущільнює гілки, якщо це можливо.
+       -c     Disable  compaction of identical subtrees.  By default, subtrees
+              are compacted whenever possible.
 
-       -C     Розфарбувати  назви  процесів за заданими атрибутами. У поточній
-              версії  pstree  передбачено   підтримку   лише   значення   age,
-              використання  якого розфарбовує процеси за віком. Процеси, які є
-              новішими за 60 секунд, буде показано зеленим, новіші за годину —
-              жовтим, а решту — червоним кольором.
+       -C     Color the process name by given attribute. Currently pstree only
+              accepts  the  value  age which colors by process age.  Processes
+              newer than 60 seconds are green, newer than an hour  yellow  and
+              the remaining red.
 
-       -g     Показувати   PGID.  Ідентифікатори  груп  процесів  (PGID)  буде
-              показано у форматі десяткових чисел у дужках після кожної  назви
-              процесу.  Якщо має бути показано одночасно PID та PGID, PID буде
-              показано першими.
+       -g     Show  PGIDs.   Process Group IDs are shown as decimal numbers in
+              parentheses after each process name.  If both PIDs and PGIDs are
+              displayed then PIDs are shown first.
 
-       -G     Використовувати для малювання ліній символи VT100.
+       -G     Use VT100 line drawing characters.
 
-       -h     Підсвічувати поточний процес і його спадкоємців. Не працює, якщо
-              у  терміналі  не  передбачено  підсвічування  або  до  показаної
-              ієрархії  не  входить  жоден  з  поточний   процесів   та   його
-              спадкоємців.
+       -h     Highlight  the current process and its ancestors.  This is a no-
+              op if the terminal doesn't support highlighting  or  if  neither
+              the  current process nor any of its ancestors are in the subtree
+              being shown.
 
-       -H     Подібний  до -h, але буде підсвічено вказаний процес. На відміну
-              від  команди   з   параметром   -h,   pstree   завершує   роботу
-              повідомленням щодо помилки, якщо використано -H, і підсвічування
-              є недоступним.
+       -H     Like -h, but highlight the specified  process  instead.   Unlike
+              with  -h,  pstree  fails  when  using  -H if highlighting is not
+              available.
 
-       -l     Показувати довгі рядки. Типово, рядки буде обрізано на  символі,
-              який  визначається  значенням змінної середовища COLUMNS, або на
-              символі, який визначається шириною дисплея.  Якщо  жодне  з  цих
-              значень не визначено, рядки буде обрізано на позиції 132.
+       -l     Display long lines.  By default, lines are truncated  to  either
+              the  COLUMNS environment variable or the display width.  If nei-
+              ther of these methods work, the default of 132 columns is used.
 
-       -n     Упорядкувати процеси із однаковим батьківським записом за PID, а
-              не за назвою. (Числове упорядковування.)
+       -n     Sort processes with the same parent by PID instead of  by  name.
+              (Numeric sort.)
 
-       -N     Показувати окремі ієрархії для кожного простору назв визначеного
-              типу Можливими значеннями типу є такі: ipc, mnt, net, pid, time,
-              user, uts. Звичайні користувачі не мають доступу до  даних  щодо
-              процесів  інших  користувачів,  тому виведені дані будуть доволі
-              обмеженими.
+       -N     Show  individual trees for each namespace of the type specified.
+              The available types are: ipc, mnt, net, pid,  time,  user,  uts.
+              Regular users don't have access to other users' processes infor-
+              mation, so the output will be limited.
 
-       -p     Показувати PID. PID буде показано як десяткові  числа  у  дужках
-              після  назви  процесу.  Використання  параметра -p неявним чином
-              вимикає ущільнення.
+       -p     Show PIDs.  PIDs are shown as decimal numbers in parentheses af-
+              ter each process name.  -p implicitly disables compaction.
 
-       -s     Показати батьківські процеси вказаного процесу.
+       -s     Show parent processes of the specified process.
 
-       -S     Показати переходи просторів назв. Подібний до -N.  Якщо  команду
-              віддано  від  імені звичайного користувача, виведені дані будуть
-              доволі обмеженими.
+       -S     Show  namespaces  transitions.   Like  -N, the output is limited
+              when running as a regular user.
 
-       -t     Показувати повні назви гілок, якщо такі доступні.
+       -t     Show full names for threads when available.
 
-       -T     Приховати гілки і показати лише процеси.
+       -T     Hide threads and only show processes.
 
-       -u     Показати переходи uid. Якщо uid процесу  відрізняється  від  uid
-              батьківського  процесу,  новий  uid буде показано у дужках після
-              назви процесу.
+       -u     Show uid transitions.  Whenever the uid  of  a  process  differs
+              from  the uid of its parent, the new uid is shown in parentheses
+              after the process name.
 
-       -U     Використовувати для малювання ліній символи UTF-8  (Unicode).  У
-              Linux  1.1-54 і новіших версіях увійти до режиму UTF-8 у консолі
-              можна за допомогою  команди  echo  -e  ' 33%8',  а  вийти  —  за
-              допомогою команди echo -e ' 33%@'.
+       -U     Use UTF-8 (Unicode) line drawing characters.  Under Linux 1.1-54
+              and  above,  UTF-8  mode  is entered on the console with echo -e
+              ' 33%8' and left with echo -e ' 33%@'.
 
-       -V     Показати інформацію щодо версії.
+       -V     Display version information.
 
-       -Z     Показувати  поточні атрибути захисту процесу. Для систем SELinux
-              це буде контекст безпеки.
+       -Z     Show the current security attributes of the process. For SELinux
+              systems this will be the security context.
 
-ФАЙЛИ
-       /proc  розташування файлової системи процесів
+FILES
+       /proc  location of the proc file system
 
-ВАДИ
-       Деякі набори символів можуть бути несумісні із набором символів VT100.
+BUGS
+       Some character sets may be incompatible with the VT100 characters.
 
-ТАКОЖ ПЕРЕГЛЯНЬТЕ
+SEE ALSO
        ps(1), top(1), proc(5).
 
-psmisc                        21 червня 2021 року                    PSTREE(1)
+psmisc                            2021-06-21                         PSTREE(1)

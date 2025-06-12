@@ -13,7 +13,7 @@ SYNOPSIS
 
 DESCRIPTION
        The system() library function behaves as if it used fork(2) to create a
-       child process that executed the shell command specified in command  us‐
+       child process that executed the shell command specified in command  us-
        ing execl(3) as follows:
 
            execl("/bin/sh", "sh", "-c", command, (char *) NULL);
@@ -31,20 +31,20 @@ DESCRIPTION
 RETURN VALUE
        The return value of system() is one of the following:
 
-       •  If command is NULL, then a nonzero value if a shell is available, or
+       o  If command is NULL, then a nonzero value if a shell is available, or
           0 if no shell is available.
 
-       •  If a child process could not be created, or its status could not  be
+       o  If a child process could not be created, or its status could not  be
           retrieved,  the  return value is -1 and errno is set to indicate the
           error.
 
-       •  If a shell could not be executed in the child process, then the  re‐
+       o  If a shell could not be executed in the child process, then the  re-
           turn  value  is  as  though  the  child  shell terminated by calling
           _exit(2) with the status 127.
 
-       •  If all system calls succeed, then the return value is  the  termina‐
-          tion status of the child shell used to execute command.  (The termi‐
-          nation status of a shell is the termination status of the last  com‐
+       o  If all system calls succeed, then the return value is  the  termina-
+          tion status of the child shell used to execute command.  (The termi-
+          nation status of a shell is the termination status of the last  com-
           mand it executes.)
 
        In  the last two cases, the return value is a "wait status" that can be
@@ -57,31 +57,31 @@ ERRORS
        system() can fail with any of the same errors as fork(2).
 
 ATTRIBUTES
-       For  an  explanation  of  the  terms  used  in  this  section,  see at‐
+       For  an  explanation  of  the  terms  used  in  this  section,  see at-
        tributes(7).
 
-       ┌────────────────────────────────────────────┬───────────────┬─────────┐
-       │Interface                                   │ Attribute     │ Value   │
-       ├────────────────────────────────────────────┼───────────────┼─────────┤
-       │system()                                    │ Thread safety │ MT-Safe │
-       └────────────────────────────────────────────┴───────────────┴─────────┘
+       +--------------------------------------------+---------------+---------+
+       |Interface                                   | Attribute     | Value   |
+       +--------------------------------------------+---------------+---------+
+       |system()                                    | Thread safety | MT-Safe |
+       +--------------------------------------------+---------------+---------+
 
 STANDARDS
        POSIX.1-2001, POSIX.1-2008, C99.
 
 NOTES
-       system() provides simplicity and convenience: it handles all of the de‐
-       tails of calling fork(2), execl(3), and waitpid(2), as well as the nec‐
+       system() provides simplicity and convenience: it handles all of the de-
+       tails of calling fork(2), execl(3), and waitpid(2), as well as the nec-
        essary manipulations of signals; in addition, the  shell  performs  the
        usual substitutions and I/O redirections for command.  The main cost of
-       system() is inefficiency: additional system calls are required to  cre‐
+       system() is inefficiency: additional system calls are required to  cre-
        ate the process that runs the shell and to execute the shell.
 
        If  the  _XOPEN_SOURCE  feature test macro is defined (before including
-       any header files), then the macros described in  waitpid(2)  (WEXITSTA‐
+       any header files), then the macros described in  waitpid(2)  (WEXITSTA-
        TUS(), etc.) are made available when including <stdlib.h>.
 
-       As  mentioned, system() ignores SIGINT and SIGQUIT.  This may make pro‐
+       As  mentioned, system() ignores SIGINT and SIGQUIT.  This may make pro-
        grams that call it from a loop uninterruptible, unless they  take  care
        themselves to check the exit status of the child.  For example:
 
@@ -93,7 +93,7 @@ NOTES
                        break;
            }
 
-       According to POSIX.1, it is unspecified whether handlers registered us‐
+       According to POSIX.1, it is unspecified whether handlers registered us-
        ing pthread_atfork(3) are called during the execution of system().   In
        the glibc implementation, such handlers are not called.
 
@@ -111,15 +111,15 @@ NOTES
 
    Caveats
        Do  not  use  system() from a privileged program (a set-user-ID or set-
-       group-ID program, or a program with capabilities) because strange  val‐
-       ues  for some environment variables might be used to subvert system in‐
+       group-ID program, or a program with capabilities) because strange  val-
+       ues  for some environment variables might be used to subvert system in-
        tegrity.  For example, PATH could be manipulated so that  an  arbitrary
-       program  is  executed  with privilege.  Use the exec(3) family of func‐
+       program  is  executed  with privilege.  Use the exec(3) family of func-
        tions instead, but not execlp(3) or execvp(3) (which also use the  PATH
        environment variable to search for an executable).
 
        system()  will not, in fact, work properly from programs with set-user-
-       ID or set-group-ID privileges on systems on which /bin/sh is bash  ver‐
+       ID or set-group-ID privileges on systems on which /bin/sh is bash  ver-
        sion  2:  as  a  security  measure, bash 2 drops privileges on startup.
        (Debian uses a different shell, dash(1), which does not  do  this  when
        invoked as sh.)

@@ -1,5 +1,7 @@
 chown(2)                      System Calls Manual                     chown(2)
 
+
+
 NAME
        chown, fchown, lchown, fchownat - change ownership of a file
 
@@ -147,77 +149,81 @@ ERRORS
        EROFS  The named file resides on a read-only filesystem.
 
 VERSIONS
-       fchownat() was added in Linux 2.6.16;  library  support  was  added  in
-       glibc 2.4.
-
-STANDARDS
-       chown(), fchown(), lchown(): 4.4BSD, SVr4, POSIX.1-2001, POSIX.1-2008.
-
        The 4.4BSD version can be used only by the superuser (that is, ordinary
        users cannot give away files).
 
-       fchownat(): POSIX.1-2008.
+STANDARDS
+       POSIX.1-2008.
+
+HISTORY
+       chown()
+       fchown()
+       lchown()
+              4.4BSD, SVr4, POSIX.1-2001.
+
+       fchownat()
+              POSIX.1-2008.  Linux 2.6.16, glibc 2.4.
 
 NOTES
    Ownership of new files
-       When a new file is created (by, for example, open(2) or mkdir(2)),  its
-       owner  is  made  the  same  as  the  filesystem user ID of the creating
-       process.  The group of the file depends on a range of factors,  includ‐
-       ing  the  type of filesystem, the options used to mount the filesystem,
-       and whether or not the set-group-ID mode bit is enabled on  the  parent
-       directory.   If  the filesystem supports the -o grpid (or, synonymously
-       -o bsdgroups) and -o nogrpid (or, synonymously -o sysvgroups)  mount(8)
+       When  a new file is created (by, for example, open(2) or mkdir(2)), its
+       owner is made the same as  the  filesystem  user  ID  of  the  creating
+       process.   The group of the file depends on a range of factors, includ‐
+       ing the type of filesystem, the options used to mount  the  filesystem,
+       and  whether  or not the set-group-ID mode bit is enabled on the parent
+       directory.  If the filesystem supports the -o grpid  (or,  synonymously
+       -o bsdgroups)  and -o nogrpid (or, synonymously -o sysvgroups) mount(8)
        options, then the rules are as follows:
 
-       •  If  the filesystem is mounted with -o grpid, then the group of a new
+       •  If the filesystem is mounted with -o grpid, then the group of a  new
           file is made the same as that of the parent directory.
 
-       •  If the filesystem is mounted with -o nogrpid  and  the  set-group-ID
-          bit  is  disabled  on  the parent directory, then the group of a new
+       •  If  the  filesystem  is mounted with -o nogrpid and the set-group-ID
+          bit is disabled on the parent directory, then the  group  of  a  new
           file is made the same as the process's filesystem GID.
 
-       •  If the filesystem is mounted with -o nogrpid  and  the  set-group-ID
+       •  If  the  filesystem  is mounted with -o nogrpid and the set-group-ID
           bit is enabled on the parent directory, then the group of a new file
           is made the same as that of the parent directory.
 
-       As at Linux 4.12, the -o grpid and -o nogrpid mount  options  are  sup‐
-       ported  by  ext2,  ext3, ext4, and XFS.  Filesystems that don't support
+       As  at  Linux  4.12, the -o grpid and -o nogrpid mount options are sup‐
+       ported by ext2, ext3, ext4, and XFS.  Filesystems  that  don't  support
        these mount options follow the -o nogrpid rules.
 
    glibc notes
-       On older kernels where fchownat() is  unavailable,  the  glibc  wrapper
-       function  falls back to the use of chown() and lchown().  When pathname
-       is a relative pathname, glibc constructs a pathname based on  the  sym‐
+       On  older  kernels  where  fchownat() is unavailable, the glibc wrapper
+       function falls back to the use of chown() and lchown().  When  pathname
+       is  a  relative pathname, glibc constructs a pathname based on the sym‐
        bolic link in /proc/self/fd that corresponds to the dirfd argument.
 
    NFS
-       The  chown()  semantics  are  deliberately  violated on NFS filesystems
-       which have UID mapping enabled.  Additionally,  the  semantics  of  all
-       system  calls  which  access  the  file  contents are violated, because
-       chown() may cause immediate access revocation on  already  open  files.
-       Client  side  caching may lead to a delay between the time where owner‐
-       ship have been changed to allow access for a user and  the  time  where
+       The chown() semantics are  deliberately  violated  on  NFS  filesystems
+       which  have  UID  mapping  enabled.  Additionally, the semantics of all
+       system calls which access  the  file  contents  are  violated,  because
+       chown()  may  cause  immediate access revocation on already open files.
+       Client side caching may lead to a delay between the time  where  owner‐
+       ship  have  been  changed to allow access for a user and the time where
        the file can actually be accessed by the user on other clients.
 
    Historical details
-       The  original  Linux  chown(), fchown(), and lchown() system calls sup‐
-       ported only 16-bit user and group IDs.  Subsequently, Linux  2.4  added
-       chown32(),  fchown32(),  and  lchown32(),  supporting  32-bit IDs.  The
-       glibc chown(), fchown(), and lchown() wrapper  functions  transparently
+       The original Linux chown(), fchown(), and lchown()  system  calls  sup‐
+       ported  only  16-bit user and group IDs.  Subsequently, Linux 2.4 added
+       chown32(), fchown32(), and  lchown32(),  supporting  32-bit  IDs.   The
+       glibc  chown(),  fchown(), and lchown() wrapper functions transparently
        deal with the variations across kernel versions.
 
-       Before  Linux  2.1.81  (except 2.1.46), chown() did not follow symbolic
-       links.  Since Linux 2.1.81, chown() does  follow  symbolic  links,  and
-       there  is  a  new  system  call  lchown() that does not follow symbolic
-       links.  Since Linux 2.1.86, this new call (that has the same  semantics
-       as  the  old  chown()) has got the same syscall number, and chown() got
+       Before Linux 2.1.81 (except 2.1.46), chown() did  not  follow  symbolic
+       links.   Since  Linux  2.1.81,  chown() does follow symbolic links, and
+       there is a new system call  lchown()  that  does  not  follow  symbolic
+       links.   Since Linux 2.1.86, this new call (that has the same semantics
+       as the old chown()) has got the same syscall number,  and  chown()  got
        the newly introduced number.
 
 EXAMPLES
-       The following program changes the ownership of the file  named  in  its
-       second  command-line  argument to the value specified in its first com‐
+       The  following  program  changes the ownership of the file named in its
+       second command-line argument to the value specified in its  first  com‐
        mand-line argument.  The new owner can be specified either as a numeric
-       user  ID,  or  as  a username (which is converted to a user ID by using
+       user ID, or as a username (which is converted to a  user  ID  by  using
        getpwnam(3) to perform a lookup in the system password file).
 
    Program source
@@ -261,4 +267,6 @@ EXAMPLES
 SEE ALSO
        chgrp(1), chown(1), chmod(2), flock(2), path_resolution(7), symlink(7)
 
-Linux man-pages 6.03              2023-02-05                          chown(2)
+
+
+Linux man-pages 6.05.01           2023-05-03                          chown(2)

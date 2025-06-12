@@ -18,9 +18,9 @@ A fully self-contained, offline-capable web application for searching and viewin
 ## Features
 
 - 🔍 **Fast Search**: Real-time search with suggestions as you type
-- 📚 **Comprehensive Coverage**: 7,897 Linux man pages from official sources
+- 📚 **Comprehensive Coverage**: 8,121 Linux man pages from official sources
 - 📋 **TLDR Integration**: Quick practical examples included locally
-- 🎨 **Multiple Themes**: 5 beautiful themes (Dark, Solarized Dark, Dracula, Monokai, High Contrast)
+- 🎨 **16 Beautiful Themes**: Including Dark, Ocean Depth, Dracula, Monokai, and more
 - 🚀 **Instant Loading**: All data stored locally for blazing-fast performance
 - 📱 **Responsive Design**: Works perfectly on desktop and mobile devices
 - 🔒 **100% Offline**: No external dependencies, CDNs, or API calls
@@ -29,6 +29,7 @@ A fully self-contained, offline-capable web application for searching and viewin
 - 🕐 **History**: Track recently viewed pages
 - ⌨️ **Keyboard Navigation**: Full keyboard support for power users
 - 🌐 **No Internet Required**: Works completely offline after deployment
+- 🔧 **Command Explainer**: Interactive breakdown of complex Linux commands (Press 'E' key)
 
 ## Live Demo
 
@@ -40,21 +41,24 @@ A fully self-contained, offline-capable web application for searching and viewin
 ```
 ├── index.html             # Complete web application
 ├── data/                  # Application data
-│   ├── index.js          # Search index (7,897 commands)
-│   └── tldr_index.js     # TLDR pages index
-├── themes/                # Modular theme CSS files
-│   ├── dark.css          # Default dark theme
-│   ├── solarized-dark.css # Solarized dark theme
-│   ├── dracula.css       # Dracula theme
-│   ├── monokai.css       # Monokai theme
-│   └── high-contrast.css # Accessibility theme
-├── man_pages/             # 7,897 man page files
+│   ├── index.js          # Search index (8,121 commands)
+│   ├── tldr_index.js     # TLDR pages index
+│   └── options.js        # Command options database
+├── themes/                # 16 modular theme CSS files
+│   ├── ocean-depth.css   # Default theme
+│   ├── dark.css          
+│   ├── solarized-dark.css
+│   ├── dracula.css       
+│   ├── monokai.css       
+│   ├── high-contrast.css 
+│   └── ...               # And 10 more themes
+├── man_pages/             # 8,121 man page files
 │   └── [command].[section].txt
 ├── tldr_pages/            # TLDR summaries
 │   ├── common/           # Cross-platform commands
 │   └── linux/            # Linux-specific commands
 ├── docs/                  # Documentation
-├── tests/                 # Test scripts
+├── extract-options.js     # Options extractor script
 ├── .github/               # GitHub Actions
 ├── .gitlab-ci.yml         # GitLab CI/CD
 ├── .nojekyll             # GitHub Pages config
@@ -135,11 +139,23 @@ cd Pages
 
 ## Available Themes
 
-- **Dark** - Default dark theme with blue accents
+16 beautiful themes to choose from:
+- **Ocean Depth** (Default) - Deep blue oceanic theme
+- **Dark** - Classic dark theme with blue accents
 - **Solarized Dark** - Popular color scheme for reduced eye strain
 - **Dracula** - Purple-accented dark theme
 - **Monokai** - Classic code editor theme
 - **High Contrast** - Accessibility-focused with maximum contrast
+- **Nord** - Arctic, north-bluish clean theme
+- **Gruvbox** - Retro groove theme with warm colors
+- **Tokyo Night** - Modern Japanese-inspired theme
+- **One Dark** - Atom's iconic dark theme
+- **Neon Noir** - Cyberpunk-inspired with neon accents
+- **Forest Dawn** - Nature-inspired green theme
+- **Cyber Frost** - Cool blue with tech aesthetics
+- **Retro Wave** - 80s synthwave inspired
+- **Miami Sunrise** - Vibrant tropical colors
+- **Flat Light** - Clean, minimalist light theme
 
 ## Man Page Sections
 

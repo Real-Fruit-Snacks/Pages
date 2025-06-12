@@ -1,5 +1,7 @@
 open(2)                       System Calls Manual                      open(2)
 
+
+
 NAME
        open, openat, creat - open and possibly create a file
 
@@ -9,17 +11,17 @@ LIBRARY
 SYNOPSIS
        #include <fcntl.h>
 
-       int open(const char *pathname, int flags);
-       int open(const char *pathname, int flags, mode_t mode);
+       int open(const char *pathname, int flags, ...
+                  /* mode_t mode */ );
 
        int creat(const char *pathname, mode_t mode);
 
-       int openat(int dirfd, const char *pathname, int flags);
-       int openat(int dirfd, const char *pathname, int flags, mode_t mode);
+       int openat(int dirfd, const char *pathname, int flags, ...
+                  /* mode_t mode */ );
 
        /* Documented separately, in openat2(2): */
        int openat2(int dirfd, const char *pathname,
-                   const struct open_how *how, size_t size);
+                  const struct open_how *how, size_t size);
 
    Feature Test Macro Requirements for glibc (see feature_test_macros(7)):
 
@@ -60,7 +62,7 @@ DESCRIPTION
        only, write-only, or read/write, respectively.
 
        In addition, zero or more file creation flags and file status flags can
-       be  bitwise-or'd  in  flags.   The  file  creation flags are O_CLOEXEC,
+       be  bitwise  ORed  in  flags.   The  file creation flags are O_CLOEXEC,
        O_CREAT, O_DIRECTORY,  O_EXCL,  O_NOCTTY,  O_NOFOLLOW,  O_TMPFILE,  and
        O_TRUNC.   The  file status flags are all of the remaining flags listed
        below.  The distinction between these two groups of flags is  that  the
@@ -655,38 +657,89 @@ ERRORS
               held on the file (see fcntl(2)).
 
 VERSIONS
-       openat()  was added in Linux 2.6.16; library support was added in glibc
-       2.4.
-
-STANDARDS
-       open(), creat() SVr4, 4.3BSD, POSIX.1-2001, POSIX.1-2008.
-
-       openat(): POSIX.1-2008.
-
-       openat2(2) is Linux-specific.
-
-       The O_DIRECT, O_NOATIME, O_PATH, and  O_TMPFILE  flags  are  Linux-spe‐
-       cific.  One must define _GNU_SOURCE to obtain their definitions.
-
-       The  O_CLOEXEC,  O_DIRECTORY, and O_NOFOLLOW flags are not specified in
-       POSIX.1-2001, but are specified in POSIX.1-2008.  Since glibc 2.12, one
-       can  obtain their definitions by defining either _POSIX_C_SOURCE with a
-       value greater than or equal to 200809L or _XOPEN_SOURCE  with  a  value
-       greater  than  or equal to 700.  In glibc 2.11 and earlier, one obtains
-       the definitions by defining _GNU_SOURCE.
-
-       As  noted  in  feature_test_macros(7),  feature  test  macros  such  as
-       _POSIX_C_SOURCE,  _XOPEN_SOURCE, and _GNU_SOURCE must be defined before
-       including any header files.
-
-NOTES
-       Under Linux, the O_NONBLOCK flag is sometimes used in cases  where  one
-       wants  to  open  but does not necessarily have the intention to read or
-       write.  For example, this may be used to open a device in order to  get
-       a file descriptor for use with ioctl(2).
-
        The  (undefined)  effect of O_RDONLY | O_TRUNC varies among implementa‐
        tions.  On many systems the file is actually truncated.
+
+   Synchronized I/O
+       The POSIX.1-2008 "synchronized I/O" option specifies different variants
+       of  synchronized  I/O,  and specifies the open() flags O_SYNC, O_DSYNC,
+       and O_RSYNC for controlling the behavior.  Regardless of whether an im‐
+       plementation  supports this option, it must at least support the use of
+       O_SYNC for regular files.
+
+       Linux implements O_SYNC and O_DSYNC, but not O_RSYNC.  Somewhat  incor‐
+       rectly,  glibc  defines  O_RSYNC  to  have  the  same  value as O_SYNC.
+       (O_RSYNC is defined in the Linux header file <asm/fcntl.h>  on  HP  PA-
+       RISC, but it is not used.)
+
+       O_SYNC  provides  synchronized  I/O  file integrity completion, meaning
+       write operations will flush data and all associated metadata to the un‐
+       derlying  hardware.   O_DSYNC  provides synchronized I/O data integrity
+       completion, meaning write operations will flush data to the  underlying
+       hardware, but will only flush metadata updates that are required to al‐
+       low a subsequent read operation to complete successfully.  Data  integ‐
+       rity  completion  can reduce the number of disk operations that are re‐
+       quired for applications that don't need the guarantees of  file  integ‐
+       rity completion.
+
+       To  understand the difference between the two types of completion, con‐
+       sider two pieces of file metadata: the file last modification timestamp
+       (st_mtime)  and  the file length.  All write operations will update the
+       last file modification timestamp, but only writes that add data to  the
+       end  of  the  file  will change the file length.  The last modification
+       timestamp is not needed to ensure that a read  completes  successfully,
+       but  the  file  length is.  Thus, O_DSYNC would only guarantee to flush
+       updates to the file length metadata (whereas O_SYNC would  also  always
+       flush the last modification timestamp metadata).
+
+       Before Linux 2.6.33, Linux implemented only the O_SYNC flag for open().
+       However, when that flag was specified, most filesystems  actually  pro‐
+       vided  the  equivalent  of  synchronized  I/O data integrity completion
+       (i.e., O_SYNC was actually implemented as the equivalent of O_DSYNC).
+
+       Since Linux 2.6.33, proper O_SYNC support is provided.  However, to en‐
+       sure  backward  binary compatibility, O_DSYNC was defined with the same
+       value as the historical O_SYNC, and O_SYNC was defined as a  new  (two-
+       bit)  flag  value  that  includes the O_DSYNC flag value.  This ensures
+       that applications compiled against new headers get at least O_DSYNC se‐
+       mantics before Linux 2.6.33.
+
+   C library/kernel differences
+       Since  glibc  2.26,  the  glibc wrapper function for open() employs the
+       openat() system call, rather than the kernel's open() system call.  For
+       certain architectures, this is also true before glibc 2.26.
+
+STANDARDS
+       open()
+       creat()
+       openat()
+              POSIX.1-2008.
+
+       openat2(2) Linux.
+
+       The  O_DIRECT,  O_NOATIME,  O_PATH,  and O_TMPFILE flags are Linux-spe‐
+       cific.  One must define _GNU_SOURCE to obtain their definitions.
+
+       The O_CLOEXEC, O_DIRECTORY, and O_NOFOLLOW flags are not  specified  in
+       POSIX.1-2001, but are specified in POSIX.1-2008.  Since glibc 2.12, one
+       can obtain their definitions by defining either _POSIX_C_SOURCE with  a
+       value  greater  than  or equal to 200809L or _XOPEN_SOURCE with a value
+       greater than or equal to 700.  In glibc 2.11 and earlier,  one  obtains
+       the definitions by defining _GNU_SOURCE.
+
+HISTORY
+       open()
+       creat()
+              SVr4, 4.3BSD, POSIX.1-2001.
+
+       openat()
+              POSIX.1-2008.  Linux 2.6.16, glibc 2.4.
+
+NOTES
+       Under  Linux,  the O_NONBLOCK flag is sometimes used in cases where one
+       wants to open but does not necessarily have the intention  to  read  or
+       write.   For example, this may be used to open a device in order to get
+       a file descriptor for use with ioctl(2).
 
        Note that open() can open device special files, but creat() cannot cre‐
        ate them; use mknod(2) instead.
@@ -698,10 +751,10 @@ NOTES
        Otherwise,  if  the  file  is modified because of the O_TRUNC flag, its
        st_ctime and st_mtime fields are set to the current time.
 
-       The files in the /proc/[pid]/fd directory show the open  file  descrip‐
-       tors of the process with the PID pid.  The files in the /proc/[pid]/fd‐
-       info directory show even more information about these file descriptors.
-       See proc(5) for further details of both of these directories.
+       The files in the /proc/pid/fd directory show the open file  descriptors
+       of the process with the PID pid.  The files in the /proc/pid/fdinfo di‐
+       rectory show even more information about these file  descriptors.   See
+       proc(5) for further details of both of these directories.
 
        The  Linux  header file <asm/fcntl.h> doesn't define O_ASYNC; the (BSD-
        derived) FASYNC synonym is defined instead.
@@ -728,225 +781,178 @@ NOTES
        two file descriptors (in the same process  or  in  two  different  pro‐
        cesses) refer to the same open file description.
 
-   Synchronized I/O
-       The POSIX.1-2008 "synchronized I/O" option specifies different variants
-       of synchronized I/O, and specifies the open()  flags  O_SYNC,  O_DSYNC,
-       and O_RSYNC for controlling the behavior.  Regardless of whether an im‐
-       plementation supports this option, it must at least support the use  of
-       O_SYNC for regular files.
-
-       Linux  implements O_SYNC and O_DSYNC, but not O_RSYNC.  Somewhat incor‐
-       rectly, glibc defines  O_RSYNC  to  have  the  same  value  as  O_SYNC.
-       (O_RSYNC  is  defined  in the Linux header file <asm/fcntl.h> on HP PA-
-       RISC, but it is not used.)
-
-       O_SYNC provides synchronized I/O  file  integrity  completion,  meaning
-       write operations will flush data and all associated metadata to the un‐
-       derlying hardware.  O_DSYNC provides synchronized  I/O  data  integrity
-       completion,  meaning write operations will flush data to the underlying
-       hardware, but will only flush metadata updates that are required to al‐
-       low  a subsequent read operation to complete successfully.  Data integ‐
-       rity completion can reduce the number of disk operations that  are  re‐
-       quired  for  applications that don't need the guarantees of file integ‐
-       rity completion.
-
-       To understand the difference between the two types of completion,  con‐
-       sider two pieces of file metadata: the file last modification timestamp
-       (st_mtime) and the file length.  All write operations will  update  the
-       last  file modification timestamp, but only writes that add data to the
-       end of the file will change the file  length.   The  last  modification
-       timestamp  is  not needed to ensure that a read completes successfully,
-       but the file length is.  Thus, O_DSYNC would only  guarantee  to  flush
-       updates  to  the file length metadata (whereas O_SYNC would also always
-       flush the last modification timestamp metadata).
-
-       Before Linux 2.6.33, Linux implemented only the O_SYNC flag for open().
-       However,  when  that flag was specified, most filesystems actually pro‐
-       vided the equivalent of  synchronized  I/O  data  integrity  completion
-       (i.e., O_SYNC was actually implemented as the equivalent of O_DSYNC).
-
-       Since Linux 2.6.33, proper O_SYNC support is provided.  However, to en‐
-       sure backward binary compatibility, O_DSYNC was defined with  the  same
-       value  as  the historical O_SYNC, and O_SYNC was defined as a new (two-
-       bit) flag value that includes the O_DSYNC  flag  value.   This  ensures
-       that applications compiled against new headers get at least O_DSYNC se‐
-       mantics before Linux 2.6.33.
-
-   C library/kernel differences
-       Since glibc 2.26, the glibc wrapper function  for  open()  employs  the
-       openat() system call, rather than the kernel's open() system call.  For
-       certain architectures, this is also true before glibc 2.26.
-
    NFS
-       There are many infelicities in the protocol underlying  NFS,  affecting
+       There  are  many infelicities in the protocol underlying NFS, affecting
        amongst others O_SYNC and O_NDELAY.
 
-       On  NFS  filesystems with UID mapping enabled, open() may return a file
-       descriptor but, for example, read(2) requests are denied  with  EACCES.
+       On NFS filesystems with UID mapping enabled, open() may return  a  file
+       descriptor  but,  for example, read(2) requests are denied with EACCES.
        This is because the client performs open() by checking the permissions,
-       but UID mapping is performed by the server  upon  read  and  write  re‐
+       but  UID  mapping  is  performed  by the server upon read and write re‐
        quests.
 
    FIFOs
-       Opening  the  read or write end of a FIFO blocks until the other end is
-       also opened (by another process or thread).  See  fifo(7)  for  further
+       Opening the read or write end of a FIFO blocks until the other  end  is
+       also  opened  (by  another process or thread).  See fifo(7) for further
        details.
 
    File access mode
        Unlike the other values that can be specified in flags, the access mode
-       values O_RDONLY, O_WRONLY, and O_RDWR do not specify  individual  bits.
-       Rather,  they  define  the low order two bits of flags, and are defined
-       respectively as 0, 1, and 2.  In other words, the combination  O_RDONLY
-       |  O_WRONLY  is  a  logical error, and certainly does not have the same
+       values  O_RDONLY,  O_WRONLY, and O_RDWR do not specify individual bits.
+       Rather, they define the low order two bits of flags,  and  are  defined
+       respectively  as 0, 1, and 2.  In other words, the combination O_RDONLY
+       | O_WRONLY is a logical error, and certainly does  not  have  the  same
        meaning as O_RDWR.
 
-       Linux reserves the special, nonstandard access mode 3  (binary  11)  in
-       flags  to mean: check for read and write permission on the file and re‐
+       Linux  reserves  the  special, nonstandard access mode 3 (binary 11) in
+       flags to mean: check for read and write permission on the file and  re‐
        turn a file descriptor that can't be used for reading or writing.  This
-       nonstandard  access mode is used by some Linux drivers to return a file
-       descriptor that is to be used only for device-specific ioctl(2)  opera‐
+       nonstandard access mode is used by some Linux drivers to return a  file
+       descriptor  that is to be used only for device-specific ioctl(2) opera‐
        tions.
 
    Rationale for openat() and other directory file descriptor APIs
-       openat()  and  the other system calls and library functions that take a
-       directory file descriptor argument  (i.e.,  execveat(2),  faccessat(2),
-       fanotify_mark(2),  fchmodat(2), fchownat(2), fspick(2), fstatat(2), fu‐
-       timesat(2),  linkat(2),   mkdirat(2),   mknodat(2),   mount_setattr(2),
-       move_mount(2),  name_to_handle_at(2),  open_tree(2),  openat2(2), read‐
-       linkat(2),  renameat(2),  renameat2(2),  statx(2),  symlinkat(2),   un‐
-       linkat(2),  utimensat(2),  mkfifoat(3),  and  scandirat(3)) address two
-       problems with the older interfaces that preceded them.  Here,  the  ex‐
+       openat() and the other system calls and library functions that  take  a
+       directory  file  descriptor  argument (i.e., execveat(2), faccessat(2),
+       fanotify_mark(2), fchmodat(2), fchownat(2), fspick(2), fstatat(2),  fu‐
+       timesat(2),   linkat(2),   mkdirat(2),   mknodat(2),  mount_setattr(2),
+       move_mount(2), name_to_handle_at(2),  open_tree(2),  openat2(2),  read‐
+       linkat(2),   renameat(2),  renameat2(2),  statx(2),  symlinkat(2),  un‐
+       linkat(2), utimensat(2), mkfifoat(3),  and  scandirat(3))  address  two
+       problems  with  the older interfaces that preceded them.  Here, the ex‐
        planation is in terms of the openat() call, but the rationale is analo‐
        gous for the other interfaces.
 
-       First, openat() allows an application to  avoid  race  conditions  that
-       could  occur  when using open() to open files in directories other than
-       the current working directory.  These race conditions result  from  the
-       fact  that some component of the directory prefix given to open() could
-       be changed in parallel with the call to open().  Suppose, for  example,
+       First,  openat()  allows  an  application to avoid race conditions that
+       could occur when using open() to open files in directories  other  than
+       the  current  working directory.  These race conditions result from the
+       fact that some component of the directory prefix given to open()  could
+       be  changed in parallel with the call to open().  Suppose, for example,
        that  we  wish  to  create  the  file  dir1/dir2/xxx.dep  if  the  file
-       dir1/dir2/xxx exists.  The problem is that between the existence  check
-       and  the  file-creation  step,  dir1  or  dir2 (which might be symbolic
-       links) could be modified to point to a different location.  Such  races
-       can  be  avoided by opening a file descriptor for the target directory,
+       dir1/dir2/xxx  exists.  The problem is that between the existence check
+       and the file-creation step, dir1  or  dir2  (which  might  be  symbolic
+       links)  could be modified to point to a different location.  Such races
+       can be avoided by opening a file descriptor for the  target  directory,
        and then specifying that file descriptor as the dirfd argument of (say)
        fstatat(2) and openat().  The use of the dirfd file descriptor also has
        other benefits:
 
-       •  the file descriptor is a stable reference to the directory, even  if
+       •  the  file descriptor is a stable reference to the directory, even if
           the directory is renamed; and
 
        •  the open file descriptor prevents the underlying filesystem from be‐
-          ing dismounted, just as when a process has a current working  direc‐
+          ing  dismounted, just as when a process has a current working direc‐
           tory on a filesystem.
 
-       Second,  openat()  allows  the  implementation of a per-thread "current
-       working directory", via file descriptor(s) maintained by  the  applica‐
-       tion.   (This functionality can also be obtained by tricks based on the
+       Second, openat() allows the implementation  of  a  per-thread  "current
+       working  directory",  via file descriptor(s) maintained by the applica‐
+       tion.  (This functionality can also be obtained by tricks based on  the
        use of /proc/self/fd/dirfd, but less efficiently.)
 
-       The dirfd argument for these APIs can be obtained by  using  open()  or
-       openat()  to  open  a directory (with either the O_RDONLY or the O_PATH
+       The  dirfd  argument  for these APIs can be obtained by using open() or
+       openat() to open a directory (with either the O_RDONLY  or  the  O_PATH
        flag).  Alternatively, such a file descriptor can be obtained by apply‐
        ing dirfd(3) to a directory stream created using opendir(3).
 
        When these APIs are given a dirfd argument of AT_FDCWD or the specified
-       pathname is absolute, then they handle their pathname argument  in  the
-       same  way  as  the  corresponding  conventional APIs.  However, in this
+       pathname  is  absolute, then they handle their pathname argument in the
+       same way as the corresponding  conventional  APIs.   However,  in  this
        case, several of the APIs have a flags argument that provides access to
        functionality that is not available with the corresponding conventional
        APIs.
 
    O_DIRECT
-       The O_DIRECT flag may impose alignment restrictions on the  length  and
-       address  of  user-space  buffers and the file offset of I/Os.  In Linux
-       alignment restrictions vary by filesystem and kernel version and  might
-       be  absent  entirely.   The  handling  of misaligned O_DIRECT I/Os also
+       The  O_DIRECT  flag may impose alignment restrictions on the length and
+       address of user-space buffers and the file offset of  I/Os.   In  Linux
+       alignment  restrictions vary by filesystem and kernel version and might
+       be absent entirely.  The handling  of  misaligned  O_DIRECT  I/Os  also
        varies; they can either fail with EINVAL or fall back to buffered I/O.
 
        Since Linux 6.1, O_DIRECT support and alignment restrictions for a file
-       can  be queried using statx(2), using the STATX_DIOALIGN flag.  Support
+       can be queried using statx(2), using the STATX_DIOALIGN flag.   Support
        for STATX_DIOALIGN varies by filesystem; see statx(2).
 
-       Some filesystems provide their own  interfaces  for  querying  O_DIRECT
-       alignment  restrictions,  for  example the XFS_IOC_DIOINFO operation in
+       Some  filesystems  provide  their  own interfaces for querying O_DIRECT
+       alignment restrictions, for example the  XFS_IOC_DIOINFO  operation  in
        xfsctl(3).  STATX_DIOALIGN should be used instead when it is available.
 
-       If none of the above is available, then direct I/O support  and  align‐
+       If  none  of the above is available, then direct I/O support and align‐
        ment restrictions can only be assumed from known characteristics of the
-       filesystem, the individual file, the underlying storage device(s),  and
-       the  kernel version.  In Linux 2.4, most filesystems based on block de‐
+       filesystem,  the individual file, the underlying storage device(s), and
+       the kernel version.  In Linux 2.4, most filesystems based on block  de‐
        vices require that the file offset and the length and memory address of
-       all  I/O  segments be multiples of the filesystem block size (typically
-       4096 bytes).  In Linux 2.6.0, this was relaxed  to  the  logical  block
+       all I/O segments be multiples of the filesystem block  size  (typically
+       4096  bytes).   In  Linux  2.6.0, this was relaxed to the logical block
        size of the block device (typically 512 bytes).  A block device's logi‐
        cal block size can be determined using the ioctl(2) BLKSSZGET operation
        or from the shell using the command:
 
            blockdev --getss
 
-       O_DIRECT  I/Os should never be run concurrently with the fork(2) system
+       O_DIRECT I/Os should never be run concurrently with the fork(2)  system
        call, if the memory buffer is a private mapping (i.e., any mapping cre‐
-       ated  with the mmap(2) MAP_PRIVATE flag; this includes memory allocated
-       on the heap and statically allocated buffers).  Any such I/Os,  whether
-       submitted  via  an asynchronous I/O interface or from another thread in
-       the process, should be completed before fork(2) is called.  Failure  to
-       do  so  can  result in data corruption and undefined behavior in parent
-       and child processes.  This restriction does not apply when  the  memory
+       ated with the mmap(2) MAP_PRIVATE flag; this includes memory  allocated
+       on  the heap and statically allocated buffers).  Any such I/Os, whether
+       submitted via an asynchronous I/O interface or from another  thread  in
+       the  process, should be completed before fork(2) is called.  Failure to
+       do so can result in data corruption and undefined  behavior  in  parent
+       and  child  processes.  This restriction does not apply when the memory
        buffer for the O_DIRECT I/Os was created using shmat(2) or mmap(2) with
-       the MAP_SHARED flag.  Nor does this restriction apply when  the  memory
+       the  MAP_SHARED  flag.  Nor does this restriction apply when the memory
        buffer has been advised as MADV_DONTFORK with madvise(2), ensuring that
        it will not be available to the child after fork(2).
 
-       The O_DIRECT flag was introduced in SGI IRIX, where  it  has  alignment
-       restrictions  similar  to those of Linux 2.4.  IRIX has also a fcntl(2)
-       call to query appropriate alignments, and sizes.   FreeBSD  4.x  intro‐
+       The  O_DIRECT  flag  was introduced in SGI IRIX, where it has alignment
+       restrictions similar to those of Linux 2.4.  IRIX has also  a  fcntl(2)
+       call  to  query  appropriate alignments, and sizes.  FreeBSD 4.x intro‐
        duced a flag of the same name, but without alignment restrictions.
 
        O_DIRECT support was added in Linux 2.4.10.  Older Linux kernels simply
-       ignore this flag.  Some filesystems may  not  implement  the  flag,  in
+       ignore  this  flag.   Some  filesystems  may not implement the flag, in
        which case open() fails with the error EINVAL if it is used.
 
-       Applications  should  avoid  mixing O_DIRECT and normal I/O to the same
-       file, and especially to overlapping byte  regions  in  the  same  file.
+       Applications should avoid mixing O_DIRECT and normal I/O  to  the  same
+       file,  and  especially  to  overlapping  byte regions in the same file.
        Even when the filesystem correctly handles the coherency issues in this
        situation, overall I/O throughput is likely to be slower than using ei‐
        ther mode alone.  Likewise, applications should avoid mixing mmap(2) of
        files with direct I/O to the same files.
 
-       The behavior of O_DIRECT with NFS will differ from  local  filesystems.
-       Older  kernels,  or kernels configured in certain ways, may not support
-       this combination.  The NFS protocol does not support passing  the  flag
-       to  the  server, so O_DIRECT I/O will bypass the page cache only on the
+       The  behavior  of O_DIRECT with NFS will differ from local filesystems.
+       Older kernels, or kernels configured in certain ways, may  not  support
+       this  combination.   The NFS protocol does not support passing the flag
+       to the server, so O_DIRECT I/O will bypass the page cache only  on  the
        client; the server may still cache the I/O.  The client asks the server
-       to  make  the  I/O synchronous to preserve the synchronous semantics of
-       O_DIRECT.  Some servers will perform poorly under these  circumstances,
-       especially  if the I/O size is small.  Some servers may also be config‐
-       ured to lie to clients about the I/O  having  reached  stable  storage;
-       this  will avoid the performance penalty at some risk to data integrity
-       in the event of server power failure.  The Linux NFS client  places  no
+       to make the I/O synchronous to preserve the  synchronous  semantics  of
+       O_DIRECT.   Some servers will perform poorly under these circumstances,
+       especially if the I/O size is small.  Some servers may also be  config‐
+       ured  to  lie  to  clients about the I/O having reached stable storage;
+       this will avoid the performance penalty at some risk to data  integrity
+       in  the  event of server power failure.  The Linux NFS client places no
        alignment restrictions on O_DIRECT I/O.
 
        In summary, O_DIRECT is a potentially powerful tool that should be used
-       with caution.  It is recommended that applications treat use  of  O_DI‐
+       with  caution.   It is recommended that applications treat use of O_DI‐
        RECT as a performance option which is disabled by default.
 
 BUGS
        Currently, it is not possible to enable signal-driven I/O by specifying
        O_ASYNC when calling open(); use fcntl(2) to enable this flag.
 
-       One must check for two different error codes, EISDIR and  ENOENT,  when
-       trying  to  determine whether the kernel supports O_TMPFILE functional‐
+       One  must  check for two different error codes, EISDIR and ENOENT, when
+       trying to determine whether the kernel supports  O_TMPFILE  functional‐
        ity.
 
-       When both O_CREAT and O_DIRECTORY are specified in flags and  the  file
+       When  both  O_CREAT and O_DIRECTORY are specified in flags and the file
        specified by pathname does not exist, open() will create a regular file
        (i.e., O_DIRECTORY is ignored).
 
 SEE ALSO
-       chmod(2), chown(2),  close(2),  dup(2),  fcntl(2),  link(2),  lseek(2),
+       chmod(2),  chown(2),  close(2),  dup(2),  fcntl(2),  link(2), lseek(2),
        mknod(2), mmap(2), mount(2), open_by_handle_at(2), openat2(2), read(2),
-       socket(2), stat(2), umask(2), unlink(2),  write(2),  fopen(3),  acl(5),
+       socket(2),  stat(2),  umask(2),  unlink(2), write(2), fopen(3), acl(5),
        fifo(7), inode(7), path_resolution(7), symlink(7)
 
-Linux man-pages 6.03              2023-02-05                           open(2)
+
+
+Linux man-pages 6.05.01           2023-05-20                           open(2)

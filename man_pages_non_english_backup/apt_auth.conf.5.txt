@@ -1,0 +1,119 @@
+APT_AUTH.CONF(5)                      APT                     APT_AUTH.CONF(5)
+
+NAME
+       apt_auth.conf - Login configuration file for APT sources and proxies
+
+DESCRIPTION
+       APT configuration files like sources.list(5) or apt.conf(5) need to be
+       accessible for everyone using apt tools on the system to have access to
+       all package-related information like the available packages in a
+       repository. Login information needed to connect to a proxy or to
+       download data from a repository on the other hand shouldn't always be
+       accessible by everyone and can hence not be placed in a file with
+       world-readable file permissions.
+
+       The APT auth.conf file /etc/apt/auth.conf, and .conf files inside
+       /etc/apt/auth.conf.d can be used to store login information in a
+       netrc-like format with restrictive file permissions.
+
+NETRC-LIKE FORMAT
+       The format defined here is similar to the format of the ~/.netrc file
+       used by ftp(1) and similar programs interacting with servers. It is a
+       simple token-based format with the following tokens being recognized;
+       Unknown tokens will be ignored. Tokens may be separated by spaces, tabs
+       or newlines.
+
+       machine [protocol://]hostname[:port][/path]
+           Entries are looked up by searching for the machine token matching
+           the hostname of the URI apt needs login information for. Extending
+           the netrc-format a portnumber can be specified. If no port is given
+           the token matches for all ports. Similar the path is optional and
+           only needed and useful if multiple repositories with different
+           login information reside on the same server. A machine token with a
+           path matches if the path in the URI starts with the path given in
+           the token. Once a match is made, the subsequent tokens are
+           processed, stopping when the end of file is reached or another
+           machine token is encountered.
+
+           If protocol is not specified, the entry only matches https and
+           tor+https.
+
+       login name
+           The username to be used.
+
+       password string
+           The password to be used.
+
+EXAMPLE
+       Supplying login information for a user named apt with the password
+       debian for the sources.list(5) entry
+
+           deb https://example.org/debian bookworm main
+
+       could be done in the entry directly:
+
+           deb https://apt:debian@example.org/debian bookworm main
+
+       Alternatively an entry like the following in the auth.conf file could
+       be used:
+
+           machine example.org
+           login apt
+           password debian
+
+       Or alternatively within a single line:
+
+           machine example.org login apt password debian
+
+       If you need to be more specific all of these lines will also apply to
+       the example entry:
+
+           machine example.org/deb login apt password debian
+           machine example.org/debian login apt password debian
+           machine example.org/debian/ login apt password debian
+
+       On the other hand neither of the following lines apply:
+
+           machine example.org:443 login apt password debian
+           machine example.org/deb/ login apt password debian
+           machine example.org/ubuntu login apt password debian
+           machine example.orga login apt password debian
+           machine example.net login apt password debian
+
+NOTES
+       Basic support for this feature is present since version 0.7.25, but was
+       undocumented for years. The documentation was added in version 1.5
+       changing also the implementation slightly. For maximum backward
+       compatibility you should avoid multiple machine tokens with the same
+       hostname, but if you need multiple they should all have a path
+       specified in the machine token.
+
+       Login information in auth.conf are more flexible than those in
+       sources.list. For example, login information can be specified for parts
+       of a repository only, or if the sources.list entry redirects elsewhere,
+       login information for the redirect destination can be supplied.
+
+FILES
+       /etc/apt/auth.conf
+           Login information for APT sources and proxies in a netrc-like
+           format. Configuration Item: Dir::Etc::netrc.
+
+       /etc/apt/auth.conf.d/*.conf
+           Login information for APT sources and proxies in a netrc-like
+           format. Configuration Item: Dir::Etc::netrcparts.
+
+SEE ALSO
+       apt.conf(5) sources.list(5)
+
+BUGS
+       APT bug page[1]. If you wish to report a bug in APT, please see
+       /usr/share/doc/debian/bug-reporting.txt or the reportbug(1) command.
+
+AUTHOR
+       APT team
+
+NOTES
+        1. APT bug page
+           http://bugs.debian.org/src:apt
+
+APT 2.6.1                      02 December 2019               APT_AUTH.CONF(5)

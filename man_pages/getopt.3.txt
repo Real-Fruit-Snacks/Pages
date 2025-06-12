@@ -1,5 +1,7 @@
 getopt(3)                  Library Functions Manual                  getopt(3)
 
+
+
 NAME
        getopt, getopt_long, getopt_long_only, optarg, optind, opterr, optopt -
        Parse command-line options
@@ -10,7 +12,7 @@ LIBRARY
 SYNOPSIS
        #include <unistd.h>
 
-       int getopt(int argc, char *const argv[],
+       int getopt(int argc, char *argv[],
                   const char *optstring);
 
        extern char *optarg;
@@ -18,10 +20,10 @@ SYNOPSIS
 
        #include <getopt.h>
 
-       int getopt_long(int argc, char *const argv[],
+       int getopt_long(int argc, char *argv[],
                   const char *optstring,
                   const struct option *longopts, int *longindex);
-       int getopt_long_only(int argc, char *const argv[],
+       int getopt_long_only(int argc, char *argv[],
                   const char *optstring,
                   const struct option *longopts, int *longindex);
 
@@ -193,48 +195,56 @@ ATTRIBUTES
        │getopt_long_only() │               │                                  │
        └───────────────────┴───────────────┴──────────────────────────────────┘
 
+VERSIONS
+       POSIX specifies that the argv array argument should be const, but these
+       functions  permute  its  elements  unless  the   environment   variable
+       POSIXLY_CORRECT  is  set.   const is used in the actual prototype to be
+       compatible with other systems; however,  this  page  doesn't  show  the
+       qualifier, to avoid confusing readers.
+
 STANDARDS
-       getopt():
-              POSIX.1-2001,  POSIX.1-2008,  and POSIX.2, provided the environ‐
-              ment variable POSIXLY_CORRECT is set.  Otherwise,  the  elements
-              of  argv  aren't  really  const, because these functions permute
-              them.  Nevertheless, const is used in the prototype to  be  com‐
-              patible with other systems.
+       getopt()
+              POSIX.1-2008.
+
+       getopt_long()
+       getopt_long_only()
+              GNU.
 
               The use of '+' and '-' in optstring is a GNU extension.
 
-              On   some   older  implementations,  getopt()  was  declared  in
-              <stdio.h>.  SUSv1 permitted the declaration to appear in  either
-              <unistd.h>   or  <stdio.h>.   POSIX.1-1996  marked  the  use  of
-              <stdio.h> for this purpose as LEGACY.  POSIX.1-2001 does not re‐
-              quire the declaration to appear in <stdio.h>.
+HISTORY
+       getopt()
+              POSIX.1-2001, and POSIX.2.
 
-       getopt_long() and getopt_long_only():
-              These functions are GNU extensions.
+       On  some  older  implementations,  getopt()  was declared in <stdio.h>.
+       SUSv1 permitted the declaration  to  appear  in  either  <unistd.h>  or
+       <stdio.h>.   POSIX.1-1996  marked the use of <stdio.h> for this purpose
+       as LEGACY.  POSIX.1-2001 does not require the declaration to appear  in
+       <stdio.h>.
 
 NOTES
        A  program  that  scans  multiple argument vectors, or rescans the same
        vector more than once, and wants to make use of GNU extensions such  as
-       '+'  and  '-' at the start of optstring, or changes the value of POSIX‐
-       LY_CORRECT between  scans,  must  reinitialize  getopt()  by  resetting
+       '+'  and  '-'  at  the  start  of  optstring,  or  changes the value of
+       POSIXLY_CORRECT between scans, must reinitialize getopt() by  resetting
        optind  to  0, rather than the traditional value of 1.  (Resetting to 0
        forces the  invocation  of  an  internal  initialization  routine  that
        rechecks POSIXLY_CORRECT and checks for GNU extensions in optstring.)
 
-       Command-line  arguments  are parsed in strict order meaning that an op‐
-       tion requiring an argument will consume the next  argument,  regardless
+       Command-line  arguments  are  parsed  in  strict  order meaning that an
+       option requiring an argument will consume the next argument, regardless
        of  whether that argument is the correctly specified option argument or
-       simply the next option (in the scenario the user mis-specifies the com‐
-       mand  line).   For  example, if optstring is specified as "1n:" and the
+       simply the next option (in the  scenario  the  user  mis-specifies  the
+       command line).  For example, if optstring is specified as "1n:" and the
        user specifies the command line arguments  incorrectly  as  prog -n -1,
        the  -n  option  will be given the optarg value "-1", and the -1 option
        will be considered to have not been specified.
 
 EXAMPLES
    getopt()
-       The following trivial example program uses getopt() to handle two  pro‐
-       gram  options:  -n, with no associated value; and -t val, which expects
-       an associated value.
+       The following trivial example  program  uses  getopt()  to  handle  two
+       program  options:  -n,  with  no  associated  value;  and -t val, which
+       expects an associated value.
 
        #include <stdio.h>
        #include <stdlib.h>
@@ -366,4 +376,6 @@ EXAMPLES
 SEE ALSO
        getopt(1), getsubopt(3)
 
-Linux man-pages 6.03              2023-02-05                         getopt(3)
+
+
+Linux man-pages 6.05.01           2023-07-20                         getopt(3)

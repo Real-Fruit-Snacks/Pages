@@ -1,5 +1,7 @@
 user_namespaces(7)     Miscellaneous Information Manual     user_namespaces(7)
 
+
+
 NAME
        user_namespaces - overview of Linux user namespaces
 
@@ -40,6 +42,16 @@ DESCRIPTION
 
        The NS_GET_PARENT ioctl(2)  operation  can  be  used  to  discover  the
        parental relationship between user namespaces; see ioctl_ns(2).
+
+       A  task that changes one of its effective IDs will have its dumpability
+       reset to the value in /proc/sys/fs/suid_dumpable.  This may affect  the
+       ownership  of proc files of child processes and may thus cause the par‐
+       ent to lack the permissions to write to mapping  files  of  child  pro‐
+       cesses  running in a new user namespace.  In such cases making the par‐
+       ent process dumpable, using PR_SET_DUMPABLE in a call to prctl(2),  be‐
+       fore  creating a child process in a new user namespace may rectify this
+       problem.  See prctl(2) and proc(5) for details on how ownership is  af‐
+       fected.
 
    Capabilities
        The  child  process  created  by  clone(2)  with the CLONE_NEWUSER flag
@@ -522,7 +534,7 @@ DESCRIPTION
        pings.
 
 STANDARDS
-       Namespaces are a Linux-specific feature.
+       Linux.
 
 NOTES
        Over the years, there have been a lot of features that have been  added
@@ -710,14 +722,14 @@ EXAMPLES
            close(fd);
        }
 
-       /* Linux 3.19 made a change in the handling of setgroups(2) and the
-          'gid_map' file to address a security issue.  The issue allowed
-          *unprivileged* users to employ user namespaces in order to drop groups.
-          The upshot of the 3.19 changes is that in order to update the
-          'gid_maps' file, use of the setgroups() system call in this
-          user namespace must first be disabled by writing "deny" to one of
-          the /proc/PID/setgroups files for this namespace.  That is the
-          purpose of the following function. */
+       /* Linux 3.19 made a change in the handling of setgroups(2) and
+          the 'gid_map' file to address a security issue.  The issue
+          allowed *unprivileged* users to employ user namespaces in
+          order to drop groups.  The upshot of the 3.19 changes is that
+          in order to update the 'gid_maps' file, use of the setgroups()
+          system call in this user namespace must first be disabled by
+          writing "deny" to one of the /proc/PID/setgroups files for
+          this namespace.  That is the purpose of the following function.  */
 
        static void
        proc_setgroups_write(pid_t child_pid, char *str)
@@ -909,4 +921,6 @@ SEE ALSO
        The   kernel   source   file   Documentation/admin-guide/namespaces/re‐
        source-control.rst.
 
-Linux man-pages 6.03              2023-02-05                user_namespaces(7)
+
+
+Linux man-pages 6.05.01           2023-05-03                user_namespaces(7)

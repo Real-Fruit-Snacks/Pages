@@ -1,324 +1,273 @@
 XXD(1)                      General Commands Manual                     XXD(1)
 
-ИМЯ
-       xxd  -  создаёт  представление файла в виде шестнадцатеричных кодов или
-       выполняет обратное преобразование.
+NAME
+       xxd - make a hexdump or do the reverse.
 
-КОМАНДНАЯ СТРОКА
+SYNOPSIS
        xxd -h[elp]
-       xxd [ключи] [входной_файл [выходной_файл]]
-       xxd -r[evert] [ключи] [входной_файл [выходной_файл]]
+       xxd [options] [infile [outfile]]
+       xxd -r[evert] [options] [infile [outfile]]
 
-ОПИСАНИЕ
-       xxd создаёт представление указанного файла или данных,  прочитанных  из
-       потока  стандартного ввода, в виде шестнадцатеричных кодов. Эта команда
-       также    может    выполнить    обратное     преобразование     заданных
-       шестнадцатеричными  кодами  данных в исходный бинарный формат.  Подобно
-       командам   uuencode(1)   и   uudecode(1),   она   позволяет   выполнять
-       преобразование бинарных данных в ASCII-код, который можно передавать по
-       электронной  почте,  однако,  помимо  этого,  программа  xxd  позволяет
-       выполнять  декодирование  в  поток  стандартного  вывода, а также может
-       применяться для создания заплаток для бинарных файлов.
+DESCRIPTION
+       xxd  creates a hex dump of a given file or standard input.  It can also
+       convert a hex dump back to its original binary form.  Like  uuencode(1)
+       and  uudecode(1)  it allows the transmission of binary data in a `mail-
+       safe' ASCII representation, but has the advantage of decoding to  stan-
+       dard output.  Moreover, it can be used to perform binary file patching.
 
-КЛЮЧИ ЗАПУСКА
-       Если входной_файл не  задан,  то  соответствующие  данные  читаются  из
-       потока  стандартного  ввода.   В случае, если в качестве входного_файла
-       используется  символ  `-',  источником  данных  также  выступает  поток
-       стандартного  ввода.   В  том случае, если не указан выходной_файл (или
-       вместо  него  используется  символ  `-'  ),  результат   преобразования
-       направляется в поток стандартного вывода.
+OPTIONS
+       If  no infile is given, standard input is read.  If infile is specified
+       as a `-' character, then input is taken from  standard  input.   If  no
+       outfile is given (or a `-' character is in its place), results are sent
+       to standard output.
 
-       Обратите  внимание, что используется "ленивый" алгоритм разбора ключей,
-       который не проверяет более одной буквы ключа,  если  в  этом  ключе  не
-       используется  параметр.   Пробелы  между  единственным символом ключа и
-       соответствующим параметром не являются обязательными. Параметры  ключей
-       могут  быть заданы с использованием десятичного, шестнадцатеричного или
-       восьмеричного формата.  Таким образом, ключи -c8, -c 8, -c 010 и  -cols
-       8 являются равнозначными.
+       Note that a "lazy" parser is used which does not check  for  more  than
+       the  first option letter, unless the option is followed by a parameter.
+       Spaces between a single option letter and its parameter  are  optional.
+       Parameters to options can be specified in decimal, hexadecimal or octal
+       notation.  Thus -c8, -c 8, -c 010 and -cols 8 are all equivalent.
 
        -a | -autoskip
-              Включает   автоматический   пропуск:  вместо  последовательности
-              нулевых строк используется одиночный символ '*'. По умолчанию не
-              применяется.
+              Toggle autoskip: A single '*' replaces nul-lines.  Default off.
 
        -b | -bits
-              Вместо   шестнадцатеричного  кода  используются  биты  (двоичные
-              цифры).   При  использовании   этого   ключа   вместо   обычного
-              шестнадцатеричного  представления октетов используются наборы из
-              восьми символов "1" и "0". Каждая  строка  предваряется  номером
-              строки   в  шестнадцатеричном  виде,  а  завершается  символьным
-              представлением (в виде ascii или ebcdic). Ключи  -r,  -p,  -i  в
-              этом режиме не работают.
+              Switch to bits (binary digits) dump, rather than hexdump.   This
+              option  writes octets as eight digits "1"s and "0"s instead of a
+              normal hexadecimal dump. Each line is preceded by a line  number
+              in  hexadecimal and followed by an ascii (or ebcdic) representa-
+              tion. The command line switches -r, -p, -i do not work with this
+              mode.
 
-       -c кол | -cols кол
-              Задаёт  количество  октетов  <кол>,  которое выводится на каждой
-              строке. По умолчанию используется значение 16 (-i: 12, -ps:  30,
-              -b: 6).  Максимально допустимое значение: 256.
+       -c cols | -cols cols
+              Format  <cols> octets per line. Default 16 (-i: 12, -ps: 30, -b:
+              6). Max 256.  No maxmimum for -ps. With -ps, 0  results  in  one
+              long line of output.
 
-       -E | -EBCDIC
-              Изменяет способ кодирования символов в правой колонке с ASCII на
-              EBCDIC. Этот ключ не изменяет  шестнадцатеричное  представление.
-              Данный  ключ не имеет смысла, если используются ключи -r, -p или
+       -C | -capitalize
+              Capitalize  variable  names  in C include file style, when using
               -i.
 
-       -g байт | -groupsize байт
-              Позволяет выполнять группировку указанного  количества  <байтов>
-              (две  шестнадцатеричные  цифры или восемь битов), отделяя группы
-              друг от друга пробелами.  Значение -g 0 применяется  для  отказа
-              от   использования   группировки.    По  умолчанию  используется
-              значение <байт> равное 2 в обычном режиме и 1 в битовом  режиме.
-              Группировка не применяется в режимах postscript и include.
+       -E | -EBCDIC
+              Change the character encoding in the righthand column from ASCII
+              to EBCDIC.  This does not change the hexadecimal representation.
+              The option is meaningless in combinations with -r, -p or -i.
+
+       -e     Switch to little-endian hexdump.  This option treats byte groups
+              as words in little-endian byte order.  The default grouping of 4
+              bytes may be changed using -g.  This option only applies to hex-
+              dump,  leaving  the  ASCII (or EBCDIC) representation unchanged.
+              The command line switches -r, -p, -i do not work with this mode.
+
+       -g bytes | -groupsize bytes
+              Separate the output of every <bytes> bytes (two  hex  characters
+              or eight bit-digits each) by a whitespace.  Specify -g 0 to sup-
+              press grouping.  <Bytes> defaults to 2 in normal mode, 4 in lit-
+              tle-endian  mode and 1 in bits mode.  Grouping does not apply to
+              postscript or include style.
 
        -h | -help
-              Выводит справку по доступным ключам командной строки и завершает
-              работу программы.  Создание шестнадцатеричного представления  не
-              выполняется.
+              Print a summary of available commands and exit.  No hex  dumping
+              is performed.
 
        -i | -include
-              Позволяет  создавать  вывод  в  стиле  подключаемых заголовочных
-              файлов  языка  C.   Вывод   содержит   полноценное   определение
-              статического  массива  данных,  имя которого соответствует имени
-              входного  файла,  если  xxd  не  считывает  данные   из   потока
-              стандартного ввода.
+              Output  in C include file style. A complete static array defini-
+              tion is written (named after the input file), unless  xxd  reads
+              from stdin.
 
-       -l длина | -len длина
-              Завершает  работу  после  записи  заданного  в параметре <длина>
-              количества октетов.
+       -l len | -len len
+              Stop after writing <len> octets.
+
+       -n name  |  -name name
+              Override  the variable name output when -i is used. The array is
+              named name and the length is named name_len.
+
+       -o offset
+              Add <offset> to the displayed file position.
 
        -p | -ps | -postscript | -plain
-              Использует непрерывный формат  вывода  шестнадцатеричного  кода,
-              известный как "простой" стиль или стиль "postscript".
+              Output in postscript continuous hexdump  style.  Also  known  as
+              plain hexdump style.
 
        -r | -revert
-              Изменяет  смысл операции на противоположный: позволяет выполнять
-              преобразование шестнадцатеричного представления в  бинарный  код
-              (или  применять  результат  в  качестве  заплаты).   Если  вывод
-              происходит не в поток  стандартного  вывода,  то  xxd  выполняет
-              добавление  кода  к  соответствующему  файлу.  При использовании
-              комбинации   ключей   -r   -p   происходит   чтение   "простого"
-              шестнадцатеричного  представления без использования информации о
-              номерах  строк  и  какого-либо  специального  раскроя   колонок.
-              Пробелы  и  символы новой строки могут встречаться в любом месте
-              исходных данных.
+              Reverse  operation:  convert (or patch) hexdump into binary.  If
+              not writing to stdout, xxd writes into its output  file  without
+              truncating it. Use the combination -r -p to read plain hexadeci-
+              mal dumps without line number information and without a particu-
+              lar column layout. Additional Whitespace and line-breaks are al-
+              lowed anywhere.
 
-       -seek смещение
-              При  использовании  после  ключа  -r   :   добавлять   указанное
-              <смещение> к файловым позициям, обнаруженным в исходных данных.
+       -seek offset
+              When used after -r: revert with <offset> added to file positions
+              found in hexdump.
 
        -s [+][-]seek
-              Начинает  работу  с  указанного абсолютного (или относительного)
-              <смещения> в байтах во входном_файле.  + указывает, что смещение
-              является относительным по отношению к текущей файловой позиции в
-              потоке стандартного ввода (бессмысленно, если чтение  происходит
-              не  из  потока стандартного ввода). - указывает, что должно быть
-              прочитано указанное количество символов от  конца  ввода  (либо,
-              если  сочетается  с   +  :  перед текущей позиции файла в потоке
-              стандартного ввода).  Если  ключ  -s  не  используется,  то  xxd
-              начинает работу от текущей позиции в файле.
+              Start at <seek> bytes abs. (or rel.) infile offset.  + indicates
+              that the seek is relative to the  current  stdin  file  position
+              (meaningless when not reading from stdin).  - indicates that the
+              seek should be that many characters from the end  of  the  input
+              (or if combined with +: before the current stdin file position).
+              Without -s option, xxd starts at the current file position.
 
-       -u     Использует   шестнадцатеричные  цифры  в  верхнем  регистре.  По
-              умолчанию используются цифры в нижнем регистре символов.
+       -u     Use upper case hex letters. Default is lower case.
 
        -v | -version
-              Отображает информацию о версии программы.
+              Show version string.
 
-ПОДВОДНЫЕ КАМНИ
-       xxd -r обладает встроенным интеллектом для распознавания  информации  о
-       номерах  строк.  Если возможен поиск по входному файлу, то номера строк
-       в начале каждой  строки  шестнадцатеричного  представления  могут  быть
-       неупорядоченными,   некоторые   строки   могут   быть   пропущены   или
-       пересекаться друг с другом. В этих случаях xxd использует lseek(2)  для
-       перехода  к следующей позиции. Если поиск по входному файлу невозможен,
-       то  допустимы  только  пропуски  строк,  которые  заполняются  нулевыми
-       байтами.
+CAVEATS
+       xxd -r has some builtin magic while evaluating line number information.
+       If  the  output  file is seekable, then the linenumbers at the start of
+       each hexdump line may be out of order, lines may be missing,  or  over-
+       lapping.  In these cases xxd will lseek(2) to the next position. If the
+       output file is not seekable, only  gaps  are  allowed,  which  will  be
+       filled by null-bytes.
 
-       xxd  -r  никогда  не  выводит  сообщений об ошибках. Мусор пропускается
-       молча.
+       xxd -r never generates parse errors. Garbage is silently skipped.
 
-       При  редактировании  шестнадцатеричных  представлений  бинарных  файлов
-       обращайте  внимание,  что xxd -r пропускает в строке ввода любые данные
-       после  прочтения  достаточного  количества  колонок   шестнадцатеричных
-       данных  (см. ключ -c). Это означает, что изменения, внесенные в колонки
-       с печатными символами ascii (или  ebcdic),  всегда  игнорируются.   При
-       обратном  преобразовании шестнадцатеричного представления в стиле post‐
-       script с помощью команды xxd -r -p количество колонок  не  учитывается.
-       В  этом  случае  распознаются  все  символы,  которые  похожи  на  пары
-       шестнадцатеричных цифр.
+       When  editing hexdumps, please note that xxd -r skips everything on the
+       input line after reading enough columns of hexadecimal data (see option
+       -c).  This  also means, that changes to the printable ascii (or ebcdic)
+       columns are always ignored. Reverting a  plain  (or  postscript)  style
+       hexdump  with  xxd  -r -p does not depend on the correct number of col-
+       umns. Here anything that looks like a  pair  of  hex-digits  is  inter-
+       preted.
 
-       Обратите внимание на различие между командами
+       Note the difference between
+       % xxd -i file
+       and
+       % xxd -i < file
 
-       % xxd -i файл
+       xxd  -s +seek may be different from xxd -s seek, as lseek(2) is used to
+       "rewind" input.  A '+' makes a difference if the input source is stdin,
+       and  if  stdin's  file  position is not at the start of the file by the
+       time xxd is started and given its input.  The  following  examples  may
+       help to clarify (or further confuse!)...
 
-       и
+       Rewind  stdin before reading; needed because the `cat' has already read
+       to the end of stdin.
+       % sh -c "cat > plain_copy; xxd -s 0 > hex_copy" < file
 
-       % xxd -i < файл
-
-       Команда xxd -s +seek может отличаться от xxd  -s  seek,  поскольку  для
-       того,  чтобы  "отмотать"  данные  на  входе  назад,  используется вызов
-       lseek(2).  При  использовании  `+'  поведение  будет  отличаться,  если
-       входные данные поступают с потока стандартного ввода, а позиция в файле
-       стандартного ввода не находится в начале файла к  тому  моменту,  когда
-       программа  xxd  запущена  и  приступает  к чтению ввода.  Нижеследующие
-       примеры помогут прояснить (или ещё больше запутать!) ситуацию...
-
-       Отмотка назад потока стандартного ввода;  необходимо,  поскольку  'cat'
-       уже выполнила чтение до конца потока стандартного ввода:
-
-       % sh -c 'cat > plain_copy; xxd -s 0 > hex_copy' < file
-
-       Вывод  шестнадцатеричного  представления  от  позиции  в файле 0x480 (=
-       1024+128).  Символ `+' означает "относительно текущей  позиции",  таким
-       образом `128' добавляется к первому килобайту, где завершает работу dd:
-
-       %  sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +128 > hex_snippet'
+       Hexdump from file position 0x480 (=1024+128)  onwards.   The  `+'  sign
+       means "relative to the current position", thus the `128' adds to the 1k
+       where dd left off.
+       % sh -c "dd of=plain_snippet bs=1k count=1; xxd -s +128 >  hex_snippet"
        < file
 
-       Вывод шестнадцатеричного представления от  позиции  в  файле  0x100  (=
-       1024-768):
-
-       % sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +-768 > hex_snippet'
+       Hexdump from file position 0x100 ( = 1024-768) on.
+       % sh -c "dd of=plain_snippet bs=1k count=1; xxd -s +-768 > hex_snippet"
        < file
 
-       В то же время, следует  заметить,  что  подобные  ситуации  встречаются
-       довольно  редко,  так  что  символ  `+'  обычно  не используется. Автор
-       предпочитает наблюдать за работой xxd с помощью strace(1) или  truss(1)
-       в тех случаях, когда применяется ключ -s.
+       However, this is a rare situation and the use of `+' is rarely  needed.
+       The  author  prefers  to  monitor  the  effect of xxd with strace(1) or
+       truss(1), whenever -s is used.
 
-ПРИМЕРЫ
-       Вывести всё, кроме первых трёх строк (0x30 байтов) файла file :
-
+EXAMPLES
+       Print everything but the first three lines (hex 0x30 bytes) of file.
        % xxd -s 0x30 file
 
-       Вывести три строки (0x30 байтов) от конца файла file :
-
+       Print 3 lines (hex 0x30 bytes) from the end of file.
        % xxd -s -0x30 file
 
-       Вывести 120 байтов в виде непрерывного шестнадцатеричного представления
-       по 20 октетов в строке:
-
+       Print 120 bytes as continuous hexdump with 20 octets per line.
        % xxd -l 120 -ps -c 20 xxd.1
-       2e544820585844203120224d616e75616c207061
-       676520666f7220787864220a2e5c220a2e5c2220
-       32317374204d617920313939360a2e5c22204d61
-       6e207061676520617574686f723a0a2e5c222020
-       2020546f6e79204e7567656e74203c746f6e7940
-       7363746e7567656e2e7070702e67752e6564752e
+       2e54482058584420312022417567757374203139
+       39362220224d616e75616c207061676520666f72
+       20787864220a2e5c220a2e5c222032317374204d
+       617920313939360a2e5c22204d616e2070616765
+       20617574686f723a0a2e5c2220202020546f6e79
+       204e7567656e74203c746f6e79407363746e7567
 
-       Вывести первые 120 байтов этой страницы справочника  по  12  октетов  в
-       строке:
-
+       Hexdump the first 120 bytes of this man page with 12 octets per line.
        % xxd -l 120 -c 12 xxd.1
-       0000000: 2e54 4820 5858 4420 3120 224d  .TH XXD 1 "M
-       000000c: 616e 7561 6c20 7061 6765 2066  anual page f
-       0000018: 6f72 2078 7864 220a 2e5c 220a  or xxd"..\".
-       0000024: 2e5c 2220 3231 7374 204d 6179  .\" 21st May
-       0000030: 2031 3939 360a 2e5c 2220 4d61   1996..\" Ma
-       000003c: 6e20 7061 6765 2061 7574 686f  n page autho
-       0000048: 723a 0a2e 5c22 2020 2020 546f  r:..\"    To
-       0000054: 6e79 204e 7567 656e 7420 3c74  ny Nugent <t
-       0000060: 6f6e 7940 7363 746e 7567 656e  ony@sctnugen
-       000006c: 2e70 7070 2e67 752e 6564 752e  .ppp.gu.edu.
+       0000000: 2e54 4820 5858 4420 3120 2241  .TH XXD 1 "A
+       000000c: 7567 7573 7420 3139 3936 2220  ugust 1996"
+       0000018: 224d 616e 7561 6c20 7061 6765  "Manual page
+       0000024: 2066 6f72 2078 7864 220a 2e5c   for xxd"..\
+       0000030: 220a 2e5c 2220 3231 7374 204d  "..\" 21st M
+       000003c: 6179 2031 3939 360a 2e5c 2220  ay 1996..\"
+       0000048: 4d61 6e20 7061 6765 2061 7574  Man page aut
+       0000054: 686f 723a 0a2e 5c22 2020 2020  hor:..\"
+       0000060: 546f 6e79 204e 7567 656e 7420  Tony Nugent
+       000006c: 3c74 6f6e 7940 7363 746e 7567  <tony@sctnug
 
-       Показать дату из файла xxd.1:
+       Display just the date from the file xxd.1
+       % xxd -s 0x36 -l 13 -c 13 xxd.1
+       0000036: 3231 7374 204d 6179 2031 3939 36  21st May 1996
 
-       % xxd -s 0x28 -l 12 -c 12 xxd.1
-       0000028: 3231 7374 204d 6179 2031 3939  21st May 199
+       Copy input_file to output_file and prepend 100 bytes of value 0x00.
+       % xxd input_file | xxd -r -s 100 > output_file
 
-       Скопировать  входной_файл  в  выходной_файл с добавлением 100 байтов со
-       значением 0x00 в начало файла:
+       Patch the date in the file xxd.1
+       % echo "0000037: 3574 68" | xxd -r - xxd.1
+       % xxd -s 0x36 -l 13 -c 13 xxd.1
+       0000036: 3235 7468 204d 6179 2031 3939 36  25th May 1996
 
-       % xxd входной_файл | xxd -r -s 100 > выходной_файл
+       Create a 65537 byte file with all bytes 0x00, except for the  last  one
+       which is 'A' (hex 0x41).
+       % echo "010000: 41" | xxd -r > file
 
-       Заменить дату в файле xxd.1:
-
-       % echo '0000029: 3574 68' | xxd -r - xxd.1
-       % xxd -s 0x28 -l 12 -c 12 xxd.1
-       0000028: 3235 7468 204d 6179 2031 3939  25th May 199
-
-       Создать 65537-байтный файл, все байты  которого  имеют  значение  0x00,
-       кроме последнего байта, который должен иметь значение 'A' (0x41):
-
-       % echo '010000: 41' | xxd -r > file
-
-       Создать  шестнадцатеричное  представление  этого файла с использованием
-       автоматического пропуска:
-
+       Hexdump this file with autoskip.
        % xxd -a -c 12 file
        0000000: 0000 0000 0000 0000 0000 0000  ............
        *
        000fffc: 0000 0000 40                   ....A
 
-       Создать 1-байтный файл, содержащий символ 'A'.   Число  после  '-r  -s'
-       добавляется   к   номерам  строк,  найденным  в  файле;  иначе  говоря,
-       предшествующие байты пропускаются:
+       Create a 1 byte file containing a single 'A' character.  The number af-
+       ter '-r -s' adds to the linenumbers found in the file; in  effect,  the
+       leading bytes are suppressed.
+       % echo "010000: 41" | xxd -r -s -0x10000 > file
 
-       % echo '010000: 41' | xxd -r -s -0x10000 > file
-
-       xxd можно использовать в  качестве  фильтра  в  редакторе,  например  в
-       vim(1),  чтобы  создать  шестнадцатеричное  представление области между
-       отметками `a' и `z':
-
+       Use xxd as a filter within an editor such as vim(1) to hexdump a region
+       marked between `a' and `z'.
        :'a,'z!xxd
 
-       Вы можете использовать xxd в качестве фильтра в редакторе,  например  в
-       vim(1),  для  восстановления данных из шестнадцатеричного представления
-       между отметками `a' и `z':
-
+       Use xxd as a filter within an editor such as vim(1) to recover a binary
+       hexdump marked between `a' and `z'.
        :'a,'z!xxd -r
 
-       Вы можете использовать xxd в качестве фильтра в редакторе,  например  в
-       vim(1),    для    восстановления    данных   из   единственной   строки
-       шестнадцатеричного представления. Поместите  курсор  в  соответствующую
-       строку и наберите
-
+       Use xxd as a filter within an editor such as vim(1) to recover one line
+       of a hexdump.  Move the cursor over the line and type:
        !!xxd -r
 
-       Чтобы прочитать единственный символ из канала связи:
-
+       Read single characters from a serial line
        % xxd -c1 < /dev/term/b &
        % stty < /dev/term/b -echo -opost -isig -icanon min 1
        % echo -n foo > /dev/term/b
 
-ВОЗВРАЩАЕМЫЕ ЗНАЧЕНИЯ
-       Программа xxd завершает работу со следующими значениями:
+RETURN VALUES
+       The following error values are returned:
 
-       0      Ошибки не обнаружены.
+       0      no errors encountered.
 
-       -1     Операция   не   поддерживается   (выполнение   xxd  -r  -i  пока
-              невозможно).
+       -1     operation not supported ( xxd -r -i still impossible).
 
-       1      Ошибка при разборе ключей командной строки.
+       1      error while parsing options.
 
-       2      Проблемы во входном файле.
+       2      problems with input file.
 
-       3      Проблемы в выходном файле.
+       3      problems with output file.
 
-       4,5    Желательная позиция поиска недостижима.
+       4,5    desired seek position is unreachable.
 
-СМОТРИ ТАКЖЕ
+SEE ALSO
        uuencode(1), uudecode(1), patch(1)
 
-ПРЕДУПРЕЖДЕНИЕ
-       Странность  этой  программы   соответствует   особенностям   мозга   её
-       создателя.   Используйте  её  на  свой  страх  и риск. Копируйте файлы,
-       отслеживайте вызовы, становитесь волшебником.
+WARNINGS
+       The tools weirdness matches its creators brain.  Use entirely  at  your
+       own risk. Copy files. Trace it. Become a wizard.
 
-ВЕРСИЯ
-       Эта страница справочника документирует xxd версии 1.7.
+VERSION
+       This manual page documents xxd version 1.7
 
-АВТОР
-       (c) 1990-1997 Юрген Вайгерт (Juergen Weigert)
+AUTHOR
+       (c) 1990-1997 by Juergen Weigert
        <jnweiger@informatik.uni-erlangen.de>
 
-       Вы можете свободно распространять программу со ссылкой на меня.
-       Если  использование  этой  программы  принесло  вам   какой-то   доход,
-       поделитесь со мной.
-       Если вы потеряли деньги, то я тут не причём.
+       Distribute freely and credit me,
+       make money and share with me,
+       lose money and don't ask me.
 
-       Первый  вариант  страницы  справочника написан Тони Наджентом (Tony Nu‐
-       gent)
+       Manual page started by Tony Nugent
        <tony@sctnugen.ppp.gu.edu.au> <T.Nugent@sct.gu.edu.au>
-       Небольшие  изменения  внесены  Брамом  Мооленааром  (Bram   Moolenaar).
-       Страница отредактирована Юргеном Вайгертом (Juergen Weigert).
+       Small changes by Bram Moolenaar.  Edited by Juergen Weigert.
 
-Страница man для xxd              August 1996                           XXD(1)
+Manual page for xxd               August 1996                           XXD(1)
