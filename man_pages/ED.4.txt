@@ -1,0 +1,551 @@
+ED(4) BSD Kernel Interfaces Manual ED(4)
+
+NAME
+
+ed &mdash; NE-2000 and
+WD-80x3 Ethernet driver
+
+SYNOPSIS
+
+To compile this driver into the
+kernel, place the following lines in your kernel
+configuration file:
+
+device
+miibus 
+device ed
+
+Alternatively,
+to load the driver as a module at boot time, place the
+following line in loader.conf(5):
+
+if_ed_load="YES"
+
+DEPRECATION NOTICE
+
+The ed driver is not
+present in FreeBSD 13.0 and later. See
+https://github.com/freebsd/fcp/blob/master/fcp-0101.md for
+more information.
+
+DESCRIPTION
+
+The ed driver provides
+support for 8 and 16bit Ethernet cards that are based on the
+National Semiconductor DS8390 and similar NICs manufactured
+by other companies. The ed driver also supports many
+PC Card chips which interface via MII to a PHY.
+Axiom&rsquo;s AX88790, AX88190 and AX88190A; DLink&rsquo;s
+DL10019 and DL10022; and Tamarack&rsquo;s TC5299J chips all
+support internal or external MII/PHY combinations.
+Realtek&rsquo;s PCI and ISA RTL80x9-based cards are also
+supported. For these chipsets, autonegotiation and status
+reporting are supported.
+
+In addition to
+the standard port and IRQ specifications, the ed
+driver also supports a number of flags which can
+force 8/16bit mode, enable/disable multi-buffering, and
+select the default interface type (AUI/BNC, and for cards
+with twisted pair, AUI/10BaseT).
+
+The flags
+are a bit field, and are summarized as follows:
+
+0x01
+
+Disable
+transceiver. On those cards which support it, this flag
+causes the transceiver to be disabled and the AUI connection
+to be used by default.
+
+0x02
+
+Force 8bit
+mode. This flag forces the card to 8bit mode regardless of
+how the card identifies itself. This may be needed for some
+clones which incorrectly identify themselves as 16bit, even
+though they only have an 8bit interface. This flag takes
+precedence over force 16bit mode.
+
+0x04
+
+Force 16bit
+mode. This flag forces the card to 16bit mode regardless of
+how the card identifies itself. This may be needed for some
+clones which incorrectly identify themselves as 8bit, even
+though they have a 16bit ISA interface.
+
+0x08
+
+Disable
+transmitter multi-buffering. This flag disables the use of
+multiple transmit buffers and may be necessary in rare cases
+where packets are sent out faster than a machine on the
+other end can handle (as evidenced by severe packet
+lossage). Some (non-FreeBSD :-)) machines have terrible
+Ethernet performance and simply cannot cope with 1100K+ data
+rates. Use of this flag also provides one more packet worth
+of receiver buffering, and on 8bit cards, this may help
+reduce receiver lossage.
+
+When using a
+3c503 card, the AUI connection may be selected by specifying
+the link2 option to ifconfig(8) (BNC is the
+default).
+
+HARDWARE
+
+The ed driver supports
+the following Ethernet NICs:
+
+&bull;
+
+3Com 3c503 Etherlink II
+(options ED_3C503)
+
+&bull;
+
+AR-P500 Ethernet
+
+&bull;
+
+Accton EN1644 (old model),
+EN1646 (old model), EN2203 (old model) (110pin) (flags
+0xd00000)
+
+&bull;
+
+Accton EN2212/EN2216/UE2216
+
+&bull;
+
+Allied Telesis CentreCOM
+LA100-PCM_V2
+
+&bull;
+
+AmbiCom 10BaseT card (8002,
+8002T, 8010 and 8610)
+
+&bull;
+
+Bay Networks NETGEAR FA410TXC
+Fast Ethernet
+
+&bull;
+
+Belkin F5D5020 PC Card Fast
+Ethernet
+
+&bull;
+
+Billionton LM5LT-10B
+Ethernet/Modem PC Card
+
+&bull;
+
+Billionton LNT-10TB, LNT-10TN
+Ethernet PC Card
+
+&bull;
+
+Bromax iPort 10/100 Ethernet PC
+Card
+
+&bull;
+
+Bromax iPort 10 Ethernet PC
+Card
+
+&bull;
+
+Buffalo LPC2-CLT, LPC3-CLT,
+LPC3-CLX, LPC4-TX, LPC-CTX PC Card
+
+&bull;
+
+Buffalo LPC-CF-CLT CF Card
+
+&bull;
+
+CNet BC40 adapter
+
+&bull;
+
+Compex Net-A adapter
+
+&bull;
+
+Compex RL2000
+
+&bull;
+
+Corega Ether PCC-T/EtherII
+PCC-T/FEther PCC-TXF/PCC-TXD PCC-T/Fether II TXD
+
+&bull;
+
+Corega LAPCCTXD (TC5299J)
+
+&bull;
+
+CyQ&rsquo;ve ELA-010
+
+&bull;
+
+DEC EtherWorks DE305
+
+&bull;
+
+Danpex EN-6200P2
+
+&bull;
+
+D-Link DE-660, DE-660+
+
+&bull;
+
+D-Link IC-CARD/IC-CARD+
+Ethernet
+
+&bull;
+
+ELECOM Laneed LD-CDL/TX,
+LD-CDF, LD-CDS, LD-10/100CD, LD-CDWA (DP83902A)
+
+&bull;
+
+Hawking PN652TX PC Card
+(AX88790)
+
+&bull;
+
+HP PC Lan+ 27247B and 27252A
+(options ED_HPP)
+
+&bull;
+
+IBM Creditcard Ethernet
+I/II
+
+&bull;
+
+I-O DATA ET2/T-PCI
+
+&bull;
+
+I-O DATA PCLATE
+
+&bull;
+
+Kingston KNE-PC2, CIO10T,
+KNE-PCM/x Ethernet
+
+&bull;
+
+KTI ET32P2 PCI
+
+&bull;
+
+Linksys EC2T/PCMPC100/PCM100,
+PCMLM56
+
+&bull;
+
+Linksys EtherFast 10/100 PC
+Card, Combo PCMCIA Ethernet Card (PCMPC100 V2)
+
+&bull;
+
+MACNICA Ethernet ME1 for
+JEIDA
+
+&bull;
+
+MELCO LGY-PCI-TR
+
+&bull;
+
+MELCO
+LPC-T/LPC2-T/LPC2-CLT/LPC2-TX/LPC3-TX/LPC3-CLX
+
+&bull;
+
+NDC Ethernet Instant-Link
+
+&bull;
+
+National Semiconductor
+InfoMover NE4100
+
+&bull;
+
+NetGear FA-410TX
+
+&bull;
+
+NetVin NV5000SC
+
+&bull;
+
+Network Everywhere Ethernet
+10BaseT PC Card
+
+&bull;
+
+New Media LANSurfer 10+56
+Ethernet/Modem
+
+&bull;
+
+New Media LANSurfer
+
+&bull;
+
+Novell NE1000/NE2000/NE2100
+
+&bull;
+
+PLANEX ENW-8300-T
+
+&bull;
+
+PLANEX FNW-3600-T
+
+&bull;
+
+Psion 10/100 LANGLOBAL Combine
+iT
+
+&bull;
+
+RealTek 8019
+
+&bull;
+
+RealTek 8029
+
+&bull;
+
+Relia Combo-L/M-56k PC Card
+
+&bull;
+
+SMC Elite 16 WD8013
+
+&bull;
+
+SMC Elite Ultra
+
+&bull;
+
+SMC
+WD8003E/WD8003EBT/WD8003S/WD8003SBT/WD8003W/WD8013EBT/WD8013W
+and clones
+
+&bull;
+
+SMC EZCard PC Card, 8040-TX,
+8041-TX (AX88x90), 8041-TX V.2 (TC5299J)
+
+&bull;
+
+Socket LP-E, ES-1000
+Ethernet/Serial, LP-E CF, LP-FE CF
+
+&bull;
+
+Surecom EtherPerfect EP-427
+
+&bull;
+
+Surecom NE-34
+
+&bull;
+
+TDK 3000/3400/5670 Fast
+Ethernet/Modem
+
+&bull;
+
+TDK LAK-CD031, Grey Cell
+GCS2000 Ethernet Card
+
+&bull;
+
+TDK DFL5610WS Ethernet/Modem PC
+Card
+
+&bull;
+
+Telecom Device SuperSocket
+RE450T
+
+&bull;
+
+Toshiba LANCT00A PC Card
+
+&bull;
+
+VIA VT86C926
+
+&bull;
+
+Winbond W89C940
+
+&bull;
+
+Winbond W89C940F
+
+ISA, PCI and PC
+Card devices are supported.
+
+The ed
+driver does not support the following Ethernet NICs:
+
+&bull;
+
+Mitsubishi LAN Adapter
+B8895
+
+DIAGNOSTICS
+
+ed%d: failed to clear shared
+memory at %x - check configuration.  When the card
+was probed at system boot time, the ed driver found
+that it could not clear the card&rsquo;s shared memory. This
+is most commonly caused by a BIOS extension ROM being
+configured in the same address space as the Ethernet
+card&rsquo;s shared memory. Either find the offending card
+and change its BIOS ROM to be at an address that does not
+conflict, or change the settings in device.hints(5) that the
+card&rsquo;s shared memory is mapped at a non-conflicting
+address.
+
+ed%d: Invalid
+irq configuration (%d) must be 2-5 for 3c503.  The
+IRQ number that was specified in the device.hints(5) file is
+not valid for the 3Com 3c503 card. The 3c503 can only be
+assigned to IRQs 2 through 5.
+
+ed%d: Cannot
+find start of RAM.  
+ed%d: Cannot find any RAM, start : %d, x = %d.  The
+probe of a Gateway card was unsuccessful in configuring the
+card&rsquo;s packet memory. This likely indicates that the
+card was improperly recognized as a Gateway or that the card
+is defective.
+
+ed: packets
+buffered, but transmitter idle.  Indicates a logic
+problem in the driver. Should never happen.
+
+ed%d: device
+timeout  Indicates that an expected transmitter
+interrupt did not occur. Usually caused by an interrupt
+conflict with another card on the ISA bus. This condition
+could also be caused if the kernel is configured for a
+different IRQ channel than the one the card is actually
+using. If that is the case, you will have to either
+reconfigure the card using a DOS utility or set the jumpers
+on the card appropriately.
+
+ed%d: NIC
+memory corrupt - invalid packet length %d. 
+Indicates that a packet was received with a packet length
+that was either larger than the maximum size or smaller than
+the minimum size allowed by the IEEE 802.3 standard. Usually
+caused by a conflict with another card on the ISA bus, but
+in some cases may also indicate faulty cabling.
+
+ed%d: remote
+transmit DMA failed to complete.  This indicates
+that a programmed I/O transfer to an NE1000 or NE2000 style
+card has failed to properly complete. Usually caused by the
+ISA bus speed being set too fast.
+
+ed%d: Invalid
+irq configuration (%ld) must be %s for %s 
+Indicates the device has a different IRQ than supported or
+expected.
+
+ed%d: Cannot
+locate my ports!  The device is using a different
+I/O port than the driver knows about.
+
+ed%d: Cannot
+extract MAC address  Attempts to get the MAC
+address failed.
+
+ed%d: Missing
+mii!  Probing for an MII bus has failed. This
+indicates a coding error in the PC Card attachment, because
+a PHY is required for the chips that generate this error
+message.
+
+SEE ALSO
+
+altq(4), arp(4), miibus(4),
+netintro(4), ng_ether(4), device.hints(5), ifconfig(8)
+
+HISTORY
+
+The ed device driver
+first appeared in FreeBSD 1.0.
+
+AUTHORS
+
+The ed device driver and
+this manual page were written by David Greenman.
+
+CAVEATS
+
+Early revision DS8390 chips have
+problems. They lock up whenever the receive ring-buffer
+overflows. They occasionally switch the byte order of the
+length field in the packet ring header (several different
+causes of this related to an off-by-one byte alignment) -
+resulting in "NIC memory corrupt - invalid packet
+length" messages. The card is reset whenever these
+problems occur, but otherwise there is no problem with
+recovering from these conditions.
+
+The NIC memory
+access to 3Com and Novell cards is much slower than it is on
+WD/SMC cards; it is less than 1MB/second on 8bit boards and
+less than 2MB/second on the 16bit cards. This can lead to
+ring-buffer overruns resulting in dropped packets during
+heavy network traffic.
+
+The Mitsubishi
+B8895 PC Card uses a DP83902, but its ASIC part is
+undocumented. Neither the NE2000 nor the WD83x0 drivers work
+with this card.
+
+BUGS
+
+The ed driver is a bit
+too aggressive about resetting the card whenever any bad
+packets are received. As a result, it may throw out some
+good packets which have been received but not yet
+transferred from the card to main memory.
+
+The ed
+driver is slow by today&rsquo;s standards.
+
+PC Card
+attachment supports the D-Link DMF650TX LAN/Modem
+card&rsquo;s Ethernet port only at this time.
+
+Some devices
+supported by ed do not generate the link state change
+events used by devd(8) to start dhclient(8). If you have
+problems with dhclient(8) not starting and the device is
+always attached to the network it may be possible to work
+around this by changing &rsquo;&rsquo;DHCP&rsquo;&rsquo; to
+&rsquo;&rsquo;SYNCDHCP&rsquo;&rsquo; in the
+ifconfig_ed0 entry in /etc/rc.conf.
+
+BSD
+October 24, 2018 BSD

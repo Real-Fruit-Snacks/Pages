@@ -1,179 +1,213 @@
-nscd.conf(5)                  File Formats Manual                 nscd.conf(5)
-
-
-
 NAME
-       nscd.conf - name service cache daemon configuration file
+
+nscd.conf -
+configuration file for Name Service Caching Daemon
 
 DESCRIPTION
-       The  file  /etc/nscd.conf  is  read from nscd(8) at startup.  Each line
-       specifies either an attribute and a value, or  an  attribute,  service,
-       and  a  value.  Fields are separated either by SPACE or TAB characters.
-       A '#' (number sign) indicates the beginning  of  a  comment;  following
-       characters, up to the end of the line, are not interpreted by nscd.
 
-       Valid services are passwd, group, hosts, services, or netgroup.
+/etc/nscd.conf
+configures the caches used by nscd(8) as well as some
+generic options. nscd(8) is able to use a
+configuration file at a different location, when supplied
+with the -f or --config-file command line
+option.
 
-       logfile debug-file-name
-              Specifies  name  of the file to which debug info should be writ‐
-              ten.
+The
+configuration file consists of a set of lines. Empty lines,
+and text after a &rsquo;#&rsquo; is ignored. All remaining
+lines denote the setting of an option. White space before
+and after options, and between options and option arguments
+is ignored.
 
-       debug-level value
-              Sets the desired debug level.  0 hides debug info.  1 shows gen‐
-              eral  debug  info.  2 additionally shows data in cache dumps.  3
-              (and above) shows all debug info.  The default is 0.
+There are two
+kinds of options: General options influence
+nscd(8)&rsquo;s general behaviour, while cache
+related options only affect the specified cache. Options are
+set like this:
 
-       threads number
-              This is the initial number of threads that are started  to  wait
-              for  requests.   At  least  five threads will always be created.
-              The number of threads may increase dynamically up to max-threads
-              in response to demand from clients, but never decreases.
+general_option
+option 
+cache_option cache_name option
 
-       max-threads number
-              Specifies the maximum number of threads.  The default is 32.
+GENERAL OPTIONS
 
-       server-user user
-              If  this  option  is  set, nscd will run as this user and not as
-              root.  If a separate cache for every user is  used  (-S  parame‐
-              ter), this option is ignored.
+logfile file
 
-       stat-user user
-              Specifies the user who is allowed to request statistics.
+Specifies the name of the debug
+log-file that nscd(8) should use if
+debug-level is higher than 0. If this option
+is not set, nscd(8) will write its debug output to
+stderr.
 
-       reload-count unlimited | number
-              Sets a limit on the number of times a cached entry gets reloaded
-              without being used before it gets removed.  The limit  can  take
-              values  ranging  from  0 to 254; values 255 or higher behave the
-              same as unlimited.  Limit values can be specified in either dec‐
-              imal  or  hexadecimal with a "0x" prefix.  The special value un‐
-              limited is case-insensitive.  The default limit is 5.   A  limit
-              of  0 turns off the reloading feature.  See NOTES below for fur‐
-              ther discussion of reloading.
+debug-level level
 
-       paranoia <yes|no>
-              Enabling paranoia mode causes nscd to  restart  itself  periodi‐
-              cally.  The default is no.
+If level is higher than
+0, nscd(8) will create some debug output. The
+higher the level, the more verbose the output.
 
-       restart-interval time
-              Sets the restart interval to time seconds if periodic restart is
-              enabled by enabling paranoia mode.  The default is 3600.
+threads #threads
 
-       enable-cache service <yes|no>
-              Enables or disables the specified service cache.  The default is
-              no.
+This option sets the number of
+threads that nscd(8) should use by default. It can be
+overridden by calling nscd(8) with the -t or
+--nthreads argument. If neither this configuration
+option nor the command line argument is given,
+nscd(8) uses 5 threads by default. The minimum is 3.
+More threads means more simultaneous connections that
+nscd(8) can handle.
 
-       positive-time-to-live service value
-              Sets  the  TTL  (time-to-live)  for positive entries (successful
-              queries) in the specified cache for service.  Value is  in  sec‐
-              onds.   Larger  values  increase cache hit rates and reduce mean
-              response times, but  increase  problems  with  cache  coherence.
-              Note  that  for  some name services (including specifically DNS)
-              the TTL returned from the name service is used and  this  attri‐
-              bute is ignored.
+max-threads #threads
 
-       negative-time-to-live service value
-              Sets  the  TTL (time-to-live) for negative entries (unsuccessful
-              queries) in the specified cache for service.  Value is  in  sec‐
-              onds.   Can  result  in  significant performance improvements if
-              there are several files owned by UIDs (user IDs) not  in  system
-              databases  (for  example  untarring  the Linux kernel sources as
-              root); should be kept small to reduce cache coherency problems.
+Specifies the maximum number of
+threads to be started.
 
-       suggested-size service value
-              This is the internal hash table  size,  value  should  remain  a
-              prime number for optimum efficiency.  The default is 211.
+server-user user
 
-       check-files service <yes|no>
-              Enables or disables checking the file belonging to the specified
-              service for changes.  The  files  are  /etc/passwd,  /etc/group,
-              /etc/hosts,  /etc/resolv.conf, /etc/services, and /etc/netgroup.
-              The default is yes.
+By default, nscd(8) is
+run as user root. This option can be set to force
+nscd(8) to drop root privileges after startup. It
+cannot be used when nscd(8) is called with the
+-S or --secure argument. Also note that some
+services require that nscd run as root, so using this may
+break those lookup services.
 
-       persistent service <yes|no>
-              Keep the content of the cache for service over server  restarts;
-              useful when paranoia mode is set.  The default is no.
+stat-user user
 
-       shared service <yes|no>
-              The  memory  mapping of the nscd databases for service is shared
-              with the clients so that they can directly search  in  them  in‐
-              stead  of  having  to ask the daemon over the socket each time a
-              lookup is performed.  The default is no.  Note that a cache miss
-              will still result in asking the daemon over the socket.
+Specifies the user who is
+allowed to request statistics.
 
-       max-db-size service bytes
-              The  maximum allowable size, in bytes, of the database files for
-              the service.  The default is 33554432.
+paranoia bool
 
-       auto-propagate service <yes|no>
-              When set to no for passwd or group service, then the .byname re‐
-              quests are not added to passwd.byuid or group.bygid cache.  This
-              can help with tables containing multiple records  for  the  same
-              ID.  The default is yes.  This option is valid only for services
-              passwd and group.
+bool must be one of
+yes or no. Enabling paranoia mode causes
+nscd(8) to restart itself periodically.
 
-NOTES
-       The default values stated in this manual page originate from the source
-       code  of  nscd(8)  and  are used if not overridden in the configuration
-       file.  The default values used in the configuration file of  your  dis‐
-       tribution might differ.
+restart-interval time
 
-   Reloading
-       nscd(8)  has a feature called reloading, whose behavior can be surpris‐
-       ing.
+Sets the restart interval to
+time seconds if periodic restart is enabled by enabling
+paranoia mode. The default value is 3600.
 
-       Reloading is enabled when the reload-count  attribute  has  a  non-zero
-       value.   The  default  value  in the source code enables reloading, al‐
-       though your distribution may differ.
+CACHE OPTIONS
 
-       When reloading is enabled, positive cached entries (the results of suc‐
-       cessful  queries)  do not simply expire when their TTL is up.  Instead,
-       at the expiry time, nscd will "reload", i.e., re-issue to the name ser‐
-       vice  the  same query that created the cached entry, to get a new value
-       to cache.  Depending on /etc/nsswitch.conf this may mean  that  a  DNS,
-       LDAP,  or NIS request is made.  If the new query is successful, reload‐
-       ing will repeat when the new value  would  expire,  until  reload-count
-       reloads  have happened for the entry, and only then will it actually be
-       removed from the cache.  A request from a client which hits  the  entry
-       will  reset  the  reload counter on the entry.  Purging the cache using
-       nscd -i overrides the reload logic and removes the entry.
+All cache
+options take two arguments. The first one denotes the
+service or cache the option should affect. Currently
+service can be one of passwd, group, or
+hosts. 
+enable-cache service bool
 
-       Reloading has the effect of extending cache entry TTLs without  compro‐
-       mising  on cache coherency, at the cost of additional load on the back‐
-       ing name service.  Whether this is a good idea on your  system  depends
-       on  details  of your applications' behavior, your name service, and the
-       effective TTL values of your cache entries.  Note that  for  some  name
-       services  (for  example,  DNS), the effective TTL is the value returned
-       from the name service and not the value  of  the  positive-time-to-live
-       attribute.
+bool must be one of
+yes or no. Each cache is disabled by default
+and must be enabled explicitly by setting this options to
+yes.
 
-       Please consider the following advice carefully:
+positive-time-to-live service secs
 
-       •  If  your  application  will make a second request for the same name,
-          after more than 1 TTL but before reload-count TTLs, and is sensitive
-          to  the  latency  of a cache miss, then reloading may be a good idea
-          for you.
+This is the number of seconds
+after which a cached entry is removed from the cache. This
+defaults to 3600 seconds (i. e. one hour).
 
-       •  If your name service is configured to return very  short  TTLs,  and
-          your  applications  only  make  requests rarely under normal circum‐
-          stances, then reloading may result in additional load on your  back‐
-          ing name service without any benefit to applications, which is prob‐
-          ably a bad idea for you.
+negative-time-to-live service secs
 
-       •  If your name service capacity is limited,  reloading  may  have  the
-          surprising effect of increasing load on your name service instead of
-          reducing it, and may be a bad idea for you.
+If an entry is not found by the
+Name Service, it is added to the cache and marked as
+"not existent". This option sets the number of
+seconds after which such a not existent entry is removed
+from the cache. This defaults to 20 seconds for the
+password and host caches and to 60 seconds for
+the group cache.
 
-       •  Setting reload-count to unlimited is almost never a good idea, as it
-          will  result  in  a cache that never expires entries and puts never-
-          ending additional load on the backing name service.
+suggested-size service prime-number
 
-       Some distributions have an init script for nscd(8) with a  reload  com‐
-       mand  which  uses  nscd  -i  to  purge the cache.  That use of the word
-       "reload" is entirely different from the "reloading" described here.
+This option sets the size of
+the hash that is used to store the cache entries. As this is
+a hash, it should be reasonably larger than the maximum
+number of entries that is expected to be cached
+simultaneously and should be a prime number. It defaults to
+a size of 211 entries.
+
+check-files service bool
+
+bool must be one of
+yes (default) or no. If file checking is
+enabled, nscd(8) periodically checks the modification
+time of /etc/passwd, /etc/group, or
+/etc/hosts (for the passwd, group, and
+host cache respectively) and invalidates the cache if
+the file has changed since the last check.
+
+persistent service bool
+
+bool must be one of
+yes (default) or no. Keep the content of the
+cache for service over nscd(8) restarts. Useful when
+paranoia mode is set.
+
+shared service bool
+
+bool must be one of
+yes (default) or no. The memory mapping of the
+nscd(8) databases for service is shared with the
+clients so that they can directly search in them instead of
+having to ask the daemon over the socket each time a lookup
+is performed.
+
+reload-count #number
+
+Sets the number of times a
+cached record is reloaded before it is pruned from the
+cache. Each cache record has a timeout, when that timeout
+expires, nscd(8) will either reload it (query the NSS
+service again if the data hasn&rsquo;t changed), or drop
+it.
+
+max-db-size service number-of-bytes
+
+Sets the maximum allowable size
+for the service.
+
+auto-propagate service bool
+
+When set to no for passwd or
+group service, then the .byname requests are not
+added to passwd.byuid or group.bygid cache.
+This may help for tables containing multiple records for the
+same id.
+
+EXAMPLE
+
+# This is a
+comment.
+
+logfile
+/var/log/nscd.log 
+threads 6 
+server-user nobody 
+debug-level 0
+
+enable-cache
+passwd yes 
+positive-time-to-live passwd 600 
+negative-time-to-live passwd 20 
+suggested-size passwd 211 
+check-files passwd yes
+
+enable-cache
+group yes 
+positive-time-to-live group 3600 
+negative-time-to-live group 60 
+suggested-size group 211 
+check-files group yes
+
+enable-cache
+hosts yes 
+positive-time-to-live hosts 3600 
+negative-time-to-live hosts 20 
+suggested-size hosts 211 
+check-files hosts yes
 
 SEE ALSO
-       nscd(8)
 
-
-
-Linux man-pages 6.05.01           2023-02-05                      nscd.conf(5)
+nscd(8),
+nsswitch.conf(5)

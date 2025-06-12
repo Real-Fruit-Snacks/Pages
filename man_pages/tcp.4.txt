@@ -1,0 +1,697 @@
+TCP(4) BSD Kernel Interfaces Manual TCP(4)
+
+NAME
+
+tcp &mdash; Internet
+Transmission Control Protocol
+
+SYNOPSIS
+
+#include 
+
+#include  
+#include  
+#include 
+
+int
+
+socket(AF_INET,
+SOCK_STREAM, 0);
+
+DESCRIPTION
+
+The TCP protocol provides
+reliable, flow-controlled, two-way transmission of data. It
+is a byte-stream protocol used to support the SOCK_STREAM
+abstraction. TCP uses the standard Internet address format
+and, in addition, provides a per-host collection of
+&rsquo;&rsquo;port addresses&rsquo;&rsquo;. Thus, each
+address is composed of an Internet address specifying the
+host and network, with a specific TCP port on the host
+identifying the peer entity.
+
+Sockets
+utilizing the TCP protocol are either
+&rsquo;&rsquo;active&rsquo;&rsquo; or
+&rsquo;&rsquo;passive&rsquo;&rsquo;. Active sockets initiate
+connections to passive sockets. By default, TCP sockets are
+created active; to create a passive socket, the listen(2)
+system call must be used after binding the socket with the
+bind(2) system call. Only passive sockets may use the
+accept(2) call to accept incoming connections. Only active
+sockets may use the connect(2) call to initiate
+connections.
+
+Passive sockets
+may &rsquo;&rsquo;underspecify&rsquo;&rsquo; their location
+to match incoming connection requests from multiple
+networks. This technique, termed &rsquo;&rsquo;wildcard
+addressing&rsquo;&rsquo;, allows a single server to provide
+service to clients on multiple networks. To create a socket
+which listens on all networks, the Internet address
+INADDR_ANY must be bound. The TCP port may still be
+specified at this time; if the port is not specified, the
+system will assign one. Once a connection has been
+established, the socket&rsquo;s address is fixed by the peer
+entity&rsquo;s location. The address assigned to the socket
+is the address associated with the network interface through
+which packets are being transmitted and received. Normally,
+this address corresponds to the peer entity&rsquo;s
+network.
+
+TCP supports a
+number of socket options which can be set with setsockopt(2)
+and tested with getsockopt(2):
+
+TCP_INFO
+
+Information
+about a socket&rsquo;s underlying TCP session may be
+retrieved by passing the read-only option TCP_INFO to
+getsockopt(2). It accepts a single argument: a pointer to an
+instance of struct tcp_info.
+
+This API is
+subject to change; consult the source to determine which
+fields are currently filled out by this option. FreeBSD
+specific additions include send window size, receive window
+size, and bandwidth-controlled window space.
+
+TCP_CCALGOOPT
+
+Set or query
+congestion control algorithm specific parameters. See
+mod_cc(4) for details.
+
+TCP_CONGESTION
+
+Select or query
+the congestion control algorithm that TCP will use for the
+connection. See mod_cc(4) for details.
+
+TCP_FUNCTION_BLK
+
+Select or query
+the set of functions that TCP will use for this connection.
+This allows a user to select an alternate TCP stack. The
+alternate TCP stack must already be loaded in the kernel. To
+list the available TCP stacks, see
+functions_available in the MIB Variables
+section further down. To list the default TCP stack, see
+functions_default in the MIB Variables
+section.
+
+TCP_KEEPINIT
+
+This
+setsockopt(2) option accepts a per-socket timeout argument
+of u_int in seconds, for new, non-established TCP
+connections. For the global default in milliseconds see
+keepinit in the MIB Variables section further
+down.
+
+TCP_KEEPIDLE
+
+This
+setsockopt(2) option accepts an argument of u_int for
+the amount of time, in seconds, that the connection must be
+idle before keepalive probes (if enabled) are sent for the
+connection of this socket. If set on a listening socket, the
+value is inherited by the newly created socket upon
+accept(2). For the global default in milliseconds see
+keepidle in the MIB Variables section further
+down.
+
+TCP_KEEPINTVL
+
+This
+setsockopt(2) option accepts an argument of u_int to
+set the per-socket interval, in seconds, between keepalive
+probes sent to a peer. If set on a listening socket, the
+value is inherited by the newly created socket upon
+accept(2). For the global default in milliseconds see
+keepintvl in the MIB Variables section further
+down.
+
+TCP_KEEPCNT
+
+This
+setsockopt(2) option accepts an argument of u_int and
+allows a per-socket tuning of the number of probes sent,
+with no response, before the connection will be dropped. If
+set on a listening socket, the value is inherited by the
+newly created socket upon accept(2). For the global default
+see the keepcnt in the MIB Variables section
+further down.
+
+TCP_NODELAY
+
+Under most
+circumstances, TCP sends data when it is presented; when
+outstanding data has not yet been acknowledged, it gathers
+small amounts of output to be sent in a single packet once
+an acknowledgement is received. For a small number of
+clients, such as window systems that send a stream of mouse
+events which receive no replies, this packetization may
+cause significant delays. The boolean option TCP_NODELAY
+defeats this algorithm.
+
+TCP_MAXSEG
+
+By default, a
+sender- and receiver-TCP will negotiate among themselves to
+determine the maximum segment size to be used for each
+connection. The TCP_MAXSEG option allows the user to
+determine the result of this negotiation, and to reduce it
+if desired.
+
+TCP_NOOPT
+
+TCP usually
+sends a number of options in each packet, corresponding to
+various TCP extensions which are provided in this
+implementation. The boolean option TCP_NOOPT is provided to
+disable TCP option use on a per-connection basis.
+
+TCP_NOPUSH
+
+By convention,
+the sender-TCP will set the &rsquo;&rsquo;push&rsquo;&rsquo;
+bit, and begin transmission immediately (if permitted) at
+the end of every user call to write(2) or writev(2). When
+this option is set to a non-zero value, TCP will delay
+sending any data at all until either the socket is closed,
+or the internal send buffer is filled.
+
+TCP_MD5SIG
+
+This option
+enables the use of MD5 digests (also known as TCP-MD5) on
+writes to the specified socket. Outgoing traffic is
+digested; digests on incoming traffic are verified. When
+this option is enabled on a socket, all inbound and outgoing
+TCP segments must be signed with MD5 digests.
+
+One common use
+for this in a FreeBSD router deployment is to enable based
+routers to interwork with Cisco equipment at peering points.
+Support for this feature conforms to RFC 2385.
+
+In order for
+this option to function correctly, it is necessary for the
+administrator to add a tcp-md5 key entry to the
+system&rsquo;s security associations database (SADB) using
+the setkey(8) utility. This entry can only be specified on a
+per-host basis at this time.
+
+If an SADB
+entry cannot be found for the destination, the system does
+not send any outgoing segments and drops any inbound
+segments.
+
+Each dropped
+segment is taken into account in the TCP protocol
+statistics.
+
+The option level
+for the setsockopt(2) call is the protocol number for TCP,
+available from getprotobyname(3), or IPPROTO_TCP. All
+options are declared in netinet/tcp.h>.
+
+Options at the
+IP transport level may be used with TCP; see ip(4). Incoming
+connection requests that are source-routed are noted, and
+the reverse source route is used in responding.
+
+The default
+congestion control algorithm for TCP is cc_newreno(4). Other
+congestion control algorithms can be made available using
+the mod_cc(4) framework.
+
+MIB
+Variables 
+The TCP protocol implements a number of variables in the
+net.inet.tcp branch of the sysctl(3) MIB.
+
+TCPCTL_DO_RFC1323
+
+(rfc1323)
+Implement the window scaling and timestamp options of RFC
+1323 (default is true).
+
+TCPCTL_MSSDFLT
+
+(mssdflt)
+The default value used for the maximum segment size
+(&rsquo;&rsquo;MSS&rsquo;&rsquo;) when no advice to the
+contrary is received from MSS negotiation.
+
+TCPCTL_SENDSPACE
+
+(sendspace)
+Maximum TCP send window.
+
+TCPCTL_RECVSPACE
+
+(recvspace)
+Maximum TCP receive window.
+
+log_in_vain
+
+Log any
+connection attempts to ports where there is not a socket
+accepting connections. The value of 1 limits the logging to
+SYN (connection establishment) packets only. That of 2
+results in any TCP packets to closed ports being logged. Any
+value unlisted above disables the logging (default is 0,
+i.e., the logging is disabled).
+
+msl
+
+The Maximum
+Segment Lifetime, in milliseconds, for a packet.
+
+keepinit
+
+Timeout, in
+milliseconds, for new, non-established TCP connections. The
+default is 75000 msec.
+
+keepidle
+
+Amount of time,
+in milliseconds, that the connection must be idle before
+keepalive probes (if enabled) are sent. The default is
+7200000 msec (2 hours).
+
+keepintvl
+
+The interval,
+in milliseconds, between keepalive probes sent to remote
+machines, when no response is received on a keepidle
+probe. The default is 75000 msec.
+
+keepcnt
+
+Number of
+probes sent, with no response, before a connection is
+dropped. The default is 8 packets.
+
+always_keepalive
+
+Assume that
+SO_KEEPALIVE is set on all TCP connections, the kernel will
+periodically send a packet to the remote host to verify the
+connection is still up.
+
+icmp_may_rst
+
+Certain ICMP
+unreachable messages may abort connections in SYN-SENT
+state.
+
+do_tcpdrain
+
+Flush packets
+in the TCP reassembly queue if the system is low on
+mbufs.
+
+blackhole
+
+If enabled,
+disable sending of RST when a connection is attempted to a
+port where there is not a socket accepting connections. See
+blackhole(4).
+
+delayed_ack
+
+Delay ACK to
+try and piggyback it onto a data packet.
+
+delacktime
+
+Maximum amount
+of time, in milliseconds, before a delayed ACK is sent.
+
+path_mtu_discovery
+
+Enable Path MTU Discovery.
+
+tcbhashsize
+
+Size of the TCP
+control-block hash table (read-only). This may be tuned
+using the kernel option TCBHASHSIZE or by setting
+net.inet.tcp.tcbhashsize in the loader(8).
+
+pcbcount
+
+Number of
+active process control blocks (read-only).
+
+syncookies
+
+Determines
+whether or not SYN cookies should be generated for outbound
+SYN-ACK packets. SYN cookies are a great help during SYN
+flood attacks, and are enabled by default. (See
+syncookies(4).)
+
+isn_reseed_interval
+
+The interval (in seconds)
+specifying how often the secret data used in RFC 1948
+initial sequence number calculations should be reseeded. By
+default, this variable is set to zero, indicating that no
+reseeding will occur. Reseeding should not be necessary, and
+will break TIME_WAIT recycling for a few minutes.
+
+reass.cursegments
+
+The current
+total number of segments present in all reassembly
+queues.
+
+reass.maxsegments
+
+The maximum
+limit on the total number of segments across all reassembly
+queues. The limit can be adjusted as a tunable.
+
+reass.maxqueuelen
+
+The maximum
+number of segments allowed in each reassembly queue. By
+default, the system chooses a limit based on each TCP
+connection&rsquo;s receive buffer size and maximum segment
+size (MSS). The actual limit applied to a session&rsquo;s
+reassembly queue will be the lower of the system-calculated
+automatic limit and the user-specified
+reass.maxqueuelen limit.
+
+rexmit_min,
+rexmit_slop
+
+Adjust the retransmit timer
+calculation for TCP. The slop is typically added to the raw
+calculation to take into account occasional variances that
+the SRTT (smoothed round-trip time) is unable to
+accommodate, while the minimum specifies an absolute
+minimum. While a number of TCP RFCs suggest a 1 second
+minimum, these RFCs tend to focus on streaming behavior, and
+fail to deal with the fact that a 1 second minimum has
+severe detrimental effects over lossy interactive
+connections, such as a 802.11b wireless link, and over very
+fast but lossy connections for those cases not covered by
+the fast retransmit code. For this reason, we use 200ms of
+slop and a near-0 minimum, which gives us an effective
+minimum of 200ms (similar to Linux).
+
+initcwnd_segments
+
+Enable the
+ability to specify initial congestion window in number of
+segments. The default value is 10 as suggested by RFC 6928.
+Changing the value on fly would not affect connections using
+congestion window from the hostcache. Caution: This
+regulates the burst of packets allowed to be sent in the
+first RTT. The value should be relative to the link
+capacity. Start with small values for lower-capacity links.
+Large bursts can cause buffer overruns and packet drops if
+routers have small buffers or the link is experiencing
+congestion.
+
+rfc3042
+
+Enable the
+Limited Transmit algorithm as described in RFC 3042. It
+helps avoid timeouts on lossy links and also when the
+congestion window is small, as happens on short
+transfers.
+
+rfc3390
+
+Enable support
+for RFC 3390, which allows for a variable-sized starting
+congestion window on new connections, depending on the
+maximum segment size. This helps throughput in general, but
+particularly affects short transfers and high-bandwidth
+large propagation-delay connections.
+
+sack.enable
+
+Enable support
+for RFC 2018, TCP Selective Acknowledgment option, which
+allows the receiver to inform the sender about all
+successfully arrived segments, allowing the sender to
+retransmit the missing segments only.
+
+sack.maxholes
+
+Maximum number
+of SACK holes per connection. Defaults to 128.
+
+sack.globalmaxholes
+
+Maximum number of SACK holes
+per system, across all connections. Defaults to 65536.
+
+maxtcptw
+
+When a TCP
+connection enters the TIME_WAIT state, its associated socket
+structure is freed, since it is of negligible size and use,
+and a new structure is allocated to contain a minimal amount
+of information necessary for sustaining a connection in this
+state, called the compressed TCP TIME_WAIT state. Since this
+structure is smaller than a socket structure, it can save a
+significant amount of system memory. The
+net.inet.tcp.maxtcptw MIB variable controls the
+maximum number of these structures allocated. By default, it
+is initialized to kern.ipc.maxsockets / 5.
+
+nolocaltimewait
+
+Suppress
+creating of compressed TCP TIME_WAIT states for connections
+in which both endpoints are local.
+
+fast_finwait2_recycle
+
+Recycle TCP FIN_WAIT_2
+connections faster when the socket is marked as
+SBS_CANTRCVMORE (no user process has the socket open, data
+received on the socket cannot be read). The timeout used
+here is finwait2_timeout.
+
+finwait2_timeout
+
+Timeout to use
+for fast recycling of TCP FIN_WAIT_2 connections. Defaults
+to 60 seconds.
+
+ecn.enable
+
+Enable support
+for TCP Explicit Congestion Notification (ECN). ECN allows a
+TCP sender to reduce the transmission rate in order to avoid
+packet drops. Settings:
+
+0
+
+Disable
+ECN.
+
+1
+
+Allow incoming
+connections to request ECN. Outgoing connections will
+request ECN.
+
+2
+
+Allow incoming
+connections to request ECN. Outgoing connections will not
+request ECN.
+
+ecn.maxretries
+
+Number of
+retries (SYN or SYN/ACK retransmits) before disabling ECN on
+a specific connection. This is needed to help with
+connection establishment when a broken firewall is in the
+network path.
+
+pmtud_blackhole_detection
+
+Turn on automatic path MTU
+blackhole detection. In case of retransmits OS will lower
+the MSS to check if it&rsquo;s MTU problem. If current MSS
+is greater than configured value to try, it will be set to
+configured value, otherwise, MSS will be set to default
+values (
+
+net.inet.tcp.mssdflt and
+net.inet.tcp.v6mssdflt ).
+
+pmtud_blackhole_mss
+
+MSS to try for IPv4 if PMTU
+blackhole detection is turned on.
+
+v6pmtud_blackhole_mss
+
+MSS to try for IPv6 if PMTU
+blackhole detection is turned on.
+
+pmtud_blackhole_activated
+
+Number of times configured
+values were used in an attempt to downshift.
+
+pmtud_blackhole_activated_min_mss
+
+Number of times default MSS was
+used in an attempt to downshift.
+
+pmtud_blackhole_failed
+
+Number of connections for which
+retransmits continued even after MSS downshift.
+
+functions_available
+
+List of available TCP function
+blocks (TCP stacks).
+
+functions_default
+
+The default TCP
+function block (TCP stack).
+
+functions_inherit_listen_socket_stack
+
+Determines whether to inherit
+listen socket&rsquo;s tcp stack or use the current system
+default tcp stack, as defined by functions_default
+
+). Default is true.
+
+insecure_rst
+
+Use criteria
+defined in RFC793 instead of RFC5961 for accepting RST
+segments. Default is false.
+
+insecure_syn
+
+Use criteria
+defined in RFC793 instead of RFC5961 for accepting SYN
+segments. Default is false.
+
+ERRORS
+
+A socket operation may fail with
+one of the following errors returned:
+
+[EISCONN]
+
+when trying to
+establish a connection on a socket which already has
+one;
+
+[ 
+ENOBUFS] or [ 
+ENOMEM]
+
+when the system runs out of
+memory for an internal data structure;
+
+[ETIMEDOUT]
+
+when a
+connection was dropped due to excessive retransmissions;
+
+[ECONNRESET]
+
+when the remote
+peer forces the connection to be closed;
+
+[ECONNREFUSED]
+
+when the remote
+peer actively refuses connection establishment (usually
+because no process is listening to the port);
+
+[EADDRINUSE]
+
+when an attempt
+is made to create a socket with a port which has already
+been allocated;
+
+[EADDRNOTAVAIL]
+
+when an attempt
+is made to create a socket with a network address for which
+no network interface exists;
+
+[EAFNOSUPPORT]
+
+when an attempt
+is made to bind or connect a socket to a multicast
+address.
+
+[EINVAL]
+
+when trying to
+change TCP function blocks at an invalid point in the
+session;
+
+[ENOENT]
+
+when trying to
+use a TCP function block that is not available;
+
+SEE ALSO
+
+getsockopt(2), socket(2),
+sysctl(3), blackhole(4), inet(4), intro(4), ip(4),
+mod_cc(4), siftr(4), syncache(4), setkey(8),
+tcp_functions(9)
+
+V. Jacobson
+
+,
+
+R. Braden , and 
+D. Borman , 
+TCP Extensions for High Performance , 
+RFC 1323 .
+
+A. Heffernan
+
+,
+
+Protection of BGP Sessions via the TCP MD5 Signature
+Option , 
+RFC 2385 .
+
+K. Ramakrishnan
+
+,
+
+S. Floyd , and 
+D. Black , 
+The Addition of Explicit Congestion Notification (ECN) to
+IP , 
+RFC 3168 .
+
+HISTORY
+
+The TCP protocol appeared in
+4.2BSD. The RFC 1323 extensions for window scaling and
+timestamps were added in 4.4BSD. The TCP_INFO option was
+introduced in Linux 2.6 and is subject to change.
+
+BSD
+August 6, 2018 BSD

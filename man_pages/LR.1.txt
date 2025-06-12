@@ -1,0 +1,562 @@
+LR(1) BSD General Commands Manual LR(1)
+
+NAME
+
+lr &mdash; list files,
+recursively
+
+SYNOPSIS
+
+lr
+[-0 | -F | -l [
+
+-TA | -TC | -TM
+] | -S | -f fmt]
+
+[-B | -D]
+[-H | -L] [-1AGPQXdhsx]
+[-U | -W | -o ord]
+
+[-e regex] [-t test]
+[-C [
+
+color: ]path] path ...
+
+DESCRIPTION
+
+lr is a versatile tool to
+generate file listings with configurable formatting,
+ordering and filtering.
+
+When no
+path is given or path is an empty string, the
+current directory is used by default.
+
+The special
+path argument &rsquo;-&rsquo; makes lr
+read file names from standard input, instead of traversing
+path. Likewise, the special path argument
+@file makes lr read file names from
+file.
+
+By default,
+lr traverses directories before their entries. When
+-D is used, the subdirectories (and files) are
+traversed first. When -B is used, each level of depth
+is traversed before moving deeper.
+
+The options are
+as follows:
+
+-0
+
+Output
+filenames separated by NUL bytes. Likewise, read input
+filenames separated by NUL bytes.
+
+-1
+
+Don&rsquo;t go
+below one level of directories.
+
+-A
+
+Don&rsquo;t
+list files starting with a dot.
+
+-B
+
+Use breadth
+first traversal. For each depth of the directory tree, files
+are sorted and printed, then the next depth is looked
+at.
+
+-C [ 
+color:]path
+
+Behaves as if path was
+passed like an ordinary argument, but overrides the color of
+the file names to the number color which must be
+between 0 and 255 (
+
+default: 2, green ).
+
+Implies
+-GG.
+
+-D
+
+Use depth first
+traversal. prune will not work, but entries
+and total are computed on the fly.
+
+-F
+
+Output
+filenames and an indicator of their file type (
+
+one of &rsquo;*/=>@|&rsquo; ).
+
+-G
+
+Colorize output
+to TTY. Use twice to force colorized output. If the
+environment variable NO_COLOR is set, colors are never
+used.
+
+-H
+
+Only follow
+symlinks on command line (
+
+default: don&rsquo;t follow symlinks ).
+
+-L
+
+Follow all
+symlinks.
+
+-P
+
+Quote file
+names using Austin Group #249 syntax $&rsquo;...&rsquo;
+(
+
+implies -Q ).
+
+-Q
+
+Quote file
+names (
+
+default for output to TTY ).
+
+-S
+
+Output inspired
+by BSD stat(1) (
+
+implies -Q ).
+
+-TA
+
+With -l,
+print atime.
+
+-TC
+
+With -l,
+print ctime.
+
+-TM
+
+With -l,
+print mtime. This is the default.
+
+-U
+
+Don&rsquo;t
+sort results, print during traversal.
+
+-W
+
+Sort results by
+name and print during traversal. (
+
+This is subtly different from sorting by file name with
+-on as it prints directories directly before their
+contents. )
+
+-X
+
+Output OSC 8
+hyperlinks to TTY. Use twice to force hyperlinks.
+
+-d
+
+Don&rsquo;t
+enter directories.
+
+-e regex
+
+Only show files where basename
+matches the POSIX ERE regex.
+
+-f fmt
+
+Custom
+formatting, see FORMATTING.
+
+-h
+
+Print human
+readable size for -l (
+
+also %s ).
+
+-l
+
+Long output a
+la &rsquo;ls -l&rsquo; (
+
+implies -Q ).
+
+-o ord
+
+Sort according
+to ord, see SORT ORDER.
+
+-s
+
+Strip directory
+prefix passed on command line.
+
+-t test
+
+Only show files matching the
+expression test, see TESTS. Multiple
+occurrences of -t and -e are regarded as a
+conjunction.
+
+-x
+
+Don&rsquo;t
+enter other filesystems.
+
+FORMATTING
+
+lr format strings support
+the following escape sequences:
+
+\a, \b, \f,
+\n, \r, \v
+
+Special characters as in C
+
+\ddd
+
+Byte with one,
+two or three-digit octal value
+
+\xdd
+
+Byte with one
+or two-digit hexadecimal value
+
+%%
+
+A plain
+&rsquo;%&rsquo;
+
+%s
+
+File size in
+bytes
+
+%S
+
+File size, with
+human readable unit
+
+%b
+
+File size in
+512-byte blocks
+
+%k
+
+File size in
+1024-byte blocks
+
+%d
+
+Path depth
+
+%D
+
+Device number
+(
+
+stat.st_dev ) 
+%R
+
+Device ID for
+special files (
+
+stat.st_rdev ) 
+%i
+
+Inode
+number
+
+%I
+
+One space
+character for every depth level
+
+%p
+
+Full path (
+
+%P if -s is used ) 
+%P
+
+Full path
+without command line argument prefix
+
+%l
+
+Symlink
+target
+
+%n
+
+Number of
+hardlinks
+
+%F
+
+File indicator
+type symbol (
+
+one of &rsquo;*/=>@|&rsquo; ) 
+%f
+
+File basename
+(
+
+everything after last / ) 
+%A-, %C-, %T-
+
+relative age for
+atime/ctime/mtime.
+
+%Ax, %Cx,
+%Tx
+
+result of strftime(3) for
+%x on atime/ctime/mtime
+
+%m
+
+Octal file
+permissions
+
+%M
+
+ls-style
+symbolic file permissions
+
+%y
+
+ls-style
+symbolic file type (
+
+&rsquo;bcdfls&rsquo; ) 
+%g
+
+Group name
+
+%G
+
+Numeric gid
+
+%u
+
+User name
+
+%U
+
+Numeric uid
+
+%e
+
+Number of
+entries in directories
+
+%t
+
+Total size used
+by accepted files in directories (
+
+only with -D ) 
+%Y
+
+Type of the
+filesystem the file resides on
+
+%x
+
+Linux-only:
+Print a combination of &rsquo;#&rsquo; for files with
+security capabilities, &rsquo;+&rsquo; for files with an
+ACL, &rsquo;@&rsquo; for files with other extended
+attributes
+
+SORT ORDER
+
+Sort order is string consisting
+of the following letters. Uppercase letters reverse sorting.
+Default sort order is &rsquo;n&rsquo;.
+
+a
+
+atime
+
+c
+
+ctime
+
+d
+
+path depth
+
+e
+
+file
+extension
+
+i
+
+inode
+number
+
+m
+
+mtime
+
+n
+
+file name
+
+p
+
+directory
+name
+
+s
+
+file size
+
+t
+
+file type. This
+sorts all directories before other files.
+
+v
+
+file name as
+version numbers (
+
+sorts &rsquo;2&rsquo; before &rsquo;10&rsquo; )
+
+E.g.
+&rsquo;Sn&rsquo; sorts first by size, smallest last,
+and then by name (
+
+in case sizes are equal ).
+
+TESTS
+
+lr tests are given by the
+following EBNF:
+
+ ::=
+ ||  -- disjunction 
+|  &&  -- conjunction 
+|  ?  :  -- ternary
+operator 
+| !  -- negation 
+| ( 
+|    
+|    
+|    
+|  
+|  
+| prune -- do not traverse into subdirectories 
+| print -- always true value 
+| skip -- always false value 
+| color  -- always true value, override
+256-color
+
+::= atime | ctime | mtime
+
+::= depth | dev | entries | gid | inode 
+| links | mode | rdev | size | total | uid
+
+::= = | > | == | = | !=
+
+ ::=
+"./path" -- mtime of relative path 
+| "/path" -- mtime of absolute path 
+| "YYYY-MM-DD HH:MM:SS" 
+| "YYYY-MM-DD" -- at midnight 
+| "HH:MM:SS" -- today 
+| "HH:MM" -- today 
+| "-[0-9]+d" -- n days ago at midnight 
+| "-[0-9]+h" -- n hours before now 
+| "-[0-9]+m" -- n minutes before now 
+| "-[0-9]+s" -- n seconds before now 
+| [0-9]+ -- absolute epoch time
+
+ ::=
+[0-9]+ ( c -- *1 
+| b -- *512 
+| k -- *1024 
+| M -- *1024*1024 
+| G -- *1024*1024*1024 
+| T )? -- *1024*1024*1024*1024
+
+::= fstype | group | name | path | target | user | xattr
+
+::= == | = | != -- string (in)equality 
+| === | !=== -- case insensitive string (in)equality 
+| ~~ | !~~ -- glob (fnmatch) 
+| ~~~ | !~~~ -- case insensitive glob (fnmatch) 
+| =~ | !=~ | !~ -- POSIX Extended Regular Expressions 
+| =~~ | !=~~ -- case insensitive POSIX Extended Regular
+Expressions
+
+ ::=
+" ([^"] | "")+ " -- use
+"" for a single " inside " 
+| $[A-Za-z0-9_]+ -- environment variable
+
+::= type ( == | = | != ) ( b | c | d | p | f | l )
+
+::= mode ( == | = -- exact permissions 
+| & -- check if all bits of  set 
+| | -- check if any bit of  set 
+)  
+| mode = "" -- check if symbolic mode
+is satisfied
+
+::= [0-7]+
+
+::=  (, )+
+
+::= [guoa]* [+-=] [rwxXstugo]* -- see chmod(1)
+
+EXIT STATUS
+
+The lr utility
+exits 0 on success, and >0 if an error
+occurs.
+
+SEE ALSO
+
+du(1), find(1), ls(1), stat(1),
+tw(1)
+
+AUTHORS
+
+Leah Neukirchen
+leah [AT] vuxu.org>
+
+LICENSE
+
+lr is licensed under the
+terms of the MIT license.
+
+BSD
+December 5, 2019 BSD

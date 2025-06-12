@@ -1,0 +1,476 @@
+NAME
+
+printers.conf
+&minus; system printing configuration database
+
+SYNOPSIS
+
+/etc/printers.conf
+
+NIS 
+printers.conf.byname
+
+NIS+ 
+printers.org_dir
+
+FNS 
+fns.ctx_dir.domain
+
+DESCRIPTION
+
+The
+printers.conf file is the system printing
+configuration database. System administrators use
+printers.conf to describe destinations for the print
+client commands and the print protocol adaptor. A
+destination names a printer or class of printers (see
+lpadmin(1M)). The LP print spooler uses
+private LP configuration data for represented in the
+printers.conf database.
+
+Entries
+
+Each entry in printers.conf describes one
+destination. Entries are one line consisting of any number
+of fields separated by colons (&rsquo;:&rsquo;) and
+terminated by a NEWLINE. The first field of each entry
+specifies the name of the destination and aliases to which
+the entry describes. Specify one or more names or aliases of
+the destination in this first field. Specify the destination
+using atomic names. POSIX-style names are not acceptable.
+See standards(5). Separate destination names by pipe
+signs (&rsquo;|&rsquo;).
+
+Two destination
+names are reserved for special use in the first entry. Use
+_all to specify the interest list for lpget,
+lpstat, and cancel. Use _default to
+specify the default destination.
+
+The remaining
+fields in an entry are key=value pairs.
+See Specifying Configuration Options for details
+regarding key=value pairs.
+
+Empty lines can
+be included for readability. Entries may continue on to
+multiple lines by adding a backslash
+(&rsquo;\&rsquo;) as the last character in the line.
+printers.conf can include comments. Comments have a
+pound sign (&rsquo;#&rsquo;) as the first character
+in the line, and are terminated by a NEWLINE. Use the
+lpset command to create or modify
+printers.conf (see lpset(1M)). Do not make
+changes in printers.conf using an
+editor.
+
+Specifying
+Configuration Options 
+key=value pairs are configuration options
+defined by the system administrator. key and
+value may be of arbitrary length. Separate key
+and value by the equal (&rsquo;=&rsquo;)
+character.
+
+Client/Server
+Configuration Options
+
+The following
+client/server configuration options (represented as
+key=value pairs) are supported: 
+bsdaddr=server,
+destination[,Solaris]
+
+Sets the server and destination
+name. Sets if the client generates protocol extensions for
+use with the lp command (see lp(1)).
+Solaris specifies a Solaris print server extension.
+If Solaris is not specified, no protocol extensions
+are generated. server is the name of the host
+containing the queue for destination.
+destination is the atomic name by which the server
+knows the destination.
+
+use=destination
+
+Sets the destination to
+continue searching for configuration information.
+destination is an atomic or Federated Naming Service
+(FNS) (.../service/printer/...) name.
+
+all=destination_list
+
+Sets the interest list for the
+lpget, lpstat, and cancel commands.
+destination_list is a comma-separated list of
+destinations. Specify destination using atomic or
+FNS names
+(.../service/printer/...). See
+lpget(1M), lpstat(1), and
+cancel(1).
+
+General
+Server Options
+
+The following
+general server configuration options (represented as
+key=value pairs) are supported: 
+spooling-type=spooler[, version]
+
+Sets the type of spooler under
+which a destination is configured. Dynamically loads
+translation support for the back-end spooling system from
+/usr/lib/print/bsd-adaptor/bsd_spooler.so[.version].
+Specify spooler as lpsched, cascade, or
+test. lpsched is used as a default for locally
+attached destinations. cascade is used as a default
+for destination spooled on a remote host. Use test
+for the test module to allow the capture of print requests.
+If using a versioned spooler module, version
+specifies the version of the translation module.
+
+spooling-type-path=
+dir_list
+
+Sets the location of
+translation support for the type of spooler defined by the
+spooling-type key. Locates translation support for
+the for the type of spooler under which a destination is
+configured. dir_list is a comma-separated list of
+absolute pathnames to the directories used to locate
+translation support for the spooling system set by the
+spooling-type key.
+
+LP Server
+Options
+
+The following
+LP configuration options (represented as
+key=value pairs) are supported: 
+user-equivalence=true|false
+
+Sets whether or not usernames
+are considered equivalent when cancelling a print request
+submitted from a different host in a networked environment.
+true means that usernames are considered equivalent,
+and permits users to cancel a print requests submitted from
+a different host. user-equivalence is set to
+false by default. false means that usernames
+are not considered equivalent, and does not permit users
+cancel a print request submitted from a different host. If
+user-equivalence is set to false, print
+requests can only be cancelled by the users on the host on
+whichs the print prequest was generated or by the super-user
+on the print server.
+
+Test
+Configuration Options
+
+The following
+test configuration options (represented as
+key=value pairs) are supported: 
+test-spooler-available=true|false
+
+Sets whether or not the
+protocol adaptor accepts connection requests to the test
+adaptor for the destination. true means that the
+protocol adaptor accepts connection requests to the test
+adaptor for the destination. test-spooler-available
+is set to true by default. false means that
+the protocol adaptor does not accept connection requests to
+the test adaptor for the destination.
+
+test-log=dir
+
+Sets the location of the log
+file generated by the test translation module. Specify
+dir as an absolute pathname.
+
+test-dir=dir
+
+Sets the directory to be used
+during execution of the test translation module. Specify
+dir as an absolute pathname.
+
+test-access=true|false
+
+Sets whether or not the
+requesting client has access to the test translation module.
+true means that the requesting client has access to
+the test translation module. test-access is set to
+true by default. false means that the the
+requesting client does not have access to the test
+translation module.
+
+test-accepting=true|false
+
+Sets whether or not the
+configured destination is accepting job submission requests.
+true means that the configured destination is
+accepting job submission requests. test-accepting is
+set to true by default. false means that the
+configured destination is not accepting job submission
+requests.
+
+test-restart=true|false
+
+Sets whether or not a protocol
+request to restart the destination will be honored or return
+an error. true means that a protocol request to
+restart the destination will be honored. test-restart
+is set to true by default. false means that a
+protocol request to restart the destination return an
+error.
+
+test-submit=true|false
+
+Sets whether or not a protocol
+request to submit a job to a destination will be honored or
+return an error. true means that a protocol request
+to submit a job to a destination will be honored.
+test-submit is set to true by default.
+false means that a protocol request to submit a job
+to a destination will not be honored.
+
+test-show-queue-file=
+file
+
+Sets the name of the file whose
+contents are to be returned as the result of a status query.
+Specify file as an absolute pathname.
+
+test-cancel-cancel-file=
+file
+
+Sets the name of the file whose
+contents are returned as the result of a cancellation
+request. Specify file as an absolute pathname.
+
+Locating
+Destination Information 
+The print client commands and the print protocol adaptor
+locate destination information based on the
+"printers" database entry in the
+/etc/nsswitch.conf file. See
+nsswitch.conf(4).
+
+Locating the
+Personal Default Destination
+
+The default
+destination is located differently depending on the
+command.
+
+The lp
+command locates the default destination in the following
+order:
+
+1.
+
+lp command&rsquo;s -d destination
+option. 
+
+2.
+
+LPDEST environment variable.
+
+3.
+
+PRINTER environment variable.
+
+4.
+
+_default destination in
+$HOME/.printers. 
+
+5.
+
+_default destination in
+/etc/printers.conf. 
+
+6.
+
+_default destination in FNS.
+
+The lpr,
+lpq, and lprm commands locate the default
+destination in the following order:
+
+1.
+
+lpr command&rsquo;s
+-P destination option.
+
+2.
+
+PRINTER environment variable.
+
+3.
+
+LPDEST environment variable.
+
+4.
+
+_default destination in
+$HOME/.printers. 
+
+5.
+
+_default destination in
+/etc/printers.conf. 
+
+6.
+
+_default destination in FNS.
+
+Locating the
+Interest List for lpstat, lpget, and cancel
+
+The
+lpget, lpstat, and cancel commands
+locate the interest list in the following order:
+
+1.
+
+_all list in
+$HOME/.printers. 
+
+2.
+
+_all list in /etc/printers.conf.
+
+3.
+
+_all list in FNS.
+
+Looking Up
+Destinations Using Atomic Names and FNS 
+Federated Naming Service (FNS) supports resolution of
+composite names spanning multiple naming systems.
+FNS supports several underlying naming services:
+NIS+, NIS, and files.
+
+Atomic
+destination names are resolved using the search order
+specified by the "printers" database entry in the
+/etc/nsswitch.conf file. When the "xfn"
+service is configured in the "printers" database,
+the following Federated Name Service contexts are searched
+for the supplied name:
+
+thisuser/service/printer,
+
+myorgunit/service/printer,
+
+EXAMPLES
+
+Example 1:
+Setting the interest list
+
+The following
+entry sets the interest list for the lpget,
+lpstat and cancel commands to printer1,
+printer2 and printer3:
+
+_all:all=printer1,printer2,printer3
+
+Example 2:
+Setting the server name
+
+The following
+entry sets the server name to server and and printer
+name to ps_printer for destinations printer1
+and ps. It does not generate protocol extensions.
+
+printer1|ps:bsdaddr=server,ps_printer
+
+Example 3:
+Setting server name and destination name
+
+The following
+entry sets the server name to server and destination
+name to pcl_printer, for destination printer2.
+It also generates Solaris protocol extensions.
+
+printer2:bsdaddr=server,pcl_printer,Solaris
+
+Example 4:
+Setting server name and destination name with continuous
+search
+
+The following
+entry sets the server name to server and destination
+name to new_printer, for destination printer3.
+It also sets the printer3 to continue searching for
+configuration information to printer
+another_printer.
+
+printer3:bsdaddr=server,new_printer:use=another_printer
+
+Example 5:
+Setting default destination
+
+The following
+entry sets the default destination to continue searching for
+configuration information to destination
+printer1.
+
+_default:use=printer1
+
+FILES
+
+/etc/printers.conf
+
+System configuration
+database.
+
+$HOME/.printers
+
+User-configurable printer
+database.
+
+printers.conf.byname (
+NIS)
+
+NIS version of
+/etc/printers.conf.
+
+printers.org_dir
+(NIS+ )
+
+NIS+ version of
+/etc/printers.conf.
+
+fns.ctx_dir.domain
+
+FNS version of
+/etc/printers.conf.
+
+/usr/lib/print/bsd-adaptor/bsd_spooler.so*
+
+Spooler translation
+modules.
+
+/usr/lib/print/in.lpd
+
+BSD print protocol
+adapter.
+
+ATTRIBUTES
+
+See
+attributes(5) for descriptions of the following
+attributes:
+
+SEE ALSO
+
+cancel(1),
+lp(1), lpq(1B), lpr(1B),
+lprm(1B), lpstat(1), in.lpd(1M),
+lpadmin(1M), lpget(1M), lpset(1M),
+nsswitch.conf(4), printers(4),
+attributes(5), fns(5), fns_policies(5),
+standards(5)
+
+System
+Administration Guide: Basic Administration

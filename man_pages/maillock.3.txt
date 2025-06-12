@@ -1,0 +1,96 @@
+NAME
+
+maillock,
+mailunlock, touchlock - manage mailbox lockfiles
+
+SYNOPSIS
+
+#include
+
+cc [
+flag ... ] file ... -llockfile [
+library ]
+
+int
+maillock( const char *user, int
+retrycnt ); 
+void mailunlock( void ); 
+void touchlock( void );
+
+DESCRIPTION
+
+The
+maillock function tries to create a lockfile for the
+users mailbox in an NFS-safe (or resistant) way. The
+algorithm is documented in
+lockfile_create(3).
+
+The mailbox is
+typically located in /var/mail. The name of the
+lockfile then becomes /var/mail/USERNAME.lock. If the
+environment variable $MAIL is set, and it ends with
+the same username as the username passed to
+maillock(), then that file is taken as the mailbox to
+lock instead.
+
+There is no
+good way to see if a lockfile is stale. Therefore if the
+lockfile is older then 5 minutes, it will be removed. That
+is why the touchlock function is provided: while
+holding the lock, it needs to be refreshed regulary (every
+minute or so) by calling touchlock () .
+
+Finally the
+mailunlock function removes the lockfile.
+
+RETURN VALUES
+
+maillock
+returns one of the following status codes:
+
+#define
+L_SUCCESS 0 /* Lockfile created */ 
+#define L_NAMELEN 1 /* Recipient name too long (> 13
+chars) */ 
+#define L_TMPLOCK 2 /* Error creating tmp lockfile */ 
+#define L_TMPWRITE 3 /* Can&rsquo;t write pid int tmp
+lockfile */ 
+#define L_MAXTRYS 4 /* Failed after max. number of attempts
+*/ 
+#define L_ERROR 5 /* Unknown error; check errno */ 
+#define L_RMSTALE 8 /* Failed to remove stale lockfile
+*/
+
+NOTES
+
+These functions
+are not thread safe. If you need thread safe functions, or
+you need to lock other mailbox (like) files that are not in
+the standard location, use lockfile_create(3)
+instead.
+
+These functions
+call lockfile_create(3) to do the work. That function
+might spawn a set group-id executable to do the actual
+locking if the current process doesn&rsquo;t have enough
+priviliges.
+
+There are some
+issues with flushing the kernels attribute cache if you are
+using NFS - see the lockfile_create(3) manpage.
+
+FILES
+
+/var/mail/user.lock,
+
+/usr/lib/liblockfile.so.1
+
+AUTHOR
+
+Miquel van
+Smoorenburg
+
+SEE ALSO
+
+lockfile_create(3),
+lockfile_touch (3), lockfile_remove(3)

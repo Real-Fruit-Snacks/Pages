@@ -1,0 +1,333 @@
+NAME
+
+cmdtest -
+blackbox testing of Unix command line tools
+
+SYNOPSIS
+
+cmdtest
+[-cCOMMAND] [--command=COMMAND]
+[--config=FILE] [--dump-config]
+[--dump-setting-names]
+[--generate-manpage=TEMPLATE] [-h]
+[--help] [--help-all]
+[--list-config-files] [--version]
+[--no-default-configs]
+[--dump-memory-profile=METHOD] [-k]
+[--keep] [--no-keep]
+[--log=FILE] [--log-keep=N]
+[--log-level=LEVEL]
+[--log-max=SIZE]
+[--log-mode=MODE]
+[--memory-dump-interval=SECONDS]
+[--output=FILE] [-tTEST]
+[--test=TEST] [--timings]
+[--no-timings] [FILE]...
+
+DESCRIPTION
+
+cmdtest
+black box tests Unix command line tools. Given some test
+scripts, their inputs, and expected outputs, it verifies
+that the command line produces the expected output. If not,
+it reports problems, and shows the differences.
+
+Each test case
+foo consists of the following files: 
+foo.script
+
+a script to run the test (this
+is required)
+
+foo.stdin
+
+the file fed to standard
+input
+
+foo.stdout
+
+the expected output to the
+standard output
+
+foo.stderr
+
+the expected output to the
+standard error
+
+foo.exit
+
+the expected exit code
+
+foo.setup
+
+a shell script to run before
+the test
+
+foo.teardown
+
+a shell script to run after
+test
+
+Usually, a
+single test is not enough. All tests are put into the same
+directory, and they may share some setup and teardown code:
+
+setup-once
+
+a shell script to run once,
+before any tests
+
+setup
+
+a shell script to run before each test
+
+teardown
+
+a shell script to run after
+each test
+
+teardown-once
+
+a shell script to run once,
+after all tests
+
+cmdtest
+is given the name of the directory with all the tests, or
+several such directories, and it does the following:
+
+&bull; execute
+setup-once
+
+&bull; for each
+test case (unique prefix foo):
+
+&mdash; execute setup
+
+&mdash; execute
+foo.setup 
+
+&mdash; execute the command, by
+running foo.script, and redirecting standard input to
+come from foo.stdin, and capturing standard output
+and error and exit codes
+
+&mdash; execute
+foo.teardown 
+
+&mdash; execute
+teardown 
+
+&mdash; report result of test:
+does exit code match foo.exit, standard output match
+foo.stdout, and standard error match
+foo.stderr? 
+
+&bull; execute teardown-once
+
+Except for
+foo.script, all of these files are optional. If a
+setup or teardown script is missing, it is simply not
+executed. If one of the standard input, output, or error
+files is missing, it is treated as if it were empty. If the
+exit code file is missing, it is treated as if it specified
+an exit code of zero.
+
+The shell
+scripts may use the following environment variables: 
+DATADIR
+
+a temporary directory where
+files may be created by the test
+
+TESTNAME
+
+name of the current test (will
+be empty for setup-once and teardown-once)
+
+SRCDIR
+
+directory from which cmdtest was launched
+
+OPTIONS
+
+-c,
+--command=COMMAND
+
+ignored for backwards
+compatibility
+
+--generate-manpage=TEMPLATE
+
+fill in manual page
+TEMPLATE
+
+-h, --help
+
+show this help message and
+exit
+
+-k, --keep
+
+keep temporary data on
+failure
+
+--no-keep
+
+opposite of --keep
+
+--output=FILE
+
+write output to FILE, instead
+of standard output
+
+-t,
+--test=TEST
+
+run only TEST (can be given
+many times)
+
+--timings
+
+report how long each test
+takes
+
+--no-timings
+
+opposite of --timings
+
+--version
+
+show program&rsquo;s version
+number and exit
+
+Configuration
+files and settings 
+--config=FILE
+
+add FILE to config files
+
+--dump-config
+
+write out the entire current
+configuration
+
+--dump-setting-names
+
+write out all names of settings
+and quit
+
+--help-all
+
+show all options
+
+--list-config-files
+
+list all possible config
+files
+
+--no-default-configs
+
+clear list of configuration
+files to read
+
+Logging 
+--log=FILE
+
+write log entries to FILE
+(default is to not write log files at all); use
+"syslog" to log to system log, "stderr"
+to log to the standard error output, or "none" to
+disable logging
+
+--log-keep=N
+
+keep last N logs (10)
+
+--log-level=LEVEL
+
+log at LEVEL, one of debug,
+info, warning, error, critical, fatal (default: debug)
+
+--log-max=SIZE
+
+rotate logs larger than SIZE,
+zero for never (default: 0)
+
+--log-mode=MODE
+
+set permissions of new log
+files to MODE (octal; default 0600)
+
+Peformance
+
+--dump-memory-profile=METHOD
+
+make memory profiling dumps
+using METHOD, which is one of: none, or simple (no meliae
+support anymore)(default: simple)
+
+--memory-dump-interval=SECONDS
+
+make memory profiling dumps at
+least SECONDS apart
+
+EXAMPLE
+
+To test that
+the echo(1) command outputs the expected string,
+create a file called echo-tests/hello.script
+containing the following content:
+
+#!/bin/sh 
+echo hello, world
+
+Also create the
+file echo-tests/hello.stdout containing:
+
+hello,
+world
+
+Then you can
+run the tests:
+
+$ cmdtest
+echo-tests 
+test 1/1 
+1/1 tests OK, 0 failures
+
+If you change
+the stdout file to be something else, cmdtest will
+report the differences:
+
+$ cmdtest
+echo-tests 
+FAIL: hello: stdout diff:
+
+--- echo-tests/hello.stdout
+
+2011-09-11 19:14:47 +0100
+
++++ echo-tests/hello.stdout-actual
+
+2011-09-11 19:14:49 +0100
+
+@@ -1 +1 @@ 
+-something else 
++hello, world
+
+test 1/1 
+0/1 tests OK, 1 failures
+
+Furthermore,
+the echo-tests directory will contain the actual
+output files, and diffs from the expected files. If one of
+the actual output files is actually correct, you can
+actually rename it to be the expected file. Actually,
+that&rsquo;s a very convenient way of creating the expected
+output files: you run the test, fixing things, until
+you&rsquo;ve manually checked the actual output is correct,
+then you rename the file.
+
+SEE ALSO
+
+cliapp(5).
