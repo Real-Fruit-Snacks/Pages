@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Linux Man Pages is a fully self-contained, offline-capable web application for searching and viewing Linux manual pages. Designed for static hosting on GitHub Pages or GitLab Pages, it provides instant access to 8,121 official Linux man pages (English only) and TLDR summaries without requiring any internet connection after deployment.
+Linux Man Pages is a fully self-contained, offline-capable web application for searching and viewing Linux manual pages. Designed for static hosting on GitHub Pages or GitLab Pages, it provides instant access to 9,371 Linux man pages and TLDR summaries without requiring any internet connection after deployment.
 
 ## Key Architecture
 
@@ -18,9 +18,10 @@ Linux Man Pages is a fully self-contained, offline-capable web application for s
 ```
 data/
 ├── index.js         # Search index (window.searchIndex)
-└── tldr_index.js    # TLDR pages index
+├── tldr_index.js    # TLDR pages index
+└── options.js       # Command options database (hardcoded subset)
 
-man_pages/           # 8,121 man page files (English only)
+man_pages/           # 9,915 man page files
 ├── [command].[section].txt
 
 tldr_pages/          # TLDR summaries
@@ -41,6 +42,7 @@ tldr_pages/          # TLDR summaries
 - Bookmarks: `localStorage.manPageBookmarks` 
 - Theme preference: `localStorage.selectedTheme`
 - TLDR cache: Built into distribution (no fetching needed)
+- Command explainer: No persistent storage (stateless)
 
 ## Development Commands
 
@@ -58,12 +60,13 @@ npx http-server -p 8000
 ```bash
 # Create tar and zip files for offline deployment
 mkdir -p dist
-tar -czf dist/linux-man-pages-v5.1.0.tar.gz \
-  index.html data/ themes/ man_pages/ tldr_pages/ \
+VERSION=$(grep '"version"' package.json | cut -d'"' -f4)
+tar -czf dist/linux-man-pages-v${VERSION}.tar.gz \
+  index.html data/ themes/ man_pages/ tldr_pages/ scripts/ \
   package.json README.md LICENSE .gitlab-ci.yml .nojekyll
 
 # Generate checksums
-cd dist && sha256sum *.tar.gz *.zip > checksums-v5.1.0.txt
+cd dist && sha256sum *.tar.gz *.zip > checksums-v${VERSION}.txt
 ```
 
 ### Testing
@@ -78,10 +81,29 @@ npm install puppeteer
 ### GitHub Release
 ```bash
 # Create and publish release with distribution files
-gh release create v5.1.0 \
-  --title "Release v5.1.0: Enhanced theme system and offline distribution" \
-  --notes-file RELEASE_NOTES_5.1.0.md \
-  dist/linux-man-pages-v5.1.0.tar.gz
+VERSION=$(grep '"version"' package.json | cut -d'"' -f4)
+gh release create v${VERSION} \
+  --title "Release v${VERSION}: <description>" \
+  --notes-file RELEASE_NOTES_${VERSION}.md \
+  dist/linux-man-pages-v${VERSION}.tar.gz
+```
+
+### Updating Search Index
+```bash
+# After adding/updating man pages, rebuild the search index
+python3 scripts/update_index.py
+```
+
+### Content Management Scripts
+```bash
+# Fix HTML entities in man pages
+python3 scripts/fix_html_entities.py
+
+# Add FAB button styles to all themes
+python3 scripts/add_fab_styles_to_themes.py
+
+# Scrape additional man pages from man.cx (use cautiously)
+python3 scripts/scrape_man_cx_optimized.py
 ```
 
 ## Key Implementation Details
