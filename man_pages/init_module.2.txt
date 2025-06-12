@@ -1,212 +1,303 @@
-init_module(2)                System Calls Manual               init_module(2)
-
 NAME
-       init_module, finit_module - load a kernel module
 
-LIBRARY
-       Standard C library (libc, -lc)
+init_module,
+finit_module - load a kernel module
 
 SYNOPSIS
-       #include <linux/module.h>    /* Definition of MODULE_* constants */
-       #include <sys/syscall.h>     /* Definition of SYS_* constants */
-       #include <unistd.h>
 
-       int syscall(SYS_init_module, void module_image[.len], unsigned long len,
-                   const char *param_values);
-       int syscall(SYS_finit_module, int fd,
-                   const char *param_values, int flags);
+int
+init_module(void *module_image, unsigned
+long len, 
+const char *param_values);
 
-       Note:  glibc provides no wrappers for these system calls, necessitating
-       the use of syscall(2).
+int
+finit_module(int fd, const char
+*param_values, 
+int flags);
+
+Note:
+glibc provides no header file declaration of
+init_module() and no wrapper function for
+finit_module(); see NOTES.
 
 DESCRIPTION
-       init_module() loads an ELF image into kernel space, performs any neces-
-       sary  symbol  relocations, initializes module parameters to values pro-
-       vided by the caller, and then runs the module's  init  function.   This
-       system call requires privilege.
 
-       The  module_image argument points to a buffer containing the binary im-
-       age to be loaded; len specifies the size of that  buffer.   The  module
-       image should be a valid ELF image, built for the running kernel.
+init_module()
+loads an ELF image into kernel space, performs any necessary
+symbol relocations, initializes module parameters to values
+provided by the caller, and then runs the module&rsquo;s
+init function. This system call requires
+privilege.
 
-       The param_values argument is a string containing space-delimited speci-
-       fications of the values for module parameters (defined inside the  mod-
-       ule  using module_param() and module_param_array()).  The kernel parses
-       this string and initializes the specified parameters.  Each of the  pa-
-       rameter specifications has the form:
+The
+module_image argument points to a buffer containing
+the binary image to be loaded; len specifies the size
+of that buffer. The module image should be a valid ELF
+image, built for the running kernel.
 
-               name[=value[,value...]]
+The
+param_values argument is a string containing
+space-delimited specifications of the values for module
+parameters (defined inside the module using
+module_param() and module_param_array()). The
+kernel parses this string and initializes the specified
+parameters. Each of the parameter specifications has the
+form:
 
-       The parameter name is one of those defined within the module using mod-
-       ule_param()  (see  the  Linux  kernel  source  file  include/linux/mod-
-       uleparam.h).   The  parameter value is optional in the case of bool and
-       invbool parameters.  Values for array parameters  are  specified  as  a
-       comma-separated list.
+name[=value[,value...]]
 
-   finit_module()
-       The  finit_module()  system  call  is like init_module(), but reads the
-       module to be loaded from the file descriptor fd.  It is useful when the
-       authenticity  of a kernel module can be determined from its location in
-       the filesystem; in cases where that is possible, the overhead of  using
-       cryptographically  signed  modules  to  determine the authenticity of a
-       module can be avoided.  The param_values argument is as  for  init_mod-
-       ule().
+The parameter
+name is one of those defined within the module using
+module_param() (see the Linux kernel source file
+include/linux/moduleparam.h). The parameter
+value is optional in the case of bool and
+invbool parameters. Values for array parameters are
+specified as a comma-separated list.
 
-       The  flags  argument modifies the operation of finit_module().  It is a
-       bit mask value created by ORing together zero or more of the  following
-       flags:
+finit_module()
 
-       MODULE_INIT_IGNORE_MODVERSIONS
-              Ignore symbol version hashes.
+The finit_module() system call is like
+init_module(), but reads the module to be loaded from
+the file descriptor fd. It is useful when the
+authenticity of a kernel module can be determined from its
+location in the filesystem; in cases where that is possible,
+the overhead of using cryptographically signed modules to
+determine the authenticity of a module can be avoided. The
+param_values argument is as for
+init_module().
 
-       MODULE_INIT_IGNORE_VERMAGIC
-              Ignore kernel version magic.
+The
+flags argument modifies the operation of
+finit_module(). It is a bit mask value created by
+ORing together zero or more of the following flags: 
+MODULE_INIT_IGNORE_MODVERSIONS
 
-       There  are  some  safety  checks  built into a module to ensure that it
-       matches the kernel against  which  it  is  loaded.   These  checks  are
-       recorded  when  the  module  is  built  and verified when the module is
-       loaded.  First, the module records a "vermagic" string  containing  the
-       kernel  version  number  and prominent features (such as the CPU type).
-       Second, if the module was built with the CONFIG_MODVERSIONS  configura-
-       tion  option  enabled,  a  version hash is recorded for each symbol the
-       module uses.  This hash is based on the types of the arguments and  re-
-       turn  value  for  the  function named by the symbol.  In this case, the
-       kernel version number within the "vermagic" string is ignored,  as  the
-       symbol version hashes are assumed to be sufficiently reliable.
+Ignore symbol version
+hashes.
 
-       Using  the  MODULE_INIT_IGNORE_VERMAGIC  flag  indicates that the "ver-
-       magic" string is to be ignored, and the  MODULE_INIT_IGNORE_MODVERSIONS
-       flag  indicates  that  the symbol version hashes are to be ignored.  If
-       the kernel is built to permit forced  loading  (i.e.,  configured  with
-       CONFIG_MODULE_FORCE_LOAD),  then  loading continues, otherwise it fails
-       with the error ENOEXEC as expected for malformed modules.
+MODULE_INIT_IGNORE_VERMAGIC
+
+Ignore kernel version
+magic.
+
+There are some
+safety checks built into a module to ensure that it matches
+the kernel against which it is loaded. These checks are
+recorded when the module is built and verified when the
+module is loaded. First, the module records a
+"vermagic" string containing the kernel version
+number and prominent features (such as the CPU type).
+Second, if the module was built with the
+CONFIG_MODVERSIONS configuration option enabled, a
+version hash is recorded for each symbol the module uses.
+This hash is based on the types of the arguments and return
+value for the function named by the symbol. In this case,
+the kernel version number within the "vermagic"
+string is ignored, as the symbol version hashes are assumed
+to be sufficiently reliable.
+
+Using the
+MODULE_INIT_IGNORE_VERMAGIC flag indicates that the
+"vermagic" string is to be ignored, and the
+MODULE_INIT_IGNORE_MODVERSIONS flag indicates that
+the symbol version hashes are to be ignored. If the kernel
+is built to permit forced loading (i.e., configured with
+CONFIG_MODULE_FORCE_LOAD), then loading continues,
+otherwise it fails with the error ENOEXEC as expected
+for malformed modules.
 
 RETURN VALUE
-       On success, these system calls return 0.  On error, -1 is returned  and
-       errno is set to indicate the error.
+
+On success,
+these system calls return 0. On error, -1 is returned and
+errno is set appropriately.
 
 ERRORS
-       EBADMSG (since Linux 3.7)
-              Module signature is misformatted.
 
-       EBUSY  Timeout  while trying to resolve a symbol reference by this mod-
-              ule.
+EBADMSG
+(since Linux 3.7)
 
-       EFAULT An address argument referred to a location that is  outside  the
-              process's accessible address space.
+Module signature is
+misformatted.
 
-       ENOKEY (since Linux 3.7)
-              Module  signature  is  invalid or the kernel does not have a key
-              for this module.  This error is returned only if the kernel  was
-              configured  with  CONFIG_MODULE_SIG_FORCE; if the kernel was not
-              configured with this option, then an invalid or unsigned  module
-              simply taints the kernel.
+EBUSY
 
-       ENOMEM Out of memory.
+Timeout while trying to resolve a symbol reference by
+this module.
 
-       EPERM  The  caller  was not privileged (did not have the CAP_SYS_MODULE
-              capability), or module loading is disabled  (see  /proc/sys/ker-
-              nel/modules_disabled in proc(5)).
+EFAULT
 
-       The following errors may additionally occur for init_module():
+An address argument referred to a location that is
+outside the process&rsquo;s accessible address space.
 
-       EEXIST A module with this name is already loaded.
+ENOKEY (since Linux
+3.7)
 
-       EINVAL param_values  is  invalid, or some part of the ELF image in mod-
-              ule_image contains inconsistencies.
+Module signature is invalid or
+the kernel does not have a key for this module. This error
+is returned only if the kernel was configured with
+CONFIG_MODULE_SIG_FORCE; if the kernel was not
+configured with this option, then an invalid or unsigned
+module simply taints the kernel.
 
-       ENOEXEC
-              The binary image supplied in module_image is not an  ELF  image,
-              or  is an ELF image that is invalid or for a different architec-
-              ture.
+ENOMEM
 
-       The following errors may additionally occur for finit_module():
+Out of memory.
 
-       EBADF  The file referred to by fd is not opened for reading.
+EPERM
 
-       EFBIG  The file referred to by fd is too large.
+The caller was not privileged (did not have the
+CAP_SYS_MODULE capability), or module loading is
+disabled (see /proc/sys/kernel/modules_disabled in
+proc(5)). 
 
-       EINVAL flags is invalid.
+The following
+errors may additionally occur for init_module():
 
-       ENOEXEC
-              fd does not refer to an open file.
+EEXIST
 
-       ETXTBSY (since Linux 4.7)
-              The file referred to by fd is opened for read-write.
+A module with this name is
+already loaded.
 
-       In addition to the above errors, if the module's init function is  exe-
-       cuted  and returns an error, then init_module() or finit_module() fails
-       and errno is set to the value returned by the init function.
+EINVAL
+
+param_values is invalid, or some part of the ELF
+image in module_image contains inconsistencies.
+
+ENOEXEC
+
+The binary image supplied in
+module_image is not an ELF image, or is an ELF image
+that is invalid or for a different architecture.
+
+The following
+errors may additionally occur for finit_module():
+
+EBADF
+
+The file referred to by fd is not opened for
+reading. 
+
+EFBIG
+
+The file referred to by fd is too large.
+
+EINVAL
+
+flags is invalid.
+
+ENOEXEC
+
+fd does not refer to an
+open file.
+
+In addition to
+the above errors, if the module&rsquo;s init function
+is executed and returns an error, then init_module()
+or finit_module() fails and errno is set to
+the value returned by the init function.
 
 VERSIONS
-       finit_module() is available since Linux 3.8.
 
-STANDARDS
-       init_module() and finit_module() are Linux-specific.
+finit_module()
+is available since Linux 3.8.
+
+CONFORMING TO
+
+init_module()
+and finit_module() are Linux-specific.
 
 NOTES
-       The init_module() system call is not supported by glibc.   No  declara-
-       tion  is  provided  in  glibc headers, but, through a quirk of history,
-       glibc versions before glibc 2.23 did export  an  ABI  for  this  system
-       call.   Therefore,  in  order to employ this system call, it is (before
-       glibc 2.23) sufficient to manually declare the interface in your  code;
-       alternatively, you can invoke the system call using syscall(2).
 
-       Information  about  currently loaded modules can be found in /proc/mod-
-       ules and in the file trees under the  per-module  subdirectories  under
-       /sys/module.
+The
+init_module() system call is not supported by glibc.
+No declaration is provided in glibc headers, but, through a
+quirk of history, glibc versions before 2.23 did export an
+ABI for this system call. Therefore, in order to employ this
+system call, it is (before glibc 2.23) sufficient to
+manually declare the interface in your code; alternatively,
+you can invoke the system call using syscall(2).
 
-       See the Linux kernel source file include/linux/module.h for some useful
-       background information.
+Glibc does not
+provide a wrapper for finit_module(); call it using
+syscall(2).
 
-   Linux 2.4 and earlier
-       In Linux 2.4 and earlier, the init_module() system call was rather dif-
-       ferent:
+Information
+about currently loaded modules can be found in
+/proc/modules and in the file trees under the
+per-module subdirectories under /sys/module.
 
-           #include <linux/module.h>
+See the Linux
+kernel source file include/linux/module.h for some
+useful background information.
 
-           int init_module(const char *name, struct module *image);
+Linux 2.4
+and earlier 
+In Linux 2.4 and earlier, the init_module() system
+call was rather different:
 
-       (User-space  applications  can detect which version of init_module() is
-       available by calling query_module(); the latter call fails with the er-
-       ror ENOSYS on Linux 2.6 and later.)
+#include
 
-       The  older  version of the system call loads the relocated module image
-       pointed to by image into kernel space and runs the module's init  func-
-       tion.   The  caller  is  responsible  for providing the relocated image
-       (since Linux 2.6, the init_module() system call does the relocation).
+int
+init_module(const char *name, struct module
+*image);
 
-       The module image begins with a module structure and is followed by code
-       and  data as appropriate.  Since Linux 2.2, the module structure is de-
-       fined as follows:
+(User-space
+applications can detect which version of
+init_module() is available by calling
+query_module(); the latter call fails with the error
+ENOSYS on Linux 2.6 and later.)
 
-           struct module {
-               unsigned long         size_of_struct;
-               struct module        *next;
-               const char           *name;
-               unsigned long         size;
-               long                  usecount;
-               unsigned long         flags;
-               unsigned int          nsyms;
-               unsigned int          ndeps;
-               struct module_symbol *syms;
-               struct module_ref    *deps;
-               struct module_ref    *refs;
-               int                 (*init)(void);
-               void                (*cleanup)(void);
-               const struct exception_table_entry *ex_table_start;
-               const struct exception_table_entry *ex_table_end;
-           #ifdef __alpha__
-               unsigned long gp;
-           #endif
-           };
+The older
+version of the system call loads the relocated module image
+pointed to by image into kernel space and runs the
+module&rsquo;s init function. The caller is
+responsible for providing the relocated image (since Linux
+2.6, the init_module() system call does the
+relocation).
 
-       All of the pointer fields, with the exception of next and refs, are ex-
-       pected  to point within the module body and be initialized as appropri-
-       ate for kernel space, that is, relocated with the rest of the module.
+The module
+image begins with a module structure and is followed by code
+and data as appropriate. Since Linux 2.2, the module
+structure is defined as follows:
+
+struct module {
+    unsigned long         size_of_struct;
+    struct module        *next;
+    const char           *name;
+    unsigned long         size;
+    long                  usecount;
+    unsigned long         flags;
+    unsigned int          nsyms;
+    unsigned int          ndeps;
+    struct module_symbol *syms;
+    struct module_ref    *deps;
+    struct module_ref    *refs;
+    int                 (*init)(void);
+    void                (*cleanup)(void);
+    const struct exception_table_entry *ex_table_start;
+    const struct exception_table_entry *ex_table_end;
+#ifdef __alpha__
+    unsigned long gp;
+#endif
+};
+
+All of the
+pointer fields, with the exception of next and
+refs, are expected to point within the module body
+and be initialized as appropriate for kernel space, that is,
+relocated with the rest of the module.
 
 SEE ALSO
-       create_module(2),  delete_module(2),  query_module(2),  lsmod(8),  mod-
-       probe(8)
 
-Linux man-pages 6.03              2022-12-04                    init_module(2)
+create_module(2),
+delete_module(2), query_module(2),
+lsmod(8), modprobe(8)
+
+COLOPHON
+
+This page is
+part of release 5.09 of the Linux man-pages project.
+A description of the project, information about reporting
+bugs, and the latest version of this page, can be found at
+https://www.kernel.org/doc/man-pages/.

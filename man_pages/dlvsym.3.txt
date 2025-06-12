@@ -1,108 +1,188 @@
-dlsym(3)                   Library Functions Manual                   dlsym(3)
-
 NAME
-       dlsym,  dlvsym  - obtain address of a symbol in a shared object or exe-
-       cutable
 
-LIBRARY
-       Dynamic linking library (libdl, -ldl)
+dladdr, dladdr1
+- translate address to symbolic information
 
 SYNOPSIS
-       #include <dlfcn.h>
 
-       void *dlsym(void *restrict handle, const char *restrict symbol);
+#define
+_GNU_SOURCE 
+#include 
 
-       #define _GNU_SOURCE
-       #include <dlfcn.h>
+int
+dladdr(void *addr, Dl_info
+*info);
 
-       void *dlvsym(void *restrict handle, const char *restrict symbol,
-                    const char *restrict version);
+int
+dladdr1(void *addr, Dl_info
+*info, void **extra_info,
+int flags);
+
+Link with
+-ldl.
 
 DESCRIPTION
-       The function dlsym() takes a "handle" of a dynamic loaded shared object
-       returned by dlopen(3) along with a null-terminated symbol name, and re-
-       turns the address where that symbol is loaded into memory.  If the sym-
-       bol  is not found, in the specified object or any of the shared objects
-       that were automatically  loaded  by  dlopen(3)  when  that  object  was
-       loaded,  dlsym()  returns  NULL.   (The  search performed by dlsym() is
-       breadth first through the dependency tree of these shared objects.)
 
-       In unusual cases (see NOTES) the value of the symbol could actually  be
-       NULL.   Therefore,  a NULL return from dlsym() need not indicate an er-
-       ror.  The correct way to distinguish an error from a symbol whose value
-       is  NULL  is to call dlerror(3) to clear any old error conditions, then
-       call dlsym(), and then call dlerror(3) again, saving its  return  value
-       into a variable, and check whether this saved value is not NULL.
+The function
+dladdr() determines whether the address specified in
+addr is located in one of the shared objects loaded
+by the calling application. If it is, then dladdr()
+returns information about the shared object and symbol that
+overlaps addr. This information is returned in a
+Dl_info structure:
 
-       There are two special pseudo-handles that may be specified in handle:
+typedef struct {
+    const char *dli_fname;  /* Pathname of shared object that
+                               contains address */
+    void       *dli_fbase;  /* Base address at which shared
+                               object is loaded */
+    const char *dli_sname;  /* Name of symbol whose definition
+                               overlaps addr */
+    void       *dli_saddr;  /* Exact address of symbol named
+                               in dli_sname */
+} Dl_info;
 
-       RTLD_DEFAULT
-              Find  the  first  occurrence of the desired symbol using the de-
-              fault shared object  search  order.   The  search  will  include
-              global  symbols  in the executable and its dependencies, as well
-              as symbols in shared objects that were dynamically  loaded  with
-              the RTLD_GLOBAL flag.
+If no symbol
+matching addr could be found, then dli_sname
+and dli_saddr are set to NULL.
 
-       RTLD_NEXT
-              Find the next occurrence of the desired symbol in the search or-
-              der after the current object.  This  allows  one  to  provide  a
-              wrapper around a function in another shared object, so that, for
-              example, the definition of a function in a preloaded shared  ob-
-              ject (see LD_PRELOAD in ld.so(8)) can find and invoke the "real"
-              function provided in another shared object (or for that  matter,
-              the  "next"  definition of the function in cases where there are
-              multiple layers of preloading).
+The function
+dladdr1() is like dladdr(), but returns
+additional information via the argument extra_info.
+The information returned depends on the value specified in
+flags, which can have one of the following values:
 
-       The _GNU_SOURCE feature test macro must be defined in order  to  obtain
-       the definitions of RTLD_DEFAULT and RTLD_NEXT from <dlfcn.h>.
+RTLD_DL_LINKMAP
 
-       The  function  dlvsym()  does  the  same as dlsym() but takes a version
-       string as an additional argument.
+Obtain a pointer to the link
+map for the matched file. The extra_info argument
+points to a pointer to a link_map structure (i.e.,
+struct link_map **), defined in
+ as:
+struct link_map {
+    ElfW(Addr) l_addr;  /* Difference between the
+                           address in the ELF file and
+                           the address in memory */
+    char      *l_name;  /* Absolute pathname where
+                           object was found */
+    ElfW(Dyn) *l_ld;    /* Dynamic section of the
+                           shared object */
+    struct link_map *l_next, *l_prev;
+                        /* Chain of loaded objects */
+
+    /* Plus additional fields private to the
+       implementation */
+};
+
+RTLD_DL_SYMENT
+
+Obtain a pointer to the ELF
+symbol table entry of the matching symbol. The
+extra_info argument is a pointer to a symbol pointer:
+const ElfW(Sym) **. The ElfW() macro
+definition turns its argument into the name of an ELF data
+type suitable for the hardware architecture. For example, on
+a 64-bit platform, ElfW(Sym) yields the data type
+name Elf64_Sym, which is defined in
+ as:
+
+typedef struct  {
+    Elf64_Word    st_name;     /* Symbol name */
+    unsigned char st_info;     /* Symbol type and binding */
+    unsigned char st_other;    /* Symbol visibility */
+    Elf64_Section st_shndx;    /* Section index */
+    Elf64_Addr    st_value;    /* Symbol value */
+    Elf64_Xword   st_size;     /* Symbol size */
+} Elf64_Sym;
+
+The
+st_name field is an index into the string table.
+
+The
+st_info field encodes the symbol&rsquo;s type and
+binding. The type can be extracted using the macro
+ELF64_ST_TYPE(st_info) (or ELF32_ST_TYPE() on
+32-bit platforms), which yields one of the following
+values:
+
+The symbol
+binding can be extracted from the st_info field using
+the macro ELF64_ST_BIND(st_info) (or
+ELF32_ST_BIND() on 32-bit platforms), which yields
+one of the following values:
+
+The
+st_other field contains the symbol&rsquo;s
+visibility, which can be extracted using the macro
+ELF64_ST_VISIBILITY(st_info) (or
+ELF32_ST_VISIBILITY() on 32-bit platforms), which
+yields one of the following values:
 
 RETURN VALUE
-       On success, these functions return the address associated with  symbol.
-       On  failure,  they return NULL; the cause of the error can be diagnosed
-       using dlerror(3).
+
+On success,
+these functions return a nonzero value. If the address
+specified in addr could be matched to a shared
+object, but not to a symbol in the shared object, then the
+info->dli_sname and info->dli_saddr
+fields are set to NULL.
+
+If the address
+specified in addr could not be matched to a shared
+object, then these functions return 0. In this case, an
+error message is not available via
+dlerror(3).
 
 VERSIONS
-       dlsym() is present in glibc 2.0 and later.  dlvsym() first appeared  in
-       glibc 2.1.
+
+dladdr()
+is present in glibc 2.0 and later. dladdr1() first
+appeared in glibc 2.3.3.
 
 ATTRIBUTES
-       For  an  explanation  of  the  terms  used  in  this  section,  see at-
-       tributes(7).
 
-       +--------------------------------------------+---------------+---------+
-       |Interface                                   | Attribute     | Value   |
-       +--------------------------------------------+---------------+---------+
-       |dlsym(), dlvsym()                           | Thread safety | MT-Safe |
-       +--------------------------------------------+---------------+---------+
+For an
+explanation of the terms used in this section, see
+attributes(7).
 
-STANDARDS
-       POSIX.1-2001 describes dlsym().  The dlvsym() function is a GNU  exten-
-       sion.
+CONFORMING TO
 
-NOTES
-       There  are  several  scenarios  when  the address of a global symbol is
-       NULL.  For example, a symbol can be placed at zero address by the link-
-       er,  via  a  linker script or with --defsym command-line option.  Unde-
-       fined weak symbols also have NULL value.  Finally, the symbol value may
-       be the result of a GNU indirect function (IFUNC) resolver function that
-       returns NULL as the resolved value.  In the latter case,  dlsym()  also
-       returns  NULL without error.  However, in the former two cases, the be-
-       havior of GNU dynamic linker  is  inconsistent:  relocation  processing
-       succeeds and the symbol can be observed to have NULL value, but dlsym()
-       fails and dlerror() indicates a lookup error.
+These functions
+are nonstandard GNU extensions that are also present on
+Solaris.
 
-   History
-       The dlsym() function is part of the dlopen  API,  derived  from  SunOS.
-       That system does not have dlvsym().
+BUGS
 
-EXAMPLES
-       See dlopen(3).
+Sometimes, the
+function pointers you pass to dladdr() may surprise
+you. On some architectures (notably i386 and x86-64),
+dli_fname and dli_fbase may end up pointing
+back at the object from which you called dladdr(),
+even if the function used as an argument should come from a
+dynamically linked library.
+
+The problem is
+that the function pointer will still be resolved at compile
+time, but merely point to the plt (Procedure Linkage
+Table) section of the original object (which dispatches the
+call after asking the dynamic linker to resolve the symbol).
+To work around this, you can try to compile the code to be
+position-independent: then, the compiler cannot prepare the
+pointer at compile time any more and gcc(1) will
+generate code that just loads the final symbol address from
+the got (Global Offset Table) at run time before
+passing it to dladdr().
 
 SEE ALSO
-       dl_iterate_phdr(3),   dladdr(3),   dlerror(3),   dlinfo(3),  dlopen(3),
-       ld.so(8)
 
-Linux man-pages 6.03              2023-01-07                          dlsym(3)
+dl_iterate_phdr(3),
+dlinfo(3), dlopen(3), dlsym(3),
+ld.so(8)
+
+COLOPHON
+
+This page is
+part of release 5.09 of the Linux man-pages project.
+A description of the project, information about reporting
+bugs, and the latest version of this page, can be found at
+https://www.kernel.org/doc/man-pages/.

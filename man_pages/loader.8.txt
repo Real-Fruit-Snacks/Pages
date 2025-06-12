@@ -1,0 +1,925 @@
+LOADER(8) BSD System Manager&rsquo;s Manual
+LOADER(8)
+
+NAME
+
+loader &mdash; kernel
+bootstrapping final stage
+
+DESCRIPTION
+
+The program called loader
+is the final stage of FreeBSD&rsquo;s kernel bootstrapping
+process. On IA32 (i386) architectures, it is a BTX
+client. It is linked statically to libstand(3) and usually
+located in the directory /boot.
+
+It provides a
+scripting language that can be used to automate tasks, do
+pre-configuration or assist in recovery procedures. This
+scripting language is roughly divided in two main
+components. The smaller one is a set of commands designed
+for direct use by the casual user, called "builtin
+commands" for historical reasons. The main drive behind
+these commands is user-friendliness. The bigger component is
+an ANS Forth compatible Forth interpreter based on FICL, by
+John Sadler.
+
+During
+initialization, loader will probe for a console and
+set the console variable, or set it to serial console
+(&rsquo;&rsquo;comconsole&rsquo;&rsquo;) if the previous
+boot stage used that. Then, devices are probed,
+currdev and loaddev are set, and LINES
+is set to 24. Next, FICL is initialized, the builtin words
+are added to its vocabulary, and /boot/boot.4th is
+processed if it exists. No disk switching is possible while
+that file is being read. The inner interpreter loader
+will use with FICL is then set to interpret, which is
+FICL&rsquo;s default. After that, /boot/loader.rc is
+processed if available, and, failing that,
+/boot/boot.conf is read for historical reasons. These
+files are processed through the include command,
+which reads all of them into memory before processing them,
+making disk changes possible.
+
+At this point,
+if an autoboot has not been tried, and if
+autoboot_delay is not set to
+&rsquo;&rsquo;NO&rsquo;&rsquo; (not case sensitive), then an
+autoboot will be tried. If the system gets past this
+point, prompt will be set and loader will
+engage interactive mode.
+
+BUILTIN COMMANDS
+
+In loader, builtin
+commands take parameters from the command line. Presently,
+the only way to call them from a script is by using
+evaluate on a string. If an error condition occurs,
+an exception will be generated, which can be intercepted
+using ANS Forth exception handling words. If not
+intercepted, an error message will be displayed and the
+interpreter&rsquo;s state will be reset, emptying the stack
+and restoring interpreting mode.
+
+The builtin
+commands available are:
+
+autoboot
+[seconds]
+
+Proceeds to bootstrap the
+system after a number of seconds, if not interrupted by the
+user. Displays a countdown prompt warning the user the
+system is about to be booted, unless interrupted by a key
+press. The kernel will be loaded first if necessary.
+Defaults to 10 seconds.
+
+bcachestat
+
+Displays statistics about disk
+cache usage. For depuration only.
+
+boot 
+boot kernelname [...] 
+boot &minus;flag ...
+
+Immediately proceeds to
+bootstrap the system, loading the kernel if necessary. Any
+flags or arguments are passed to the kernel, but they must
+precede the kernel name, if a kernel name is provided.
+
+WARNING:
+The behavior of this builtin is changed if loader.4th(8) is
+loaded.
+
+echo 
+[&minus;n] [&lang; message&rang; ]
+
+Displays text on the screen. A
+new line will be printed unless &minus;n is
+specified.
+
+heap
+
+Displays memory
+usage statistics. For debugging purposes only.
+
+help [topic
+[subtopic]]
+
+Shows help messages read from
+/boot/loader.help. The special topic index
+will list the topics available.
+
+include file
+[file ...]
+
+Process script files. Each
+file, in turn, is completely read into memory, and then each
+of its lines is passed to the command line interpreter. If
+any error is returned by the interpreter, the include
+command aborts immediately, without reading any other files,
+and returns an error itself (see ERRORS).
+
+load 
+[&minus;t type] file ...
+
+Loads a kernel, kernel loadable
+module (kld), or file of opaque contents tagged as being of
+the type type. Kernel and modules can be either in
+a.out or ELF format. Any arguments passed after the name of
+the file to be loaded will be passed as arguments to that
+file. Currently, argument passing does not work for the
+kernel.
+
+ls 
+[&minus;l] [path]
+
+Displays a listing of files in
+the directory path, or the root directory if
+path is not specified. If &minus;l is
+specified, file sizes will be shown too.
+
+lsdev
+[&minus;v]
+
+Lists all of the devices from
+which it may be possible to load modules. If &minus;v
+is specified, more details are printed.
+
+lsmod
+[&minus;v]
+
+Displays loaded modules. If
+&minus;v is specified, more details are shown.
+
+more file
+[file ...]
+
+Display the files specified,
+with a pause at each LINES displayed.
+
+pnpscan
+[&minus;v]
+
+Scans for Plug-and-Play
+devices. This is not functional at present.
+
+read 
+[&minus;t seconds] [&minus;p
+prompt] [variable]
+
+Reads a line of input from the
+terminal, storing it in variable if specified. A
+timeout can be specified with &minus;t, though it
+will be canceled at the first key pressed. A prompt may also
+be displayed through the &minus;p flag.
+
+reboot
+
+Immediately
+reboots the system.
+
+set variable
+
+set variable=value
+
+Set loader&rsquo;s environment
+variables.
+
+show
+[variable]
+
+Displays the specified
+variable&rsquo;s value, or all variables and their values if
+variable is not specified.
+
+unload
+
+Remove all
+modules from memory.
+
+unset variable
+
+Removes variable from
+the environment.
+
+?
+
+Same as
+&rsquo;&rsquo;help index&rsquo;&rsquo;.
+
+BUILTIN
+ENVIRONMENT VARIABLES 
+The loader has actually two different kinds of
+&rsquo;environment&rsquo; variables. There are ANS
+Forth&rsquo;s environmental queries, and a separate
+space of environment variables used by builtins, which are
+not directly available to Forth words. It is the latter type
+that this section covers.
+
+Environment
+variables can be set and unset through the set and
+unset builtins, and can have their values
+interactively examined through the use of the show
+builtin. Their values can also be accessed as described in
+BUILTIN PARSER.
+
+Notice that
+these environment variables are not inherited by any shell
+after the system has been booted.
+
+A few variables
+are set automatically by loader. Others can affect
+the behavior of either loader or the kernel at boot.
+Some options may require a value, while others define
+behavior just by being set. Both types of builtin variables
+are described below.
+
+acpi_load
+
+Unset this to disable automatic
+loading of the ACPI module. See also
+hint.acpi.0.disabled in device.hints(5).
+
+autoboot_delay
+
+Number of seconds
+autoboot will wait before booting. If this variable
+is not defined, autoboot will default to 10
+seconds.
+
+If set to
+&rsquo;&rsquo;NO&rsquo;&rsquo;, no autoboot will be
+automatically attempted after processing
+/boot/loader.rc, though explicit
+autoboot&rsquo;s will be processed normally,
+defaulting to 10 seconds delay.
+
+boot_askname
+
+Instructs the kernel to prompt
+the user for the name of the root device when the kernel is
+booted.
+
+boot_ddb
+
+Instructs the
+kernel to start in the DDB debugger, rather than proceeding
+to initialize when booted.
+
+boot_gdb
+
+Selects
+gdb-remote mode for the kernel debugger by default.
+
+boot_single
+
+Prevents the kernel from
+initiating a multi-user startup; instead single-user mode
+will be entered when the kernel has finished device
+probing.
+
+boot_userconfig
+
+Requests that the
+kernel&rsquo;s interactive device configuration program be
+run when the kernel is booted.
+
+boot_verbose
+
+Setting this variable causes
+extra debugging information to be printed by the kernel
+during the boot phase.
+
+bootfile
+
+List of
+semicolon-separated search path for bootable kernels. The
+default is
+&rsquo;&rsquo;kernel;kernel.old&rsquo;&rsquo;.
+
+console
+
+Defines the
+current console.
+
+currdev
+
+Selects the
+default device. Syntax for devices is odd.
+
+init_path
+
+Sets the list of binaries which
+the kernel will try to run as the initial process. The first
+matching binary is used. The default list is
+&rsquo;&rsquo;/sbin/init:/sbin/oinit:/sbin/init.bak:/stand/sysinstall&rsquo;&rsquo;.
+
+interpret
+
+Has the value
+&rsquo;&rsquo;ok&rsquo;&rsquo; if the Forth&rsquo;s current
+state is interpreting.
+
+LINES
+
+Define the
+number of lines on the screen, to be used by the pager.
+
+module_path
+
+Sets the list of directories
+which will be searched for modules named in a load command
+or implicitly required by a dependency. The default value
+for this variable is
+&rsquo;&rsquo;/boot/kernel;/boot/modules&rsquo;&rsquo;.
+
+num_ide_disks
+
+Sets the number of IDE disks as
+a workaround for some problems in finding the root disk at
+boot. This has been deprecated in favor of
+root_disk_unit.
+
+prompt
+
+Value of
+loader&rsquo;s prompt. Defaults to
+&rsquo;&rsquo;${currdev}>&rsquo;&rsquo;.
+
+root_disk_unit
+
+If the code which detects the
+disk unit number for the root disk is confused, e.g. by a
+mix of SCSI and IDE disks, or IDE disks with gaps in the
+sequence (e.g. no primary slave), the unit number can be
+forced by setting this variable.
+
+rootdev
+
+By default the
+value of currdev is used to set the root file system
+when the kernel is booted. This can be overridden by setting
+rootdev explicitly.
+
+dumpdev
+
+The name of a
+device where the kernel can save a crash dump in case of a
+panic. This automatically sets the kern.dumpdev
+sysctl(3) MIB variable.
+
+Other variables
+are used to override kernel tunable parameters. The
+following tunables are available:
+
+hw.physmem
+
+Limit the
+amount of physical memory the system will use. By default
+the size is in bytes, but the k, K, m,
+M, g and G suffixes are also accepted
+and indicate kilobytes, megabytes and gigabytes
+respectively. An invalid suffix will result in the variable
+being ignored by the kernel.
+
+hw.pci.enable_io_modes
+
+Enable PCI resources which are
+left off by some BIOSes or are not enabled correctly by the
+device driver. Tunable value set to ON (1) by default, but
+this may cause problems with some peripherals.
+
+kern.maxusers
+
+Set the size of a number of
+statically allocated system tables; see tuning(7) for a
+description of how to select an appropriate value for this
+tunable. When set, this tunable replaces the value declared
+in the kernel compile-time configuration file.
+
+kern.ipc.nmbclusters
+
+Set the number of mbuf clusters
+to be allocated. The value cannot be set below the default
+determined when the kernel was compiled. Modifies
+NMBCLUSTERS.
+
+kern.ipc.nsfbufs
+
+Set the number of sendfile(2)
+buffers to be allocated. Overrides NSFBUFS.
+
+kern.maxswzone
+
+Limits the amount of KVM to be
+used to hold swap meta information, which directly governs
+the maximum amount of swap the system can support. This
+value is specified in bytes of KVA space and defaults to
+around 70MBytes. Care should be taken to not reduce this
+value such that the actual amount of configured swap exceeds
+1/2 the kernel-supported swap. The default 70MB allows the
+kernel to support a maximum of (approximately) 14GB of
+configured swap. Only mess around with this parameter if you
+need to greatly extend the KVM reservation for other
+resources such as the buffer cache or NMBCLUSTERS. Modifies
+VM_SWZONE_SIZE_MAX.
+
+kern.maxbcache
+
+Limits the amount of KVM
+reserved for use by the buffer cache, specified in bytes.
+The default maximum is 200MB. This parameter is used to
+prevent the buffer cache from eating too much KVM in
+large-memory machine configurations. Only mess around with
+this parameter if you need to greatly extend the KVM
+reservation for other resources such as the swap zone or
+NMBCLUSTERS. Note that the NBUF parameter will override this
+limit. Modifies VM_BCACHE_SIZE_MAX.
+
+machdep.disable_mtrrs
+
+Disable the use of i686 MTRRs
+(x86 only).
+
+net.inet.tcp.tcbhashsize
+
+Overrides the compile-time set
+value of TCBHASHSIZE or the preset default of 512. Must be a
+power of 2.
+
+vm.kmem_size
+
+Sets the size
+of kernel memory (bytes). This overrides the value
+determined when the kernel was compiled. Modifies
+VM_KMEM_SIZE.
+
+BUILTIN
+PARSER 
+When a builtin command is executed, the rest of the line is
+taken by it as arguments, and it is processed by a special
+parser which is not used for regular Forth commands.
+
+This special
+parser applies the following rules to the parsed text:
+
+1.
+
+All backslash characters are
+preprocessed.
+
+&bull;
+
+\b , \f , \r , \n and \t are
+processed as in C.
+
+&bull;
+
+\s is converted to a space.
+
+&bull;
+
+\v is converted to ASCII
+11.
+
+&bull;
+
+\z is just skipped. Useful for
+things like &rsquo;&rsquo;\0xf\z\0xf&rsquo;&rsquo;.
+
+&bull;
+
+\0xN and \0xNN are replaced by
+the hex N or NN.
+
+&bull;
+
+\NNN is replaced by the octal
+NNN ASCII character.
+
+&bull;
+
+\" , \&rsquo; and \$ will
+escape these characters, preventing them from receiving
+special treatment in Step 2, described below.
+
+&bull;
+
+\\ will be replaced with a
+single \ .
+
+&bull;
+
+In any other occurrence,
+backslash will just be removed.
+
+2.
+
+Every string between
+non-escaped quotes or double-quotes will be treated as a
+single word for the purposes of the remaining steps.
+
+3.
+
+Replace any $VARIABLE or
+${VARIABLE} with the value of the environment variable
+VARIABLE.
+
+4.
+
+Space-delimited arguments are
+passed to the called builtin command. Spaces can also be
+escaped through the use of \\ .
+
+An exception to
+this parsing rule exists, and is described in BUILTINS
+AND FORTH.
+
+BUILTINS AND
+FORTH 
+All builtin words are state-smart, immediate words. If
+interpreted, they behave exactly as described previously. If
+they are compiled, though, they extract their arguments from
+the stack instead of the command line.
+
+If compiled, the
+builtin words expect to find, at execution time, the
+following parameters on the stack:
+
+addrN lenN ... addr2 len2
+addr1 len1 N
+
+where addrX lenX are
+strings which will compose the command line that will be
+parsed into the builtin&rsquo;s arguments. Internally, these
+strings are concatenated in from 1 to N, with a space put
+between each one.
+
+If no arguments
+are passed, a 0 must be passed, even if the builtin
+accepts no arguments.
+
+While this
+behavior has benefits, it has its trade-offs. If the
+execution token of a builtin is acquired (through
+&rsquo; or [&rsquo;]), and then passed to
+catch or execute, the builtin behavior will
+depend on the system state at the time catch
+or execute is processed! This is
+particularly annoying for programs that want or need to
+handle exceptions. In this case, the use of a proxy is
+recommended. For example:
+
+: (boot) boot;
+
+FICL
+
+FICL is a Forth interpreter
+written in C, in the form of a forth virtual machine library
+that can be called by C functions and vice versa.
+
+In
+loader, each line read interactively is then fed to
+FICL, which may call loader back to execute the
+builtin words. The builtin include will also feed
+FICL, one line at a time.
+
+The words
+available to FICL can be classified into four groups. The
+ANS Forth standard words, extra FICL words, extra FreeBSD
+words, and the builtin commands; the latter were already
+described. The ANS Forth standard words are listed in the
+STANDARDS section. The words falling in the two other
+groups are described in the following subsections.
+
+FICL EXTRA
+WORDS
+
+.env 
+.ver 
+-roll 
+2constant 
+>name 
+body> 
+compare
+
+This is the
+STRING word set&rsquo;s compare.
+
+compile-only 
+endif 
+forget-wid 
+parse-word 
+sliteral
+
+This is the
+STRING word set&rsquo;s sliteral.
+
+wid-set-super 
+w@ 
+w! 
+x. 
+empty 
+cell- 
+-rot
+
+FREEBSD EXTRA WORDS
+
+$ (--)
+
+Evaluates the
+remainder of the input buffer, after having printed it
+first.
+
+% (--)
+
+Evaluates the
+remainder of the input buffer under a catch exception
+guard.
+
+.#
+
+Works like .
+but without outputting a trailing space.
+
+fclose (fd --)
+
+Closes a file.
+
+fkey (fd --
+char)
+
+Reads a single character from a
+file.
+
+fload (fd --)
+
+Processes a file fd.
+
+fopen (addr len
+mode -- fd)
+
+Opens a file. Returns a file
+descriptor, or &minus;1 in case of failure. The mode
+parameter selects whether the file is to be opened for read
+access, write access, or both. The constants O_RDONLY,
+O_WRONLY, and O_RDWR are defined in
+/boot/support.4th, indicating read only, write only,
+and read-write access, respectively.
+
+fread (fd addr len --
+len&rsquo;)
+
+Tries to read len bytes
+from file fd into buffer addr. Returns the
+actual number of bytes read, or -1 in case of error or end
+of file.
+
+heap? (--
+cells)
+
+Return the space remaining in
+the dictionary heap, in cells. This is not related to the
+heap used by dynamic memory allocation words.
+
+inb (port --
+char)
+
+Reads a byte from a port.
+
+key (-- char)
+
+Reads a single character from
+the console.
+
+key? (-- flag)
+
+Returns true if there is
+a character available to be read from the console.
+
+ms (u --)
+
+Waits u
+microseconds.
+
+outb (port char
+--)
+
+Writes a byte to a port.
+
+seconds (-- u)
+
+Returns the number of seconds
+since midnight.
+
+tib> (-- addr
+len)
+
+Returns the remainder of the
+input buffer as a string on the stack.
+
+trace! (flag
+--)
+
+Activates or deactivates
+tracing. Does not work with catch.
+
+FREEBSD
+DEFINED ENVIRONMENTAL QUERIES
+
+arch-i386
+
+TRUE if the architecture
+is IA32.
+
+arch-alpha
+
+TRUE if the architecture
+is AXP.
+
+FreeBSD_version
+
+FreeBSD version at compile
+time.
+
+loader_version
+
+loader version.
+
+SYSTEM
+DOCUMENTATION
+
+FILES 
+/boot/loader
+
+loader
+itself.
+
+/boot/boot.4th
+
+Additional FICL
+initialization.
+
+/boot/boot.conf
+
+loader
+bootstrapping script. Deprecated.
+
+/boot/defaults/loader.conf 
+/boot/loader.conf 
+/boot/loader.conf.local
+
+loader
+configuration files, as described in loader.conf(5).
+
+/boot/loader.rc
+
+loader
+bootstrapping script.
+
+/boot/loader.help
+
+Loaded by
+help. Contains the help messages.
+
+EXAMPLES
+
+Boot in single user mode:
+
+boot -s
+
+Load
+kernel&rsquo;s user configuration file. Notice that a kernel
+must be loaded before any other load command is
+attempted.
+
+load kernel
+
+load -t userconfig_script /boot/kernel.conf
+
+Load the kernel,
+a splash screen, and then autoboot in five seconds.
+
+load kernel
+
+load splash_bmp 
+load -t splash_image_data /boot/chuckrulez.bmp 
+autoboot 5
+
+Set the disk
+unit of the root device to 2, and then boot. This would be
+needed in a system with two IDE disks, with the second IDE
+disk hardwired to wd2 instead of wd1.
+
+set
+root_disk_unit=2 
+boot /kernel
+
+See also:
+
+/boot/loader.4th
+
+Extra
+builtin-like words.
+
+/boot/support.4th
+
+loader.conf
+processing words.
+
+/usr/share/examples/bootforth/
+
+Assorted
+examples.
+
+ERRORS
+
+The following values are thrown
+by loader:
+
+100
+
+Any type of
+error in the processing of a builtin.
+
+-1
+
+Abort
+executed.
+
+-2
+
+Abort"
+executed.
+
+-56
+
+Quit
+executed.
+
+-256
+
+Out of
+interpreting text.
+
+-257
+
+Need more text
+to succeed -- will finish on next run.
+
+-258
+
+Bye
+executed.
+
+-259
+
+Unspecified
+error.
+
+SEE ALSO
+
+libstand(3), loader.conf(5),
+tuning(7), boot(8), btxld(8)
+
+STANDARDS
+
+For the purposes of ANS Forth
+compliance, loader is an ANS Forth System with
+Environmental Restrictions, Providing .(, :noname, ?do,
+parse, pick, roll, refill, to, value, \, false, true,
+<>, 0<>, compile, , erase, nip, tuck and
+marker from the Core Extensions word set, Providing the
+Exception Extensions word set, Providing the Locals
+Extensions word set, Providing the Memory-Allocation
+Extensions word set, Providing .s, bye, forget, see,
+words, [if], [else] and [then] from the
+Programming-Tools extension word set, Providing the
+Search-Order extensions word set.
+
+HISTORY
+
+The loader first appeared
+in FreeBSD 3.1.
+
+AUTHORS
+
+The loader was written by
+Michael Smith msmith [AT] FreeBSD.org>.
+
+FICL was written
+by John Sadler john_sadler [AT] alum.edu>.
+
+BUGS
+
+The expect and
+accept words will read from the input buffer instead
+of the console. The latter will be fixed, but the former
+will not.
+
+BSD
+August 18, 2004 BSD

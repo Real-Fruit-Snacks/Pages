@@ -1,0 +1,411 @@
+NAME
+
+init -
+Coordination of system startup.
+
+DESCRIPTION
+
+This module is
+preloaded and contains the code for the init system
+process that coordinates the startup of the system. The
+first function evaluated at startup is
+boot(BootArgs), where BootArgs is a list of
+command-line arguments supplied to the Erlang runtime system
+from the local operating system; see erl(1).
+
+init
+reads the boot script, which contains instructions on how to
+initiate the system. For more information about boot
+scripts, see script(5).
+
+init
+also contains functions to restart, reboot, and stop the
+system.
+
+DATA TYPES
+
+mode() =
+embedded | interactive
+
+Code loading
+mode.
+
+EXPORTS
+
+boot(BootArgs)
+-> no_return()
+
+Types:
+
+BootArgs =
+[binary()]
+
+Starts the
+Erlang runtime system. This function is called when the
+emulator is started and coordinates system startup.
+
+BootArgs
+are all command-line arguments except the emulator flags,
+that is, flags and plain arguments; see erl(1).
+
+init
+interprets some of the flags, see section Command-Line Flags
+below. The remaining flags ("user flags") and
+plain arguments are passed to the init loop and can
+be retrieved by calling get_arguments/0 and
+get_plain_arguments/0, respectively.
+
+get_argument(Flag)
+-> {ok, Arg} | error
+
+Types:
+
+Flag = atom()
+
+Arg = [Values :: [string()]]
+
+Returns all
+values associated with the command-line user flag
+Flag. If Flag is provided several times, each
+Values is returned in preserved order. Example:
+
+% erl -a b c -a
+d 
+... 
+1> init:get_argument(a). 
+{ok,[["b","c"],["d"]]}
+
+The following
+flags are defined automatically and can be retrieved using
+this function:
+
+root:
+
+The installation directory of
+Erlang/OTP, $ROOT:
+
+2>
+init:get_argument(root). 
+
+{ok,[["/usr/local/otp/releases/otp_beam_solaris8_r10b_patched"]]}
+
+progname:
+
+The name of the program which
+started Erlang:
+
+3>
+init:get_argument(progname). 
+{ok,[["erl"]]} 
+home:
+
+The home directory (on Unix,
+the value of $HOME):
+
+4>
+init:get_argument(home). 
+{ok,[["/home/harry"]]}
+
+Returns
+error if no value is associated with Flag.
+
+get_arguments()
+-> Flags
+
+Types:
+
+Flags = [{Flag
+:: atom(), Values :: [string()]}]
+
+Returns all
+command-line flags and the system-defined flags, see
+get_argument/1.
+
+get_plain_arguments()
+-> [Arg]
+
+Types:
+
+Arg =
+string()
+
+Returns any
+plain command-line arguments as a list of strings (possibly
+empty).
+
+get_status()
+-> {InternalStatus, ProvidedStatus}
+
+Types:
+
+InternalStatus
+= internal_status() 
+ProvidedStatus = term() 
+internal_status() = starting | started | stopping
+
+The current
+status of the init process can be inspected. During
+system startup (initialization), InternalStatus is
+starting, and ProvidedStatus indicates how far
+the boot script has been interpreted. Each {progress,
+Info} term interpreted in the boot script affects
+ProvidedStatus, that is, ProvidedStatus gets
+the value of Info.
+
+reboot()
+-> ok
+
+All
+applications are taken down smoothly, all code is unloaded,
+and all ports are closed before the system terminates. If
+command-line flag -heart was specified, the
+heart program tries to reboot the system. For more
+information, see heart(3erl).
+
+To limit the
+shutdown time, the time init is allowed to spend
+taking down applications, command-line flag
+-shutdown_time is to be used.
+
+restart()
+-> ok
+
+The same as
+restart([]).
+
+restart(Opts
+:: [{mode, mode()}]) -> ok
+
+The system is
+restarted inside the running Erlang node, which means
+that the emulator is not restarted. All applications are
+taken down smoothly, all code is unloaded, and all ports are
+closed before the system is booted again in the same way as
+initially started.
+
+The same
+BootArgs are used when restarting the system unless
+the mode option is given, allowing the code loading
+mode to be set to either embedded or
+interactive. All other BootArgs remain the
+same.
+
+To limit the
+shutdown time, the time init is allowed to spend
+taking down applications, command-line flag
+-shutdown_time is to be used.
+
+script_id()
+-> Id
+
+Types:
+
+Id = term()
+
+Gets the
+identity of the boot script used to boot the system.
+Id can be any Erlang term. In the delivered boot
+scripts, Id is {Name, Vsn}. Name and
+Vsn are strings.
+
+stop() ->
+ok
+
+The same as
+stop(0).
+
+stop(Status)
+-> ok
+
+Types:
+
+Status =
+integer() >= 0 | string()
+
+All
+applications are taken down smoothly, all code is unloaded,
+and all ports are closed before the system terminates by
+calling halt(Status). If command-line flag
+-heart was specified, the heart program is
+terminated before the Erlang node terminates. For more
+information, see heart(3erl).
+
+To limit the
+shutdown time, the time init is allowed to spend
+taking down applications, command-line flag
+-shutdown_time is to be used.
+
+COMMAND-LINE FLAGS
+
+Warning:
+
+The support for loading of code
+from archive files is experimental. The only purpose of
+releasing it before it is ready is to obtain early feedback.
+The file format, semantics, interfaces, and so on, can be
+changed in a future release. The -code_path_choice
+flag is also experimental.
+
+The init
+module interprets the following command-line flags:
+
+--:
+
+Everything following --
+up to the next flag is considered plain arguments and can be
+retrieved using get_plain_arguments/0.
+
+-code_path_choice
+Choice:
+
+Can be set to strict or
+relaxed. It controls how each directory in the code
+path is to be interpreted:
+
+*
+
+Strictly as it appears in the boot script, or
+
+*
+
+init is to be more relaxed and try to find a
+suitable directory if it can choose from a regular
+ebin directory and an ebin directory in an
+archive file.
+
+This flag is
+particular useful when you want to elaborate with code
+loading from archives without editing the boot
+script. For more information about interpretation of
+boot scripts, see script(5). The flag has also a
+similar effect on how the code server works; see
+code(3erl).
+
+-epmd_module Module:
+
+Specifies the module to use for
+registration and lookup of node names. Defaults to
+erl_epmd.
+
+-eval Expr:
+
+Scans, parses, and evaluates an
+arbitrary expression Expr during system
+initialization. If any of these steps fail (syntax error,
+parse error, or exception during evaluation), Erlang stops
+with an error message. In the following example Erlang is
+used as a hexadecimal calculator:
+
+% erl -noshell
+-eval &rsquo;R = 16#1F+16#A0, io:format("~.16B~n",
+[R])&rsquo; \\ 
+-s erlang halt 
+BF
+
+If multiple
+-eval expressions are specified, they are evaluated
+sequentially in the order specified. -eval
+expressions are evaluated sequentially with -s and
+-run function calls (this also in the order
+specified). As with -s and -run, an evaluation
+that does not terminate blocks the system initialization
+process.
+
+-extra:
+
+Everything following
+-extra is considered plain arguments and can be
+retrieved using get_plain_arguments/0.
+
+-run Mod [Func [Arg1, Arg2,
+...]]:
+
+Evaluates the specified
+function call during system initialization. Func
+defaults to start. If no arguments are provided, the
+function is assumed to be of arity 0. Otherwise it is
+assumed to be of arity 1, taking the list
+[Arg1,Arg2,...] as argument. All arguments are passed
+as strings. If an exception is raised, Erlang stops with an
+error message.
+
+Example:
+
+% erl -run foo
+-run foo bar -run foo bar baz 1 2
+
+This starts the
+Erlang runtime system and evaluates the following
+functions:
+
+foo:start()
+
+foo:bar() 
+foo:bar(["baz", "1",
+"2"]).
+
+The functions
+are executed sequentially in an initialization process,
+which then terminates normally and passes control to the
+user. This means that a -run call that does not
+return blocks further processing; to avoid this, use some
+variant of spawn in such cases.
+
+-s Mod [Func [Arg1, Arg2,
+...]]:
+
+Evaluates the specified
+function call during system initialization. Func
+defaults to start. If no arguments are provided, the
+function is assumed to be of arity 0. Otherwise it is
+assumed to be of arity 1, taking the list
+[Arg1,Arg2,...] as argument. All arguments are passed
+as atoms. If an exception is raised, Erlang stops with an
+error message.
+
+Example:
+
+% erl -s foo -s
+foo bar -s foo bar baz 1 2
+
+This starts the
+Erlang runtime system and evaluates the following
+functions:
+
+foo:start()
+
+foo:bar() 
+foo:bar([baz, &rsquo;1&rsquo;, &rsquo;2&rsquo;]).
+
+The functions
+are executed sequentially in an initialization process,
+which then terminates normally and passes control to the
+user. This means that a -s call that does not return
+blocks further processing; to avoid this, use some variant
+of spawn in such cases.
+
+Because of the
+limited length of atoms, it is recommended to use
+-run instead.
+
+EXAMPLE
+
+% erl -- a b
+-children thomas claire -ages 7 3 -- x y 
+...
+
+1>
+init:get_plain_arguments(). 
+["a","b","x","y"]
+
+2> init:get_argument(children). 
+{ok,[["thomas","claire"]]} 
+3> init:get_argument(ages). 
+{ok, [["7","3"]]} 
+4> init:get_argument(silly). 
+error
+
+SEE ALSO
+
+erl_prim_loader(3erl),
+heart(3erl)

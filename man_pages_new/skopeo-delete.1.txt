@@ -1,0 +1,164 @@
+NAME
+
+skopeo-delete -
+Mark the image-name for later deletion by the
+registry&rsquo;s garbage collector.
+
+SYNOPSIS
+
+skopeo
+delete [options] image-name
+
+DESCRIPTION
+
+Mark
+image-name for deletion. The effect of this is
+registry-specific; many registries don&rsquo;t support this
+operation, or don&rsquo;t allow it in some circumstances /
+configurations.
+
+WARNING:
+If image-name contains a digest, this affects the
+referenced manifest, and may delete all tags (within the
+current repository?) pointing to that manifest.
+
+WARNING:
+If image-name contains a tag (but not a digest), in
+the current version of Skopeo this resolves the tag into a
+digest, and then deletes the manifest by digest, as
+described above (possibly deleting all tags pointing to that
+manifest, not just the provided tag). This behavior may
+change in the future.
+
+When using the
+github.com/distribution/distribution registry server: To
+release the allocated disk space, you must login to the
+container registry server and execute the container registry
+garbage collector. E.g.,
+
+/usr/bin/registry
+garbage-collect
+/etc/docker-distribution/registry/config.yml
+
+Note: sometimes
+the config.yml is stored in
+/etc/docker/registry/config.yml
+
+If you are
+running the container registry inside of a container you
+would execute something like:
+
+$ docker exec
+-it registry /usr/bin/registry garbage-collect
+/etc/docker-distribution/registry/config.yml
+
+OPTIONS
+
+See also
+skopeo(1) for options placed before the subcommand name.
+
+--authfile
+path
+
+Path of the
+authentication file. Default is
+${XDG_RUNTIME_DIR}/containers/auth.json, which is set using
+skopeo login. If the authorization state is not found
+there, $HOME/.docker/config.json is checked, which is set
+using docker login.
+
+--creds
+username[:password]
+
+Credentials for
+accessing the registry.
+
+--cert-dir
+path
+
+Use
+certificates at path (*.crt, *.cert, *.key) to
+connect to the registry.
+
+--daemon-host
+host
+
+Use docker
+daemon host at host (docker-daemon: transport
+only)
+
+--help,
+-h
+
+Print usage
+statement
+
+--no-creds
+
+Access the
+registry anonymously.
+
+Additionally,
+the registry must allow deletions by setting
+REGISTRY_STORAGE_DELETE_ENABLED=true for the registry
+daemon.
+
+--registry-token
+token
+
+Bearer token
+for accessing the registry.
+
+--retry-times
+
+The number of
+times to retry. Retry wait time will be exponentially
+increased based on the number of failed attempts.
+
+--shared-blob-dir
+directory
+
+Directory to
+use to share blobs across OCI repositories.
+
+--tls-verify=bool
+
+Require HTTPS
+and verify certificates when talking to the container
+registry or daemon. Default to registry.conf setting.
+
+--username
+
+The username to
+access the registry.
+
+--password
+
+The password to
+access the registry.
+
+EXAMPLES
+
+Mark image
+example/pause for deletion from the registry.example.com
+registry:
+
+$ skopeo delete
+docker://registry.example.com/example/pause:latest
+
+See above for
+additional details on using the command delete.
+
+SEE ALSO
+
+skopeo(1),
+skopeo-login(1), docker-login(1),
+containers-auth.json(5)
+
+AUTHORS
+
+Antonio Murdaca
+runcom [AT] redhat.com &lang; mailto:runcom [AT] redhat.com&rang; ,
+Miloslav Trmac mitr [AT] redhat.com &lang;
+mailto:mitr [AT] redhat.com&rang; , Jhon Honce jhonce [AT] redhat.com
+&lang; mailto:jhonce [AT] redhat.com&rang;

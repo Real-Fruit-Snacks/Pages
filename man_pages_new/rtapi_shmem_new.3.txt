@@ -1,0 +1,82 @@
+NAME
+
+rtapi_shmem -
+Functions for managing shared memory blocks
+
+SYNTAX
+
+int
+rtapi_shmem_new(int key, int module_id,
+unsigned long int size)
+
+int
+rtapi_shmem_delete(int shmem_id, int
+module_id) 
+
+int
+rtapi_shmem_getptr(int shmem_id, void **
+ptr)
+
+ARGUMENTS
+
+key
+
+Identifies the memory block. Key must be nonzero. All
+modules wishing to use the same memory must use the same
+key. 
+
+module_id
+
+Module identifier returned by a
+prior call to rtapi_init.
+
+size
+
+The desired size of the shared memory block, in
+bytes 
+
+ptr
+
+The pointer to the shared memory block. Note that the
+block may be mapped at a different address for different
+modules. 
+
+DESCRIPTION
+
+rtapi_shmem_new
+allocates a block of shared memory. key identifies
+the memory block, and must be non-zero. All modules wishing
+to access the same memory must use the same key.
+module_id is the ID of the module that is making the
+call (see rtapi_init). The block will be at least
+size bytes, and may be rounded up. Allocating many
+small blocks may be very wasteful. When a particular block
+is allocated for the first time, the contents are zeroed.
+Subsequent allocations of the same block by other modules or
+processes will not touch the contents of the block.
+Applications can use those bytes to see if they need to
+initialize the block, or if another module already did so.
+On success, it returns a positive integer ID, which is used
+for all subsequent calls dealing with the block. On failure
+it returns a negative error code.
+
+rtapi_shmem_delete
+frees the shared memory block associated with
+shmem_id. module_id is the ID of the calling
+module. Returns a status code.
+
+rtapi_shmem_getptr
+sets *ptr to point to shared memory block associated
+with shmem_id.
+
+REALTIME CONSIDERATIONS
+
+rtapi_shmem_getptr
+may be called from non-realtime code, init/cleanup code, or
+realtime tasks.
+
+rtapi_shmem_new
+and rtapi_shmem_dete may not be called from realtime
+tasks.
+
+RETURN VALUE

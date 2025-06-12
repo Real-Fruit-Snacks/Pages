@@ -1,0 +1,598 @@
+NAME
+
+SSH - The ssh
+application implements the Secure Shell (SSH) protocol and
+
+provides an SSH File Transfer Protocol (SFTP) client and
+server.
+
+DESCRIPTION
+
+The ssh
+application is an implementation of the SSH protocol in
+Erlang. ssh offers API functions to write customized
+SSH clients and servers as well as making the Erlang shell
+available over SSH. An SFTP client, ssh_sftp, and
+server, ssh_sftpd, are also included.
+
+DEPENDENCIES
+
+The ssh
+application uses the applications public_key and
+crypto to handle public keys and encryption. Hence,
+these applications must be loaded for the ssh
+application to work. In an embedded environment this means
+that they must be started with application:start/1,2
+before the ssh application is started.
+
+CONFIGURATION
+
+The ssh
+application does not have an application- specific
+configuration file, as described in
+application(3erl). However, by default it use the
+following configuration files from OpenSSH:
+
+*
+
+known_hosts
+
+*
+
+authorized_keys
+
+*
+
+authorized_keys2
+
+*
+
+id_dsa
+
+*
+
+id_rsa
+
+*
+
+id_ecdsa
+
+*
+
+ssh_host_dsa_key
+
+*
+
+ssh_host_rsa_key
+
+*
+
+ssh_host_ecdsa_key
+
+By default,
+ssh looks for id_dsa, id_rsa,
+id_ecdsa_key, known_hosts, and
+authorized_keys in ~/.ssh, and for the host key files
+in /etc/ssh. These locations can be changed by the
+options user_dir and system_dir.
+
+Public key
+handling can also be customized through a callback module
+that implements the behaviors ssh_client_key_api and
+ssh_server_key_api.
+
+See also the
+default callback module documentation in
+ssh_file.
+
+PUBLIC KEYS
+
+id_dsa,
+id_rsa and id_ecdsa are the users private key
+files. Notice that the public key is part of the private key
+so the ssh application does not use the
+id_.pub files. These are for the
+user&rsquo;s convenience when it is needed to convey the
+user&rsquo;s public key.
+
+KNOWN HOSTS
+
+The
+known_hosts file contains a list of approved servers
+and their public keys. Once a server is listed, it can be
+verified without user interaction.
+
+AUTHORIZED KEYS
+
+The
+authorized_key file keeps track of the user&rsquo;s
+authorized public keys. The most common use of this file is
+to let users log in without entering their password, which
+is supported by the Erlang ssh daemon.
+
+HOST KEYS
+
+RSA, DSA and
+ECDSA host keys are supported and are expected to be found
+in files named ssh_host_rsa_key,
+ssh_host_dsa_key and ssh_host_ecdsa_key.
+
+ERROR LOGGER AND EVENT HANDLERS
+
+The ssh
+application uses the default OTP error logger to log
+unexpected errors or print information about special
+events.
+
+SUPPORTED SPECIFICATIONS AND STANDARDS
+
+The supported
+SSH version is 2.0.
+
+ALGORITHMS
+
+The actual set
+of algorithms may vary depending on which OpenSSL crypto
+library that is installed on the machine. For the list on a
+particular installation, use the command
+ssh:default_algorithms/0. The user may override the
+default algorithm configuration both on the server side and
+the client side. See the options preferred_algorithms
+and modify_algorithms in the ssh:daemon/1,2,3
+and ssh:connect/3,4 functions.
+
+Supported
+algorithms are (in the default order):
+
+Key exchange
+algorithms:
+
+*
+
+ecdh-sha2-nistp384
+
+*
+
+ecdh-sha2-nistp521
+
+*
+
+ecdh-sha2-nistp256
+
+*
+
+diffie-hellman-group-exchange-sha256
+
+*
+
+diffie-hellman-group16-sha512
+
+*
+
+diffie-hellman-group18-sha512
+
+*
+
+diffie-hellman-group14-sha256
+
+*
+
+curve25519-sha256
+
+*
+
+curve25519-sha256 [AT] libssh.org
+
+*
+
+curve448-sha512
+
+*
+
+diffie-hellman-group14-sha1
+
+*
+
+diffie-hellman-group-exchange-sha1
+
+*
+
+(diffie-hellman-group1-sha1, retired: It can be enabled
+with the preferred_algorithms or
+modify_algorithms options. Use for example the Option
+value {modify_algorithms, [{append,
+[{kex,[&rsquo;diffie-hellman-group1-sha1&rsquo;]}]}]}) 
+
+Public key
+algorithms:
+
+*
+
+ecdsa-sha2-nistp384
+
+*
+
+ecdsa-sha2-nistp521
+
+*
+
+ecdsa-sha2-nistp256
+
+*
+
+ssh-ed25519
+
+*
+
+ssh-ed448
+
+*
+
+ssh-rsa
+
+*
+
+rsa-sha2-256
+
+*
+
+rsa-sha2-512
+
+*
+
+ssh-dss
+
+MAC algorithms:
+
+*
+
+hmac-sha2-256
+
+*
+
+hmac-sha2-512
+
+*
+
+hmac-sha1
+
+*
+
+(hmac-sha1-96 It can be enabled with the
+preferred_algorithms or modify_algorithms
+options. Use for example the Option value
+{modify_algorithms, [{append,
+[{mac,[&rsquo;hmac-sha1-96&rsquo;]}]}]}) 
+
+Encryption algorithms
+(ciphers):
+
+*
+
+chacha20-poly1305 [AT] openssh.com
+
+*
+
+aes256-gcm [AT] openssh.com
+
+*
+
+aes256-ctr
+
+*
+
+aes192-ctr
+
+*
+
+aes128-gcm [AT] openssh.com
+
+*
+
+aes128-ctr
+
+*
+
+aes256-cbc
+
+*
+
+aes192-cbc
+
+*
+
+aes128-cbc
+
+*
+
+3des-cbc
+
+*
+
+(AEAD_AES_128_GCM, not enabled per default)
+
+*
+
+(AEAD_AES_256_GCM, not enabled per default)
+
+See the text at
+the description of the rfc 5647 further down for more
+information regarding AEAD_AES_*_GCM.
+
+Following the
+internet de-facto standard, the cipher and mac algorithm
+AEAD_AES_128_GCM is selected when the cipher
+aes128-gcm [AT] openssh.com is negotiated. The cipher and mac
+algorithm AEAD_AES_256_GCM is selected when the cipher
+aes256-gcm [AT] openssh.com is negotiated.
+
+Compression
+algorithms:
+
+*
+
+none
+
+*
+
+zlib [AT] openssh.com
+
+*
+
+zlib
+
+UNICODE SUPPORT
+
+Unicode
+filenames are supported if the emulator and the underlaying
+OS support it. See section DESCRIPTION in the file
+manual page in Kernel for information about this
+subject.
+
+The shell and
+the cli both support unicode.
+
+RFCS
+
+The following
+rfc:s are supported:
+
+*
+
+RFC 4251, The Secure Shell (SSH)
+Protocol Architecture.
+
+Except
+
+*
+
+9.4.6 Host-Based
+Authentication 
+
+*
+
+9.5.2 Proxy Forwarding
+
+*
+
+9.5.3 X11 Forwarding
+
+*
+
+RFC 4252, The
+Secure Shell (SSH) Authentication Protocol.
+
+Except
+
+*
+
+9. Host-Based Authentication:
+"hostbased" 
+
+*
+
+RFC 4253, The
+Secure Shell (SSH) Transport Layer Protocol.
+
+Except
+
+*
+
+8.1. diffie-hellman-group1-sha1.
+Disabled by default, can be enabled with the
+preferred_algorithms or modify_algorithms
+options. 
+
+*
+
+RFC 4254, The
+Secure Shell (SSH) Connection Protocol.
+
+Except
+
+*
+
+6.3. X11 Forwarding
+
+*
+
+7. TCP/IP Port Forwarding
+
+*
+
+RFC 4256,
+Generic Message Exchange Authentication for the Secure Shell
+Protocol (SSH).
+
+Except
+
+*
+
+num-prompts > 1
+
+*
+
+password changing
+
+*
+
+other identification methods than userid-password
+
+*
+
+RFC 4419,
+Diffie-Hellman Group Exchange for the Secure Shell (SSH)
+Transport Layer Protocol.
+
+*
+
+RFC 4716, The Secure Shell (SSH)
+Public Key File Format.
+
+*
+
+RFC 5647, AES Galois Counter Mode for the Secure Shell
+Transport Layer Protocol.
+
+There is an
+ambiguity in the synchronized selection of cipher and mac
+algorithm. This is resolved by OpenSSH in the ciphers
+aes128-gcm [AT] openssh.com and aes256-gcm [AT] openssh.com which are
+implemented. If the explicit ciphers and macs
+AEAD_AES_128_GCM or AEAD_AES_256_GCM are needed, they could
+be enabled with the options preferred_algorithms or
+modify_algorithms.
+
+Warning:
+
+If the client or the server is
+not Erlang/OTP, it is the users responsibility to check that
+other implementation has the same interpretation of
+AEAD_AES_*_GCM as the Erlang/OTP SSH before enabling them.
+The aes*-gcm [AT] openssh.com variants are always safe to use
+since they lack the ambiguity.
+
+The second
+paragraph in section 5.1 is resolved as:
+
+*
+
+If the negotiated cipher is
+AEAD_AES_128_GCM, the mac algorithm is set to
+AEAD_AES_128_GCM. 
+
+*
+
+If the negotiated cipher is AEAD_AES_256_GCM, the mac
+algorithm is set to AEAD_AES_256_GCM.
+
+*
+
+If the mac algorithm is AEAD_AES_128_GCM, the cipher is
+set to AEAD_AES_128_GCM.
+
+*
+
+If the mac algorithm is AEAD_AES_256_GCM, the cipher is
+set to AEAD_AES_256_GCM.
+
+The first rule
+that matches when read in order from the top is applied
+
+*
+
+RFC 5656, Elliptic Curve
+Algorithm Integration in the Secure Shell Transport
+Layer. 
+
+Except
+
+*
+
+5. ECMQV Key Exchange
+
+*
+
+6.4. ECMQV Key Exchange and Verification Method Name
+
+*
+
+7.2. ECMQV Message Numbers
+
+*
+
+10.2. Recommended Curves
+
+*
+
+RFC 6668, SHA-2
+Data Integrity Verification for the Secure Shell (SSH)
+Transport Layer Protocol
+
+Comment:
+Defines hmac-sha2-256 and hmac-sha2-512
+
+*
+
+Draft-ietf-curdle-ssh-kex-sha2
+(work in progress), Key Exchange (KEX) Method Updates and
+Recommendations for Secure Shell (SSH).
+
+Deviations:
+
+*
+
+The
+diffie-hellman-group1-sha1 is not enabled by default,
+but is still supported and can be enabled with the options
+preferred_algorithms or modify_algorithms.
+
+*
+
+The questionable sha1-based algorithms
+diffie-hellman-group-exchange-sha1 and
+diffie-hellman-group14-sha1 are still enabled by
+default for compatibility with ancient clients and servers.
+They can be disabled with the options
+preferred_algorithms or modify_algorithms.
+They will be disabled by default when the draft is turned
+into an RFC.
+
+*
+
+RFC 8332, Use
+of RSA Keys with SHA-256 and SHA-512 in the Secure Shell
+(SSH) Protocol.
+
+*
+
+RFC 8308, Extension Negotiation
+in the Secure Shell (SSH) Protocol.
+
+Implemented
+are:
+
+*
+
+The Extension Negotiation
+Mechanism 
+
+*
+
+The extension server-sig-algs
+
+*
+
+Secure Shell
+(SSH) Key Exchange Method using Curve25519 and Curve448
+(work in progress)
+
+*
+
+Ed25519 and Ed448 public key
+algorithms for the Secure Shell (SSH) protocol (work in
+progress) 
+
+SEE ALSO
+
+application(3erl)

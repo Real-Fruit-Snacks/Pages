@@ -1,128 +1,151 @@
-stpncpy(3)                 Library Functions Manual                 stpncpy(3)
-
-
-
 NAME
-       stpncpy,  strncpy  - zero a fixed-width buffer and copy a string into a
-       character sequence with truncation and zero the rest of it
 
-LIBRARY
-       Standard C library (libc, -lc)
+strcpy, strncpy
+- copy a string
 
 SYNOPSIS
-       #include <string.h>
 
-       char *stpncpy(char dst[restrict .sz], const char *restrict src,
-                      size_t sz);
-       char *strncpy(char dst[restrict .sz], const char *restrict src,
-                      size_t sz);
+#include
 
-   Feature Test Macro Requirements for glibc (see feature_test_macros(7)):
+char
+*strcpy(char *dest, const char
+*src);
 
-       stpncpy():
-           Since glibc 2.10:
-               _POSIX_C_SOURCE >= 200809L
-           Before glibc 2.10:
-               _GNU_SOURCE
+char
+*strncpy(char *dest, const char
+*src, size_t n);
 
 DESCRIPTION
-       These functions copy the string pointed to by src  into  a  null-padded
-       character sequence at the fixed-width buffer pointed to by dst.  If the
-       destination buffer, limited by its size, isn't large enough to hold the
-       copy,  the  resulting character sequence is truncated.  For the differ‐
-       ence between the two functions, see RETURN VALUE.
 
-       An implementation of these functions might be:
+The
+strcpy() function copies the string pointed to by
+src, including the terminating null byte ('\0'), to
+the buffer pointed to by dest. The strings may not
+overlap, and the destination string dest must be
+large enough to receive the copy. Beware of buffer
+overruns! (See BUGS.)
 
-           char *
-           stpncpy(char *restrict dst, const char *restrict src, size_t sz)
-           {
-               bzero(dst, sz);
-               return mempcpy(dst, src, strnlen(src, sz));
-           }
+The
+strncpy() function is similar, except that at most
+n bytes of src are copied. Warning: If
+there is no null byte among the first n bytes of
+src, the string placed in dest will not be
+null-terminated.
 
-           char *
-           strncpy(char *restrict dst, const char *restrict src, size_t sz)
-           {
-               stpncpy(dst, src, sz);
-               return dst;
-           }
+If the length
+of src is less than n, strncpy() writes
+additional null bytes to dest to ensure that a total
+of n bytes are written.
+
+A simple
+implementation of strncpy() might be:
+char *
+strncpy(char *dest, const char *src, size_t n)
+{
+    size_t i;
+
+    for (i = 0; i 
 
 RETURN VALUE
-       stpncpy()
-              returns a pointer to one after the last character in the  desti‐
-              nation character sequence.
 
-       strncpy()
-              returns dst.
+The
+strcpy() and strncpy() functions return a
+pointer to the destination string dest.
 
 ATTRIBUTES
-       For  an  explanation  of  the  terms  used  in  this  section,  see at‐
-       tributes(7).
 
-       ┌────────────────────────────────────────────┬───────────────┬─────────┐
-       │Interface                                   │ Attribute     │ Value   │
-       ├────────────────────────────────────────────┼───────────────┼─────────┤
-       │stpncpy(), strncpy()                        │ Thread safety │ MT-Safe │
-       └────────────────────────────────────────────┴───────────────┴─────────┘
+For an
+explanation of the terms used in this section, see
+attributes(7).
 
-STANDARDS
-       stpncpy()
-              POSIX.1-2008.
+CONFORMING TO
 
-       strncpy()
-              POSIX.1-2001, POSIX.1-2008, C99, SVr4, 4.3BSD.
+POSIX.1-2001,
+POSIX.1-2008, C89, C99, SVr4, 4.3BSD.
 
-CAVEATS
-       The name of these functions is confusing.  These  functions  produce  a
-       null-padded character sequence, not a string (see string_copying(7)).
+NOTES
 
-       It's  impossible  to  distinguish truncation by the result of the call,
-       from a character sequence that just fits the destination buffer;  trun‐
-       cation  should  be detected by comparing the length of the input string
-       with the size of the destination buffer.
+Some
+programmers consider strncpy() to be inefficient and
+error prone. If the programmer knows (i.e., includes code to
+test!) that the size of dest is greater than the
+length of src, then strcpy() can be used.
 
-       If you're going to use this function in chained calls, it would be use‐
-       ful  to  develop  a  similar function that accepts a pointer to the end
-       (one after the last element) of the destination buffer instead  of  its
-       size.
+One valid (and
+intended) use of strncpy() is to copy a C string to a
+fixed-length buffer while ensuring both that the buffer is
+not overflowed and that unused bytes in the destination
+buffer are zeroed out (perhaps to prevent information leaks
+if the buffer is to be written to media or transmitted to
+another process via an interprocess communication
+technique).
 
-EXAMPLES
-       #include <err.h>
-       #include <stdio.h>
-       #include <stdlib.h>
-       #include <string.h>
+If there is no
+terminating null byte in the first n bytes of
+src, strncpy() produces an unterminated string
+in dest. If buf has length buflen, you
+can force termination using something like the
+following:
 
-       int
-       main(void)
-       {
-           char    *p;
-           char    buf1[20];
-           char    buf2[20];
-           size_t  len;
+if (buflen > 0) {
+    strncpy(buf, str, buflen - 1);
+    buf[buflen - 1]= '\0';
+}
 
-           if (sizeof(buf1) < strlen("Hello world!"))
-               warnx("stpncpy: truncating character sequence");
-           p = stpncpy(buf1, "Hello world!", sizeof(buf1));
-           len = p - buf1;
+(Of course, the
+above technique ignores the fact that, if src
+contains more than buflen - 1 bytes,
+information is lost in the copying to dest.)
 
-           printf("[len = %zu]: ", len);
-           printf("%.*s\n", (int) len, buf1);  // "Hello world!"
+strlcpy()
 
-           if (sizeof(buf2) < strlen("Hello world!"))
-               warnx("strncpy: truncating character sequence");
-           strncpy(buf2, "Hello world!", sizeof(buf2));
-           len = strnlen(buf2, sizeof(buf2));
+Some systems (the BSDs, Solaris, and others) provide the
+following function:
 
-           printf("[len = %zu]: ", len);
-           printf("%.*s\n", (int) len, buf2);  // "Hello world!"
+size_t
+strlcpy(char *dest, const char *src, size_t size);
 
-           exit(EXIT_SUCCESS);
-       }
+This function
+is similar to strncpy(), but it copies at most
+size-1 bytes to dest, always adds a
+terminating null byte, and does not pad the destination with
+(further) null bytes. This function fixes some of the
+problems of strcpy() and strncpy(), but the
+caller must still handle the possibility of data loss if
+size is too small. The return value of the function
+is the length of src, which allows truncation to be
+easily detected: if the return value is greater than or
+equal to size, truncation occurred. If loss of data
+matters, the caller must either check the arguments
+before the call, or test the function return value.
+strlcpy() is not present in glibc and is not
+standardized by POSIX, but is available on Linux via the
+libbsd library.
+
+BUGS
+
+If the
+destination string of a strcpy() is not large enough,
+then anything might happen. Overflowing fixed-length string
+buffers is a favorite cracker technique for taking complete
+control of the machine. Any time a program reads or copies
+data into a buffer, the program first needs to check that
+there&rsquo;s enough space. This may be unnecessary if you
+can show that overflow is impossible, but be careful:
+programs can get changed over time, in ways that may make
+the impossible possible.
 
 SEE ALSO
-       wcpncpy(3), string_copying(7)
 
+bcopy(3),
+memccpy(3), memcpy(3), memmove(3),
+stpcpy(3), stpncpy(3), strdup(3),
+string(3), wcscpy(3), wcsncpy(3)
 
+COLOPHON
 
-Linux man-pages 6.03              2023-01-26                        stpncpy(3)
+This page is
+part of release 5.09 of the Linux man-pages project.
+A description of the project, information about reporting
+bugs, and the latest version of this page, can be found at
+https://www.kernel.org/doc/man-pages/.

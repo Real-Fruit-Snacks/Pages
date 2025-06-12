@@ -1,0 +1,305 @@
+NAME
+
+node &minus;
+Node front end for AX.25, NET/ROM, Rose and TCP
+
+SYNOPSIS
+
+node
+[-c]
+
+DESCRIPTION
+
+Node is
+a simple node front end, modelled after the node shells of
+TheNet and G8BPQ nodes.
+
+OPTIONS
+
+&minus;c
+
+Enable compression. With this
+option it is assumed that the incoming call is using Zlib
+based compression (modified Lempel-Ziv 1977). Currently no
+negotiation is done so the caller must be aware of this. You
+probably want to set up a separate AX.25, NET/ROM or ROSE
+callsign in ax25d.conf or a separate TCP port in inetd.conf
+to listen to compressed connects.
+
+At the moment I
+know only two implementations compatible with this
+compression method, namely LinuxNode and Clussed.
+
+NODE COMMANDS
+
+The following
+commands are supported for users of node:
+
+?
+
+Give short list of available
+commands. 
+
+Bye
+
+Disconnect user from the node.
+
+Connect 
+ [via  ...] [d|s] For AX.25 
+Connect  [d|s] For NET/ROM 
+Connect   [] [d|s]
+For ROSE
+
+Initiate an
+AX.25, NET/ROM or ROSE connection to a remote host. If only
+one argument is supplied then the connection is assumed to
+be a NET/ROM connection and the argument specifies the
+callsign of alias of a NET/ROM node. If more than one
+argument is supplied and the second parameter is composed of
+numeric characters only then the connection is assumed to be
+a ROSE connection. Any other combination is assumed to be an
+AX.25 connection with the first argument being the AX25 port
+to use for the connection.
+
+For a ROSE
+connection the  part must be exactly six or
+ten digits. If only six digits are supplied, the DNIC (first
+four digits) default to the local DNIC. The local DNIC is
+assumed to be that of the first configured Rose port in
+/etc/ax25/rsports.
+
+The user may
+optionally supply as the last argument a single character
+which modifies the default behaviour on disconnection of the
+connection. If a single &rsquo;s&rsquo; is entered as the
+last argument, then when the remote host disconnects you
+will be returned to this node. If a single &rsquo;d&rsquo;
+is entered as the last argument, you will be disconnected
+from this node too. The Default behaviour (neither
+&rsquo;s&rsquo; nor &rsquo;d&rsquo; entered) is configured
+in the node configuration file and depends on the sysop
+preference.
+
+Escape []
+
+Override the sysop configured
+default escape character setting. If the Escape command is
+given without an argument then the current escape character
+setting is returned to the user. The escape string may be
+specified using any of the well known codings:
+
+to enter the escape character in its binary form.
+
+^C to
+enter the escape character as a control character value.
+
+NNN to
+set the escape character to a Decimal value.
+
+0xNN to
+set the escape character to a HexaDecimal value.
+
+0NNN to
+set the escape character to an Octal value.
+
+off to
+disable the escape character.
+
+Finger
+[][@]
+
+Retrieve information about
+users of a system. If the user name is omitted, shows the
+users currently logged on the host. If the hostname is
+omitted, defaults to the local host.
+
+Help
+[]
+
+Give help for the specified
+command or this text if no command is specified. Commands
+can not be abbreviated. Use the "?" command to
+retrieve a list of available commands.
+
+HOst  |
+
+Give the Domain Name Service
+host name information about  or .
+
+Info
+
+Display the version information and the contents of the
+/etc/ax25/node.info file, which should describe any aspects
+of your system that you would like to brag about.
+
+Links [* |
+]
+
+Give a list of active AX.25
+connections to and from the local host. With an optional
+argument * list also AX.25 sockets in state listening. A
+callsign as argument gives a list of all connections with
+ as source or destination address.
+
+Mheard
+
+Give a list of heard AX.25
+stations on the specified port.
+
+NLinks
+
+Give a list of active NET/ROM connections to and from
+the local host.
+
+Nodes [* |
+]
+
+Show the NET/ROM node table of
+the local host. The nodes on this list can be reached using
+the Connect command without knowing the actual network path
+used (assuming the network is OK).
+
+The optional
+argument &rsquo;*&rsquo; toggles verbose mode, showing the
+Obsolescence counter, relative path quality and the port and
+neighbour node used to reach each node. You can also specify
+a node callsign to get the verbose information for a single
+node. In that case a "which" field that tells what
+route the kernel will use to reach the node is also
+shown.
+
+Ports
+
+Show the available AX.25 ports. Shown are the port name
+and a short description for the port. The port name is used
+when using the Connect command to connect to an user or
+service not running NET/ROM (eg. not visible in the Nodes
+list). 
+
+PIng 
+[]
+
+Check if a host can be reached
+trough the network by sending an ICMP Echo Request packet to
+the host and waiting for it to reply. If a reply is received
+the round-trip-time (RTT) between the local and remote hosts
+is shown.
+
+If an optional
+length is specified the data portion of the packet is filled
+with length number of bytes.
+
+Routes
+
+Show the NET/ROM neighbour table of the local host (ie.
+the nodes which the local node directly talks with). These
+nodes are used to reach the other nodes on the node
+table. 
+
+Status
+
+Give some more or less useful information about the
+system. 
+
+Telnet 
+[] [] [d|s]
+
+Initiate a telnet session to a
+remote host using TCP/IP. By default, the telnet command
+connects to the TCP port 23 (allocated for telnet). You can
+specify another TCP port or a TCP port name.
+
+If an optional
+third argument  is given, that string,
+followed by a CRLF is sent to the remote host right after
+the connection is established. This is mainly useful for
+command aliases.
+
+If a single
+&rsquo;s&rsquo; is entered as the last parameter, then when
+the remote host disconnects you will be returned to this
+node. If a single &rsquo;d&rsquo; is entered as the last
+parameter, you will be disconnected from this node too.
+Default behaviour (neither &rsquo;s&rsquo; nor
+&rsquo;d&rsquo; entered) depends on sysop configuration.
+
+TAlk 
+
+Send a message to another user
+of the node. The user in question must be in idle state (ie.
+not connected/connecting anywhere or running a program).
+
+If the user has
+an SSID other than zero, the SSID must be specified. If
+multiple users are logged in with the same callsign/SSID
+pair, those who are in idle state, get the message.
+
+Users
+
+Show a list of users currently connected to the local
+node, where the users are coming from, and what are they
+doing at the moment.
+
+ZConnect
+
+Initiate a compressed AX.25, NET/ROM or ROSE connection.
+The command arguments are the same as in Connect
+command. Note that the other end must be expecting a
+compressed connection (a LinuxNode started with the -c
+command line option). No negotiation of compression is
+done. 
+
+ZTelnet
+
+Initiate a compressed telnet session. The command
+arguments are the same as in Telnet command. Note
+that the other end must be expecting a compressed connection
+(a LinuxNode started with the -c command line option). No
+negotiation of compression is done.
+
+FILES
+
+/etc/ax25/node.conf
+
+LinuxNode configuration
+file.
+
+/etc/ax25/node.perms
+
+LinuxNode permissions file.
+
+/etc/ax25/node.motd
+
+LinuxNode message of the day
+file.
+
+/etc/ax25/node.info
+
+The response to the
+&rsquo;info&rsquo; command. This file should be edited to
+reflect the local configuration.
+
+/var/ax25/node/loggedin
+
+Database of current users.
+
+/var/ax25/mheard/mheard.dat
+
+Information about AX.25
+stations heard.
+
+/usr/lib/ax25/node/help/*.hlp
+
+The online help files.
+
+SEE ALSO
+
+node.conf(5),
+node.perms(5), axports(5), ax25d(8),
+mheardd(8).
+
+AUTHOR
+
+Tomi Manninen
+OH2BNS tpmannin [AT] cc.fi> 
+Alan Cox GW4PTS gw4pts [AT] gw4pts.org>
