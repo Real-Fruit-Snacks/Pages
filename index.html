@@ -425,10 +425,34 @@
         }
         
         .command-link-button:hover {
-            background: #333;
             transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.2);
         }
+        
+        /* Command color coding */
+        .command-link-button.command-0 { background: #4a90e2; }
+        .command-link-button.command-1 { background: #e74c3c; }
+        .command-link-button.command-2 { background: #2ecc71; }
+        .command-link-button.command-3 { background: #f39c12; }
+        .command-link-button.command-4 { background: #9b59b6; }
+        
+        .command-header {
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #fff;
+            display: inline-block;
+        }
+        
+        .command-header.command-0 { background: #4a90e2; }
+        .command-header.command-1 { background: #e74c3c; }
+        .command-header.command-2 { background: #2ecc71; }
+        .command-header.command-3 { background: #f39c12; }
+        .command-header.command-4 { background: #9b59b6; }
 
         .action-button.active {
             background: #e8f0fe;
@@ -4453,16 +4477,17 @@
             commandTokens.forEach((commandToken, index) => {
                 const commandName = commandToken.value;
                 const commandInfo = commandOptions[commandName];
+                const colorClass = `command-${index % 5}`;  // Cycle through 5 colors
                 
                 if (!commandInfo) {
                     overviewHtml += `
-                        <button class="command-link-button" onclick="searchInput.value='${commandName}'; searchInput.dispatchEvent(new Event('input')); commandExplainerModal.style.display='none'; overlay.style.display='none';" title="Search for ${commandName}">
+                        <button class="command-link-button ${colorClass}" onclick="searchInput.value='${commandName}'; searchInput.dispatchEvent(new Event('input')); commandExplainerModal.style.display='none'; overlay.style.display='none';" title="Search for ${commandName}">
                             ${commandName}
                         </button>
                     `;
                 } else {
                     overviewHtml += `
-                        <button class="command-link-button" onclick="displayManPage('${commandName}', '1'); commandExplainerModal.style.display='none'; overlay.style.display='none';" title="View ${commandName} man page">
+                        <button class="command-link-button ${colorClass}" onclick="displayManPage('${commandName}', '1'); commandExplainerModal.style.display='none'; overlay.style.display='none';" title="View ${commandName} man page">
                             ${commandName}
                         </button>
                     `;
@@ -4496,11 +4521,19 @@
                 // Check if we have multiple commands
                 const commandCount = Object.keys(optionsByCommand).length;
                 
+                // Create a mapping of command names to their index for color coding
+                const commandIndexMap = {};
+                commandTokens.forEach((token, index) => {
+                    commandIndexMap[token.value] = index;
+                });
+                
                 Object.entries(optionsByCommand).forEach(([cmd, options]) => {
-                    // Add command label if multiple commands
-                    if (commandCount > 1) {
-                        optionsHtml += `<div style="font-weight: bold; margin-top: 10px; color: #00bfa5;">${cmd} options:</div>`;
-                    }
+                    // Get the color class for this command
+                    const commandIndex = commandIndexMap[cmd] || 0;
+                    const colorClass = `command-${commandIndex % 5}`;
+                    
+                    // Add command label with matching color
+                    optionsHtml += `<div class="command-header ${colorClass}">${cmd} options:</div>`;
                     
                     const optionCommandInfo = commandOptions[cmd];
                     
@@ -4562,23 +4595,21 @@
             
             // Load examples for all commands asynchronously
             const commandNames = commandTokens.map(t => t.value);
-            getAllCommandExamples(commandNames).then(examplesHtml => {
+            getAllCommandExamples(commandNames, commandTokens).then(examplesHtml => {
                 exampleSection.querySelector('.explanation-content').innerHTML = examplesHtml;
             });
         }
 
         // Get examples for multiple commands
-        async function getAllCommandExamples(commandNames) {
+        async function getAllCommandExamples(commandNames, commandTokens) {
             const examplePromises = commandNames.map(cmd => getCommandExamples(cmd));
             const allExamples = await Promise.all(examplePromises);
             
             let combinedHtml = '';
             commandNames.forEach((cmd, index) => {
-                if (index > 0) {
-                    combinedHtml += '<hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">';
-                }
+                const colorClass = `command-${index % 5}`;
                 
-                combinedHtml += `<h4 style="color: #00bfa5; margin-bottom: 10px;">${cmd} examples:</h4>`;
+                combinedHtml += `<div class="command-header ${colorClass}">${cmd} examples:</div>`;
                 combinedHtml += allExamples[index] || '<p style="color: #666;">No examples available</p>';
             });
             
