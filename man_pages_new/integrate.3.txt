@@ -1,0 +1,200 @@
+NAME
+
+integrate -
+expression integration (rheolef-7.2)
+
+SYNOPSIS
+
+template
+
+Value integrate (geo domain, Expression, integrate_option
+iopt);
+
+DESCRIPTION
+
+This overloaded
+function is able to return either a scalar constant, a
+field(2) or a bilinear form(2), depending upon
+its arguments.
+
+1.
+
+When the expression involves both trial and
+test(2) functions, the result is a bilinear
+form(2) 
+
+2.
+
+When the expression involves either a trial or
+a test(2) function, the result is a linear form,
+represented by the field(2) class
+
+3.
+
+When the expression involves neither a trial
+nor a test(2) function, the result is a scalar
+constant 
+
+The general
+call involves three arguments:
+
+1.
+
+the geo(2) domain of
+integration 
+
+2.
+
+the expression to integrate
+
+3.
+
+the integrate_option(3)
+
+Here is the
+overloaded synopsis:
+
+Float integrate
+(geo domain, Expression, integrate_option iopt); 
+field integrate (geo domain, Expression, integrate_option
+iopt); 
+form integrate (geo domain, Expression, integrate_option
+iopt);
+
+OMITTED ARGUMENTS
+
+Some argument
+could be omitted when the expression involves a
+test(2) function:
+
+&bull;
+
+when the domain of integration
+is omitted, then it is taken as those of the test(2)
+function 
+
+The reduced
+synopsis is:
+
+field integrate
+(Expression, integrate_option iopt); 
+form integrate (Expression, integrate_option iopt);
+
+&bull;
+
+when the
+integrate_option(3) is omitted, then a Gauss
+quadrature formula is considered such that it integrates
+exactly 2*k+1 polynomials where k is the
+polynomial degree of the test(2) function. When a
+trial function is also involved, then this degree
+is k1+k2+1 where k1 and k2 are
+the polynomial degree of the test(2) and
+trial functions.
+
+The reduced
+synopsis is:
+
+field integrate
+(geo domain, Expression); 
+form integrate (geo domain, Expression);
+
+Both arguments
+could be omitted an the synopsis becomes:
+
+field integrate
+(Expression); 
+form integrate (Expression);
+
+INTEGRATION OVER A SUBDOMAIN
+
+Let
+omega be a finite element mesh of a geometric
+domain, as described by the geo(2) class. A subdomain
+is defined by indexation, e.g.
+omega[&rsquo;left&rsquo;] and, when a
+test(2) function is involved, the omega
+could be omitted, and only the string
+&rsquo;left&rsquo; has to be present e.g.
+
+test v (Xh);
+
+field lh = integrate (&rsquo;left&rsquo;, 2*v);
+
+is equivalent
+to
+
+field lh =
+integrate (omega[&rsquo;left&rsquo;], 2*v);
+
+MEASURE OF A DOMAIN
+
+Finally, when
+only the domain argument is provided, the integrate
+function returns its measure:
+
+Float integrate
+(geo domain);
+
+EXAMPLES
+
+The computation
+of the measure of a domain:
+
+Float
+meas_omega = integrate (omega); 
+Float meas_left = integrate (omega[&rsquo;left&rsquo;]);
+
+The integral of
+a function:
+
+Float f (const
+point& x) { return exp(x[0]+x[1]); } 
+... 
+integrate_option iopt; 
+iopt.set_order (3); 
+Float int_f = integrate (omega, f, iopt);
+
+The function
+can be replaced by any expression combining functions,
+class-functions and field(2).
+
+The
+right-hand-side involved by the variational formulation
+
+space Xh
+(omega, &rsquo;P1&rsquo;); 
+test v (Xh); 
+field lh = integrate (f*v);
+
+For a bilinear
+form:
+
+trial u (Xh);
+
+form m = integrate (u*v); 
+form a = integrate (dot(grad(u),grad(v)));
+
+The expression
+can also combine functions, class-functions and
+field(2).
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+main/lib/integrate.h
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html&gt;. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

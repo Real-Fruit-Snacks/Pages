@@ -1,0 +1,988 @@
+NAME
+
+console -
+console server client program
+
+SYNOPSIS
+
+console
+[generic-args] [-aAfFsS] [-e
+esc] console 
+console [generic-args] [-iIuwWx]
+[console] 
+console [generic-args] [-hPqQrRV]
+[-[bB] message] [-d
+[user][@console]] [-t
+[user][@console] message]
+[-[zZ] cmd]
+
+generic-args:
+[-7DEknUv] [-c cred] [-C
+config] [-M master] [-p
+port] [-l user]
+
+DESCRIPTION
+
+Console
+is used to manipulate console terminals remotely or to poll
+running conserver(8) daemons for status
+information.
+
+In the first
+form above, console asks the user&rsquo;s password
+before granting interactive access to a console (on a
+non-trusted system), since such a session may provide
+single-user access. If the server&rsquo;s autocompletion
+feature is enabled, only as much of the console name as is
+required to identify it uniquely to the server is
+required.
+
+For
+non-interactive options, console outputs only the
+requested information and exits.
+
+Console
+knows only of a primary conserver host (see the
+-M option below), to which it initially connects. In
+a multi-server environment, the primary server may refer the
+client to a different server handling the requested console,
+or it will provide a list of all servers if required (as
+when console is invoked with the -r option).
+Console then opens connections to the appropriate
+server(s). It is not necessary for the user of
+console to know which server manages which consoles,
+as long as console knows a valid primary server and
+all available consoles are listed in the primary
+server&rsquo;s configuration file.
+
+OPTIONS
+
+Options may be
+given as separate arguments (e.g., -v -w) or
+clustered (e.g., -vw). Options and their arguments
+may be separated by optional white space. Option arguments
+containing spaces or other characters special to the shell
+must be quoted.
+
+-7
+
+Strip the high bit off of all data received, whether
+from user input or from the server, before any processing
+occurs. Disallows escape sequence characters with the high
+bit set.
+
+-a
+
+Access a console with a two-way (read-write) connection
+(this is the default). The connection is dropped to spy mode
+if someone else is attached read-write.
+
+-bmessage
+
+Broadcast a message to all users connected to
+each server.
+
+-Bmessage
+
+Same as -b but just send a message to
+users on the primary server.
+
+-ccred
+
+Load an SSL certificate and key from the PEM encoded
+file cred.
+
+-Cconfig
+
+Use the per-user configuration file config.
+
+-d
+
+Disconnect the users specified by
+user@console. You may specify the target as
+user (disconnect the user, regardless of what
+console they are attached to), @console (disconnect
+all users attached to console), or
+user@console (disconnect the user
+attached to console).
+
+-D
+
+Enable debugging output.
+
+-eesc
+
+Set the initial two-character escape sequence to those
+represented by esc. Any of the forms output by
+cat(1)&rsquo;s -v option are accepted. The
+default value is &rsquo;&rsquo;^Ec&rsquo;&rsquo;.
+
+-E
+
+If encryption has been built into the code
+(--with-openssl), encrypted client connections are,
+by default, a requirement. This option disables any attempt
+at creating an encrypted connection. If you&rsquo;d like to
+use encrypted connections when your server supports it, but
+fallback to non-encrypted otherwise, the -U option is
+what you want.
+
+-f
+
+Same as -a except it will force any existing
+connection into spy mode.
+
+-h
+
+Display a brief help message.
+
+-i
+
+Display status information in a machine-parseable format
+(see below for the details).
+
+-I
+
+Same as -i but just acts on the primary
+server. 
+
+-k
+
+Abort the connection if the console is not in the
+&rsquo;up&rsquo; state immediately upon connecting.
+
+-luser
+
+Set the login name used for authentication to
+user. By default, console uses $USER if its
+uid matches the user&rsquo;s real uid, or $LOGNAME if its
+uid matches the user&rsquo;s real uid, or else the name
+associated with the user&rsquo;s real uid.
+
+-Mmaster
+
+The console client program polls master as
+the primary server, rather than the default set at compile
+time (typically &rsquo;&rsquo;console&rsquo;&rsquo;).
+The default master may be changed at compile time
+using the --with-master option. If --with-uds
+is used to enable Unix domain sockets, however, this option
+points console to the directory which holds those
+sockets. The default master directory
+(&rsquo;&rsquo;/tmp/conserver&rsquo;&rsquo;) may be
+changed at compile time using the --with-uds
+option. 
+
+-n
+
+Do not read the system-wide configuration file.
+
+-pport
+
+Set the port to connect to. This may be either a port
+number or a service name. The default port may be
+changed at compile time using the --with-port option.
+If the --with-uds option was used, this option is
+ignored. 
+
+-P
+
+Display the pid of the master daemon process on each
+server. 
+
+-q
+
+The console client connects to each server to
+request that the server daemon quit (shut down). The root
+password of the host(s) running conserver is required unless
+the local host is listed as
+&rsquo;&rsquo;trusted&rsquo;&rsquo; in the conserver.cf
+file; in that case, just press .
+
+-Q
+
+Same as -q but just acts on the primary
+server. 
+
+-r
+
+Display daemon versions. The console client
+connects to each server to request its version
+information. 
+
+-R
+
+Same as -r but just acts on the primary
+server. 
+
+-s
+
+Request a read-only (spy mode) connection. In this mode
+all the escape sequences (below) work, or report errors, but
+all other keyboard input is discarded.
+
+-t
+
+Send a text message to
+user@console. You may specify the target as
+user (send to user, regardless of what console
+they are attached to), @console (send to all users
+attached to console), or user@console
+(send to user attached to console).
+
+-u
+
+Show a list of all consoles with status
+(&rsquo;up&rsquo;, &rsquo;down&rsquo;, or
+&rsquo;init&rsquo;) and attached users
+(user@host if attached read-write,
+&rsquo;&rsquo; if only users in spy mode, or
+&rsquo;&rsquo;). 
+
+-U
+
+If encryption has been built into the code
+(--with-openssl), encrypted client connections are,
+by default, a requirement. This option allows the client to
+attempt an encrypted connection but fall back to a
+non-encrypted connection if the server doesn&rsquo;t support
+encryption. If the encryption handshake is failing,
+disabling encryption on the client with the -E option
+is probably what you want.
+
+-v
+
+Be more verbose when building the connection(s). Use
+this option in combination with any of &rsquo;show&rsquo;
+options (below) for added benefit.
+
+-V
+
+Output the version and settings of the console client
+program and then exit.
+
+-w
+
+Show a list of all who are currently connected to
+consoles, including the hostnames where the console
+connections originate and the idle times. This is useful to
+see if anybody is actively using the console system if it
+becomes necessary to shut down conserver.
+
+-W
+
+Same as -w but just acts on the primary
+server. 
+
+-x
+
+Show a list of consoles and devices.
+
+-zcmd
+
+Sends a command (cmd) to each server and displays
+the result. The valid commands are:
+
+bringup
+
+Try to connect all consoles
+marked as down (this is equivalent to sending the server a
+SIGUSR1) 
+
+SIGUSR1
+
+Same as bringup
+
+help
+
+Displays the help message
+
+pid
+
+Returns the pid of the server (this is equivalent to
+-P) 
+
+quit
+
+Instructs the server to shut down (this is equivalent to
+-q or sending the server a SIGTERM)
+
+SIGTERM
+
+Same as quit
+
+reconfig
+
+Instructs the server to reload the configuration file,
+then perform the actions of reopen (this is
+equivalent to sending the server a SIGHUP)
+
+SIGHUP
+
+Same as reconfig
+
+reopen
+
+Instructs the server to reopen all logfiles, then
+perform the actions of bringup (this is equivalent to
+sending the server a SIGUSR2)
+
+SIGUSR2
+
+Same as reopen
+
+version
+
+Returns the version of the server (this is equivalent to
+-V) 
+
+-Zcmd
+
+Same as
+-z but just sends cmd to the primary
+server.
+
+The -A,
+-F, or -S options have the same effect as
+their lower-case variants. In addition, they each request
+the last 20 lines of the console output after making the
+connection (as if &rsquo;&rsquo;^Ecr&rsquo;&rsquo;
+were typed).
+
+The -i,
+-u, -w, and -x options can be given a
+console name, which will limit their output to that
+console.
+
+The -i
+option outputs status information regarding each console in
+15 colon-separated fields.
+
+name
+
+The name of the console.
+
+hostname,pid,socket
+
+The hostname, pid, and socket
+number of the child process managing the console.
+
+type
+
+The type of console. Values will be a &rsquo;/&rsquo;
+for a local device, &rsquo;|&rsquo; for a command,
+&rsquo;!&rsquo; for a remote port, &rsquo;%&rsquo; for a
+Unix domain socket, and &rsquo;#&rsquo; for a noop
+console. 
+
+console-details
+
+The details regarding the
+console. The values here (all comma-separated) depend on the
+type of the console. Local devices will have values of the
+device file, baud rate/parity, and file descriptor for the
+device. Commands will have values of the command, the
+command&rsquo;s pid, the pseudo-tty, and file descriptor for
+the pseudo-tty. Remote ports will have values of the remote
+hostname, remote port number,
+&rsquo;&rsquo;raw&rsquo;&rsquo; or
+&rsquo;&rsquo;telnet&rsquo;&rsquo; protocol, and file
+descriptor for the socket connection. Unix domain sockets
+will have the path to the socket and the file descriptor for
+the socket connection. Noop consoles will have nothing.
+
+users-list
+
+The details of each user
+connected to the console. The details for each user are an
+&rsquo;@&rsquo; separated list of &rsquo;w&rsquo;,
+&rsquo;r&rsquo;, or &rsquo;s&rsquo; (for read-write,
+read-only, or suspended), username, hostname the user is on,
+the user&rsquo;s idle time, and (for &rsquo;r&rsquo; and
+&rsquo;s&rsquo; users only) &rsquo;&rsquo;rw&rsquo;&rsquo;
+or &rsquo;&rsquo;ro&rsquo;&rsquo; (if the user wants
+read-write mode or not). Each user bundle is separated by
+commas.
+
+state
+
+The state of the console. Values with either be
+&rsquo;&rsquo;up&rsquo;&rsquo;,
+&rsquo;&rsquo;down&rsquo;&rsquo;, or
+&rsquo;&rsquo;init&rsquo;&rsquo;. 
+
+perm
+
+This value will either be &rsquo;&rsquo;rw&rsquo;&rsquo;
+or &rsquo;&rsquo;ro&rsquo;&rsquo;. It will only be
+&rsquo;&rsquo;ro&rsquo;&rsquo; if the console is a local
+device (&rsquo;/&rsquo; type) and the permissions are such
+that the server can open the file for read, but not
+write. 
+
+logfile-details
+
+The details regarding the
+logging for the console. The comma-separated values will be
+the logfile, &rsquo;&rsquo;log&rsquo;&rsquo; or
+&rsquo;&rsquo;nolog&rsquo;&rsquo; (if logging is on or not -
+toggled via &rsquo;&rsquo;^EcL&rsquo;&rsquo;),
+&rsquo;&rsquo;act&rsquo;&rsquo; or
+&rsquo;&rsquo;noact&rsquo;&rsquo; (if activity logging is
+enabled or not - the &rsquo;a&rsquo; timestamp option), the
+timestamp interval, and the file descriptor of the
+logfile.
+
+break
+
+The default break sequence used for the console.
+
+reup
+
+If the console is currently down and the automatic
+reconnection code is at work, it will have the value of
+&rsquo;&rsquo;autoup&rsquo;&rsquo;, otherwise it will be
+&rsquo;&rsquo;noautoup&rsquo;&rsquo;. 
+
+aliases
+
+The console aliases are
+presented in a comma-separated list.
+
+options
+
+The active options for the
+console are presented in a comma-separated list.
+
+initcmd
+
+The initcmd configuration
+option for the console.
+
+idletimeout
+
+The idletimeout configuration
+option for the console.
+
+idlestring
+
+The idlestring configuration
+option for the console.
+
+CONFIGURATION
+
+Console
+reads configuration information from the system-wide
+configuration file (console.cf), then the per-user
+configuration file (.consolerc), and then applies
+command-line arguments. Each configuration location can
+override the previous. The same happens when parsing an
+individual file - the later entries always override the
+earlier entries. Because of that, you should put
+&rsquo;&rsquo;global&rsquo;&rsquo; defaults first and more
+specific defaults second.
+
+The
+configuration file is read using the same parser as
+conserver.cf(5), and you should check that manpage
+for parser details. Console recognizes the following
+configuration blocks. 
+config hostname|ipaddr
+
+Define a configuration block
+for the client host named hostname or using the
+address ipaddr. If the value of
+&rsquo;&rsquo;*&rsquo;&rsquo; is used, the configuration
+block will be applied to all client hosts. 
+escape esc
+
+Set the escape sequence (see
+the -e command-line flag).
+
+master master
+
+Set the default master to
+master (see the -M command-line flag).
+
+playback
+num|""
+
+Override the playback length
+for the p escape command to num lines (if the
+server supports it). Using the special value of
+&rsquo;&rsquo;0&rsquo;&rsquo; will cause the client to use
+the number of lines of the current terminal (if that can be
+determined). If the null string
+(&rsquo;&rsquo;""&rsquo;&rsquo;) is used, the
+playback length will not be overridden.
+
+port port
+
+Set the default port to
+port (see the -p command-line flag).
+
+replay
+num|""
+
+Override the replay length for
+the r escape command to num lines (if the
+server supports it). Using the special value of
+&rsquo;&rsquo;0&rsquo;&rsquo; will cause the client to use
+the number of lines of the current terminal (if that can be
+determined). If the null string
+(&rsquo;&rsquo;""&rsquo;&rsquo;) is used, the
+replay length will not be overridden.
+
+sslcacertificatefile
+filename
+
+Load the valid CA certificates
+for the SSL connection from the PEM encoded
+file.
+
+sslcacertificatepath
+directory
+
+Load the valid CA certificates
+for the SSL connection from the PEM encoded
+files in the directory.
+
+sslcredentials
+filename
+
+Set the SSL
+credentials file location (see the -c command-line
+flag).
+
+sslenabled
+yes|true|on|no|false|off
+
+Set whether or not encryption
+is attempted when talking to servers (see the -E
+command-line flag).
+
+sslrequired
+yes|true|on|no|false|off
+
+Set whether or not encryption
+is required when talking to servers (see the -U
+command-line flag).
+
+striphigh
+yes|true|on|no|false|off
+
+Set whether or not to strip the
+high bit off all data received (see the -7
+command-line flag).
+
+username user
+
+Set the username passed to the
+server to user (see the -l command-line
+flag).
+
+terminal type
+
+Define a configuration block
+when using a terminal of type type. If the value of
+&rsquo;&rsquo;*&rsquo;&rsquo; is used, the configuration
+block will be applied to all terminal types. 
+attach string|""
+
+Set a string to print
+when successfully attached to a console. Character
+substitions will be performed based on the
+attachsubst value and occur before
+interpretation of the special characters below. If the null
+string (&rsquo;&rsquo;""&rsquo;&rsquo;) is
+used, no string will be printed. string is a simple
+character string with the exception of &rsquo;\&rsquo; and
+&rsquo;^&rsquo;:
+
+\a
+
+alert
+
+\b
+
+backspace
+
+\f
+
+form-feed
+
+\n
+
+newline
+
+\r
+
+carriage-return
+
+\t
+
+tab
+
+\v
+
+vertical-tab
+
+\\
+
+backslash
+
+\^
+
+circumflex
+
+\ooo
+
+octal representation of a character (where ooo is
+one to three octal digits)
+
+\c
+
+character c
+
+^?
+
+delete
+
+^c
+
+control character (c is
+&rsquo;&rsquo;and&rsquo;&rsquo;ed with 0x1f)
+
+An interesting
+use of attach and attachsubst would be:
+
+terminal xterm
+{ 
+attach "^[]0;conserver: U@C^G"; 
+attachsubst U=us,C=cs; 
+}
+
+attachsubst
+c=t[n]f[,...]|""
+
+Perform character substitutions
+on the attach value. A series of replacements can be
+defined by specifying a comma-separated list of
+c=t[n]f sequences where
+c is any printable character, t specifies the
+replacement value, n is a field length (optional),
+and f is the format string. t can be one of
+the characters below, catagorized as a string replacement or
+a numeric replacement, which dictates the use of the
+n and f fields.
+
+String Replacement
+
+u
+
+username
+
+c
+
+console name
+
+Numeric
+Replacement 
+none available (yet)
+
+For string
+replacements, if the replacement isn&rsquo;t at least
+n characters, it will be padded with space characters
+on the left. f must be &rsquo;s&rsquo;. For numeric
+replacements, the value will be formatted to at least
+n characters, padded with 0s if n begins with
+a 0, and space characters otherwise. f must be either
+&rsquo;d&rsquo;, &rsquo;x&rsquo; or &rsquo;X&rsquo;,
+specifying a decimal, lower-case hexadecimal, or an
+uppercase hexadecimal conversion. If the null string
+(&rsquo;&rsquo;""&rsquo;&rsquo;) is used,
+no replacements will be done.
+
+detach
+string|""
+
+Set a string to print
+once detached from a console. Character substitions will be
+performed based on the detachsubst value. See the
+attach option for an explanation of string. If
+the null string
+(&rsquo;&rsquo;""&rsquo;&rsquo;) is used,
+no string will be printed.
+
+detachsubst
+c=t[n]f[,...]|""
+
+Perform character substitutions
+on the detach value. See the attachsubst
+option for an explanation of the format string.
+
+A simple
+configuration to set a new default escape sequence and
+override the master location would be:
+
+# override
+options for all hosts 
+config * { 
+master localhost; 
+escape ^Ee; 
+} 
+# set things more specific to host1 
+# note: if the entries were reversed, host1 
+# would also use localhost. 
+config host1 { 
+master console1; 
+}
+
+ESCAPE SEQUENCES
+
+The connection
+can be controlled by a two-character escape sequence,
+followed by a command. The default escape sequence is
+&rsquo;&rsquo;control-E c&rsquo;&rsquo; (octal 005 143).
+(The escape sequences are actually processed by the server;
+see the conserver(8) man page for more information.)
+Commands are:
+
+.
+
+disconnect
+
+;
+
+move to another console
+
+a
+
+attach read-write if nobody already is
+
+b
+
+send broadcast message to all users on this console
+
+c
+
+toggle flow control (don&rsquo;t do this)
+
+d
+
+down the current console
+
+ecc
+
+change the escape sequence to the next two
+characters 
+
+f
+
+forcibly attach read-write
+
+g
+
+group info
+
+i
+
+information dump
+
+L
+
+toggle logging on/off
+
+l?
+
+list the break sequences available
+
+l0
+
+send the break sequence associated with this console
+
+l1-9a-z
+
+send the specific break sequence
+
+m
+
+display the "message of the day"
+
+o
+
+close (if open) and reopen the line (to clear errors
+(silo overflows)) and the log file
+
+p
+
+playback the last 60 lines of output
+
+P
+
+set number of playback lines
+
+r
+
+replay the last 20 lines of output
+
+R
+
+set number of replay lines
+
+s
+
+switch to spy mode (read only)
+
+u
+
+show status of hosts/users in this group
+
+v
+
+show the version of the group server
+
+w
+
+who is using this console
+
+x
+
+examine this group&rsquo;s devices and modes
+
+z
+
+suspend this connection
+
+!
+
+invoke task
+
+|
+
+attach a local command to the console
+
+?
+
+display list of commands
+
+^M (return)
+
+continue, ignore the escape sequence
+
+^R (ctrl-R)
+
+replay the last line only
+
+\ooo
+
+send character having octal code ooo (must
+specify three octal digits)
+
+If any other
+character is hit after the escape sequence, all three
+characters will be discarded. Note that a line break or a
+down command can only be sent from a read-write connection.
+To send the escape sequence through the connection one must
+redefine the outer escape sequence, or use
+^Ec\ooo to send the first escape character
+before typing the second character directly.
+
+In the
+-u output, the login
+&rsquo;&rsquo;&rsquo;&rsquo; indicates no one is
+viewing that console, and the login
+&rsquo;&rsquo;&rsquo;&rsquo; indicates that no
+one has a read-write connection (only read-only).
+
+When running a
+local command via &rsquo;&rsquo;^Ec|&rsquo;&rsquo;,
+you can type &rsquo;^C&rsquo; to send the command a
+SIGHUP, &rsquo;^\&rsquo; to send the command a
+SIGKILL, and &rsquo;o&rsquo; to toggle the display of
+the console data.
+
+EXAMPLES
+
+console -u
+
+Outputs something like:
+
+dumb up
+
+expert up ksb@mentor 
+tyro up  
+mentor up  
+sage up fine@cis
+
+The
+ indicates no one is viewing dumb
+or mentor, the  indicates only
+read-only connections exist for tyro, and other
+login@host entries indicate users attached
+read-write to sage and expert.
+
+console -w
+
+Outputs something like:
+
+ksb@extra
+attach 2days expert 
+file@cis attach 21:46 sage 
+dmr@alice spy 0:04 tyro
+
+The third
+column is the idle time of the user. Either
+hours:minutes or number of days is
+displayed.
+
+console -e "^[1"
+lv426
+
+Requests a connection to the
+host &rsquo;&rsquo;lv426&rsquo;&rsquo; with the escape
+characters set to &rsquo;&rsquo;escape
+one&rsquo;&rsquo;.
+
+FILES
+
+The following
+default file locations may be overridden at compile time or
+by the command-line options described above. Run console
+-V to see the defaults set at compile time.
+
+/etc/console.cf
+
+system-wide configuration file
+
+$HOME /.consolerc
+
+per-user configuration file
+
+BUGS
+
+It is possible
+to create a loop of console connections, with ugly results.
+Never run console from within a console connection
+(unless you set each escape sequence differently).
+
+The -i output
+can produce more than the stated number of fields of
+information if the user-provided information has embedded
+colons.
+
+I&rsquo;m sure
+there are more, I just don&rsquo;t know where they are.
+Please let me know if you find any.
+
+AUTHORS
+
+Thomas A. Fine,
+Ohio State Computer Science 
+Kevin Braunsdorf, Purdue University Computing Center 
+Bryan Stansell, conserver.com
+
+SEE ALSO
+
+conserver.cf(5),
+conserver.passwd(5), conserver(8)

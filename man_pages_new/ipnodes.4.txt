@@ -1,0 +1,159 @@
+NAME
+
+ipnodes &minus;
+local database associating names of nodes with IP
+addresses
+
+SYNOPSIS
+
+/etc/inet/ipnodes
+
+DESCRIPTION
+
+The
+ipnodes file is a local database that associates the
+names of nodes with their Internet Protocol (IP)
+addresses. IP addresses can be either an IPv4 or an
+IPv6 address. The ipnodes file can be used in
+conjunction with, or instead of, other ipnodes databases,
+including the Domain Name System (DNS), the NIS
+ipnodes map, and the NIS+ ipnodes table. Programs
+use library interfaces to access information in the
+ipnodes file.
+
+The
+ipnodes file has one entry for each IP address
+of each node. If a node has more than one IP address,
+it will have one entry for each, on consecutive lines. The
+format of each line is:
+
+IP-address official-node-name nicknames...
+
+Items are
+separated by any number of  and/or
+ characters. The first item on a line is
+the node&rsquo;s IP address. The second entry is the
+node&rsquo;s official name. Subsequent entries on the same
+line are alternative names for the same machine, or
+"nicknames." Nicknames are optional.
+
+For a node with
+more than one IP address, consecutive entries for
+these addresses may contain the same or differing nicknames.
+Different nicknames are useful for assigning distinct names
+to different addresses.
+
+A call to
+getipnodebyname(3SOCKET) returns a hostent
+structure containing 
+the union of all addresses and nicknames from each line
+containing a matching official name or nickname.
+
+A
+&rsquo;#&rsquo; indicates the beginning of a comment;
+characters up to the end of the line are not interpreted by
+routines that search the file.
+
+Network
+addresses are written in one of two ways:
+
+&bull;
+
+The conventional "decimal dot" notation and
+interpreted using the inet_addr routine from the Internet
+address manipulation library, inet(3SOCKET).
+
+&bull;
+
+The IP Version 6 protocol [IPV6], defined in RFC
+1884 and interpreted using the inet_pton()
+routine from the Internet address manipulation library. See
+inet(3SOCKET). 
+
+These
+interfaces supports node names as defined in Internet RFC
+952 which states:
+
+A
+"name" (Net, Host, Gateway, or Domain name) is a
+text string up to 24 characters drawn from the alphabet
+(A-Z), digits (0-9), minus sign (-), and period (.). Note
+that periods are only allowed when they serve to delimit
+components of "domain style names". (See RFC
+921, "Domain Name System Implementation
+Schedule," for background). 
+No blank or space characters are permitted as part of a
+name. No distinction is made between upper and lower case.
+The first character must be an alpha character. The last
+character must not be a minus sign or period.
+
+Although the
+interface accepts node names longer than 24 characters for
+the node portion (exclusive of the domain component),
+choosing names for nodes that adhere to the 24 character
+restriction will insure maximum interoperability on the
+Internet.
+
+A node which
+serves as a GATEWAY should have "-GATEWAY"
+or "-GW" as part of its name. Nodes which
+do not serve as Internet gateways should not use
+"-GATEWAY" and "-GW" as
+part of their names. A node that is a TAC should have
+"-TAC" as the last part of its node name,
+if it is a DoD node. Single character names or nicknames are
+not allowed.
+
+RFC 952
+has been modified by RFC 1123 to relax the
+restriction on the first character being a digit.
+
+EXAMPLES
+
+Example 1: A
+Typical Line from the ipnodes File
+
+The following
+is a typical line from the ipnodes file:
+
+ 2::56:a00:20ff:fe7b:b667        foo             # John Smith
+
+SEE ALSO
+
+in.named(1M),
+getipnodebyname(3SOCKET), inet(3SOCKET),
+nsswitch.conf(4), resolv.conf(4),
+hosts(4)
+
+Braden, B.,
+editor, RFC 1123, Requirements for Internet Hosts -
+Application and Support, Network Working Group, October,
+1989.
+
+Harrenstien,
+K., Stahl, M., and Feinler, E., RFC 952, DOD INTERNET
+HOST TABLE SPECIFICATION, Network Working Group, October
+1985.
+
+Hinden, R., and
+Deering, S., editors, RFC 1884, IP Version 6 Addressing
+Architecture, Network Working Group, December, 1995.
+
+Postel, Jon,
+RFC 921, Domain Name System Implementation Schedule
+&mdash; Revised, Network Working Group, October
+1984.
+
+NOTES
+
+IPv4 addresses
+can be defined in the ipnodes file or in the
+hosts file. See hosts(4). The ipnodes
+file will be searched for IPv4 addresses when using the
+getipnodebyname(3SOCKET) API. If no matching IPv4
+addresses are found in the ipnodes file, then the
+hosts file will be searched. To prevent delays in
+name resolution and to keep /etc/inet/ipnodes and
+/etc/inet/hosts synchronized, IPv4 addresses defined
+in the hosts file should be copied to the
+ipnodes file.

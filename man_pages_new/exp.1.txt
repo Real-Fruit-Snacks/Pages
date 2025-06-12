@@ -1,0 +1,360 @@
+EXP
+
+exp - a
+multiple expession calculator.
+
+SYNOPSIS
+
+exp
+[-vn0..4] [-o output-file]
+[input-file]
+
+DESCRIPTION
+
+Input is an
+ascii format file including numeric expessions with
+variables. Input file can includes other input files thanks
+to an inclusion directive. exp reads the input files
+to write it as is in the output file, but the numeric
+expessions are replaced by their value.
+
+OPTIONS
+
+-v
+
+verbose mode
+
+0 : quiet mode 
+1 : messages mess(...) are printed 
+2 : few statistics 
+3 : all expressions are decomposed 
+4 : yacc messages
+
+-o
+output-file
+
+where exp writes (stdout
+by default).
+
+input-file
+
+where exp reads (stdin
+by default).
+
+EXP FORMAT FILES
+
+Except the
+expessionsi and offline comments, the output file is
+identical to the flattened view of the input files whatever
+they are. The expession forms can be either
+[expessions] or {expessions}. The first form
+is for floating point expessions, the second one is for
+integer expessions. By default, the print format is
+respectively %7.3f and %4d (cf. sprintf(3)). Offline
+comments begins with // and ends at the beginning of the
+next line.
+
+Examples
+
+&bull;
+
+[ 3.0 + 12.1] print 15.100
+
+&bull;
+
+{ 3.0 + 12.1} print 15
+
+It is possible
+to have more that one expession separated by ;
+(semi-column). All the expessions of a list are computed,
+but only the last one is printed. If the last expession is
+empty, exp do not print anything (see Examples
+section).
+
+Examples
+
+&bull;
+
+[ 6. *2.0;
+
+3.0 + 12.1 ] print
+15.100
+
+&bull;
+
+[ 6. *2.0;
+
+3.0 + 12.1; ] print
+nothing
+
+It is possible
+to have comments in expessions. A comment begins with
+# (diese) and ends to the carriage return. Comment in
+expression is not copied to the output file.
+
+Example
+
+&bull;
+
+[ 3.0 + 12.1 # comment
+
+] print 15.100
+
+Expessions
+
+Expession is a multi-level numeric expession using numbers,
+variables, arithmetic operators and numeric functions.
+
+Examples
+
+&bull;
+
+[ i=3.0; i*12.1] print
+15.100 
+
+&bull;
+
+{i=3} print 3
+
+{i++} print 4
+
+Arithmetic
+Operators 
+The operators, in order of increasing priority, are
+
++ -
+
+Addition and subtraction.
+
+* /
+
+Multiplication and division.
+
+++ --
+
+post-incrementation of 1, post-decrementation of 1.
+
+( )
+
+Grouping
+
+=
+
+Variable affectation. The return value is the one
+affected. 
+
+Boolean
+Operators
+
+> 
+
+respectively greater than and
+lower than
+
+def(variable)
+
+True whenever variable is
+defined yet
+
+ndef(variable)
+
+True whenever variable is not
+defined yet
+
+Variables
+
+Expession values may be stored in simple variables. There
+are three forms of variable name. First, they can begin with
+a letter followed by any number of letters, digits and
+underscores; second, they can begin with "
+(double quote) followed by any number of any char and ended
+by a "; Third they can begin with &acute;
+(quote) then a regular expression (see regex(7))
+ended by &acute;. exp is case sensitive.
+
+Examples
+
+&bull;
+
+[ VAR_1=3.0; # first form
+
+"variable numero
+2"=12.0; # second form 
+] print nothing
+
+&bull;
+
+[ VAR_1 * "variable numero
+2" ] print 15.100
+
+When a variable
+appears in the right member of an affectation, exp
+uses its value. If it has never been defined, this causes a
+fatal error. If it appears the left member, the first time
+it is automatically created and its value is set, or its
+value is changed.
+
+Special
+variables 
+float_fmt, integer_fmt and string_fmt
+special variables to redefine print format of floats,
+integers and strings. Defaults are %7.3f, %-8s and %4d.
+Those variables are the only variables with a non numerical
+value.
+
+Examples
+
+&bull;
+
+[float_fmt =
+"%7.1f";] print nothing
+
+&bull;
+
+[ 3.0 + 12.1] print 15.1
+
+verbose
+is the variable passed in argument list, which can be
+modified by the program itself.
+
+Examples
+get details of expression calculation
+
+&bull;
+
+[tmp = verbose;
+verbose = 3; ..expressions..;
+
+verbose = tmp;]
+
+Numeric
+functions 
+Few numeric functions are available. The form is
+fun(args). The arguments take the form of a list of
+expessions, separated with a , (comma). The number of
+arguments depends on functions. It is possible to make a
+list of arguments with a regular expession (see
+regex(7)). Then all matching variable names are part
+of the list. 
+min(args) max(args)
+
+The minimum (resp. maximum)
+value of its arguments.
+
+Examples
+
+&bull;
+
+[min(3.0,12.1)] print 3.000
+
+&bull;
+
+[min(&rsquo;RW_ALU.*&rsquo;)] print min value of
+all variables begining by RW_ALU
+
+inf(step,val)
+sup(step,val)
+
+Two arguments. inf
+(resp. sup) function rounds the second argument (val)
+downwards (resp. upwards) to an integer number of the first
+argument (step).
+
+Examples
+
+&bull;
+
+[step=0.3;value=1.6;inf(step,value)] print
+1.500 
+
+Special
+functions and directives 
+if(condition, expr1, expr2, ...)
+
+Calculates the condition if it
+is true (means greater than zero), the following expressions
+are all calculated.
+
+sort(args)
+rsort(args)
+
+sort (resp. reverse
+rsort) numerically all its arguments, each argument
+must be a variable, not directly a numeric expession. The
+return value is the sorted list of its arguments.
+
+message(args)
+
+writes its arguments to stdout
+using float_fmt, one argument per line. The form is :
+variable_name = value;, value is omitted if the
+variable has never been defined. 
+Examples
+
+&bull;
+
+[message(&rsquo;"&rsquo;this is a
+message&rsquo;"&rsquo;);] print
+
+this is a message
+
+&bull;
+
+[a1b=0; a2b=1O; a3b=5;
+message(a*b);] print
+
+a1b = 0.000 
+a2b = 1O.000 
+a3b = 5.000
+
+&bull;
+
+[string_fmt=%6s;
+message(sort(a*b));] print
+
+a1b = 0.000 
+a3b = 5.000 
+a2b = 1O.000
+
+#include
+"filename"
+
+Opens the file in argument then
+returns to the current file as soon as the new one is
+empty.
+
+EXAMPLES
+
+Input
+file
+
+# this is a test file 
+[ # few variables 
+WITDH = 2; 
+LENGTH = 25 ; 
+] 
+this message is unchanged but all expresions are computed
+
+length_div_2 = [LENGTH/2] 
+length_mul_2 = {LENGTH*2} 
+result = [max (&rsquo;leng.*&rsquo;)]
+
+Output file
+
+# this is a test file
+
+this message is
+unchanged but all expresions are computed 
+length_div_2 = 12.500 
+length_mul_2 = 50 
+result = 12.500
+
+AUTHOR
+
+Written by
+Franck Wajsburt.
+
+SEE ALSO
+
+Alliance .rds
+file uses exp to be generated.

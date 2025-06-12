@@ -1,0 +1,219 @@
+NAME
+
+form - finite
+element bilinear form (rheolef-7.2)
+
+DESCRIPTION
+
+The form class
+groups four sparse matrix, associated to a bilinear form
+defined on two finite element spaces:
+
+a: Uh*Vh
+----> IR 
+(uh,vh) +---> a(uh,vh)
+
+The A
+operator associated to the bilinear form is defined by:
+
+A: Uh ---->
+Vh 
+uh +---> A*uh
+
+where
+uh is a field(2), and vh=A*uh in Vh
+is such that a(uh,vh)=dual(A*uh,vh) for all vh
+in Vh and where dual(.,.) denotes the duality
+product between Vh and its dual. Since Vh
+is a finite dimensional space, its dual is identified to
+Vh itself and the duality product is the euclidean
+product in IR^dim(Vh). Also, the linear operator
+can be represented by a matrix.
+
+In practice,
+bilinear forms are created by using the integrate(3)
+function.
+
+ALGEBRA
+
+Forms, as
+matrix, support standard algebra. Adding or subtracting two
+forms writes a+b and a-b, respectively,
+while multiplying by a scalar lambda writes
+lambda*a and multiplying two forms writes
+a*b. Also, multiplying a form by a field
+uh writes a*uh. The form inversion is not
+as direct as e.g. as inv(a), since forms are very
+large matrix in practice: form inversion can be obtained via
+the solver(4) class. A notable exception is the case
+of block-diagonal forms at the element level: in that case,
+a direct inversion is possible during the assembly process,
+see integrate_option(3).
+
+REPRESENTATION
+
+The degrees of
+freedom (see space(2)) are splited between
+unknowns and blocked, i.e. uh=[uh.u,uh.b]
+for any field uh in Uh. Conversely,
+vh=[vh.u,vh.b] for any field vh in Vh.
+Then, the form-field vh=a*uh operation is formally
+equivalent to the following matrix-vector block
+operations:
+
+[ vh.u ] [ a.uu
+a.ub ] [ uh.u ] 
+[ ] = [ ] [ ] 
+[ vh.b ] [ a.bu a.bb ] [ uh.n ]
+
+or, after
+expansion:
+
+vh.u =
+a.uu*uh.u + a.ub*vh.b 
+vh.b = a.bu*uh.b + a.bb*vh.b
+
+i.e. the
+A matrix also admits a 2x2 block structure. Then,
+the form class is represented by four sparse matrix
+and the csr(4) compressed format is used. Note that
+the previous formal relations for vh=a*uh writes
+equivalently within the Rheolef library as:
+
+vh.set_u() =
+a.uu()*uh.u() + a.ub()*uh.b(); 
+vh.set_b() = a.bu()*uh.u() + a.bb()*uh.b();
+
+IMPLEMENTATION
+
+This
+documentation has been generated from file
+main/lib/form.h
+
+The
+form class is simply an alias to the form_basic
+class
+
+typedef
+form_basic form;
+
+The
+form_basic class provides an interface to four sparse
+matrix:
+
+template 
+class form_basic { 
+public : 
+// typedefs:
+
+typedef
+typename csr::size_type size_type; 
+typedef T value_type; 
+typedef typename scalar_traits::type float_type;
+
+typedef geo_basic geo_type; 
+typedef space_basic space_type;
+
+//
+allocator/deallocator:
+
+form_basic ();
+
+form_basic (const form_basic&); 
+form_basic& operator= (const
+form_basic&);
+
+template::value,
+Expr>::type> 
+form_basic (const Expr&);
+
+template::value,
+Expr>::type> 
+form_basic& operator= (const Expr&);
+
+// allocators
+from initializer list (c++ 2011):
+
+form_basic
+(const
+std::initializer_list
+>& init_list); 
+form_basic (const
+std::initializer_list >& init_list);
+
+//
+accessors:
+
+const
+space_type& get_first_space() const; 
+const space_type& get_second_space() const; 
+const geo_type& get_geo() const; 
+bool is_symmetric() const; 
+void set_symmetry (bool is_symm = true) const; 
+bool is_definite_positive() const; 
+void set_definite_positive (bool is_dp = true) const; 
+bool is_symmetric_definite_positive() const; 
+void set_symmetric_definite_positive() const;
+
+const
+communicator& comm() const;
+
+// linear
+algebra:
+
+form_basic
+operator+ (const form_basic& b) const; 
+form_basic operator- (const
+form_basic& b) const; 
+form_basic operator* (const
+form_basic& b) const; 
+form_basic& operator*= (const T& lambda);
+
+field_basic operator* (const
+field_basic& xh) const; 
+field_basic trans_mult (const
+field_basic& yh) const; 
+float_type operator () (const field_basic&
+uh, const field_basic& vh) const;
+
+// io:
+
+odiststream&
+put (odiststream& ops, bool show_partition = true)
+const; 
+void dump (std::string name) const;
+
+// accessors
+& modifiers to unknown & blocked parts:
+
+const
+csr& uu() const { return _uu; } 
+const csr& ub() const { return _ub; } 
+const csr& bu() const { return _bu; } 
+const csr& bb() const { return _bb; } 
+csr& set_uu() { return _uu; } 
+csr& set_ub() { return _ub; } 
+csr& set_bu() { return _bu; } 
+csr& set_bb() { return _bb; }
+
+}; 
+template form_basic trans
+(const form_basic& a); 
+template field_basic diag
+(const form_basic& a); 
+template form_basic diag
+(const field_basic& dh);
+
+AUTHOR
+
+Pierre Saramito
+Pierre.Saramito [AT] imag.fr>
+
+COPYRIGHT
+
+Copyright (C)
+2000-2018 Pierre Saramito Pierre.Saramito [AT] imag.fr>
+GPLv3+: GNU GPL version 3 or later
+http://gnu.org/licenses/gpl.html&gt;. This is free
+software: you are free to change and redistribute it. There
+is NO WARRANTY, to the extent permitted by law.

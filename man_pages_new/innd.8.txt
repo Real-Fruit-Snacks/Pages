@@ -1,0 +1,671 @@
+NAME
+
+innd -
+InterNetNews daemon
+
+SYNOPSIS
+
+innd
+[-adfNrsSu] [-4 address] [-6
+address] [-c days] [-H
+count] [-i count] [-l
+size] [-m mode] [-n flag]
+[-o count] [-P port] [-t
+timeout] [-T count] [-X
+seconds]
+
+DESCRIPTION
+
+innd,
+the InterNetNews daemon, handles all incoming NNTP feeds,
+coordinates the storage, retransmission, and overview
+generation for all accepted articles, and manages the
+active(5) and history(5) databases. It handles incoming
+connections on the NNTP port, and also creates and listens
+to a local Unix-domain stream socket in order to receive
+articles from local processes such as nnrpd(8) and
+rnews(1).
+
+As the master
+daemon, innd should generally be started at boot and
+be always running. It listens to a Unix-domain datagram
+socket for commands to control its activities, commands that
+can be sent using ctlinnd(8). The current status of
+innd can be obtained by running "ctlinnd
+mode", or for more detailed output, innstat(8).
+
+innd can
+be in one of three operating modes: running, paused, or
+throttled. Running is the normal mode; when the server is
+throttled, it closes connections and rejects new ones.
+Paused is like a temporary throttle, suspending
+innd&rsquo;s activities but not causing the server to
+shut down existing connections. The mode is normally changed
+via ctlinnd(8), either by various automated processes (such
+as nightly article expiration) or manually by the news
+administrator, but innd will also throttle itself if
+it encounters ENOSPC errors in writing data or an excessive
+number of I/O errors (among other problems).
+
+innd
+normally takes care of spawning nnrpd(8) to handle
+connections from news reading clients, but it can be run on
+a separate port from nnrpd(8) so that feed connections and
+news reading connections are handled separately (this can
+often be faster). Normally, innd listens on port 119,
+the assigned port for NNTP; if it is desirable to run
+innd and nnrpd(8) on separate ports, it&rsquo;s
+recommended that nnrpd(8) be given port 119 (since many news
+reading clients connect only to that port) and that port 433
+be used for innd.
+
+The primary
+configuration files that control innd&rsquo;s
+activities are incoming.conf, which specifies what
+remote sites innd will accept connections from,
+newsfeeds, which specifies what is to be done with
+incoming articles besides storing them, and inn.conf,
+which sets a wide variety of configuration parameters. Some
+parameters in inn.conf(5) can also be set with command-line
+flags; for these, the command-line flags take precedence if
+used.
+
+innd
+must be run as the news user and news group. It will check
+for this at startup and fail to start if not run properly.
+Normally it should be started via rc.news(8) as part of the
+system boot up process. It relies on the setuid root helper
+program innbind(8) to listen on a privileged port (119, 433
+or 563).
+
+OPTIONS
+
+For the options
+below that override inn.conf settings, see
+inn.conf(5) for the default values if neither the
+inn.conf setting nor the command-line option is
+given. 
+-4 address
+
+Normally, innd binds to
+all local IP addresses (unless bindaddress is set in
+inn.conf). If this option is given, it specifies the
+IP address that INN should bind as. This is only relevant
+for servers with multiple local IP addresses. The IP address
+must be in dotted-quad ("nnn.nnn.nnn.nnn")
+format.
+
+If this option
+is specified, it&rsquo;s the same as setting
+bindaddress in inn.conf and may cause changes
+in whether INN binds to an IPv6 address as well. See
+inn.conf(5) for more details and also the -6 flag for
+innd.
+
+This option has
+no effect when systemd socket activation is used.
+
+-6 address
+
+Only applies when INN has been
+built with IPv6 support. Normally innd binds to all
+local IP addresses (unless bindaddress6 is set in
+inn.conf). If this option is given, it specifies the
+IPv6 address that INN should bind to. The IPv6 address must
+be in colon-separated RFC 4291 format
+("n:n:n:n:n:n:n:n").
+
+If this option
+is specified, it&rsquo;s the same as setting
+bindaddress6 in inn.conf and may cause changes
+in whether INN binds to an IPv4 address as well. See
+inn.conf(5) for more details and also the -4 flag for
+innd.
+
+This option has
+no effect when systemd socket activation is used.
+
+-a
+
+By default, if a host connects to innd but is not
+listed in incoming.conf, the connection is handed off
+to nnrpd (or rejected if noreader is set in
+inn.conf). If -a is given,
+incoming.conf is ignored and any host can connect and
+transfer articles. This flag should never be used with an
+accessible server connected to Usenet; it would open the
+server up for all sorts of abuse.
+
+-c days
+
+innd normally rejects
+any article that is older (in days) than the value of
+artcutoff in inn.conf. This option, if given,
+overrides the value of that setting. If days is 0,
+this check is suppressed and innd will accept
+articles regardless of how old they are.
+
+Note that
+rejected articles are remembered during the number of days
+specified by the "/remember/" line in
+expire.ctl(5). You&rsquo;ll have to wait that number of days
+before being able to inject again an article with the same
+previously rejected Message-ID.
+
+In case you
+need re-injecting articles before that amount of time,
+you&rsquo;ll have to set "/remember/" to
+"0" in expire.ctl, run the expire
+process (for instance via news.daily called with the
+same parameters as in crontab, plus "notdaily")
+and undo the change in expire.ctl. All previously
+rejected or removed articles will then not be considered as
+duplicate if their Message-ID is proposed.
+
+-d, -f
+
+innd normally puts
+itself into the background, points its standard output and
+error to log files, and disassociates itself from the
+terminal. Using -d prevents all of this, resulting in
+log messages being written to standard output; this is
+generally useful only for debugging. Using -f
+prevents the backgrounding and disassociation but still
+redirects output; it may be useful if you want to monitor
+innd with a program that would be confused by
+forks.
+
+-H count,
+-T count, -X seconds
+
+These flags control the number
+of connections per seconds seconds that are allowed.
+This code is meant to protect your server from newsreader
+clients that make too many connections per minute (and
+therefore these flags are probably only useful when
+innd is spawning nnrpd). You probably should
+not use these options unless you&rsquo;re having problems.
+The table used for this check is fixed at 128 entries and is
+used as a ring; the size was chosen to make calculating the
+index easy and to be fairly sure that it won&rsquo;t run out
+of space. In practice, it is unlikely that even half the
+table will be used at any given moment.
+
+The -H
+flag limits the number of times a host is allowed to connect
+to the server per the time interval given by -X. The
+default is "2".
+
+The -T
+flag limits the total number of incoming connections per the
+time interval given by -X. The maximum value is
+"128", and the default is "60".
+
+Note that the
+time interval given by -X is set to "0" by
+default, that is to say no control is done on the number of
+connections.
+
+-i count
+
+innd normally allows a
+maximum number of concurrent NNTP connections given by the
+value of maxconnections in inn.conf. This
+option, if given, overrides the value of that setting. If
+count is "0", this check is suppressed.
+
+-l size
+
+innd normally rejects
+any article larger than the value of maxartsize in
+inn.conf. This option, if given, overrides the value
+of that setting and specifies a maximum article size of
+size. If size is "0", this check is
+suppressed.
+
+-m mode
+
+Normally, innd starts in
+the "running" mode. If this option is given, it
+specifies what mode innd should start in. mode
+should begin with one of "g", "p", or
+"t", and the starting mode will be set to
+"running", "paused", or
+"throttled", respectively, based on that initial
+letter. ("g" is short for "go".)
+
+-N
+
+If this option is given, any filters (Perl or Python)
+are disabled before innd starts (normally, filters
+default to being enabled). The filters can be enabled after
+innd has started with ctlinnd(8).
+
+-n flag
+
+Whether innd allows (and
+hands off to nnrpd) reader connections while paused
+or throttled is normally determined by the value of
+readerswhenstopped in inn.conf. This option,
+if given, overrides that value. If flag is
+"n", innd will not allow readers if it is
+paused or throttled. If flag is "y",
+readers will be allowed regardless of innd&rsquo;s
+operating mode.
+
+-o count
+
+This flag limits the number of
+file descriptors that are available for outgoing file feeds.
+The default is the number of available file descriptors
+minus some reserved for internal use (which could
+potentially starve innd of descriptors to use for
+accepting new connections). If innd has more file
+feeds than count, some of them will be buffered and
+only written out periodically.
+
+Normally you
+never need to use this option, since the number of outgoing
+feeds is fixed, being the number of file feeds configured in
+newsfeeds, and is generally small (particularly given
+that innfeed(8) is now used for most outgoing feeds at large
+sites).
+
+-P port
+
+The port innd should
+listen on is normally given by the value of port in
+inn.conf. This option, if given, overrides that value
+and specifies the port that innd should bind to.
+
+-r
+
+Instructs innd to renumber the active file
+after starting, just as if a "ctlinnd renumber"
+command were sent.
+
+-s
+
+Just check the syntax of the newsfeeds file and
+exit. innd will exit with a non-zero status if any
+errors are found; the actual errors will be reported via
+syslog(3). 
+
+-S
+
+Report errors found in incoming.conf via
+syslog(3) and exit normally. (Yes, this is less useful than
+it should be.)
+
+-t seconds
+
+Normally, innd will
+flush any changes to history and the active file
+after 300 seconds of inactivity. This option changes that
+timeout to seconds.
+
+-u
+
+The news log (the trace information for every article
+accepted by innd) is normally buffered. This option
+changes the log to be unbuffered.
+
+CONTROL MESSAGES
+
+Arriving
+articles that have a Control header field are called
+"control messages". Except for cancel messages,
+these messages are handled by controlchan(8) via a feed set
+up in newsfeeds.
+
+(Cancel
+messages update the history database, so they must be
+handled internally; the cost of syncing, locking, then
+unlocking would be too high given the number of cancel
+messages that are received. Note that if an article is
+cancelled before it is received by the news server, it will
+be rejected when it arrives since the history database has
+been updated; it is useful for rejecting spam before it
+arrives.)
+
+The
+distribution of control messages is different than that of
+standard articles. Control messages are normally filed into
+the pseudo-newsgroup named "control" regardless of
+which newsgroup they were actually posted to. If, however, a
+"control."command newsgroup exists that
+matches the control command, the control message will be
+filed into that group instead. For example, a newgroup
+control message will be filed in
+"control.newgroup" if that group exists;
+otherwise, it will be filed in "control".
+
+If you want to
+specifically feed all control messages to a given site
+regardless of whether the control messages would affect the
+newsgroups you&rsquo;re feeding that site, you can put the
+appropriate control newsgroup in the subscription list. For
+example, to feed all cancel messages to a given remote site
+(normally a bad idea), add "control.cancel" to its
+subscription list. Normally it&rsquo;s best to exclude the
+control newsgroups from feeds to keep from sending your
+peers more control messages than they care about.
+That&rsquo;s why the newsfeeds pattern
+"!control,!control.*" is as often as not specified
+(adding this pattern do not prevent control messages which
+affect the newsgroups fed to a site from being sent to
+it).
+
+checkgroups,
+newgroup and rmgroup control messages receive additional
+special treatment. If one of these control messages is
+approved and posted to the newsgroup being created or
+removed (or to the admin group to which the checkgroups is
+posted), the message will be sent to all sites whose
+subscription patterns would cause them to receive articles
+posted to that group. For example, if a newgroup control
+message for a nonexistent newsgroup
+"news.admin.meow" is received, it will be sent to
+any site whose subscription pattern would cause it to
+receive "news.admin.meow" if that newsgroup
+existed (such as a pattern of "news.admin.*"). For
+this reason, it is correct to post newgroup messages to the
+newsgroup that the control message would create. It is
+not generally correct to crosspost newgroup messages
+to some "well-propagated" newsgroup; not only will
+this not actually improve their propagation to sites that
+want such control messages, but it will also cause sites
+that do not want those control messages to receive them.
+Therefore, assuming that a newgroup control message is sent
+to the group "news.admin.meow" (specified in the
+Newsgroups header field body) in order to create the group
+"news.admin.meow", the sites with the following
+subscription patterns will receive it:
+
+*,@news.* 
+news.* 
+news.*,!control,!control.* 
+control,control.*
+
+As a matter of
+fact, for the first pattern, "control.newgroup"
+(or "control") is included in "*".
+However, the sites with the following subscription patterns
+will not receive it:
+
+*,@news.*,!control,!control.*
+
+comp.*,@news.*
+
+If a control
+message is posted to a group whose name ends with the four
+characters ".ctl", this suffix is stripped off and
+the control message is propagated as if it were posted to
+the base group. For example, a cancel message posted to
+"news.admin.ctl" will be sent to all sites that
+subscribe to "control.cancel" (or
+"control" if that newsgroup doesn&rsquo;t exist)
+or "news.admin". This behavior is present for
+historical compatibility reasons and should be considered
+obsolete; support for the ".ctl" suffix may be
+removed in a future version of INN.
+
+Finally,
+articles posted to newsgroups beginning with "to."
+are treated specially. Provided that either that newsgroup
+exists in the active file or mergetogroups is
+set in inn.conf, the remainder of the newsgroup is
+taken to be a site name, as configured in newsfeeds,
+and the article is sent to sites propagating
+"to.uunet". If mergetogroups is set, the
+article will be filed in the group named "to"
+(which must exist in the active file). For example,
+with mergetogroups set, an article posted to
+"to.uunet" will be filed in "to" and
+sent to the sites propagating "to.uunet".
+
+PROTOCOL DIFFERENCES
+
+innd
+implements the NNTP commands defined in RFC 3977
+(NNTP), RFC 4643 (NNTP authentication), RFC 4644
+(streaming NNTP feeds) and RFC 6048 (NNTP LIST
+additions) with the following differences:
+
+1.
+
+A batch transfer command, XBATCH
+byte-count, is provided. This command will read
+byte-count bytes and store them for later processing
+by rnews(1) (which must be run separately, probably from
+cron). See innxbatch(8) and sendxbatches for more
+details on this extension.
+
+2.
+
+As INN is a mode-switching news server, innd
+implements a limited subset of the protocol useful for
+transferring news. The remaining commands are mostly only
+useful for readers and are implemented by nnrpd(8). Use of
+the MODE READER command will cause innd to pass the
+connection to nnrpd.
+
+3.
+
+innd allows a wider syntax for wildmats.
+
+4.
+
+Three commands (IHAVE, CHECK and TAKETHIS) will
+continue, for interoperability reasons, to return a reject
+code (respectively "435", "438" and
+"439") when the command contains a syntax error
+(which normally leads to "501").
+
+HEADER MODIFICATIONS
+
+innd
+modifies as few article headers as possible, although it
+could be better in this area.
+
+Empty header
+field bodies and header field bodies that consist of nothing
+but whitespace are dropped.
+
+The local
+site&rsquo;s name (as set with the pathhost parameter
+in inn.conf) and an exclamation point are prepended
+to the Path header field body, provided the first site name
+in the Path header field body is different from the local
+one. In addition, pathalias and pathcluster
+may be similarly respectively prepended and appended as path
+identities immediately to the right or the left of
+pathhost in the Path header field body; see
+inn.conf(5) for the details.
+
+The Xref header
+field is removed and a new one created.
+
+innd
+does not rewrite incorrect header fields. For example, it
+will not replace an incorrect Lines header field, though it
+may reject such an article depending on the value of
+linecountfuzz in inn.conf.
+
+CANCEL FEEDS
+
+In order to
+efficiently apply a large number of local cancels (such as
+from processing NoCeMs or from some other external source),
+INN supports a special feed mode available only to
+connections to the local Unix-domain socket (not to
+connections to any network sockets).
+
+To enter this
+mode, connect to the Unix-domain socket
+(pathrun/nntpin) and send the command MODE CANCEL.
+The response will have code "284". Every
+subsequent line sent on that connection should consist of a
+single message-ID. An attempt will be made to cancel that
+message-ID, and the server will reply "289" for
+success or "484" for failure. (Failure can occur,
+for example, if the server is paused or throttled, or the
+message-ID is corrupt. Failure does not occur if the
+article to be cancelled does not exist.)
+
+LOGGING
+
+innd
+reports all incoming articles in its log file
+(pathlog/news). This is a text file with a variable
+number of space-separated fields in one of the following
+formats:
+
+mon dd
+hh:mm:ss.mmm + feed  site ... 
+mon dd hh:mm:ss.mmm j feed  site ... 
+mon dd hh:mm:ss.mmm c feed  Cancelling
+
+mon dd hh:mm:ss.mmm - feed  reason 
+mon dd hh:mm:ss.mmm ? feed  reason
+
+There may also
+be hostname and/or size fields after the message-ID
+depending on the settings of nntplinklog and
+logartsize in inn.conf.
+
+The first three
+fields are the date and time to millisecond resolution. The
+fifth field is the site that sent the article (based on the
+Path header field body) and the sixth field is the
+article&rsquo;s Message-ID; they will be a question mark if
+the information is not available.
+
+The fourth
+field indicates whether the article was accepted or not. If
+it is a plus sign, then the article was accepted. If it is
+the letter "j", then the article was accepted,
+providing all of the newsgroups to which the article was
+posted were set to status "j" in the active
+file (or not listed in the active file and
+wanttrash was set in inn.conf), and then the
+article was filed into the "junk" newsgroup. In
+both of these cases, the article has been accepted and the
+"site ..." field contains the space-separated list
+of sites to which the article is being sent.
+
+If the fourth
+field is the letter "c", then a cancel message was
+accepted before the original article arrived, and a history
+entry for the cancelled message was created so that
+innd will reject that message if it arrives
+later.
+
+If the fourth
+field is a minus sign, then the article was rejected. The
+reasons for rejection generated by innd include:
+
+"%s"
+header too long 
+Article exceeds local limit of %s bytes 
+Article posted in the future -- "%s" 
+Bad "%s" header field 
+Can't write history 
+Duplicate 
+Duplicate "%s" header field 
+EOF in headers 
+Linecount %s != %s +- %s 
+Missing %s header field 
+No body 
+No colon-space in "%s" header field 
+No matching newsgroups in cancel  
+No space 
+Space before colon in "%s" header field 
+Too old -- "%s" 
+Unapproved for "%s" 
+Unwanted newsgroup "%s" 
+Unwanted distribution "%s" 
+Whitespace in "Newsgroups" header field --
+"%s"
+
+where
+"%s", above, is replaced by more specific
+information. (The Perl and Python filters, if used, may
+reject articles with other reasons.)
+
+If the fourth
+field is the letter "?", the article contains
+strange strings, such as CR without LF or LF without CR.
+(These characters should never occur in isolation, only
+together as CRLF to indicate the end of a line.) This log
+message is just informational, to give an idea of how
+widespread such articles are; innd does not reject
+such articles.
+
+Note that when
+wanttrash is set to true in inn.conf and an
+article is received that isn&rsquo;t posted to any valid
+newsgroups, it will be accepted and logged with two lines, a
+"j" line and a minus sign line, unless the
+logtrash parameter is set to false (in which case
+only the "j" line is written).
+
+innd
+also makes extensive reports through syslog(3). The first
+word of the log message will be the name of the site if the
+entry is site-specific (such as a "connected"
+message). The first word will be "SERVER" if the
+message relates to the server itself, such as when a read
+error occurs.
+
+If the second
+word is the four letters "cant", then an error is
+being reported. (The absence of an apostrophe is
+intentional; it makes it easier to grep from the command
+line and easier to find error messages in FAQs using a
+search engine. However, "can't" is also used at a
+few places.) In this case, the next two words generally name
+the system call or library routine that failed and the
+object upon which the action was being performed. The rest
+of the line may contain other information.
+
+In other cases,
+the second word attempts to summarize what change has been
+made, while the rest of the line gives more specific
+information. The word "internal" generally
+indicates an internal logic error.
+
+SIGNALS
+
+innd
+will catch SIGTERM and SIGHUP and shut down. If -d is
+used, SIGINT will also be caught and will result in an
+orderly shutdown.
+
+innd
+will catch the SIGUSR1 signal and recreate the control
+channel used by ctlinnd(8).
+
+BUGS
+
+innd
+normally attempts to strip IP options from incoming
+connections, since it uses IP-based authentication and
+source routing can confuse that. However, this doesn&rsquo;t
+work on all systems, and it doesn&rsquo;t work at all in the
+presence of IPv6 support (and is disabled in that case).
+Hence, if using innd with IPv6 support, make sure
+that your kernel or router disables source routing.
+
+HISTORY
+
+Written by Rich
+$alz rsalz [AT] uunet.net> for InterNetNews.
+
+SEE ALSO
+
+active(5),
+ctlinnd(8), history(5), incoming.conf(5), inn.conf(5),
+innbind(8), innfeed(8), innstat(8), libinn_dbz(3),
+libinn_inndcomm(3), newsfeeds(5), nnrpd(8), rnews(1),
+syslog(3).
