@@ -4017,9 +4017,25 @@
                         // Check if it's an option
                         else if (word.startsWith('-') && currentCommand) {
                             const optionInfo = this.parseOption(word, currentCommand);
-                            // Add the command context to the option token
-                            optionInfo.command = currentCommand;
-                            this.tokens.push(optionInfo);
+                            
+                            // If it's a grouped option like -latr, break it out
+                            if (optionInfo.isGrouped && optionInfo.individualOptions) {
+                                // Add each individual option as a separate token
+                                optionInfo.individualOptions.forEach((opt, index) => {
+                                    const individualOptionInfo = this.findOption(currentCommand, opt);
+                                    this.tokens.push({
+                                        value: opt,
+                                        type: 'option',
+                                        description: individualOptionInfo?.description || `Unknown option ${opt}`,
+                                        command: currentCommand,
+                                        fromGrouped: word
+                                    });
+                                });
+                            } else {
+                                // Single option or long option
+                                optionInfo.command = currentCommand;
+                                this.tokens.push(optionInfo);
+                            }
                             
                             // Check if this option expects an argument
                             if (optionInfo.expectsArg && i + 1 < rawTokens.length) {
@@ -4160,8 +4176,10 @@
                     return {
                         value: option,
                         type: 'option',
-                        description: descriptions.join('; '),
-                        expectsArg: expectsArg
+                        description: 'Options combined: ' + descriptions.join(', '),
+                        expectsArg: expectsArg,
+                        isGrouped: true,
+                        individualOptions: options.map(opt => '-' + opt)
                     };
                 }
                 
