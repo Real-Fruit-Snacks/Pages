@@ -93,15 +93,15 @@ that porcelains can implement different merge policies. This
 flag makes the command resolve a few more cases
 internally:
 
-&bull; when one
+• when one
 side removes a path and the other side leaves the path
 unmodified. The resolution is to remove that path.
 
-&bull; when
+• when
 both sides remove a path. The resolution is to remove that
 path.
 
-&bull; when
+• when
 both sides add a path identically. The resolution is to add
 that path.
 
@@ -184,8 +184,8 @@ as if the user did not specify -m, except that if the
 original index has an entry for a given pathname, and the
 contents of the path match with the tree being read, the
 stat info from the index is used. (In other words, the
-index&rsquo;s stat()s take precedence over the merged
-tree&rsquo;s).
+index’s stat()s take precedence over the merged
+tree’s).
 
 That means that
 if you do a git read-tree -m  followed
@@ -303,7 +303,7 @@ same.
 Merge 
 Each "index" entry has two bits worth of
 "stage" state. stage 0 is the normal one, and is
-the only one you&rsquo;d see in any kind of normal use.
+the only one you’d see in any kind of normal use.
 
 However, when
 you do git read-tree with three trees, the
@@ -331,18 +331,18 @@ you see a file that matches in all respects in the following
 states, it "collapses" back to
 "stage0":
 
-&bull; stage 2
+• stage 2
 and 3 are the same; take one or the other (it makes no
 difference - the same work has been done on our branch in
 stage 2 and their branch in stage 3)
 
-&bull; stage 1
+• stage 1
 and stage 2 are the same and stage 3 is different; take
 stage 3 (our branch in stage 2 did not do anything since the
 ancestor in stage 1 while their branch in stage 3 worked on
 it)
 
-&bull; stage 1
+• stage 1
 and stage 3 are the same and stage 2 is different take stage
 2 (we did something while they did nothing)
 
@@ -353,7 +353,7 @@ single entry that is not stage 0.
 
 OK, this all
 sounds like a collection of totally nonsensical rules, but
-it&rsquo;s actually exactly what you want in order to do a
+it’s actually exactly what you want in order to do a
 fast merge. The different stages represent the "result
 tree" (stage 0, aka "merged"), the original
 tree (stage 1, aka "orig"), and the two trees you
@@ -365,35 +365,35 @@ command-line arguments) are significant when you start a
 3-way merge with an index file that is already populated.
 Here is an outline of how the algorithm works:
 
-&bull; if a
+• if a
 file exists in identical format in all three trees, it will
 automatically collapse to "merged" state by git
 read-tree.
 
-&bull; a file
+• a file
 that has any difference what-so-ever in the three
-trees will stay as separate entries in the index. It&rsquo;s
+trees will stay as separate entries in the index. It’s
 up to "porcelain policy" to determine how to
 remove the non-0 stages, and insert a merged version.
 
-&bull; the
+• the
 index file saves and restores with all this information, so
 you can merge things incrementally, but as long as it has
 entries in stages 1/2/3 (i.e., "unmerged entries")
-you can&rsquo;t write the result. So now the merge algorithm
+you can’t write the result. So now the merge algorithm
 ends up being really simple:
 
-&bull; you walk
+• you walk
 the index in order, and ignore all entries of stage 0, since
-they&rsquo;ve already been done.
+they’ve already been done.
 
-&bull; if you
+• if you
 find a "stage1", but no matching
 "stage2" or "stage3", you know
-it&rsquo;s been removed from both trees (it only existed in
+it’s been removed from both trees (it only existed in
 the original tree), and you remove that entry.
 
-&bull; if you
+• if you
 find a matching "stage2" and "stage3"
 tree, you remove one of them, and turn the other into a
 "stage0" entry. Remove any matching
@@ -421,8 +421,8 @@ mixing your random changes in an unrelated merge commit. To
 illustrate, suppose you start from what has been committed
 last to your repository:
 
-$ JC=&rsquo;git
-rev-parse --verify "HEAD^0"&rsquo; 
+$ JC=’git
+rev-parse --verify "HEAD^0"’ 
 $ git checkout-index -f -u -a $JC
 
 You do random
@@ -432,20 +432,20 @@ advanced since you pulled from him:
 
 $ git fetch
 git://.... linus 
-$ LT=&rsquo;git rev-parse FETCH_HEAD&rsquo;
+$ LT=’git rev-parse FETCH_HEAD’
 
 Your work tree
 is still based on your HEAD ($JC), but you have some edits
 since. Three-way merge makes sure that you have not added or
-modified index entries since $JC, and if you haven&rsquo;t,
+modified index entries since $JC, and if you haven’t,
 then does the right thing. So with the following
 sequence:
 
 $ git read-tree
--m -u &rsquo;git merge-base $JC $LT&rsquo; $JC $LT 
+-m -u ’git merge-base $JC $LT’ $JC $LT 
 $ git merge-index git-merge-one-file -a 
 $ echo "Merge with Linus" | \ 
-git commit-tree &rsquo;git write-tree&rsquo; -p $JC -p
+git commit-tree ’git write-tree’ -p $JC -p
 $LT
 
 what you would

@@ -31,9 +31,9 @@ use with wg(8).
 
 CONFIG_FILE
 is a configuration file, whose filename is the interface
-name followed by &rsquo;.conf&rsquo;. Otherwise,
+name followed by ’.conf’. Otherwise,
 INTERFACE is an interface name, with configuration
-found at &rsquo;/etc/wireguard/INTERFACE.conf&rsquo;,
+found at ’/etc/wireguard/INTERFACE.conf’,
 searched first, followed by distro-specific search
 paths.
 
@@ -56,7 +56,7 @@ that it understands, and then it passes the remaining ones
 directly to wg(8) for further processing.
 
 It infers all
-routes from the list of peers&rsquo; allowed IPs, and
+routes from the list of peers’ allowed IPs, and
 automatically adds them to the system routing table. If one
 of those routes is the default route (0.0.0.0/0 or ::/0),
 then it uses ip-rule(8) to handle overriding of the
@@ -64,72 +64,72 @@ default gateway.
 
 The
 configuration file will be passed directly to
-wg(8)&rsquo;s &rsquo;setconf&rsquo; sub-command, with
+wg(8)’s ’setconf’ sub-command, with
 the exception of the following additions to the
 Interface section, which are handled by this
 tool:
 
-&bull;
+•
 
-Address &mdash; a comma-separated list of IP (v4 or v6)
+Address — a comma-separated list of IP (v4 or v6)
 addresses (optionally with CIDR masks) to be assigned to the
 interface. May be specified multiple times.
 
-&bull;
+•
 
-DNS &mdash; a comma-separated list of IP (v4 or v6)
-addresses to be set as the interface&rsquo;s DNS servers, or
-non-IP hostnames to be set as the interface&rsquo;s DNS
+DNS — a comma-separated list of IP (v4 or v6)
+addresses to be set as the interface’s DNS servers, or
+non-IP hostnames to be set as the interface’s DNS
 search domains. May be specified multiple times. Upon
-bringing the interface up, this runs &rsquo;resolvconf -a
-tun.INTERFACE -m 0 -x&rsquo; and upon bringing it
-down, this runs &rsquo;resolvconf -d
-tun.INTERFACE&rsquo;. If these particular invocations
+bringing the interface up, this runs ’resolvconf -a
+tun.INTERFACE -m 0 -x’ and upon bringing it
+down, this runs ’resolvconf -d
+tun.INTERFACE’. If these particular invocations
 of resolvconf(8) are undesirable, the PostUp and
 PostDown keys below may be used instead.
 
-&bull;
+•
 
-MTU &mdash; if not specified, the MTU is automatically
+MTU — if not specified, the MTU is automatically
 determined from the endpoint addresses or the system default
 route, which is usually a sane choice. However, to manually
 specify an MTU to override this automatic discovery, this
 value may be specified explicitly.
 
-&bull;
+•
 
-Table &mdash; Controls the routing table to which routes
-are added. There are two special values: &rsquo;off&rsquo;
+Table — Controls the routing table to which routes
+are added. There are two special values: ’off’
 disables the creation of routes altogether, and
-&rsquo;auto&rsquo; (the default) adds routes to the default
+’auto’ (the default) adds routes to the default
 table and enables special handling of default routes.
 
-&bull;
+•
 
-PreUp, PostUp, PreDown, PostDown &mdash; script snippets
+PreUp, PostUp, PreDown, PostDown — script snippets
 which will be executed by bash(1) before/after
 setting up/tearing down the interface, most commonly used to
 configure custom DNS options or firewall rules. The special
-string &rsquo;%i&rsquo; is expanded to INTERFACE.
+string ’%i’ is expanded to INTERFACE.
 Each one may be specified multiple times, in which case the
 commands are executed in order.
 
-&bull;
+•
 
-SaveConfig &mdash; if set to &rsquo;true&rsquo;, the
+SaveConfig — if set to ’true’, the
 configuration is saved from the current state of the
 interface upon shutdown. Any changes made to the
 configuration file before the interface is removed will
 therefore be overwritten.
 
 Recommended
-INTERFACE names include &rsquo;wg0&rsquo; or
-&rsquo;wgvpn0&rsquo; or even &rsquo;wgmgmtlan0&rsquo;.
+INTERFACE names include ’wg0’ or
+’wgvpn0’ or even ’wgmgmtlan0’.
 However, the number at the end is in fact optional, and
 really any free-form string [a-zA-Z0-9_=+.-]{1,15} will
 work. So even interface names corresponding to geographic
-locations would suffice, such as &rsquo;cincinnati&rsquo;,
-&rsquo;nyc&rsquo;, or &rsquo;paris&rsquo;, if that&rsquo;s
+locations would suffice, such as ’cincinnati’,
+’nyc’, or ’paris’, if that’s
 somehow desirable.
 
 EXAMPLES
@@ -159,21 +159,21 @@ AllowedIPs = 0.0.0.0/0
 Endpoint = demo.wireguard.com:51820
 
 The
-&rsquo;Address&rsquo; field is added here in order to set up
-the address for the interface. The &rsquo;DNS&rsquo; field
+’Address’ field is added here in order to set up
+the address for the interface. The ’DNS’ field
 indicates that a DNS server for the interface should be
-configured via resolvconf(8). The peer&rsquo;s
+configured via resolvconf(8). The peer’s
 allowed IPs entry implies that this interface should be
 configured as the default gateway, which this script
 does.
 
 Building on the
 last example, one might attempt the so-called
-&rsquo;&rsquo;kill-switch&rsquo;&rsquo;, in order to prevent
+’’kill-switch’’, in order to prevent
 the flow of unencrypted packets through the non-WireGuard
 interfaces, by adding the following two lines
-&rsquo;PostUp&rsquo; and &rsquo;PreDown&rsquo; lines to the
-&rsquo;[Interface]&rsquo; section:
+’PostUp’ and ’PreDown’ lines to the
+’[Interface]’ section:
 
 PostUp =
 iptables -I OUTPUT ! -o %i -m mark ! --mark $(wg show %i
@@ -183,11 +183,11 @@ show %i fwmark) -m addrtype ! --dst-type LOCAL -j
 REJECT
 
 The
-&rsquo;PostUp&rsquo; and &rsquo;PreDown&rsquo; fields have
+’PostUp’ and ’PreDown’ fields have
 been added to specify an iptables(8) command which,
 when used with interfaces that have a peer that specifies
-0.0.0.0/0 as part of the &rsquo;AllowedIPs&rsquo;, works
-together with wg-quick&rsquo;s fwmark usage in order to drop
+0.0.0.0/0 as part of the ’AllowedIPs’, works
+together with wg-quick’s fwmark usage in order to drop
 all packets that are either not coming out of the tunnel
 encrypted or not going through the tunnel itself. (Note that
 this continues to allow most DHCP traffic through, since
@@ -231,14 +231,14 @@ PublicKey = gN65BkIKy1eCE9pP1wdc8ROUtkHLF2PfAqYdyYBz6EA=
 AllowedIPs = 10.10.10.230/32
 
 Notice the two
-&rsquo;Address&rsquo; lines at the top, and that
-&rsquo;SaveConfig&rsquo; is set to &rsquo;true&rsquo;,
+’Address’ lines at the top, and that
+’SaveConfig’ is set to ’true’,
 indicating that the configuration file should be saved on
 shutdown using the current status of the interface.
 
 A combination
-of the &rsquo;Table&rsquo;, &rsquo;PostUp&rsquo;, and
-&rsquo;PreDown&rsquo; fields may be used for policy routing
+of the ’Table’, ’PostUp’, and
+’PreDown’ fields may be used for policy routing
 as well. For example, the following may be used to send SSH
 traffic (TCP port 22) traffic through the tunnel:
 
@@ -268,14 +268,14 @@ up /path/to/wgnet0.conf
 For
 convenience, if only an interface name is supplied, it
 automatically chooses a path in
-&rsquo;/etc/wireguard/&rsquo;:
+’/etc/wireguard/’:
 
 # wg-quick
 up wgnet0
 
 This will load
 the configuration file
-&rsquo;/etc/wireguard/wgnet0.conf&rsquo;.
+’/etc/wireguard/wgnet0.conf’.
 
 The
 strip command is useful for reloading configuration

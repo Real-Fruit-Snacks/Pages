@@ -33,8 +33,8 @@ and entering the kernel.
 The rest of
 this documentation is geared toward the curious and/or C
 library writers rather than general developers. If
-you&rsquo;re trying to call the vDSO in your own application
-rather than using the C library, you&rsquo;re most likely
+you’re trying to call the vDSO in your own application
+rather than using the C library, you’re most likely
 doing it wrong.
 
 Example
@@ -43,7 +43,7 @@ Making system calls can be slow. In x86 32-bit systems, you
 can trigger a software interrupt (int $0x80) to tell
 the kernel you wish to make a system call. However, this
 instruction is expensive: it goes through the full
-interrupt-handling paths in the processor&rsquo;s microcode
+interrupt-handling paths in the processor’s microcode
 as well as in the kernel. Newer processors have faster (but
 backward incompatible) instructions to initiate system
 calls. Rather than require the C library to figure out if
@@ -62,9 +62,9 @@ One frequently
 used system call is gettimeofday(2). This system call
 is called both directly by user-space applications as well
 as indirectly by the C library. Think timestamps or timing
-loops or polling&mdash;all of these frequently need to know
+loops or polling—all of these frequently need to know
 what time it is right now. This information is also not
-secret&mdash;any application in any privilege mode (root or
+secret—any application in any privilege mode (root or
 any unprivileged user) will get the same answer. Thus the
 kernel arranges for the information required to answer this
 question to be placed in memory the process can access. Now
@@ -80,7 +80,7 @@ tag.
 
 You must not
 assume the vDSO is mapped at any particular location in the
-user&rsquo;s memory map. The base address will usually be
+user’s memory map. The base address will usually be
 randomized at run time every time a new process image is
 created (at execve(2) time). This is done for
 security reasons, to prevent "return-to-libc"
@@ -89,7 +89,7 @@ attacks.
 For some
 architectures, there is also an AT_SYSINFO tag. This
 is used only for locating the vsyscall entry point and is
-frequently omitted or set to 0 (meaning it&rsquo;s not
+frequently omitted or set to 0 (meaning it’s not
 available). This tag is a throwback to the initial vDSO work
 (see History below) and its use should be
 avoided.
@@ -138,7 +138,7 @@ arch/$ARCH/ -name '*vdso*.so*' -o -name '*gate*.so*'
 vDSO
 names 
 The name of the vDSO varies across architectures. It will
-often show up in things like glibc&rsquo;s ldd(1)
+often show up in things like glibc’s ldd(1)
 output. The exact name should not matter to any code, so do
 not hardcode it.
 
@@ -157,7 +157,7 @@ below provide architecture-specific notes on the vDSO.
 Note that the
 vDSO that is used is based on the ABI of your user-space
 code and not the ABI of the kernel. Thus, for example, when
-you run an i386 32-bit ELF binary, you&rsquo;ll get the same
+you run an i386 32-bit ELF binary, you’ll get the same
 vDSO regardless of whether you run it under an i386 32-bit
 kernel or under an x86-64 64-bit kernel. Therefore, the name
 of the user-space ABI should be used to determine which of
@@ -169,13 +169,13 @@ The table below lists the symbols exported by the vDSO.
 
 Additionally,
 the ARM port has a code page full of utility functions.
-Since it&rsquo;s just a raw page of code, there is no ELF
+Since it’s just a raw page of code, there is no ELF
 information for doing symbol lookups or versioning. It does
 provide support for different versions though.
 
 For information
-on this code page, it&rsquo;s best to refer to the kernel
-documentation as it&rsquo;s extremely detailed and covers
+on this code page, it’s best to refer to the kernel
+documentation as it’s extremely detailed and covers
 everything you need to know:
 Documentation/arm/kernel_user_helpers.txt.
 
@@ -186,17 +186,17 @@ The table below lists the symbols exported by the vDSO.
 bfin
 (Blackfin) functions (port removed in Linux 4.17) 
 As this CPU lacks a memory management unit (MMU), it
-doesn&rsquo;t set up a vDSO in the normal sense. Instead, it
+doesn’t set up a vDSO in the normal sense. Instead, it
 maps at boot time a few raw functions into a fixed location
 in memory. User-space applications then call directly into
 that region. There is no provision for backward
 compatibility beyond sniffing raw opcodes, but as this is an
-embedded CPU, it can get away with things&mdash;some of the
-object formats it runs aren&rsquo;t even ELF based
-(they&rsquo;re bFLT/FLAT).
+embedded CPU, it can get away with things—some of the
+object formats it runs aren’t even ELF based
+(they’re bFLT/FLAT).
 
 For information
-on this code page, it&rsquo;s best to refer to the public
+on this code page, it’s best to refer to the public
 documentation: 
 
 http://docs.blackfin.uclinux.org/doku.php?id=linux-kernel:fixed-code
@@ -230,7 +230,7 @@ automatically executes with kernel privileges and not in
 user space. This is done to match the way HP-UX works.
 
 Since
-it&rsquo;s just a raw page of code, there is no ELF
+it’s just a raw page of code, there is no ELF
 information for doing symbol lookups or versioning. Simply
 call into the appropriate offset via the branch instruction,
 for example:
@@ -295,9 +295,9 @@ The table below lists the symbols exported by the vDSO.
 
 History
 
-The vDSO was originally just a single function&mdash;the
+The vDSO was originally just a single function—the
 vsyscall. In older kernels, you might see that name in a
-process&rsquo;s memory map rather than "vdso".
+process’s memory map rather than "vdso".
 Over time, people realized that this mechanism was a great
 way to pass more functionality to user space, so it was
 reconceived as a vDSO in the current format.

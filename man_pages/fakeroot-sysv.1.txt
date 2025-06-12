@@ -45,9 +45,9 @@ other packages you build with fakeroot will quite likely
 fail too, but possibly in much more subtle ways.
 
 Also, note that
-it&rsquo;s best not to do the building of the binaries
+it’s best not to do the building of the binaries
 themselves under fakeroot. Especially configure and friends
-don&rsquo;t like it when the system suddenly behaves
+don’t like it when the system suddenly behaves
 differently from what they expect. (or, they randomly unset
 some environment variables, some of which fakeroot
 needs).
@@ -68,8 +68,8 @@ to use as faked.
 [--] command
 
 Any command you want to be ran
-as fakeroot. Use &rsquo;--&rsquo; if in the command you have
-other options that may confuse fakeroot&rsquo;s option
+as fakeroot. Use ’--’ if in the command you have
+other options that may confuse fakeroot’s option
 parsing.
 
 -s save-file
@@ -156,13 +156,13 @@ GNU/Linux packages (in the deb(5) format) without
 giving them root privileges. This can be done by commands
 like dpkg-buildpackage -rfakeroot or debuild
 -rfakeroot (actually, -rfakeroot is default in debuild
-nowadays, so you don&rsquo;t need that argument).
+nowadays, so you don’t need that argument).
 
 SECURITY ASPECTS
 
 fakeroot
 is a regular, non-setuid program. It does not enhance a
-user&rsquo;s privileges, or decrease the system&rsquo;s
+user’s privileges, or decrease the system’s
 security.
 
 FILES
@@ -178,7 +178,7 @@ The key used to communicate
 with the fakeroot daemon. Any program started with the right
 LD_PRELOAD and a FAKEROOTKEY of a running
 daemon will automatically connect to that daemon, and have
-the same "fake" view of the file system&rsquo;s
+the same "fake" view of the file system’s
 permissions/ownerships. (assuming the daemon and connecting
 program were started by the same user).
 
@@ -189,7 +189,7 @@ Fakeroot is implemented by
 wrapping system calls. This is accomplished by setting
 LD_LIBRARY_PATH=/usr/lib/fakeroot and
 LD_PRELOAD=libfakeroot.so.0. That library is loaded before
-the system&rsquo;s C library, and so most of the library
+the system’s C library, and so most of the library
 functions are intercepted by it. If you need to set either
 LD_LIBRARY_PATH or LD_PRELOAD from within a
 fakeroot environment, it should be set relative to the given
@@ -207,7 +207,7 @@ the C library as fakeroot itself.
 
 open()/create()
 
-fakeroot doesn&rsquo;t wrap
+fakeroot doesn’t wrap
 open(), create(), etc. So, if user joost does
 either
 
@@ -233,17 +233,17 @@ problems, as demonstrated by the libtricks package. This
 package wrapped many more functions, and tried to do a lot
 more than fakeroot . It turned out that a minor
 upgrade of libc (from one where the stat() function
-didn&rsquo;t use open() to one with a stat()
+didn’t use open() to one with a stat()
 function that did (in some cases) use open()), would
 cause unexplainable segfaults (that is, the libc6
 stat() called the wrapped open(), which would
 then call the libc6 stat(), etc). Fixing them
-wasn&rsquo;t all that easy, but once fixed, it was just a
+wasn’t all that easy, but once fixed, it was just a
 matter of time before another function started to use
 open(), never mind trying to port it to a different
 operating system. Thus I decided to keep the number of
 functions wrapped by fakeroot as small as possible, to limit
-the likelihood of &rsquo;collisions&rsquo;.
+the likelihood of ’collisions’.
 
 GNU configure (and other
 such programs)
@@ -251,8 +251,8 @@ such programs)
 fakeroot, in effect, is
 changing the way the system behaves. Programs that probe the
 system like GNU configure may get confused by this (or if
-they don&rsquo;t, they may stress fakeroot so much that
-fakeroot itself becomes confused). So, it&rsquo;s advisable
+they don’t, they may stress fakeroot so much that
+fakeroot itself becomes confused). So, it’s advisable
 not to run "configure" from within fakeroot. As
 configure should be called in the "debian/rules
 build" target, running "dpkg-buildpackage
@@ -261,13 +261,13 @@ build" target, running "dpkg-buildpackage
 BUGS
 
 It
-doesn&rsquo;t wrap open(). This isn&rsquo;t bad by itself,
+doesn’t wrap open(). This isn’t bad by itself,
 but if a program does open("file", O_WRONLY, 000),
 writes to file "file", closes it, and then again
 tries to open to read the file, then that open fails, as the
 mode of the file will be 000. The bug is that if root does
 the same, open() will succeed, as the file permissions
-aren&rsquo;t checked at all for root. I choose not to wrap
+aren’t checked at all for root. I choose not to wrap
 open(), as open() is used by many other functions in libc
 (also those that are already wrapped), thus creating loops
 (or possible future loops, when the implementation of

@@ -8,11 +8,11 @@ HISTORY & INTRODUCTION
 HFSC
 (Hierarchical Fair Service Curve) is a network packet
 scheduling algorithm that was first presented at
-SIGCOMM&rsquo;97. Developed as a part of ALTQ (ALTernative
+SIGCOMM’97. Developed as a part of ALTQ (ALTernative
 Queuing) on NetBSD, found its way quickly to other BSD
 systems, and then a few years ago became part of the linux
-kernel. Still, it&rsquo;s not the most popular scheduling
-algorithm - especially if compared to HTB - and it&rsquo;s
+kernel. Still, it’s not the most popular scheduling
+algorithm - especially if compared to HTB - and it’s
 not well documented for the enduser. This introduction aims
 to explain how HFSC works without using too much math
 (although some math it will be inevitable).
@@ -54,12 +54,12 @@ CASES for examples.
 
 Feature
 (3) is mentioned due to the nature of the problem.
-There may be situations where it&rsquo;s either not possible
+There may be situations where it’s either not possible
 to guarantee service of all curves at the same time, and/or
-it&rsquo;s impossible to do so fairly. Both will be
+it’s impossible to do so fairly. Both will be
 explained later. Note that this is mainly related to
 interior (aka aggregate) classes, as the leafs are already
-handled by (1). Still, it&rsquo;s perfectly possible
+handled by (1). Still, it’s perfectly possible
 to create a leaf class without realtime service, and in such
 a case the caveats will naturally extend to leaf classes as
 well.
@@ -67,7 +67,7 @@ well.
 ABBREVIATIONS
 
 For the
-remaining part of the document, we&rsquo;ll use following
+remaining part of the document, we’ll use following
 shortcuts:
 
 RT - realtime
@@ -80,7 +80,7 @@ BASICS OF HFSC
 
 To understand
 how HFSC works, we must first introduce a service curve.
-Overall, it&rsquo;s a nondecreasing function of some time
+Overall, it’s a nondecreasing function of some time
 unit, returning the amount of service (an allowed or
 allocated amount of bandwidth) at some specific point in
 time. The purpose of it should be subconsciously obvious: if
@@ -93,18 +93,18 @@ more elaborate criterion than just the above (although in
 the most generic case it can be reduced to it). The
 criterion has to take two things into account:
 
-&bull;
+•
 
 idling periods
 
-&bull;
+•
 
 the ability to "look back", so if during
 current active period the service curve is violated, maybe
-it isn&rsquo;t if we count excess bandwidth received during
+it isn’t if we count excess bandwidth received during
 earlier active period(s)
 
-Let&rsquo;s
+Let’s
 define the criterion as follows:
 
 (1)
@@ -113,10 +113,10 @@ For each t1, there must exist t0
 in set B, so S(t1-t0) 
 
 Here
-&rsquo;w&rsquo; denotes the amount of service received
+’w’ denotes the amount of service received
 during some time period between t0 and t1. B is a set of all
 times, where a session becomes active after idling period
-(further denoted as &rsquo;becoming backlogged&rsquo;). For
+(further denoted as ’becoming backlogged’). For
 a clearer picture, imagine two situations:
 
 a)
@@ -131,14 +131,14 @@ as in (a), but with a larger gap
 Consider
 (a): if the service received during both periods
 meets (1), then all is well. But what if it
-doesn&rsquo;t do so during the 2nd period? If the amount of
+doesn’t do so during the 2nd period? If the amount of
 service received during the 1st period is larger than the
 service curve, then it might compensate for smaller service
 during the 2nd period and the gap - if the gap is
 small enough.
 
 If the gap is
-larger (b) - then it&rsquo;s less likely to happen
+larger (b) - then it’s less likely to happen
 (unless the excess bandwidth allocated during the 1st part
 was really large). Still, the larger the gap - the less
 interesting is what happened in the past (e.g. 10 minutes
@@ -146,7 +146,7 @@ ago) - what matters is the current traffic that just
 started.
 
 From
-HFSC&rsquo;s perspective, more interesting is answering the
+HFSC’s perspective, more interesting is answering the
 following question: when should we start transferring
 packets, so a service curve of a class is not violated. Or
 rephrasing it: How much X() amount of service should a
@@ -156,13 +156,13 @@ building block of HFSC, used in: eligible, deadline,
 virtual-time and fit-time curves. Of course, X() is based on
 equation (1) and is defined recursively:
 
-&bull;
+•
 
 At the 1st backlogged period
 beginning function X is initialized to generic service curve
 assigned to a class
 
-&bull;
+•
 
 At any subsequent backlogged period, X() is:
 
@@ -175,7 +175,7 @@ HFSC uses
 either linear, or two-piece linear service curves. In case
 of linear or two-piece linear convex functions (first slope
 =t0. Note, that for some backlogged period, X() is
-defined only from that period&rsquo;s beginning. We also
+defined only from that period’s beginning. We also
 define X^(-1)(w) as smallest t>=t0, for which
 X(t) = w. We have to define it this way, as X() is
 usually not an injection.
@@ -187,38 +187,38 @@ E()
 
 In realtime criterion, selects
 packets eligible for sending. If none are eligible, HFSC
-will use linkshare criterion. Eligible time &rsquo;et&rsquo;
-is calculated with reference to packets&rsquo; heads (
-et = E^(-1)(w) ). It&rsquo;s based on RT service
+will use linkshare criterion. Eligible time ’et’
+is calculated with reference to packets’ heads (
+et = E^(-1)(w) ). It’s based on RT service
 curve, but in case of a convex curve, uses its 2nd slope
 only. 
 
 D()
 
 In realtime criterion, selects the most suitable packet
-from the ones chosen by E(). Deadline time &rsquo;dt&rsquo;
-corresponds to packets&rsquo; tails
-(dt = D^(-1)(w+l), where &rsquo;l&rsquo; is
-packet&rsquo;s length). Based on RT service curve.
+from the ones chosen by E(). Deadline time ’dt’
+corresponds to packets’ tails
+(dt = D^(-1)(w+l), where ’l’ is
+packet’s length). Based on RT service curve.
 
 V()
 
 In linkshare criterion, arbitrates which packet to send
 next. Note that V() is function of a virtual time - see
 LINKSHARE CRITERION section for details. Virtual time
-&rsquo;vt&rsquo; corresponds to packets&rsquo; heads
+’vt’ corresponds to packets’ heads
 (vt = V^(-1)(w)). Based on LS service curve.
 
 F()
 
 An extension to linkshare criterion, used to limit at
 which speed linkshare criterion is allowed to dequeue.
-Fit-time &rsquo;ft&rsquo; corresponds to packets&rsquo;
+Fit-time ’ft’ corresponds to packets’
 heads as well (ft = F^(-1)(w)). Based on UL
 service curve.
 
 Be sure to make
-clean distinction between session&rsquo;s RT, LS and UL
+clean distinction between session’s RT, LS and UL
 service curves and the above "utility"
 functions.
 
@@ -237,12 +237,12 @@ Interface
 10Mbit, two classes, both with two-piece linear service
 curves:
 
-&bull;
+•
 
 1st class - 2Mbit for 100ms,
 then 7Mbit (convex - 1st slope 
 
-&bull;
+•
 
 2nd class - 7Mbit for 100ms, then 2Mbit (concave - 1st
 slope > 2nd slope)
@@ -252,15 +252,15 @@ moment, that we only use D() for both finding eligible
 packets, and choosing the most fitting one, thus eligible
 time would be computed as D^(-1)(w) and deadline time would
 be computed as D^(-1)(w+l). If the 2nd class starts sending
-packets 1 second after the 1st class, it&rsquo;s of course
+packets 1 second after the 1st class, it’s of course
 impossible to guarantee 14Mbit, as the interface capability
 is only 10Mbit. The only workaround in this scenario is to
 allow the 1st class to send the packets earlier that would
-normally be allowed. That&rsquo;s where separate E() comes
+normally be allowed. That’s where separate E() comes
 to help. Putting all the math aside (see HFSC paper for
 details), E() for RT concave service curve is just like D(),
-but for the RT convex service curve - it&rsquo;s constructed
-using only RT service curve&rsquo;s 2nd slope (in our
+but for the RT convex service curve - it’s constructed
+using only RT service curve’s 2nd slope (in our
 example 
 7Mbit).
 
@@ -269,7 +269,7 @@ such E() - packets will be sent earlier, and at the same
 time D() will be updated - so the current deadline
 time calculated from it will be later. Thus, when the 2nd
 class starts sending packets later, both the 1st and the 2nd
-class will be eligible, but the 2nd session&rsquo;s deadline
+class will be eligible, but the 2nd session’s deadline
 time will be smaller and its packets will be sent first.
 When the 1st class becomes idle at some later point, the 2nd
 class will be able to "buffer" up again for later
@@ -286,7 +286,7 @@ Important part
 of RT criterion is that apart from updating its D() and E(),
 also V() used by LS criterion is updated. Generally the RT
 criterion is secondary to LS one, and used only if
-there&rsquo;s a risk of violating precise realtime
+there’s a risk of violating precise realtime
 requirements. Still, the "participation" in
 bandwidth distributed by LS criterion is there, so V() has
 to be updated along the way. LS criterion can than properly
@@ -298,24 +298,24 @@ updated as well (UL service curve is an extension to LS one
 Anyway -
 careless specification of LS and RT service curves can lead
 to potentially undesired situations (see CORNER CASES for
-examples). This wasn&rsquo;t the case in HFSC paper where LS
-and RT service curves couldn&rsquo;t be specified
+examples). This wasn’t the case in HFSC paper where LS
+and RT service curves couldn’t be specified
 separately.
 
 LINKSHARING CRITERION
 
 LS
-criterion&rsquo;s task is to distribute bandwidth according
+criterion’s task is to distribute bandwidth according
 to specified class hierarchy. Contrary to RT criterion,
-there&rsquo;re no comparisons between current real time and
+there’re no comparisons between current real time and
 virtual time - the decision is based solely on direct
 comparison of virtual times of all active subclasses - the
 one with the smallest vt wins and gets scheduled. One
 immediate conclusion from this fact is that absolute values
-don&rsquo;t matter - only ratios between them (so for
+don’t matter - only ratios between them (so for
 example, two children classes with simple linear 1Mbit
 service curves will get the same treatment from LS
-criterion&rsquo;s perspective, as if they were 5Mbit). The
+criterion’s perspective, as if they were 5Mbit). The
 other conclusion is, that in perfectly fluid system with
 linear curves, all virtual times across whole class
 hierarchy would be equal.
@@ -325,19 +325,19 @@ defined in term of virtual time (and what is it)?
 
 Imagine an
 example: class A with two children - A1 and A2, both with
-let&rsquo;s say 10Mbit SCs. If A2 is idle, A1 receives all
+let’s say 10Mbit SCs. If A2 is idle, A1 receives all
 the bandwidth of A (and update its V() in the process). When
-A2 becomes active, A1&rsquo;s virtual time is already
-far later than A2&rsquo;s one. Considering the type
+A2 becomes active, A1’s virtual time is already
+far later than A2’s one. Considering the type
 of decision made by LS criterion, A1 would become idle for a
 long time. We can workaround this situation by adjusting
 virtual time of the class becoming active - we do that by
 getting such time "up to date". HFSC uses a mean
 of the smallest and the biggest virtual time of currently
-active children fit for sending. As it&rsquo;s not real time
+active children fit for sending. As it’s not real time
 anymore (excluding trivial case of situation where all
 classes become active at the same time, and never become
-idle), it&rsquo;s called virtual time.
+idle), it’s called virtual time.
 
 Such approach
 has its price though. The problem is analogous to what was
@@ -346,7 +346,7 @@ of service curves:
 
 1)
 
-either it&rsquo;s impossible to
+either it’s impossible to
 guarantee service curves and satisfy fairness during certain
 time periods:
 
@@ -354,20 +354,20 @@ Recall the
 example from RT section, slightly modified (with 3Mbit
 slopes instead of 2Mbit ones):
 
-&bull;
+•
 
 1st class - 3Mbit for 100ms,
 then 7Mbit (convex - 1st slope 
 
-&bull;
+•
 
 2nd class - 7Mbit for 100ms, then 3Mbit (concave - 1st
 slope > 2nd slope)
 
 They sum up
-nicely to 10Mbit - the interface&rsquo;s capacity. But if we
+nicely to 10Mbit - the interface’s capacity. But if we
 wanted to only use LS for guarantees and fairness - it
-simply won&rsquo;t work. In LS context, only V() is used for
+simply won’t work. In LS context, only V() is used for
 making decision which class to schedule. If the 2nd class
 becomes active when the 1st one is in its second slope, the
 fairness will be preserved - ratio will be 1:1
@@ -377,7 +377,7 @@ to go beyond of what the interface is capable of.
 
 2)
 
-and/or it&rsquo;s impossible to
+and/or it’s impossible to
 guarantee service curves of all classes at the same time
 [fairly or not]:
 
@@ -408,17 +408,17 @@ now? B (choice made by R) will always get 7 Mbit as R
 is only (obviously) concerned with the ratio between its
 direct children. Thus A subtree gets 3Mbit, but its children
 would want (at the point when A1 became backlogged) 5Mbit +
-1Mbit. That&rsquo;s of course impossible, as they can only
+1Mbit. That’s of course impossible, as they can only
 get 3Mbit due to interface limitation.
 
 In the left
 subtree - we have the same situation as previously (fair
 split between A1 and A2, but violated guarantees), but in
-the whole tree - there&rsquo;s no fairness (B got 7Mbit, but
-A1 and A2 have to fit together in 3Mbit) and there&rsquo;s
+the whole tree - there’s no fairness (B got 7Mbit, but
+A1 and A2 have to fit together in 3Mbit) and there’s
 no guarantees for all classes (only B got what it wanted).
 Even if we violated fairness in the A subtree and set
-A2&rsquo;s service curve to 0, A1 would still not get the
+A2’s service curve to 0, A1 would still not get the
 required bandwidth.
 
 UPPERLIMIT CRITERION
@@ -426,7 +426,7 @@ UPPERLIMIT CRITERION
 UL criterion is
 an extensions to LS one, that permits sending packets only
 if current real time is later than fit-time
-(&rsquo;ft&rsquo;). So the modified LS criterion becomes:
+(’ft’). So the modified LS criterion becomes:
 choose the smallest virtual time from all active children,
 such that fit-time 
 
@@ -435,16 +435,16 @@ purpose of the UL service curve is to limit HFSC to
 bandwidth available on the upstream router (think adsl home
 modem/router, and linux server as NAT/firewall/etc. with
 100Mbit+ connection to mentioned modem/router). Typically,
-it&rsquo;s used to create a single class directly under
+it’s used to create a single class directly under
 root, setting a linear UL service curve to available
 bandwidth - and then creating your class structure from that
-class downwards. Of course, you&rsquo;re free to add a UL
+class downwards. Of course, you’re free to add a UL
 service curve (linear or not) to any class with LS
 criterion.
 
 An important
 part about the UL service curve is that whenever at some
-point in time a class doesn&rsquo;t qualify for linksharing
+point in time a class doesn’t qualify for linksharing
 due to its fit-time, the next time it does qualify it will
 update its virtual time to the smallest virtual time of all
 active children fit for linksharing. This way, one of the
@@ -454,11 +454,11 @@ perfectly fluid system with only linear curves, all virtual
 times would be equal).
 
 Without that,
-&rsquo;vt&rsquo; would lag behind other virtual times, and
+’vt’ would lag behind other virtual times, and
 could cause problems. Consider an interface with a capacity
 of 10Mbit, and the following leaf classes (just in case
-you&rsquo;re skipping this text quickly - this example shows
-behavior that doesn&rsquo;t happen):
+you’re skipping this text quickly - this example shows
+behavior that doesn’t happen):
 
 A - ls 5.0Mbit
 
@@ -474,8 +474,8 @@ remaining 7.5Mbit. The longer the backlogged period, the
 more the virtual times of A and C would drift apart. If B
 became backlogged at some later point in time, its virtual
 time would be set to
-(A&rsquo;s vt + C&rsquo;s vt)/2, thus
-blocking A from sending any traffic until B&rsquo;s virtual
+(A’s vt + C’s vt)/2, thus
+blocking A from sending any traffic until B’s virtual
 time catches up with A.
 
 SEPARATE LS / RT SCs
@@ -493,7 +493,7 @@ Separate
 service curves for LS and RT criteria can lead to certain
 traps that come from "fighting" between ideal
 linksharing and enforced realtime guarantees. Those
-situations didn&rsquo;t exist in original HFSC paper, where
+situations didn’t exist in original HFSC paper, where
 specifying separate LS / RT service curves was not
 discussed.
 
@@ -516,19 +516,19 @@ discrepancy between virtual times of A and C.
 
 Assume this
 situation lasts for a long time with no idle periods, and
-suddenly B becomes active. B&rsquo;s virtual time will be
+suddenly B becomes active. B’s virtual time will be
 updated to
-(A&rsquo;s vt + C&rsquo;s vt)/2,
-effectively landing in the middle between A&rsquo;s and
-C&rsquo;s virtual time. The effect - B, having no RT
+(A’s vt + C’s vt)/2,
+effectively landing in the middle between A’s and
+C’s virtual time. The effect - B, having no RT
 guarantees, will be punished and will not be allowed to
-transfer until C&rsquo;s virtual time catches up.
+transfer until C’s virtual time catches up.
 
 If the
 interface had a higher capacity, for example 100Mbit, this
 example would behave perfectly fine though.
 
-Let&rsquo;s
+Let’s
 look a bit closer at the above example - it
 "cleverly" invalidates one of the basic things LS
 criterion tries to achieve - equality of all virtual times
@@ -537,7 +537,7 @@ curves are literally left to their own fate (governed by
 messed up virtual times).
 
 Also, it
-doesn&rsquo;t make much sense. Class A will always be
+doesn’t make much sense. Class A will always be
 guaranteed up to 8Mbit, and this is more than any absolute
 bandwidth that could happen from its LS criterion (excluding
 trivial case of only A being active). If the bandwidth taken
@@ -557,13 +557,13 @@ example.
 You can quickly
 "workaround" it by making sure each leaf class has
 RT service curve assigned (thus guaranteeing all of them
-will get some bandwidth), but it doesn&rsquo;t make it any
+will get some bandwidth), but it doesn’t make it any
 more valid.
 
 Keep in mind -
 if you use nonlinear curves and irregularities explained
 above happen only in the first segment, then
-there&rsquo;s little wrong with "overusing" RT
+there’s little wrong with "overusing" RT
 curve a bit:
 
 A - ls 5.0Mbit,
@@ -584,37 +584,37 @@ called watchdog to wakeup dequeue function at some time
 later. In case of HFSC it happens when for example no packet
 is eligible for scheduling, and UL service curve is used to
 limit the speed at which LS criterion is allowed to dequeue
-packets. It&rsquo;s called throttling, and accuracy of it is
+packets. It’s called throttling, and accuracy of it is
 dependent on how the kernel is compiled.
 
-There&rsquo;re
+There’re
 3 important options in modern kernels, as far as
-timers&rsquo; resolution goes: &rsquo;tickless
-system&rsquo;, &rsquo;high resolution timer support&rsquo;
-and &rsquo;timer frequency&rsquo;.
+timers’ resolution goes: ’tickless
+system’, ’high resolution timer support’
+and ’timer frequency’.
 
 If you have
-&rsquo;tickless system&rsquo; enabled, then the timer
+’tickless system’ enabled, then the timer
 interrupt will trigger as slowly as possible, but each time
 a scheduler throttles itself (or any other part of the
 kernel needs better accuracy), the rate will be increased as
-needed / possible. The ceiling is either &rsquo;timer
-frequency&rsquo; if &rsquo;high resolution timer
-support&rsquo; is not available or not compiled in, or
-it&rsquo;s hardware dependent and can go far beyond
-the highest &rsquo;timer frequency&rsquo; setting
+needed / possible. The ceiling is either ’timer
+frequency’ if ’high resolution timer
+support’ is not available or not compiled in, or
+it’s hardware dependent and can go far beyond
+the highest ’timer frequency’ setting
 available.
 
 If
-&rsquo;tickless system&rsquo; is not enabled, the timer will
-trigger at a fixed rate specified by &rsquo;timer
-frequency&rsquo; - regardless if high resolution timers are
-or aren&rsquo;t available.
+’tickless system’ is not enabled, the timer will
+trigger at a fixed rate specified by ’timer
+frequency’ - regardless if high resolution timers are
+or aren’t available.
 
 This is
 important to keep those settings in mind, as in scenario
 like: no tickless, no HR timers, frequency set to 100hz -
-throttling accuracy would be at 10ms. It doesn&rsquo;t
+throttling accuracy would be at 10ms. It doesn’t
 automatically mean you would be limited to ~0.8Mbit/s
 (assuming packets at ~1KB) - as long as your queues are
 prepared to cover for timer inaccuracy. Of course, in case
@@ -633,15 +633,15 @@ of ~1KB size and HZ=100, that averages to ~0.8Mbit -
 anything beyond it (e.g. the above example with specified
 rate over 10x larger) will require appropriate queuing and
 cause bursts every ~10 ms. As you can imagine, any
-HFSC&rsquo;s RT guarantees will be seriously invalidated by
+HFSC’s RT guarantees will be seriously invalidated by
 that. Aforementioned example is mainly important if you deal
 with old hardware - as is particularly popular for home
 server chores. Even then, you can easily set HZ=1000 and
 have very accurate scheduling for typical adsl speeds.
 
 Anything modern
-(apic or even hpet msi based timers + &rsquo;tickless
-system&rsquo;) will provide enough accuracy for superb 1Gbit
+(apic or even hpet msi based timers + ’tickless
+system’) will provide enough accuracy for superb 1Gbit
 scheduling. For example, on one of my cheap dual-core AMD
 boards I have the following settings:
 
@@ -665,7 +665,7 @@ from /proc/interrupts):
 HPET_MSI-edge hpet2 (before) 
 319: 42436214 0 HPET_MSI-edge hpet2 (after 10s.)
 
-That&rsquo;s
+That’s
 roughly 31000/s. Now compare it with HZ=1000 setting. The
 obvious drawback of it is that cpu load can be rather high
 with servicing that many timer interrupts. The example with
@@ -674,12 +674,12 @@ as it requires a lot of throttling with minuscule
 delays.
 
 Also note that
-it&rsquo;s just an example showing the capabilities of
+it’s just an example showing the capabilities of
 current hardware. The above example (essentially a 300Mbit
 TBF emulator) is pointless on an internal interface to begin
 with: you will pretty much always want a regular LS service
 curve there, and in such a scenario HFSC simply
-doesn&rsquo;t throttle at all.
+doesn’t throttle at all.
 
 300Mbit RT
 service curve (selected columns from mpstat -P ALL 1):
@@ -702,14 +702,14 @@ love to overuse UL criterion and stuff it in every node
 possible. This makes no sense and works against what HFSC
 tries to do (and does pretty damn well). Use UL where it
 makes sense: on the uppermost node to match upstream
-router&rsquo;s uplink capacity. Or in special cases, such as
+router’s uplink capacity. Or in special cases, such as
 testing (limit certain subtree to some speed), or customers
 that must never get more than certain speed. In the last
 case you can usually achieve the same by just using a RT
 criterion without LS+UL on leaf nodes.
 
 As for the
-router case - remember it&rsquo;s good to differentiate
+router case - remember it’s good to differentiate
 between "traffic to router" (remote console, web
 config, etc.) and "outgoing traffic", so for
 example:

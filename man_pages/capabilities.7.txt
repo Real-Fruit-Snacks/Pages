@@ -13,7 +13,7 @@ referred to as superuser or root), and unprivileged
 processes (whose effective UID is nonzero). Privileged
 processes bypass all kernel permission checks, while
 unprivileged processes are subject to full permission
-checking based on the process&rsquo;s credentials (usually:
+checking based on the process’s credentials (usually:
 effective UID, effective GID, and supplementary group
 list).
 
@@ -151,7 +151,7 @@ CAP_FSETID
 
 *
 
-Don&rsquo;t clear set-user-ID and set-group-ID mode bits
+Don’t clear set-user-ID and set-group-ID mode bits
 when a file is modified;
 
 *
@@ -320,7 +320,7 @@ CAP_SETPCAP
 
 If file capabilities are
 supported (i.e., since Linux 2.6.24): add any capability
-from the calling thread&rsquo;s bounding set to its
+from the calling thread’s bounding set to its
 inheritable set; drop capabilities from the bounding set
 (via prctl(2) PR_CAPBSET_DROP); make changes
 to the securebits flags.
@@ -328,7 +328,7 @@ to the securebits flags.
 If file
 capabilities are not supported (i.e., kernels before Linux
 2.6.24): grant or remove any capability in the
-caller&rsquo;s permitted capability set to or from any other
+caller’s permitted capability set to or from any other
 process. (This property of CAP_SETPCAP is not
 available when the kernel is configured to support file
 capabilities, since CAP_SETPCAP has entirely
@@ -466,7 +466,7 @@ operation;
 
 employ the TIOCSTI ioctl(2) to insert characters
 into the input queue of a terminal other than the
-caller&rsquo;s controlling terminal;
+caller’s controlling terminal;
 
 *
 
@@ -505,12 +505,12 @@ modify allow/deny rules for device control groups;
 
 employ the ptrace(2)
 PTRACE_SECCOMP_GET_FILTER operation to dump
-tracee&rsquo;s seccomp filters;
+tracee’s seccomp filters;
 
 *
 
 employ the ptrace(2) PTRACE_SETOPTIONS
-operation to suspend the tracee&rsquo;s seccomp protections
+operation to suspend the tracee’s seccomp protections
 (i.e., the PTRACE_O_SUSPEND_SECCOMP flag);
 
 *
@@ -793,7 +793,7 @@ effective set.
 2.
 
 The kernel must provide system calls allowing a
-thread&rsquo;s capability sets to be changed and
+thread’s capability sets to be changed and
 retrieved. 
 
 3.
@@ -842,14 +842,14 @@ should use the same capability as the other features.
 
 *
 
-Don&rsquo;t choose CAP_SYS_ADMIN if you
+Don’t choose CAP_SYS_ADMIN if you
 can possibly avoid it! A vast proportion of existing
 capability checks are associated with this capability (see
 the partial list above). It can plausibly be called
 "the new root", since on the one hand, it confers
 a wide range of powers, and on the other hand, its broad
 scope means that this is the capability that is required by
-many privileged programs. Don&rsquo;t make the problem
+many privileged programs. Don’t make the problem
 worse. The only new features that should be associated with
 CAP_SYS_ADMIN are ones that closely match
 existing uses in that silo.
@@ -857,7 +857,7 @@ existing uses in that silo.
 *
 
 If you have determined that it really is necessary to
-create a new capability for your feature, don&rsquo;t make
+create a new capability for your feature, don’t make
 or name it as a "single-use" capability. Thus, for
 example, the addition of the highly specific
 CAP_SYS_PACCT was probably a mistake. Instead, try to
@@ -940,13 +940,13 @@ set-group-ID bits or executing a program that has any file
 capabilities set will clear the ambient set. Ambient
 capabilities are added to the permitted set and assigned to
 the effective set when execve(2) is called. If
-ambient capabilities cause a process&rsquo;s permitted and
+ambient capabilities cause a process’s permitted and
 effective capabilities to increase during an
 execve(2), this does not trigger the secure-execution
 mode described in ld.so(8).
 
 A child created
-via fork(2) inherits copies of its parent&rsquo;s
+via fork(2) inherits copies of its parent’s
 capability sets. See below for a discussion of the treatment
 of capabilities during execve(2).
 
@@ -978,13 +978,13 @@ Permitted (formerly known as forced):
 
 These capabilities are
 automatically permitted to the thread, regardless of the
-thread&rsquo;s inheritable capabilities.
+thread’s inheritable capabilities.
 
 Inheritable (formerly
 known as allowed):
 
 This set is ANDed with the
-thread&rsquo;s inheritable set to determine which
+thread’s inheritable set to determine which
 inheritable capabilities are enabled in the permitted set of
 the thread after the execve(2).
 
@@ -1050,7 +1050,7 @@ As with version
 2 file capabilities, version 3 capability masks are 64 bits
 in size. But in addition, the root user ID of namespace is
 encoded in the security.capability extended
-attribute. (A namespace&rsquo;s root user ID is the value
+attribute. (A namespace’s root user ID is the value
 that user ID 0 inside that namespace maps to in the initial
 user namespace.)
 
@@ -1087,12 +1087,12 @@ The thread has the CAP_SETFCAP capability over
 the file inode, meaning that (a) the thread has the
 CAP_SETFCAP capability in its own user namespace; and
 (b) the UID and GID of the file inode have mappings in the
-writer&rsquo;s user namespace.
+writer’s user namespace.
 
 When a
 VFS_CAP_REVISION_3 security.capability
 extended attribute is created, the root user ID of the
-creating thread&rsquo;s user namespace is saved in the
+creating thread’s user namespace is saved in the
 extended attribute.
 
 By contrast,
@@ -1138,16 +1138,16 @@ of capabilities during execve()
 During an execve(2), the kernel calculates the new
 capabilities of the process using the following
 algorithm:
-P&rsquo;(ambient)     = (file is privileged) ? 0 : P(ambient)
+P’(ambient)     = (file is privileged) ? 0 : P(ambient)
 
-P&rsquo;(permitted)   = (P(inheritable) & F(inheritable)) |
-                  (F(permitted) & P(bounding)) | P&rsquo;(ambient)
+P’(permitted)   = (P(inheritable) & F(inheritable)) |
+                  (F(permitted) & P(bounding)) | P’(ambient)
 
-P&rsquo;(effective)   = F(effective) ? P&rsquo;(permitted) : P&rsquo;(ambient)
+P’(effective)   = F(effective) ? P’(permitted) : P’(ambient)
 
-P&rsquo;(inheritable) = P(inheritable)    [i.e., unchanged]
+P’(inheritable) = P(inheritable)    [i.e., unchanged]
 
-P&rsquo;(bounding)    = P(bounding)       [i.e., unchanged]
+P’(bounding)    = P(bounding)       [i.e., unchanged]
 
 where:
 
@@ -1156,7 +1156,7 @@ P()
 denotes the value of a thread
 capability set before the execve(2)
 
-P&rsquo;()
+P’()
 
 denotes the value of a thread capability set after the
 execve(2) 
@@ -1244,9 +1244,9 @@ set-user-ID-root program is executed.
 After having
 performed any changes to the process effective ID that were
 triggered by the set-user-ID mode bit of the
-binary&mdash;e.g., switching the effective user ID to 0
+binary—e.g., switching the effective user ID to 0
 (root) because a set-user-ID-root program was
-executed&mdash;the kernel calculates the file capability
+executed—the kernel calculates the file capability
 sets as follows:
 
 1.
@@ -1266,26 +1266,26 @@ the file effective bit is in fact enabled, then the file
 effective bit is notionally defined to be one (enabled).
 
 These notional
-values for the file&rsquo;s capability sets are then used as
+values for the file’s capability sets are then used as
 described above to calculate the transformation of the
-process&rsquo;s capabilities during execve(2).
+process’s capabilities during execve(2).
 
 Thus, when a
 process with nonzero UIDs execve(2)s a
 set-user-ID-root program that does not have capabilities
 attached, or when a process whose real and effective UIDs
 are zero execve(2)s a program, the calculation of the
-process&rsquo;s new permitted capabilities simplifies
+process’s new permitted capabilities simplifies
 to:
-P&rsquo;(permitted)   = P(inheritable) | P(bounding)
+P’(permitted)   = P(inheritable) | P(bounding)
 
-P&rsquo;(effective)   = P&rsquo;(permitted)
+P’(effective)   = P’(permitted)
 
 Consequently,
 the process gains all capabilities in its permitted and
 effective capability sets, except those masked out by the
 capability bounding set. (In the calculation of
-P&rsquo;(permitted), the P&rsquo;(ambient) term can be
+P’(permitted), the P’(ambient) term can be
 simplified away because it is by definition a proper subset
 of P(inheritable).)
 
@@ -1330,7 +1330,7 @@ following ways:
 During an execve(2), the
 capability bounding set is ANDed with the file permitted
 capability set, and the result of this operation is assigned
-to the thread&rsquo;s permitted capability set. The
+to the thread’s permitted capability set. The
 capability bounding set thus places a limit on the permitted
 capabilities that may be granted by an executable file.
 
@@ -1340,7 +1340,7 @@ capabilities that may be granted by an executable file.
 a limiting superset for the capabilities that a thread can
 add to its inheritable set using capset(2). This
 means that if a capability is not in the bounding set, then
-a thread can&rsquo;t add this capability to its inheritable
+a thread can’t add this capability to its inheritable
 set, even if it was in its permitted capabilities, and
 thereby cannot have this capability preserved in its
 permitted set when it execve(2)s a file that has the
@@ -1367,7 +1367,7 @@ attribute. (The system-wide capability bounding set
 described below no longer exists.)
 
 The bounding
-set is inherited at fork(2) from the thread&rsquo;s
+set is inherited at fork(2) from the thread’s
 parent, and is preserved across an execve(2).
 
 A thread may
@@ -1396,8 +1396,8 @@ different meaning when there are no file capabilities.
 
 Removing a
 capability from the bounding set does not remove it from the
-thread&rsquo;s inheritable set. However it does prevent the
-capability from being added back into the thread&rsquo;s
+thread’s inheritable set. However it does prevent the
+capability from being added back into the thread’s
 inheritable set in the future.
 
 Capability
@@ -1432,8 +1432,8 @@ Effect of
 user ID changes on capabilities 
 To preserve the traditional semantics for transitions
 between 0 and nonzero user IDs, the kernel makes the
-following changes to a thread&rsquo;s capability sets on
-changes to the thread&rsquo;s real, effective, saved set,
+following changes to a thread’s capability sets on
+changes to the thread’s real, effective, saved set,
 and filesystem user IDs (using setuid(2),
 setresuid(2), or similar):
 
@@ -1548,9 +1548,9 @@ PR_SET_KEEPCAPS operation.
 SECBIT_NO_SETUID_FIXUP
 
 Setting this flag stops the
-kernel from adjusting the process&rsquo;s permitted,
+kernel from adjusting the process’s permitted,
 effective, and ambient capability sets when the
-thread&rsquo;s effective and filesystem UIDs are switched
+thread’s effective and filesystem UIDs are switched
 between zero and nonzero values. (See the subsection
 Effect of user ID changes on capabilities.)
 
@@ -1612,12 +1612,12 @@ Per-user-namespace
 "set-user-ID-root" programs 
 A set-user-ID program whose UID matches the UID that created
 a user namespace will confer capabilities in the
-process&rsquo;s permitted and effective sets when executed
+process’s permitted and effective sets when executed
 by any process inside that namespace or any descendant user
 namespace.
 
 The rules about
-the transformation of the process&rsquo;s capabilities
+the transformation of the process’s capabilities
 during the execve(2) are exactly as described in the
 subsections Transformation of capabilities during
 execve() and Capabilities and execution of programs
@@ -1703,7 +1703,7 @@ The
 /proc/[pid]/task/TID/status file can be used to view
 the capability sets of a thread. The
 /proc/[pid]/status file shows the capability sets of
-a process&rsquo;s main thread. Before Linux 3.8, nonexistent
+a process’s main thread. Before Linux 3.8, nonexistent
 capabilities were shown as being enabled (1) in these sets.
 Since Linux 3.8, all nonexistent capabilities (above
 CAP_LAST_CAP) are shown as disabled (0).

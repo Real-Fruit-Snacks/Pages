@@ -19,7 +19,7 @@ MulticastDNS resolver and responder. Local applications may
 submit network name resolution requests via three
 interfaces:
 
-&bull; The
+• The
 native, fully-featured API systemd-resolved exposes
 via D-Bus, see org.freedesktop.resolve1(5) and
 org.freedesktop.LogControl1(5) for details. Usage of
@@ -29,14 +29,14 @@ returns DNSSEC validation status and interface scope for
 addresses as necessary for supporting link-local
 networking).
 
-&bull; The
+• The
 native API systemd-resolved exposes via Varlink on
 the /run/systemd/resolve/io.systemd.Resolve AF_UNIX socket.
 This provides similar functionality as the D-Bus interface,
 but is available during the entire runtime, without
 requiring a running D-Bus system bus broker service.
 
-&bull; The
+• The
 glibc getaddrinfo(3) API as defined by
 RFC3493
 [1]
@@ -50,7 +50,7 @@ Usage of the glibc NSS module nss-resolve(8) is
 required in order to allow glibc's NSS resolver functions to
 resolve hostnames via systemd-resolved.
 
-&bull;
+•
 Additionally, systemd-resolved provides a local DNS
 stub listener on the IP addresses 127.0.0.53 and 127.0.0.54
 on the local loopback interface. Programs issuing DNS
@@ -98,28 +98,28 @@ systemd-resolved
 synthesizes DNS resource records (RRs) for the following
 cases:
 
-&bull;
+•
 The local, configured hostname is resolved to all locally
-configured IP addresses ordered by their scope, or &mdash;
-if none are configured &mdash; the IPv4 address 127.0.0.2
+configured IP addresses ordered by their scope, or —
+if none are configured — the IPv4 address 127.0.0.2
 (which is on the local loopback interface) and the IPv6
 address ::1 (which is the local host).
 
-&bull;
+•
 The hostnames "localhost" and
 "localhost.localdomain" as well as any hostname
 ending in ".localhost" or
 ".localhost.localdomain" are resolved to the IP
 addresses 127.0.0.1 and ::1.
 
-&bull;
+•
 The hostname "_gateway" is resolved to all current
 default routing gateway addresses, ordered by their metric.
 This assigns a stable hostname to the current gateway,
 useful for referencing it independently of the current
 network configuration state.
 
-&bull;
+•
 The hostname "_outbound" is resolved to the local
 IPv4 and IPv6 addresses that are most likely used for
 communication with other hosts. This is determined by
@@ -132,17 +132,17 @@ outbound IP addresses, useful for referencing them
 independently of the current network configuration
 state.
 
-&bull;
+•
 The hostname "_localdnsstub" is resolved to the IP
 address 127.0.0.53, i.e. the address the local DNS stub (see
 above) is listening on.
 
-&bull;
+•
 The hostname "_localdnsproxy" is resolved to the
 IP address 127.0.0.54, i.e. the address the local DNS proxy
 (see above) is listening on.
 
-&bull;
+•
 The mappings defined in /etc/hosts are resolved to their
 configured addresses and back, but they will not affect
 lookups for non-address types (like MX). Support for
@@ -156,14 +156,14 @@ lookup requests that systemd-resolved.service receives are
 routed to the available DNS servers, LLMNR, and MulticastDNS
 interfaces according to the following rules:
 
-&bull;
+•
 Names for which synthetic records are generated (the local
 hostname, "localhost" and "localdomain",
 local gateway, as listed in the previous section) and
 addresses configured in /etc/hosts are never routed to the
 network and a reply is sent immediately.
 
-&bull;
+•
 Single-label names are resolved using LLMNR on all local
 interfaces where LLMNR is enabled. Lookups for IPv4
 addresses are only sent via LLMNR on IPv4, and lookups for
@@ -171,7 +171,7 @@ IPv6 addresses are only sent via LLMNR on IPv6. Note that
 lookups for single-label synthesized names are not routed to
 LLMNR, MulticastDNS or unicast DNS.
 
-&bull;
+•
 Queries for the address records (A and AAAA) of single-label
 non-synthesized names are resolved via unicast DNS using
 search domains. For any interface which defines search
@@ -189,14 +189,14 @@ queries for single-label names are never sent out to remote
 DNS servers by default, and resolution is only possible if
 search domains are defined.
 
-&bull;
+•
 Multi-label names with the domain suffix ".local"
 are resolved using MulticastDNS on all local interfaces
 where MulticastDNS is enabled. As with LLMNR, IPv4 address
 lookups are sent via IPv4 and IPv6 address lookups are sent
 via IPv6.
 
-&bull;
+•
 Queries for multi-label names are routed via unicast DNS on
 local interfaces that have a DNS server configured, plus the
 globally configured DNS servers if there are any. Which
@@ -216,7 +216,7 @@ RFC6762
 reserves this domain for exclusive
 MulticastDNS use.
 
-&bull;
+•
 Address lookups (reverse lookups) are routed similarly to
 multi-label names, with the exception that addresses from
 the link-local address range are never routed to unicast DNS
@@ -243,7 +243,7 @@ The
 following query routing logic applies for unicast DNS
 lookups initiated by systemd-resolved.service:
 
-&bull;
+•
 If a name to look up matches (that is: is equal to or has as
 suffix) any of the configured routing domains (search or
 route-only) of any link, or the globally configured DNS
@@ -264,19 +264,19 @@ this search logic doesn't apply to any names with at least
 one dot. Also see the discussion about compatibility with
 the traditional glibc resolver below.
 
-&bull;
+•
 If a query does not match any configured routing domain
 (either per-link or global), it is sent to all DNS servers
 that are configured on links with the DefaultRoute=
 option set, as well as the globally configured DNS
 server.
 
-&bull;
+•
 If there is no link configured as DefaultRoute= and
 no global DNS server configured, one of the compiled-in
 fallback DNS servers is used.
 
-&bull;
+•
 Otherwise the unicast DNS query fails, as no suitable DNS
 servers can be determined.
 
@@ -316,7 +316,7 @@ resolver implemented by nss-resolve(8) together with
 systemd-resolved and the traditional stub resolver
 implemented in nss-dns.
 
-&bull;
+•
 Some names are always resolved internally (see Synthetic
 Records above). Traditionally they would be resolved by
 nss-files if provided in /etc/hosts. But note that the
@@ -327,7 +327,7 @@ routed to systemd-resolved, it will send them out over the
 network using the usual rules for multi-label name routing
 [3] .
 
-&bull;
+•
 Single-label names are not resolved for A and AAAA records
 using unicast DNS (unless overridden with
 ResolveUnicastSingleLabel=, see
@@ -335,7 +335,7 @@ resolved.conf(5)). This is similar to the
 no-tld-query option being set in
 resolv.conf(5).
 
-&bull;
+•
 Search domains are not used for suffixing of
 multi-label names. (Search domains are nevertheless used for
 lookup routing, for names that were originally
@@ -351,32 +351,32 @@ resolved as relative first. This stub resolver does not
 implement this at all: multi-label names are only resolved
 as FQDNs. [4]
 
-&bull;
+•
 This resolver has a notion of the special ".local"
 domain used for MulticastDNS, and will not route queries
 with that suffix to unicast DNS servers unless explicitly
 configured, see above. Also, reverse lookups for link-local
 addresses are not sent to unicast DNS servers.
 
-&bull;
+•
 This resolver reads and caches /etc/hosts internally. (In
 other words, nss-resolve replaces nss-files in addition to
 nss-dns). Entries in /etc/hosts have highest
 priority.
 
-&bull;
+•
 This resolver also implements LLMNR and MulticastDNS in
 addition to the classic unicast DNS protocol, and will
 resolve single-label names using LLMNR (when enabled) and
 names ending in ".local" using MulticastDNS (when
 enabled).
 
-&bull;
+•
 Environment variables $LOCALDOMAIN and
 $RES_OPTIONS described in resolv.conf(5) are
 not supported currently.
 
-&bull;
+•
 The nss-dns resolver maintains little state between
 subsequent DNS queries, and for each query always talks to
 the first listed DNS server from /etc/resolv.conf first, and
@@ -403,7 +403,7 @@ Four
 modes of handling /etc/resolv.conf (see
 resolv.conf(5)) are supported:
 
-&bull;
+•
 systemd-resolved maintains the
 /run/systemd/resolve/stub-resolv.conf file for compatibility
 with traditional Linux programs. This file lists the
@@ -418,7 +418,7 @@ local clients that bypass local DNS APIs to
 systemd-resolved with correct search domains
 settings. This mode of operation is recommended.
 
-&bull;
+•
 A static file /usr/lib/systemd/resolv.conf is provided that
 lists the 127.0.0.53 DNS stub (see above) as only DNS
 server. This file may be symlinked from /etc/resolv.conf in
@@ -426,7 +426,7 @@ order to connect all local clients that bypass local DNS
 APIs to systemd-resolved. This file does not contain
 any search domains.
 
-&bull;
+•
 systemd-resolved maintains the
 /run/systemd/resolve/resolv.conf file for compatibility with
 traditional Linux programs. This file may be symlinked from
@@ -442,7 +442,7 @@ clients that bypass any local DNS API will also bypass
 systemd-resolved and will talk directly to the known
 DNS servers.
 
-&bull;
+•
 Alternatively, /etc/resolv.conf may be managed by other
 packages, in which case systemd-resolved will read it
 for DNS configuration data. In this mode of operation
@@ -476,8 +476,8 @@ Upon
 reception of the SIGUSR2 process signal
 systemd-resolved will flush all caches it maintains.
 Note that it should normally not be necessary to request
-this explicitly &ndash; except for debugging purposes
-&ndash; as systemd-resolved flushes the caches
+this explicitly – except for debugging purposes
+– as systemd-resolved flushes the caches
 automatically anyway any time the host's network
 configuration changes. Sending this signal to
 systemd-resolved is equivalent to the resolvectl
@@ -497,7 +497,7 @@ information about server feature support is flushed out, and
 the server feature probing logic is restarted on the next
 request, starting with the most fully featured level. Note
 that it should normally not be necessary to request this
-explicitly &ndash; except for debugging purposes &ndash; as
+explicitly – except for debugging purposes – as
 systemd-resolved automatically forgets learnt
 information any time the DNS server configuration changes.
 Sending this signal to systemd-resolved is equivalent
@@ -567,13 +567,13 @@ The
 systemd-resolved service listens on the following IP
 ports:
 
-&bull;
+•
 Port 53 on IPv4 addresses 127.0.0.53 and 127.0.0.54 (both
 are on the local loopback interface "lo"). This is
 the local DNS stub, as discussed above. Both UDP and TCP are
 covered.
 
-&bull;
+•
 Port 5353 on all local addresses, both IPv4 and IPv6
 (0.0.0.0 and ::0), for MulticastDNS on UDP. Note that even
 though the socket is bound to all local interfaces via the
@@ -583,7 +583,7 @@ coming in on, and separate MulticastDNS link-local scopes
 are maintained for each, taking into consideration whether
 MulticastDNS is enabled for the interface or not.
 
-&bull;
+•
 Port 5355 on all local addresses, both IPv4 and IP6 (0.0.0.0
 and ::0), for LLMNR, on both TCP and UDP. As with
 MulticastDNS filtering by incoming network interface is

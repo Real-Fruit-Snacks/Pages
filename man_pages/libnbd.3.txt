@@ -102,8 +102,8 @@ SYNCHRONOUS VS ASYNCHRONOUS API
 There are two
 levels of API available. A simple high level synchronous API
 lets you give the handle high level instructions like
-&ldquo;connect to the server&rdquo;, &ldquo;read a
-block&rdquo;, &ldquo;write a block&rdquo;, etc. Each of
+“connect to the server”, “read a
+block”, “write a block”, etc. Each of
 these functions will run to completion, blocking the current
 thread before returning. A more complicated low level
 non-blocking asynchronous API is also available where you
@@ -112,14 +112,14 @@ can integrate with poll(2) or another main loop.
 You can freely
 mix the two APIs on the same handle. You can also call APIs
 on a single handle from multiple threads. Single API calls
-on the handle are atomic &mdash; they either take a lock on
+on the handle are atomic — they either take a lock on
 the handle while they run or are careful to access handle
 fields atomically.
 
 Libnbd does
 not create its own threads.
 
-USING THE SYNCHRONOUS (&ldquo;HIGH LEVEL&rdquo;) API
+USING THE SYNCHRONOUS (“HIGH LEVEL”) API
 
 This is the
 simplest way to use the API, with the possible drawback that
@@ -165,7 +165,7 @@ the high level API from multiple threads, but each libnbd
 API call takes a lock on the handle and so commands will not
 run in parallel.
 
-USING THE ASYNCHRONOUS (&ldquo;LOW LEVEL&rdquo;) API
+USING THE ASYNCHRONOUS (“LOW LEVEL”) API
 
 The low level
 API is useful if you want to use libnbd in non-blocking
@@ -176,7 +176,7 @@ connection.
 
 To use the low
 level API you will need to integrate with poll(2) or
-another &ldquo;main loop&rdquo; such as the GLib main event
+another “main loop” such as the GLib main event
 loop.
 
 Issuing
@@ -199,7 +199,7 @@ exit (EXIT_FAILURE);
 There are
 several things to note here:
 
-&bull;
+•
 
 This only starts the command. The command is (usually)
 still in flight when the call returns success, where you
@@ -209,7 +209,7 @@ However, you must also be able to handle the case where
 system load allows the state machine to advance far enough
 to invoke callbacks before the asynchronous API returns.
 
-&bull;
+•
 
 A buffer ("buf") has been assigned to collect
 the result of the read, but it is not guaranteed to be
@@ -217,18 +217,18 @@ filled with data until the command has completed (see
 examples below). The buffer must not be freed until the
 command has finished running.
 
-&bull;
+•
 
 You can issue multiple commands on the same handle at
 the same time.
 
-&bull;
+•
 
 A cookie is returned which identifies this command in
 subsequent calls. The cookie is unique (per libnbd handle)
-and &ge; 1.
+and ≥ 1.
 
-&bull;
+•
 
 You may register a function which is called when the
 command completes, see "Completion callbacks"
@@ -400,7 +400,7 @@ nbd_get_error (), nbd_get_errno ());
 
 These functions
 use thread-local storage to return the most recent error in
-the current thread. This is why you don&rsquo;t need to pass
+the current thread. This is why you don’t need to pass
 the handle to these calls. They even work if
 nbd_create(3) returns "NULL" when there is
 no handle at all.
@@ -529,11 +529,11 @@ to a URI as in these examples (using the high level
 API):
 
 nbd_connect_uri
-(nbd, "nbd://example.com/&quot;);
+(nbd, "nbd://example.com/");
 
 nbd_connect_uri
 (nbd,
-"nbds+unix:///export?socket=/tmp/nbd.sock&quot;);
+"nbds+unix:///export?socket=/tmp/nbd.sock");
 
 This feature is
 implemented by calling other libnbd APIs to set up the
@@ -550,9 +550,9 @@ for it explicitly using nbd_supports_uri(3).
 
 Connecting
 to a subprocess 
-Some NBD servers &mdash; notably nbdkit(1) with the
+Some NBD servers — notably nbdkit(1) with the
 -s parameter, and nbd-server(1) with the port
-parameter set to 0 &mdash; can also accept a single NBD
+parameter set to 0 — can also accept a single NBD
 connection on stdin/stdout. You can run these servers as a
 subprocess of your main program using
 nbd_connect_command(3). This example creates a 1G
@@ -571,8 +571,8 @@ testing.
 
 Connecting
 to a subprocess using systemd socket activation 
-Some NBD servers &mdash; notably nbdkit(1) and
-qemu-nbd(1) &mdash; support systemd socket activation
+Some NBD servers — notably nbdkit(1) and
+qemu-nbd(1) — support systemd socket activation
 allowing libnbd to pass a socket to the subprocess. This
 works very similarly to nbd_connect_command(3)
 described above, but you must use
@@ -641,7 +641,7 @@ EXPORTS AND FLAGS
 
 It is possible
 for NBD servers to serve different content on different
-&ldquo;exports&rdquo;. For this you must pass the right
+“exports”. For this you must pass the right
 export name to the server. Call this API before
 connecting:
 
@@ -649,7 +649,7 @@ nbd_set_export_name
 (nbd, "export");
 
 Note that there
-are some servers (like nbdkit(1) &le; 1.14) which
+are some servers (like nbdkit(1) ≤ 1.14) which
 ignore this, and other servers (like qemu-nbd(8))
 which require it to be set correctly but cannot serve
 different content.
@@ -743,8 +743,8 @@ also support:
 trim/discard
 
 If nbd_can_trim(3)
-returns true, nbd_trim(3) can be used to &ldquo;punch
-holes&rdquo; in the backing storage of the disk on the
+returns true, nbd_trim(3) can be used to “punch
+holes” in the backing storage of the disk on the
 server. Normally (although not in every case) the holes read
 back as zeroes but take up no space.
 
@@ -839,7 +839,7 @@ simply issue more requests as needed (eg. using calls like
 nbd_aio_pread(3), nbd_aio_pwrite(3)) without
 waiting for previous commands to complete. You need to be
 careful that requests in flight do not overlap with disk
-offsets of other write-like commands in flight &mdash; an
+offsets of other write-like commands in flight — an
 overlapping read may see indeterminate data, and an
 overlapping write may even cause disk corruption where the
 resulting disk contents do not match either of the two
@@ -857,7 +857,7 @@ performed.
 
 Although in
 theory you can have an indefinite number of requests in
-flight at the same time, in practice it&rsquo;s a good idea
+flight at the same time, in practice it’s a good idea
 to limit them to some number. Libnbd will queue commands in
 the handle even if it cannot write them to the server, so
 this limit is largely to prevent a backlog of commands from
@@ -872,7 +872,7 @@ https://gitlab.com/nbdkit/libnbd/blob/master/examples/threaded-reads-and-writes.
 
 Multi-conn
 
-Some NBD servers advertise &ldquo;multi-conn&rdquo; which
+Some NBD servers advertise “multi-conn” which
 means that it is safe to make multiple connections to the
 server and load-balance commands across all of the
 connections.
@@ -913,7 +913,7 @@ ENCRYPTION AND AUTHENTICATION
 
 The NBD
 protocol and libnbd supports TLS (sometimes incorrectly
-called &ldquo;SSL&rdquo;) for encryption of the data stream
+called “SSL”) for encryption of the data stream
 and authentication of clients and servers. Libnbd defaults
 to TLS disabled for maximum interoperability. To
 enable it on a handle you must call nbd_set_tls(3)
@@ -939,7 +939,7 @@ nbd_set_tls
 (nbd, LIBNBD_TLS_REQUIRE);
 
 It may also be
-necessary to verify that the server&rsquo;s identity is
+necessary to verify that the server’s identity is
 correct. For some servers it may be necessary to verify to
 the server that the client is permitted to connect. This can
 be done using either X.509 certificates, or TLS Pre-Shared
@@ -949,15 +949,15 @@ distribute the keys.
 
 Setting up
 X.509 using system certificate authorities (CAs) 
-This is the default if you don&rsquo;t call any other
+This is the default if you don’t call any other
 "nbd_set_tls_*" functions. In this case the server
 must have a public (eg. HTTPS) certificate which can be
 verified against the CAs registered on your system (eg.
 under /etc/pki).
 
 To disable
-server name verification &mdash; which opens you up to a
-potential Man-In-The-Middle (MITM) attack &mdash; use:
+server name verification — which opens you up to a
+potential Man-In-The-Middle (MITM) attack — use:
 
 nbd_set_tls_verify_peer
 (nbd, false);
@@ -973,13 +973,13 @@ Doing this is
 described in detail in the nbdkit-tls(1) manual. The
 only differences for libnbd are:
 
-&bull;
+•
 
 Non-root certificates must be placed in
 "$HOME/.pki/libnbd/" or
 "$HOME/.config/pki/libnbd/" 
 
-&bull;
+•
 
 Libnbd reads client-cert.pem and
 client-key.pem (instead of server-cert.pem and
@@ -1038,7 +1038,7 @@ nbd_aio_pread
 0);
 
 For optional
-callbacks, if you don&rsquo;t want the callback, either set
+callbacks, if you don’t want the callback, either set
 ".callback" to "NULL" or use the
 equivalent macros (such as "NBD_NULL_COMPLETION")
 defined in "libnbd.h":
@@ -1109,7 +1109,7 @@ The callbacks are invoked at a point where the libnbd lock
 is held, typically during a call to
 "nbd_aio_notify_read",
 "nbd_aio_notify_write", "nbd_aio_poll",
-or other call that can advance libnbd&rsquo;s state machine.
+or other call that can advance libnbd’s state machine.
 Depending on system load, it is even possible for a callback
 to be reached before completion of the "nbd_aio_*"
 call that specified the callback. As such, it is unsafe for
@@ -1142,7 +1142,7 @@ Some of the high-level commands
 (nbd_pread_structured(3),
 nbd_block_status_64(3)) involve the use of a callback
 function invoked by the state machine at appropriate points
-in the server&rsquo;s reply before the overall command is
+in the server’s reply before the overall command is
 complete. These callback functions, along with all of the
 completion callbacks, include a parameter "error"
 which is a pointer containing the value of any error
@@ -1164,7 +1164,7 @@ failure that concludes the command. It is safe for a
 mid-command callback to ignore non-zero "error":
 all the other parameters to the mid-command callback will
 still be valid (corresponding to the current portion of the
-server&rsquo;s reply), and the overall command will still
+server’s reply), and the overall command will still
 fail (at the completion callback or
 nbd_aio_command_completed(3) for an asynchronous
 command, or as the result of the overall synchronous
@@ -1259,7 +1259,7 @@ prog `pkg-config libnbd --cflags --libs`
 
 To compile an
 external project against a built copy of the libnbd source
-tree which hasn&rsquo;t been installed, see the ./run
+tree which hasn’t been installed, see the ./run
 script.
 
 Autoconf

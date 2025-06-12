@@ -33,8 +33,8 @@ git filter-repo
 [1]
 . If you still need to use git
 filter-branch, please carefully read the section called
-&ldquo;SAFETY&rdquo; (and the section called
-&ldquo;PERFORMANCE&rdquo;) to learn about the land mines of
+“SAFETY” (and the section called
+“PERFORMANCE”) to learn about the land mines of
 filter-branch, and then vigilantly avoid as many of the
 hazards listed there as reasonably possible.
 
@@ -131,8 +131,8 @@ except the commit filter, for technical reasons.
 Only look
 at the history which touches the given subdirectory. The
 result will contain that directory (and only that) as its
-project root. Implies the section called &ldquo;Remap to
-ancestor&rdquo;.
+project root. Implies the section called “Remap to
+ancestor”.
 
 --env-filter
 
@@ -165,7 +165,7 @@ cases, see git-update-index(1).
 --parent-filter
 
 This is
-the filter for rewriting the commit&rsquo;s parent list. It
+the filter for rewriting the commit’s parent list. It
 will receive the parent string on stdin and shall output the
 new parent string on stdout. The parent string is in the
 format described in git-commit-tree(1): empty for the
@@ -206,7 +206,7 @@ rebase instead).
 You
 can also use the git_commit_non_empty_tree
 "$@" instead of git commit-tree
-"$@" if you don&rsquo;t wish to keep commits
+"$@" if you don’t wish to keep commits
 with a single parent and that makes no change to the
 tree.
 
@@ -295,14 +295,14 @@ for git rev-list. All positive refs included by these
 options are rewritten. You may also specify options such as
 --all, but you must use -- to separate them
 from the git filter-branch options. Implies the
-section called &ldquo;Remap to ancestor&rdquo;.
+section called “Remap to ancestor”.
 
 Remap
 to ancestor 
 By using git-rev-list(1) arguments, e.g., path
 limiters, you can limit the set of revisions which get
 rewritten. However, positive refs on the command line are
-distinguished: we don&rsquo;t let them be excluded by such
+distinguished: we don’t let them be excluded by such
 limiters. For this purpose, they are instead rewritten to
 point at the nearest ancestor that was not
 excluded.
@@ -311,7 +311,7 @@ EXIT STATUS
 
 On
 success, the exit status is 0. If the filter
-can&rsquo;t find any commits to rewrite, the exit status is
+can’t find any commits to rewrite, the exit status is
 2. On any other error, the exit status may be any
 other non-zero value.
 
@@ -531,12 +531,12 @@ few more steps to actually make it smaller, because Git
 tries hard not to lose your objects until you tell it to.
 First make sure that:
 
-&bull;
+•
 You really removed all variants of a filename, if a blob was
 moved over its lifetime. git log --name-only --follow
 --all -- filename can help you find renames.
 
-&bull;
+•
 You really filtered all refs: use --tag-name-filter cat
 -- --all when calling git-filter-branch.
 
@@ -544,29 +544,29 @@ Then
 there are two ways to get a smaller repository. A safer way
 is to clone, that keeps your original intact.
 
-&bull;
+•
 Clone it with git clone file:///path/to/repo. The
 clone will not have the removed objects. See
 git-clone(1). (Note that cloning with a plain path
 just hardlinks everything!)
 
 If
-you really don&rsquo;t want to clone it, for whatever
+you really don’t want to clone it, for whatever
 reasons, check the following points instead (in this order).
 This is a very destructive approach, so make a backup
 or go back to cloning it. You have been warned.
 
-&bull;
+•
 Remove the original refs backed up by git-filter-branch: say
 git for-each-ref --format="%(refname)"
 refs/original/ | xargs -n 1 git update-ref
 -d.
 
-&bull;
+•
 Expire all reflogs with git reflog expire --expire=now
 --all.
 
-&bull;
+•
 Garbage collect all unreferenced objects with git gc
 --prune=now (or if your git-gc is not new enough to
 support arguments to --prune, use git repack -ad;
@@ -579,7 +579,7 @@ performance of git-filter-branch is glacially slow; its
 design makes it impossible for a backward-compatible
 implementation to ever be fast:
 
-&bull;
+•
 In editing files, git-filter-branch by design checks out
 each and every commit as it existed in the original repo. If
 your repo has 10^5 files and 10^5 commits, but
@@ -587,19 +587,19 @@ each commit only modifies five files, then git-filter-branch
 will make you do 10^10 modifications, despite only
 having (at most) 5*10^5 unique blobs.
 
-&bull;
+•
 If you try and cheat and try to make git-filter-branch only
 work on files modified in a commit, then two things
 happen
 
-&bull;
+•
 you run into problems with deletions whenever the user is
 simply trying to rename files (because attempting to delete
-files that don&rsquo;t exist looks like a no-op; it takes
+files that don’t exist looks like a no-op; it takes
 some chicanery to remap deletes across file renames when the
 renames happen via arbitrary user-provided shell)
 
-&bull;
+•
 even if you succeed at the map-deletes-for-renames
 chicanery, you still technically violate backward
 compatibility because users are allowed to filter files in
@@ -607,22 +607,22 @@ ways that depend upon topology of commits instead of
 filtering solely based on file contents or names (though
 this has not been observed in the wild).
 
-&bull;
-Even if you don&rsquo;t need to edit files but only want to
+•
+Even if you don’t need to edit files but only want to
 e.g. rename or remove some and thus can avoid checking out
 each file (i.e. you can use --index-filter), you still are
 passing shell snippets for your filters. This means that for
 every commit, you have to have a prepared git repo where
-those filters can be run. That&rsquo;s a significant
+those filters can be run. That’s a significant
 setup.
 
-&bull;
+•
 Further, several additional files are created or updated per
 commit by git-filter-branch. Some of these are for
 supporting the convenience functions provided by
 git-filter-branch (such as map()), while others are for
 keeping track of internal state (but could have also been
-accessed by user filters; one of git-filter-branch&rsquo;s
+accessed by user filters; one of git-filter-branch’s
 regression tests does so). This essentially amounts to using
 the filesystem as an IPC mechanism between git-filter-branch
 and the user-provided filters. Disks tend to be a slow IPC
@@ -630,7 +630,7 @@ mechanism, and writing these files also effectively
 represents a forced synchronization point between separate
 processes that we hit with every commit.
 
-&bull;
+•
 The user-provided shell commands will likely involve a
 pipeline of commands, resulting in the creation of many
 processes per commit. Creating and running another process
@@ -638,7 +638,7 @@ takes a widely varying amount of time between operating
 systems, but on any platform it is very slow relative to
 invoking a function.
 
-&bull;
+•
 git-filter-branch itself is written in shell, which is kind
 of slow. This is the one performance issue that could be
 backward-compatibly fixed, but compared to the above
@@ -646,13 +646,13 @@ problems that are intrinsic to the design of
 git-filter-branch, the language of the tool itself is a
 relatively minor issue.
 
-&bull;
+•
 Side note: Unfortunately, people tend to fixate on the
 written-in-shell aspect and periodically ask if
 git-filter-branch could be rewritten in another language to
 fix the performance issues. Not only does that ignore the
-bigger intrinsic problems with the design, it&rsquo;d help
-less than you&rsquo;d expect: if git-filter-branch itself
+bigger intrinsic problems with the design, it’d help
+less than you’d expect: if git-filter-branch itself
 were not shell, then the convenience functions (map(),
 skip_commit(), etc) and the --setup argument could no
 longer be executed once at the beginning of the program but
@@ -683,7 +683,7 @@ is riddled with gotchas resulting in various ways to easily
 corrupt repos or end up with a mess worse than what you
 started with:
 
-&bull;
+•
 Someone can have a set of "working and tested
 filters" which they document or provide to a coworker,
 who then runs them on a different OS where the same commands
@@ -691,16 +691,16 @@ are not working/tested (some examples in the
 git-filter-branch manpage are also affected by this). BSD
 vs. GNU userland differences can really bite. If lucky,
 error messages are spewed. But just as likely, the commands
-either don&rsquo;t do the filtering requested, or silently
+either don’t do the filtering requested, or silently
 corrupt by making some unwanted change. The unwanted change
-may only affect a few commits, so it&rsquo;s not necessarily
-obvious either. (The fact that problems won&rsquo;t
+may only affect a few commits, so it’s not necessarily
+obvious either. (The fact that problems won’t
 necessarily be obvious means they are likely to go unnoticed
 until the rewritten history is in use for quite a while, at
-which point it&rsquo;s really hard to justify another
+which point it’s really hard to justify another
 flag-day for another rewrite.)
 
-&bull;
+•
 Filenames with spaces are often mishandled by shell snippets
 since they cause problems for shell pipelines. Not everyone
 is familiar with find -print0, xargs -0, git-ls-files -z,
@@ -709,23 +709,23 @@ flags are not relevant because someone else renamed any such
 files in their repo back before the person doing the
 filtering joined the project. And often, even those familiar
 with handling arguments with spaces may not do so just
-because they aren&rsquo;t in the mindset of thinking about
+because they aren’t in the mindset of thinking about
 everything that could possibly go wrong.
 
-&bull;
+•
 Non-ascii filenames can be silently removed despite being in
 a desired directory. Keeping only wanted paths is often done
 using pipelines like git ls-files | grep -v ^WANTED_DIR/
 | xargs git rm. ls-files will only quote filenames if
 needed, so folks may not notice that one of the files
-didn&rsquo;t match the regex (at least not until it&rsquo;s
+didn’t match the regex (at least not until it’s
 much too late). Yes, someone who knows about core.quotePath
 can avoid this (unless they have other special characters
 like \t, \n, or "), and people who use ls-files -z with
 something other than grep can avoid this, but that
-doesn&rsquo;t mean they will.
+doesn’t mean they will.
 
-&bull;
+•
 Similarly, when moving files around, one can find that
 filenames with non-ascii or special characters end up in a
 different directory, one that includes a double quote
@@ -733,75 +733,75 @@ character. (This is technically the same issue as above with
 quoting, but perhaps an interesting different way that it
 can and has manifested as a problem.)
 
-&bull;
-It&rsquo;s far too easy to accidentally mix up old and new
-history. It&rsquo;s still possible with any tool, but
+•
+It’s far too easy to accidentally mix up old and new
+history. It’s still possible with any tool, but
 git-filter-branch almost invites it. If lucky, the only
-downside is users getting frustrated that they don&rsquo;t
+downside is users getting frustrated that they don’t
 know how to shrink their repo and remove the old stuff. If
 unlucky, they merge old and new history and end up with
 multiple "copies" of each commit, some of which
 have unwanted or sensitive files and others which
-don&rsquo;t. This comes about in multiple different
+don’t. This comes about in multiple different
 ways:
 
-&bull;
+•
 the default to only doing a partial history rewrite
 (--all is not the default and few examples show
 it)
 
-&bull;
-the fact that there&rsquo;s no automatic post-run
+•
+the fact that there’s no automatic post-run
 cleanup
 
-&bull;
+•
 the fact that --tag-name-filter (when used to rename tags)
-doesn&rsquo;t remove the old tags but just adds new ones
+doesn’t remove the old tags but just adds new ones
 with the new name
 
-&bull;
+•
 the fact that little educational information is provided to
 inform users of the ramifications of a rewrite and how to
 avoid mixing old and new history. For example, this man page
 discusses how users need to understand that they need to
 rebase their changes for all their branches on top of new
-history (or delete and reclone), but that&rsquo;s only one
+history (or delete and reclone), but that’s only one
 of multiple concerns to consider. See the
 "DISCUSSION" section of the git filter-repo manual
 page for more details.
 
-&bull;
+•
 Annotated tags can be accidentally converted to lightweight
 tags, due to either of two issues:
 
-&bull;
+•
 Someone can do a history rewrite, realize they messed up,
 restore from the backups in refs/original/, and then redo
 their git-filter-branch command. (The backup in
 refs/original/ is not a real backup; it dereferences tags
 first.)
 
-&bull;
+•
 Running git-filter-branch with either --tags or --all in
 your . In order to retain annotated
 tags as annotated, you must use --tag-name-filter (and must
 not have restored from refs/original/ in a previously
 botched rewrite).
 
-&bull;
+•
 Any commit messages that specify an encoding will become
 corrupted by the rewrite; git-filter-branch ignores the
 encoding, takes the original bytes, and feeds it to
 commit-tree without telling it the proper encoding. (This
 happens whether or not --msg-filter is used.)
 
-&bull;
+•
 Commit messages (even if they are all UTF-8) by default
-become corrupted due to not being updated &mdash; any
+become corrupted due to not being updated — any
 references to other commit hashes in commit messages will
 now refer to no-longer-extant commits.
 
-&bull;
+•
 There are no facilities for helping users find what unwanted
 crud they should delete, which means they are much more
 likely to have incomplete or partial cleanups that sometimes
@@ -812,32 +812,32 @@ and once they do so, then sometime later folks using the new
 repository who are going through history will notice a build
 artifact directory that has some files but not others, or a
 cache of dependencies (node_modules or similar) which
-couldn&rsquo;t have ever been functional since it&rsquo;s
+couldn’t have ever been functional since it’s
 missing some files.)
 
-&bull;
-If --prune-empty isn&rsquo;t specified, then the filtering
+•
+If --prune-empty isn’t specified, then the filtering
 process can create hoards of confusing empty
 commits
 
-&bull;
+•
 If --prune-empty is specified, then intentionally placed
 empty commits from before the filtering operation are also
 pruned instead of just pruning commits that became empty due
 to filtering rules.
 
-&bull;
+•
 If --prune-empty is specified, sometimes empty commits are
 missed and left around anyway (a somewhat rare bug, but it
 happens...)
 
-&bull;
+•
 A minor issue, but users who have a goal to update all names
 and emails in a repository may be led to --env-filter which
 will only update authors and committers, missing
 taggers.
 
-&bull;
+•
 If the user provides a --tag-name-filter that maps multiple
 tags to the same name, no warning or error is provided;
 git-filter-branch simply overwrites each tag in some
@@ -849,9 +849,9 @@ Also,
 the poor performance of git-filter-branch often leads to
 safety issues:
 
-&bull;
+•
 Coming up with the correct shell snippet to do the filtering
-you want is sometimes difficult unless you&rsquo;re just
+you want is sometimes difficult unless you’re just
 doing a trivial modification such as deleting a couple
 files. Unfortunately, people often learn if the snippet is
 right or wrong by trying it out, but the rightness or
@@ -869,15 +869,15 @@ from broken filters may not be shown for a long time and/or
 get lost in a sea of output. Even worse, broken filters
 often just result in silent incorrect rewrites.
 
-&bull;
+•
 To top it all off, even when users finally find working
 commands, they naturally want to share them. But they may be
-unaware that their repo didn&rsquo;t have some special cases
-that someone else&rsquo;s does. So, when someone else with a
+unaware that their repo didn’t have some special cases
+that someone else’s does. So, when someone else with a
 different repository runs the same commands, they get hit by
 the problems above. Or, the user just runs commands that
 really were vetted for special cases, but they run it on a
-different OS where it doesn&rsquo;t work, as noted
+different OS where it doesn’t work, as noted
 above.
 
 GIT

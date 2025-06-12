@@ -2,7 +2,7 @@ GEOM(4) BSD Kernel Interfaces Manual GEOM(4)
 
 NAME
 
-GEOM &mdash; modular disk
+GEOM — modular disk
 I/O request transformation framework
 
 SYNOPSIS
@@ -41,7 +41,7 @@ DESCRIPTION
 
 The GEOM framework
 provides an infrastructure in which
-&rsquo;&rsquo;classes&rsquo;&rsquo; can perform
+’’classes’’ can perform
 transformations on disk I/O requests on their path from the
 upper kernel to the device drivers and back.
 
@@ -52,11 +52,11 @@ over RAID algorithms and device multipath resolution to full
 blown cryptographic protection of the stored data.
 
 Compared to
-traditional &rsquo;&rsquo;volume management&rsquo;&rsquo;,
+traditional ’’volume management’’,
 GEOM differs from most and in some cases all previous
 implementations in the following ways:
 
-&bull;
+•
 
 GEOM is extensible. It
 is trivially simple to write a new class of transformation
@@ -65,7 +65,7 @@ some reason wanted to mount IBM MVS diskpacks, a class
 recognizing and configuring their VTOC information would be
 a trivial matter.
 
-&bull;
+•
 
 GEOM is topologically
 agnostic. Most volume management implementations have very
@@ -96,63 +96,63 @@ oriented and consequently the terminology borrows a lot of
 context and semantics from the OO vocabulary:
 
 A
-&rsquo;&rsquo;class&rsquo;&rsquo;, represented by the data
+’’class’’, represented by the data
 structure g_class implements one particular kind of
 transformation. Typical examples are MBR disk partition, BSD
 disklabel, and RAID5 classes.
 
 An instance of a
-class is called a &rsquo;&rsquo;geom&rsquo;&rsquo; and
+class is called a ’’geom’’ and
 represented by the data structure g_geom. In a
 typical i386 FreeBSD system, there will be one geom of class
 MBR for each disk.
 
 A
-&rsquo;&rsquo;provider&rsquo;&rsquo;, represented by the
+’’provider’’, represented by the
 data structure g_provider, is the front gate at which
-a geom offers service. A provider is &rsquo;&rsquo;
+a geom offers service. A provider is ’’
 
 a disk-like thing which appears in /dev
-&rsquo;&rsquo; - a logical disk in other words. All
+’’ - a logical disk in other words. All
 providers have three main properties:
-&rsquo;&rsquo;name&rsquo;&rsquo;,
-&rsquo;&rsquo;sectorsize&rsquo;&rsquo; and
-&rsquo;&rsquo;size&rsquo;&rsquo;.
+’’name’’,
+’’sectorsize’’ and
+’’size’’.
 
 A
-&rsquo;&rsquo;consumer&rsquo;&rsquo; is the backdoor through
+’’consumer’’ is the backdoor through
 which a geom connects to another geom provider and through
 which I/O requests are sent.
 
 The topological
 relationship between these entities are as follows:
 
-&bull;
+•
 
 A class has zero or more geom
 instances.
 
-&bull;
+•
 
 A geom has exactly one class it
 is derived from.
 
-&bull;
+•
 
 A geom has zero or more
 consumers.
 
-&bull;
+•
 
 A geom has zero or more
 providers.
 
-&bull;
+•
 
 A consumer can be attached to
 zero or one providers.
 
-&bull;
+•
 
 A provider can have zero or
 more consumers attached.
@@ -202,26 +202,26 @@ class does to recognize if it should accept the offered
 provider is not defined by GEOM, but the sensible set
 of options are:
 
-&bull;
+•
 
 Examine specific data
 structures on the disk.
 
-&bull;
+•
 
 Examine properties like
-&rsquo;&rsquo;sectorsize&rsquo;&rsquo; or
-&rsquo;&rsquo;mediasize&rsquo;&rsquo; for the provider.
+’’sectorsize’’ or
+’’mediasize’’ for the provider.
 
-&bull;
+•
 
 Examine the rank number of the
-provider&rsquo;s geom.
+provider’s geom.
 
-&bull;
+•
 
 Examine the method name of the
-provider&rsquo;s geom.
+provider’s geom.
 
 ORPHANIZATION
 
@@ -231,7 +231,7 @@ used.
 
 When a geom
 orphans a provider, all future I/O requests will
-&rsquo;&rsquo;bounce&rsquo;&rsquo; on the provider with an
+’’bounce’’ on the provider with an
 error code set by the geom. Any consumers attached to the
 provider will receive notification about the orphanization
 when the event loop gets around to it, and they can take
@@ -254,12 +254,12 @@ outstanding I/O requests are still outstanding.
 The typical
 scenario is:
 
-&bull;
+•
 
 A device driver detects a disk
 has departed and orphans the provider for it.
 
-&bull;
+•
 
 The geoms on top of the disk
 receive the orphanization event and orphan all their
@@ -268,12 +268,12 @@ typically self-destruct right away. This process continues
 in a quasi-recursive fashion until all relevant pieces of
 the tree have heard the bad news.
 
-&bull;
+•
 
 Eventually the buck stops when
 it reaches geom_dev at the top of the stack.
 
-&bull;
+•
 
 Geom_dev will call
 destroy_dev(9) to stop any more requests from coming in. It
@@ -283,13 +283,13 @@ access counts), a change which will propagate all the way
 down through the mesh. It will then detach and destroy its
 geom.
 
-&bull;
+•
 
 The geom whose provider is now
 detached will destroy the provider, detach and destroy its
 consumer and destroy its geom.
 
-&bull;
+•
 
 This process percolates all the
 way down through the mesh, until the cleanup is
@@ -372,9 +372,9 @@ bio, originate at a consumer, are scheduled on its
 attached provider and, when processed, are returned to the
 consumer. It is important to realize that the struct
 bio which enters through the provider of a particular
-geom does not &rsquo;&rsquo;
+geom does not ’’
 
-come out on the other side &rsquo;&rsquo;. Even simple
+come out on the other side ’’. Even simple
 transformations like MBR and BSD will clone the struct
 bio, modify the clone, and schedule the clone on their
 own consumer. Note that cloning the struct bio does
@@ -383,7 +383,7 @@ I/O request.
 
 In total, four
 different I/O requests exist in GEOM: read, write,
-delete, and &rsquo;&rsquo;get attribute&rsquo;&rsquo;.
+delete, and ’’get attribute’’.
 
 Read and write
 are self explanatory.
@@ -401,13 +401,13 @@ It is important
 to recognize that a delete indication is not a request and
 consequently there is no guarantee that the data actually
 will be erased or made unavailable unless guaranteed by
-specific geoms in the graph. If &rsquo;&rsquo;secure
-delete&rsquo;&rsquo; semantics are required, a geom should
+specific geoms in the graph. If ’’secure
+delete’’ semantics are required, a geom should
 be pushed which converts delete indications into (a sequence
 of) write requests.
 
-&rsquo;&rsquo;Get
-attribute&rsquo;&rsquo; supports inspection and manipulation
+’’Get
+attribute’’ supports inspection and manipulation
 of out-of-band attributes on a particular provider or path.
 Attributes are named by ASCII strings and they will be
 discussed in a separate section below.
@@ -484,7 +484,7 @@ This software was developed for
 the FreeBSD Project by Poul-Henning Kamp and NAI Labs, the
 Security Research Division of Network Associates, Inc. under
 DARPA/SPAWAR contract N66001-01-C-8035
-(&rsquo;&rsquo;CBOSS&rsquo;&rsquo;), as part of the DARPA
+(’’CBOSS’’), as part of the DARPA
 CHATS research program.
 
 The first

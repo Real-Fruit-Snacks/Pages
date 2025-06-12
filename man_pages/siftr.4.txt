@@ -2,7 +2,7 @@ SIFTR(4) BSD Kernel Interfaces Manual SIFTR(4)
 
 NAME
 
-SIFTR &mdash; Statistical
+SIFTR — Statistical
 Information For TCP Research
 
 SYNOPSIS
@@ -38,8 +38,8 @@ IPv4 and IPv6 by uncommenting:
 
 CFLAGS+=-DSIFTR_IPV6
 
-in &lang;
-sys/modules/siftr/Makefile&rang; and recompiling.
+in ⟨
+sys/modules/siftr/Makefile⟩ and recompiling.
 
 In the IPv4-only
 (default) mode, standard dotted decimal notation (e.g.
@@ -266,8 +266,8 @@ window scaling factor for the receiving window.
 15
 
 The current
-state of the TCP finite state machine, as defined in &lang;
-netinet/tcp_fsm.h&rang; .
+state of the TCP finite state machine, as defined in ⟨
+netinet/tcp_fsm.h⟩ .
 
 16
 
@@ -279,7 +279,7 @@ segment size for the flow, in bytes.
 The current
 smoothed RTT estimate for the flow, in units of
 TCP_RTT_SCALE * HZ, where TCP_RTT_SCALE is a define found in
-tcp_var.h, and HZ is the kernel&rsquo;s tick timer. Divide
+tcp_var.h, and HZ is the kernel’s tick timer. Divide
 by TCP_RTT_SCALE * HZ to get the RTT in secs. TCP_RTT_SCALE
 and HZ are reported in the enable log message.
 
@@ -291,15 +291,15 @@ indicator. 1 if SACK enabled, 0 otherwise.
 19
 
 The current
-state of the TCP flags for the flow. See &lang;
-netinet/tcp_var.h&rang; for information about the
+state of the TCP flags for the flow. See ⟨
+netinet/tcp_var.h⟩ for information about the
 various flags.
 
 20
 
 The current
 retransmission timeout length for the flow, in units of HZ,
-where HZ is the kernel&rsquo;s tick timer. Divide by HZ to
+where HZ is the kernel’s tick timer. Divide by HZ to
 get the timeout length in seconds. HZ is reported in the
 enable log message.
 
@@ -337,8 +337,8 @@ number of segments in the reassembly queue.
 27
 
 Flowid for the
-connection. A caveat: Zero &rsquo;0&rsquo; either represents
-a valid flowid or a default value when it&rsquo;s not being
+connection. A caveat: Zero ’0’ either represents
+a valid flowid or a default value when it’s not being
 set. There is no easy way to differentiate without looking
 at actual network interface card and drivers being used.
 
@@ -529,7 +529,7 @@ case. SIFTR uses TCP packet events (inbound and
 outbound) for each TCP flow originating from the system to
 trigger a dump of the state of the TCP control block for
 that flow. With the PPL set to 1, we are in effect sampling
-each TCP flow&rsquo;s control block state as frequently as
+each TCP flow’s control block state as frequently as
 flow packets enter/leave the system. For example, setting
 PPL to 2 halves the sampling rate i.e., every second flow
 packet (inbound OR outbound) causes a dump of the control
@@ -574,7 +574,7 @@ Likewise, when the processing thread tries to read details
 from the structure, it must also acquire an exclusive lock
 to do so. If one thread holds the lock, the other must wait
 before it can obtain it. This does introduce some additional
-bounded delay into the kernel&rsquo;s packet processing code
+bounded delay into the kernel’s packet processing code
 path.
 
 In some cases
@@ -604,21 +604,21 @@ and the existing path will continue to be used.
 Assuming the new path is valid
 and opened successfully:
 
-&minus;
+−
 
 Flush all pending log messages
 to the old file path.
 
-&minus;
+−
 
 Close the old file path.
 
-&minus;
+−
 
 Switch the active log file
 pointer to point at the new file path.
 
-&minus;
+−
 
 Commence logging to the new
 file.
@@ -632,7 +632,7 @@ will be written out to the file.
 
 EXAMPLES
 
-To enable the module&rsquo;s
+To enable the module’s
 operations, run the following command as root: sysctl
 net.inet.siftr.enabled=1
 
@@ -666,7 +666,7 @@ FreeBSD 7.4 and FreeBSD 8.2.
 SIFTR was
 first released in 2007 by Lawrence Stewart and James Healy
 whilst working on the NewTCP research project at Swinburne
-University of Technology&rsquo;s Centre for Advanced
+University of Technology’s Centre for Advanced
 Internet Architectures, Melbourne, Australia, which was made
 possible in part by a grant from the Cisco University
 Research Program Fund at Community Foundation Silicon
@@ -699,7 +699,7 @@ BUGS
 Current known limitations and
 any relevant workarounds are outlined below:
 
-&minus;
+−
 
 The internal queue used to pass
 information between the threads of operation is currently
@@ -708,7 +708,7 @@ network traffic, but sustained high packet-per-second
 traffic can cause exhaustion of kernel memory if the
 processing thread cannot keep up with the packet rate.
 
-&minus;
+−
 
 If using SIFTR on a
 machine that is also running other modules utilising the
@@ -718,21 +718,21 @@ kldload the other modules first, as this will ensure TCP
 packets undergo any necessary manipulations before
 SIFTR "sees" and processes them.
 
-&minus;
+−
 
 There is a known, harmless lock
 order reversal warning between the pfil(9) mutex and tcbinfo
 TCP lock reported by witness(4) when SIFTR is enabled
 in a kernel compiled with witness(4) support.
 
-&minus;
+−
 
 There is no way to filter which
 TCP flows you wish to capture data for. Post processing is
 required to separate out data belonging to particular flows
 of interest.
 
-&minus;
+−
 
 The module does not detect
 deletion of the log file path. New log messages will simply
@@ -743,7 +743,7 @@ variable will create the new file and allow log messages to
 begin being written to disk again. The new log file path
 must differ from the path to the deleted file.
 
-&minus;
+−
 
 The hash table used within the
 code is sized to hold 65536 flows. This is not a hard limit,
@@ -751,18 +751,18 @@ because chaining is used to handle collisions within the
 hash table structure. However, we suspect (based on
 analogies with other hash table performance data) that the
 hash table look up performance (and therefore the
-module&rsquo;s packet processing performance) will degrade
+module’s packet processing performance) will degrade
 in an exponential manner as the number of unique flows
 handled in a module enable/disable cycle approaches and
 surpasses 65536.
 
-&minus;
+−
 
 There is no garbage collection
 performed on the flow hash table. The only way currently to
 flush it is to disable SIFTR.
 
-&minus;
+−
 
 The PPL variable applies to
 packets that make it into the processing thread, not total
@@ -774,11 +774,11 @@ last log message is skipped, the 11th packet will actually
 trigger the log message to be generated. This is discussed
 in greater depth in CAIA technical report 070824A.
 
-&minus;
+−
 
 At the time of writing, there
 was no simple way to hook into the TCP layer to intercept
-packets. SIFTR&rsquo;s use of IP layer hook points
+packets. SIFTR’s use of IP layer hook points
 means all IP traffic will be processed by the SIFTR
 pfil(9) hook function, which introduces minor, but
 nonetheless unnecessary packet delay and processing overhead
@@ -799,19 +799,19 @@ events tend to trigger outbound events, allowing the
 cause-and-effect to be observed indirectly by capturing the
 state on outbound events as well.
 
-&minus;
+−
 
 The "inflight bytes"
 value logged by SIFTR does not take into account
-bytes that have been SACK&rsquo;ed by the receiving
+bytes that have been SACK’ed by the receiving
 host.
 
-&minus;
+−
 
 Packet hash generation does not
 currently work for IPv6 based TCP packets.
 
-&minus;
+−
 
 Compressed notation is not used
 for IPv6 address representation. This consumes more bytes

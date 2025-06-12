@@ -1,6 +1,6 @@
 NAME
 
-engine &minus;
+engine −
 ENGINE cryptographic module support
 
 SYNOPSIS
@@ -154,17 +154,17 @@ cryptographic functionality that can be provided by an
 ENGINE implementation includes the
 following abstractions;
 
- RSA_METHOD &minus; for providing alternative RSA implementations
+ RSA_METHOD − for providing alternative RSA implementations
  DSA_METHOD, DH_METHOD, RAND_METHOD, ECDH_METHOD, ECDSA_METHOD,
-       STORE_METHOD &minus; similarly for other OpenSSL APIs
- EVP_CIPHER &minus; potentially multiple cipher algorithms (indexed by 'nid')
- EVP_DIGEST &minus; potentially multiple hash algorithms (indexed by 'nid')
- key&minus;loading &minus; loading public and/or private EVP_PKEY keys
+       STORE_METHOD − similarly for other OpenSSL APIs
+ EVP_CIPHER − potentially multiple cipher algorithms (indexed by 'nid')
+ EVP_DIGEST − potentially multiple hash algorithms (indexed by 'nid')
+ key−loading − loading public and/or private EVP_PKEY keys
 
 Reference
 counting and handles 
 Due to the modular nature of the ENGINE API ,
-pointers to ENGINEs need to be treated as handles &minus;
+pointers to ENGINEs need to be treated as handles −
 ie. not only as pointers, but also as references to the
 underlying ENGINE object. Ie. one should
 obtain a new reference when making copies of an
@@ -175,7 +175,7 @@ ENGINE
 objects have two levels of reference-counting to match the
 way in which the objects are used. At the most basic level,
 each ENGINE pointer is inherently a
-structural reference &minus; a structural reference
+structural reference − a structural reference
 is required to use the pointer value at all, as this kind of
 reference is a guarantee that the structure can not be
 deallocated until the reference is released.
@@ -183,15 +183,15 @@ deallocated until the reference is released.
 However, a
 structural reference provides no guarantee that the
 ENGINE is initiliased and able to use any of
-its cryptographic implementations. Indeed it&rsquo;s quite
+its cryptographic implementations. Indeed it’s quite
 possible that most ENGINEs will not initialise at all in
 typical environments, as ENGINEs are typically used to
 support specialised hardware. To use an
-ENGINE &rsquo;s functionality, you need a
+ENGINE ’s functionality, you need a
 functional reference. This kind of reference can be
 considered a specialised form of structural reference,
 because each functional reference implicitly contains a
-structural reference as well &minus; however to avoid
+structural reference as well − however to avoid
 difficult-to-find programming bugs, it is recommended to
 treat the two kinds of reference independently. If you have
 a functional reference to an ENGINE , you
@@ -205,7 +205,7 @@ references
 
 This basic type
 of reference is used for instantiating new ENGINEs,
-iterating across OpenSSL&rsquo;s internal linked-list of
+iterating across OpenSSL’s internal linked-list of
 loaded ENGINEs, reading information about an
 ENGINE , etc. Essentially a structural
 reference is sufficient if you only need to query or
@@ -220,7 +220,7 @@ structural references such as; ENGINE_by_id(),
 ENGINE_get_first(), ENGINE_get_last(),
 ENGINE_get_next(), ENGINE_get_prev(). All
 structural references should be released by a corresponding
-to call to the ENGINE_free() function &minus; the
+to call to the ENGINE_free() function − the
 ENGINE object itself will only actually be
 cleaned up and deallocated when the last structural
 reference is released.
@@ -228,20 +228,20 @@ reference is released.
 It should also
 be noted that many ENGINE API function calls
 that accept a structural reference will internally obtain
-another reference &minus; typically this happens whenever
+another reference − typically this happens whenever
 the supplied ENGINE will be needed by OpenSSL
 after the function has returned. Eg. the function to add a
-new ENGINE to OpenSSL&rsquo;s internal list
-is ENGINE_add() &minus; if this function returns
+new ENGINE to OpenSSL’s internal list
+is ENGINE_add() − if this function returns
 success, then OpenSSL will have stored a new structural
 reference internally so the caller is still responsible for
 freeing their own reference with ENGINE_free() when
 they are finished with it. In a similar way, some functions
 will automatically release the structural reference passed
-to it if part of the function&rsquo;s job is to do so. Eg.
+to it if part of the function’s job is to do so. Eg.
 the ENGINE_get_next() and ENGINE_get_prev()
 functions are used for iterating across the internal
-ENGINE list &minus; they will return a new
+ENGINE list − they will return a new
 structural reference to the next (or previous)
 ENGINE in the list or NULL if
 at the end (or beginning) of the list, but in either case
@@ -249,8 +249,8 @@ the structural reference passed to the function is released
 on behalf of the caller.
 
 To clarify a
-particular function&rsquo;s handling of references, one
-should always consult that function&rsquo;s documentation
+particular function’s handling of references, one
+should always consult that function’s documentation
 "man" page, or failing that the openssl/engine.h
 header file includes some hints.
 
@@ -270,7 +270,7 @@ To obtain a
 functional reference from an existing structural reference,
 call the ENGINE_init() function. This returns zero if
 the ENGINE was not already operational and
-couldn&rsquo;t be successfully initialised (eg. lack of
+couldn’t be successfully initialised (eg. lack of
 system drivers, no special hardware attached, etc),
 otherwise it will return non-zero to indicate that the
 ENGINE is now operational and will have
@@ -297,14 +297,14 @@ For each supported abstraction, the ENGINE
 code maintains an internal table of state to control which
 implementations are available for a given abstraction and
 which should be used by default. These implementations are
-registered in the tables and indexed by an &rsquo;nid&rsquo;
+registered in the tables and indexed by an ’nid’
 value, because abstractions like EVP_CIPHER
 and EVP_DIGEST support many distinct
 algorithms and modes, and ENGINEs can support arbitrarily
 many of them. In the case of other abstractions like
 RSA , DSA , etc, there is only
 one "algorithm" so all implementations implicitly
-register using the same &rsquo;nid&rsquo; index.
+register using the same ’nid’ index.
 
 When a default
 ENGINE is requested for a given
@@ -317,7 +317,7 @@ initialised ENGINE whose implementation
 should be used. If no ENGINE should (or can)
 be used, it will return NULL and the caller
 will operate with a NULL ENGINE handle
-&minus; this usually equates to using the conventional
+− this usually equates to using the conventional
 software implementation. In the latter case, OpenSSL will
 from then on behave the way it used to before the
 ENGINE API existed.
@@ -333,7 +333,7 @@ ENGINE , it will also cache another reference
 to speed up processing future queries (without needing to
 iterate across the table). Likewise, it will cache a
 NULL response if no ENGINE was
-available so that future queries won&rsquo;t repeat the same
+available so that future queries won’t repeat the same
 iteration unless the state table changes. This behaviour can
 also be changed; if the
 ENGINE_TABLE_FLAG_NOINIT flag is set (using
@@ -344,11 +344,11 @@ to the "get_default" query will be if one is
 expressly set in the table. Eg.
 ENGINE_set_default_RSA() does the same job as
 ENGINE_register_RSA() except that it also sets the
-state table&rsquo;s cached response for the
+state table’s cached response for the
 "get_default" query. In the case of abstractions
 like EVP_CIPHER , where implementations are
-indexed by &rsquo;nid&rsquo;, these flags and
-cached-responses are distinct for each &rsquo;nid&rsquo;
+indexed by ’nid’, these flags and
+cached-responses are distinct for each ’nid’
 value.
 
 Application
@@ -360,14 +360,14 @@ user. The first thing to consider is whether the programmer
 wishes to make alternative ENGINE modules
 available to the application and user. OpenSSL maintains an
 internal linked list of "visible" ENGINEs from
-which it has to operate &minus; at start-up, this list is
+which it has to operate − at start-up, this list is
 empty and in fact if an application does not call any
 ENGINE API calls and it uses static linking
 against openssl, then the resulting application binary will
 not contain any alternative ENGINE code at
 all. So the first consideration is whether any/all available
 ENGINE implementations should be made visible
-to OpenSSL &minus; this is controlled by calling the various
+to OpenSSL − this is controlled by calling the various
 "load" functions, eg.
 
  /* Make the "dynamic" ENGINE available */
@@ -383,7 +383,7 @@ to OpenSSL &minus; this is controlled by calling the various
 Having called
 any of these functions, ENGINE objects would
 have been dynamically allocated and populated with these
-implementations and linked into OpenSSL&rsquo;s internal
+implementations and linked into OpenSSL’s internal
 linked list. At this point it is important to mention an
 important API function;
 
@@ -403,9 +403,9 @@ that knows it requires cleanup can register its cleanup
 details to be called during ENGINE_cleanup(). This
 approach allows ENGINE_cleanup() to clean up after
 any ENGINE functionality at all that your
-program uses, yet doesn&rsquo;t automatically create linker
+program uses, yet doesn’t automatically create linker
 dependencies to all possible ENGINE
-functionality &minus; only the cleanup callbacks required by
+functionality − only the cleanup callbacks required by
 the functionality you do use will be required by the
 linker.
 
@@ -413,26 +413,26 @@ The fact that
 ENGINEs are made visible to OpenSSL (and thus are linked
 into the program and loaded into memory at run-time) does
 not mean they are "registered" or called into use
-by OpenSSL automatically &minus; that behaviour is something
+by OpenSSL automatically − that behaviour is something
 for the application to control. Some applications will want
 to allow the user to specify exactly which
 ENGINE they want used if any is to be used at
 all. Others may prefer to load all support and have OpenSSL
 automatically use at run-time any ENGINE that
-is able to successfully initialise &minus; ie. to assume
+is able to successfully initialise − ie. to assume
 that this corresponds to acceleration hardware attached to
 the machine or some such thing. There are probably numerous
 other ways in which applications may prefer to handle
 things, so we will simply illustrate the consequences as
 they apply to a couple of simple cases and leave developers
-to consider these and the source code to openssl&rsquo;s
+to consider these and the source code to openssl’s
 builtin utilities as guides.
 
 Using a
 specific ENGINE implementation
 
 Here
-we&rsquo;ll assume an application has been configured by its
+we’ll assume an application has been configured by its
 user or admin to want to use the " ACME
 " ENGINE if it is available in the
 version of OpenSSL the application was compiled with. If it
@@ -469,10 +469,10 @@ Automatically
 using builtin ENGINE implementations
 
 Here
-we&rsquo;ll assume we want to load and register all
+we’ll assume we want to load and register all
 ENGINE implementations bundled with OpenSSL,
 such that for any cryptographic algorithm required by
-OpenSSL &minus; if there is an ENGINE that
+OpenSSL − if there is an ENGINE that
 implements it and can be initialise, it should be used. The
 following code illustrates how this can work;
 
@@ -481,8 +481,8 @@ following code illustrates how this can work;
  /* Register all of them for every algorithm they collectively implement */
  ENGINE_register_all_complete();
 
-That&rsquo;s
-all that&rsquo;s required. Eg. the next time OpenSSL tries
+That’s
+all that’s required. Eg. the next time OpenSSL tries
 to set up an RSA key, any bundled ENGINEs
 that implement RSA_METHOD will be passed to
 ENGINE_init() and if any of those succeed, that
@@ -538,14 +538,14 @@ documentation.
 Issuing
 control commands to an ENGINE
 
-Let&rsquo;s
+Let’s
 illustrate by example; a function for which the caller
 supplies the name of the ENGINE it wishes to
 use, a table of string-pairs for use before initialisation,
 and another table for use after initialisation. Note that
 the string-pairs used for control commands consist of a
 command "name" followed by the command
-"parameter" &minus; the parameter could be
+"parameter" − the parameter could be
 NULL in some cases but the name can not. This
 function should initialise the ENGINE
 (issuing the "pre" commands beforehand and the
@@ -559,9 +559,9 @@ return a boolean success or failure.
  {
      ENGINE *e = ENGINE_by_id(engine_id);
      if(!e) return 0;
-     while(pre_num&minus;&minus;) {
+     while(pre_num−−) {
          if(!ENGINE_ctrl_cmd_string(e, pre_cmds[0], pre_cmds[1], 0)) {
-             fprintf(stderr, "Failed command (%s &minus; %s:%s)\n", engine_id,
+             fprintf(stderr, "Failed command (%s − %s:%s)\n", engine_id,
                  pre_cmds[0], pre_cmds[1] ? pre_cmds[1] : "(NULL)");
              ENGINE_free(e);
              return 0;
@@ -576,9 +576,9 @@ return a boolean success or failure.
      /* ENGINE_init() returned a functional reference, so free the structural
       * reference from ENGINE_by_id(). */
      ENGINE_free(e);
-     while(post_num&minus;&minus;) {
+     while(post_num−−) {
          if(!ENGINE_ctrl_cmd_string(e, post_cmds[0], post_cmds[1], 0)) {
-             fprintf(stderr, "Failed command (%s &minus; %s:%s)\n", engine_id,
+             fprintf(stderr, "Failed command (%s − %s:%s)\n", engine_id,
                  post_cmds[0], post_cmds[1] ? post_cmds[1] : "(NULL)");
              ENGINE_finish(e);
              return 0;
@@ -592,11 +592,11 @@ return a boolean success or failure.
 
 Note that
 ENGINE_ctrl_cmd_string() accepts a boolean argument
-that can relax the semantics of the function &minus; if set
+that can relax the semantics of the function − if set
 non-zero it will only return failure if the
 ENGINE supported the given command name but
 failed while executing it, if the ENGINE
-doesn&rsquo;t support the command name it will simply return
+doesn’t support the command name it will simply return
 success without doing anything. In this case we assume the
 user is only supplying commands specific to the given
 ENGINE so we set this to FALSE
@@ -612,7 +612,7 @@ supported by an ENGINE using a structural
 reference. Note that some control commands are defined by
 OpenSSL itself and it will intercept and handle these
 control commands on behalf of the ENGINE ,
-ie. the ENGINE &rsquo;s ctrl() handler
+ie. the ENGINE ’s ctrl() handler
 is not used for the control command. openssl/engine.h
 defines an index, ENGINE_CMD_BASE , that all
 control commands implemented by ENGINEs should be numbered
@@ -643,12 +643,12 @@ ENGINE has 3 properties it exposes that can
 affect how this behaves; it can supply a ctrl()
 handler, it can specify
 ENGINE_FLAGS_MANUAL_CMD_CTRL in the
-ENGINE &rsquo;s flags, and it can expose an
+ENGINE ’s flags, and it can expose an
 array of control command descriptions. If an
 ENGINE specifies the
 ENGINE_FLAGS_MANUAL_CMD_CTRL flag, then it
 will simply pass all these "core" control commands
-directly to the ENGINE &rsquo;s ctrl()
+directly to the ENGINE ’s ctrl()
 handler (and thus, it must have supplied one), so it is up
 to the ENGINE to reply to these
 "discovery" commands itself. If that flag is not
@@ -666,7 +666,7 @@ following rules;
      all other commands proceed processing ...
 
 If the
-ENGINE &rsquo;s array of control commands is
+ENGINE ’s array of control commands is
 empty then all other commands will fail, otherwise;
 ENGINE_CTRL_GET_FIRST_CMD_TYPE returns the
 identifier of the first command supported by the
@@ -683,7 +683,7 @@ ENGINE_CTRL_GET_FLAGS return the string
 length of a command name or description, or populate a
 supplied character buffer with a copy of the command name or
 description. ENGINE_CTRL_GET_FLAGS returns a
-bitwise-OR&rsquo;d mask of the following possible
+bitwise-OR’d mask of the following possible
 values;
 
  #define ENGINE_CMD_FLAG_NUMERIC                (unsigned int)0x0001
@@ -694,7 +694,7 @@ values;
 If the
 ENGINE_CMD_FLAG_INTERNAL flag is set, then
 any other flags are purely informational to the caller
-&minus; this flag will prevent the command being usable for
+− this flag will prevent the command being usable for
 any higher-level ENGINE functions such as
 ENGINE_ctrl_cmd_string(). "
 INTERNAL " commands are not intended to
@@ -707,9 +707,9 @@ simply to allow applications determinie if an
 ENGINE supports certain specific commands it
 might want to use (eg. application "foo" might
 query various ENGINEs to see if they implement "
-FOO_GET_VENDOR_LOGO_GIF " &minus; and
+FOO_GET_VENDOR_LOGO_GIF " − and
 ENGINE could therefore decide whether or not
-to support this "foo"&minus;specific
+to support this "foo"−specific
 extension).
 
 Future

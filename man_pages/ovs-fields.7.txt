@@ -32,12 +32,12 @@ received from a non-Ethernet interfaces, such as a layer-3
 LISP tunnel, Open vSwitch 2.7 and earlier force-fit the
 packet to this Ethernet-centric point of view by pretending
 that an Ethernet header is present whose Ethernet type that
-indicates the packet&rsquo;s actual type (and whose source
+indicates the packet’s actual type (and whose source
 and destination addresses are all-zero).
 
 Open vSwitch
-2.8 and later implement the &rsquo;&rsquo;packet type-aware
-pipeline&rsquo;&rsquo; concept introduced in OpenFlow 1.5.
+2.8 and later implement the ’’packet type-aware
+pipeline’’ concept introduced in OpenFlow 1.5.
 Such a pipeline does not have any root fields. Instead, a
 new metadata field, packet_type, indicates the basic
 type of the packet, which can be Ethernet, IPv4, IPv6, or
@@ -65,16 +65,16 @@ prerequisites. Some VLAN-related fields are a special
 case: these fields are always applicable for Ethernet
 packets, but have a designated value or bit that indicates
 whether a VLAN header is present, with the remaining values
-or bits indicating the VLAN header&rsquo;s content (if it is
+or bits indicating the VLAN header’s content (if it is
 present).
 
 An inapplicable
 field does not have a value, not even a nominal
-&rsquo;&rsquo;value&rsquo;&rsquo; such as all-zero-bits. In
+’’value’’ such as all-zero-bits. In
 many circumstances, OpenFlow and Open vSwitch allow
 references only to applicable fields. For example, one may
 match (see Matching, below) a given field only if the
-match includes the field&rsquo;s prerequisite, e.g. matching
+match includes the field’s prerequisite, e.g. matching
 an ARP field is only allowed if one also matches on
 Ethertype 0x0806 or the packet_type for ARP in a
 packet type-aware bridge.
@@ -86,15 +86,15 @@ and tunnels can cause any data field to recur. OpenFlow and
 Open vSwitch do not address these cases uniformly. For VLAN
 and MPLS headers, only the outermost header is accessible,
 so that inner headers may be accessed only by
-&rsquo;&rsquo;popping&rsquo;&rsquo; (removing) the outer
+’’popping’’ (removing) the outer
 header. (Open vSwitch supports only a single VLAN header in
 any case.) For tunnels, e.g. GRE or VXLAN, the outer header
 and inner headers are treated as different data fields.
 
 Many network
 protocols are built in layers as a stack of concatenated
-headers. Each header typically contains a &rsquo;&rsquo;next
-type&rsquo;&rsquo; field that indicates the type of the
+headers. Each header typically contains a ’’next
+type’’ field that indicates the type of the
 protocol header that follows, e.g. Ethernet contains an
 Ethertype and IPv4 contains a IP protocol type. The
 exceptional cases, where protocols are layered but an outer
@@ -108,7 +108,7 @@ vSwitch cannot provide insight into the inner protocol data
 fields without additional context, and thus they treat all
 later data fields as inapplicable until an OpenFlow action
 explicitly specifies what protocol follows. In the case of
-MPLS, the OpenFlow &rsquo;&rsquo;pop MPLS&rsquo;&rsquo;
+MPLS, the OpenFlow ’’pop MPLS’’
 action that removes the last MPLS header from a packet
 provides this context, as the Ethertype of the payload. See
 Layer 2.5: MPLS for more information.
@@ -123,7 +123,7 @@ variables: they give an OpenFlow switch space for temporary
 storage while processing a packet. Existing metadata and
 register fields have no prerequisites.
 
-A field&rsquo;s
+A field’s
 value consists of an integral number of bytes. For data
 fields, sometimes those bytes are taken directly from the
 packet. Other data fields are copied from a packet with
@@ -175,7 +175,7 @@ for the possibility for most fields). Even switches that do
 allow bitwise matching on a given field may restrict the
 masks that are allowed, e.g. by allowing matches only on
 contiguous sets of bits starting from the most significant
-bit, that is, &rsquo;&rsquo;CIDR&rsquo;&rsquo; masks [RFC
+bit, that is, ’’CIDR’’ masks [RFC
 4632]. Open vSwitch does not allows bitwise matching on
 every field, but it allows arbitrary bitwise masks on any
 field that does support bitwise matching. (Older versions
@@ -183,7 +183,7 @@ had some restrictions, as documented in the descriptions of
 individual fields.)
 
 Wildcard, e.g.
-&rsquo;&rsquo;any nw_src&rsquo;&rsquo;
+’’any nw_src’’
 
 The value of the field is not
 constrained. Wildcarded fields may be written as
@@ -195,7 +195,7 @@ against shell expansion.)
 There is a tiny
 difference between wildcarding a field and not specifying
 any match on a field: wildcarding a field requires
-satisfying the field&rsquo;s prerequisites.
+satisfying the field’s prerequisites.
 
 Some types of
 matches on individual fields cannot be expressed directly
@@ -203,8 +203,8 @@ with OpenFlow and Open vSwitch. These can be expressed
 indirectly:
 
 Set match, e.g.
-&rsquo;&rsquo;tcp_dst &isin; {80, 443,
-8080}&rsquo;&rsquo;
+’’tcp_dst ∈ {80, 443,
+8080}’’
 
 The value of a field is one of
 a specified set of values; for example, the TCP destination
@@ -215,8 +215,8 @@ used in flows (see Flows, below), multiple flows can
 simulate set matches.
 
 Range match, e.g.
-&rsquo;&rsquo;1000 &le; tcp_dst &le;
-1999&rsquo;&rsquo;
+’’1000 ≤ tcp_dst ≤
+1999’’
 
 The value of the field must lie
 within a numerical range, for example, TCP destination ports
@@ -258,7 +258,7 @@ tcp,tp_src=0x0780/0xffc0
 tcp,tp_src=0x07c0/0xfff0
 
 Inequality match, e.g.
-&rsquo;&rsquo;tcp_dst &ne; 80&rsquo;&rsquo;
+’’tcp_dst ≠ 80’’
 
 The value of the field differs
 from a specified value, for example, all TCP destination
@@ -267,10 +267,10 @@ ports except 80.
 An inequality
 match on an n-bit field can be expressed as a
 disjunction of n 1-bit matches. For example, the
-inequality match &rsquo;&rsquo;vlan_pcp &ne;
-5&rsquo;&rsquo; can be expressed as
-&rsquo;&rsquo;vlan_pcp = 0/4 or vlan_pcp = 2/2
-or vlan_pcp = 0/1.&rsquo;&rsquo; For matches used in
+inequality match ’’vlan_pcp ≠
+5’’ can be expressed as
+’’vlan_pcp = 0/4 or vlan_pcp = 2/2
+or vlan_pcp = 0/1.’’ For matches used in
 flows (see Flows, below), sometimes one can more
 compactly express inequality as a higher-priority flow that
 matches the exceptional case paired with a lower-priority
@@ -278,14 +278,14 @@ flow that matches the general case.
 
 Alternatively,
 an inequality match may be converted to a pair of range
-matches, e.g. tcp_src &ne; 80 may be expressed as
-&rsquo;&rsquo;0 &le; tcp_src tcp_src &le; 65535&rsquo;&rsquo;, and then each range
+matches, e.g. tcp_src ≠ 80 may be expressed as
+’’0 ≤ tcp_src tcp_src ≤ 65535’’, and then each range
 match may in turn be converted to a bitwise match.
 
 Conjunctive match, e.g.
-&rsquo;&rsquo;tcp_src &isin; {80, 443, 8080} and
+’’tcp_src ∈ {80, 443, 8080} and
 tcp_dst 
-&isin; {80, 443, 8080}&rsquo;&rsquo;
+∈ {80, 443, 8080}’’
 
 As an OpenFlow extension, Open
 vSwitch supports matching on conditions on conjunctions of
@@ -384,40 +384,40 @@ defined the OpenFlow protocol format of a match as a
 fixed-length data structure that could match on the
 following fields:
 
-&bull;
+•
 
 Ingress port.
 
-&bull;
+•
 
 Ethernet source and destination MAC.
 
-&bull;
+•
 
 Ethertype (with a special value to match frames that
 lack an Ethertype).
 
-&bull;
+•
 
 VLAN ID and priority.
 
-&bull;
+•
 
 IPv4 source, destination, protocol, and DSCP.
 
-&bull;
+•
 
 TCP source and destination port.
 
-&bull;
+•
 
 UDP source and destination port.
 
-&bull;
+•
 
 ICMPv4 type and code.
 
-&bull;
+•
 
 ARP IPv4 addresses (SPA and TPA) and opcode.
 
@@ -431,8 +431,8 @@ opcode could be represented, and the ICMPv4 type and code
 were padded with 8 bits of zeros to fit in the 16-bit
 members primarily meant for TCP and UDP ports. An additional
 bitmap member indicated, for each member, whether its field
-should be an &rsquo;&rsquo;exact&rsquo;&rsquo; or
-&rsquo;&rsquo;wildcarded&rsquo;&rsquo; match (see
+should be an ’’exact’’ or
+’’wildcarded’’ match (see
 Matching), with additional support for CIDR prefix
 matching on the IPv4 source and destination fields.
 
@@ -445,7 +445,7 @@ priority at the time. Lack of room to support matching the
 Ethernet addresses inside ARP packets actually caused more
 of a design problem later, leading to an Open vSwitch
 extension action specialized for dropping
-&rsquo;&rsquo;spoofed&rsquo;&rsquo; ARP packets in which the
+’’spoofed’’ ARP packets in which the
 frame and ARP Ethernet source addressed differed. (This
 extension was never standardized. Open vSwitch dropped
 support for it a few releases after it added support for
@@ -505,10 +505,10 @@ The emphasis on
 matching microflows also led designers to carefully consider
 the bandwidth requirements between switch and controller: to
 maximize the number of microflow setups per second, one must
-minimize the size of each flow&rsquo;s description. This
+minimize the size of each flow’s description. This
 favored the fixed-length format in use, because it expressed
 common TCP and UDP microflows in fewer bytes than more
-flexible &rsquo;&rsquo;type-length-value&rsquo;&rsquo; (TLV)
+flexible ’’type-length-value’’ (TLV)
 formats. (Early versions of OpenFlow also avoided TLVs in
 general to head off protocol fragmentation.)
 
@@ -520,7 +520,7 @@ does not clearly specify how to treat inapplicable fields.
 The members for inapplicable fields are always present in
 the match data structure, as are the bits that indicate
 whether the fields are matched, and the
-&rsquo;&rsquo;correct&rsquo;&rsquo; member and bit values
+’’correct’’ member and bit values
 for inapplicable fields is unclear. OpenFlow 1.0
 implementations changed their behavior over time as
 priorities shifted. The early OpenFlow reference
@@ -575,19 +575,19 @@ large as in OpenFlow 1.0, 88 bytes versus 40.
 OpenFlow 1.1
 added support for the following fields:
 
-&bull;
+•
 
 SCTP source and destination
 port. 
 
-&bull;
+•
 
 MPLS label and traffic control (TC) fields.
 
-&bull;
+•
 
 One 64-bit register (named
-&rsquo;&rsquo;metadata&rsquo;&rsquo;). 
+’’metadata’’). 
 
 OpenFlow 1.1
 increased the width of the ingress port number field (and
@@ -597,7 +597,7 @@ bits.
 OpenFlow 1.1
 increased matching flexibility by introducing arbitrary
 bitwise matching on Ethernet and IPv4 address fields and on
-the new &rsquo;&rsquo;metadata&rsquo;&rsquo; register field.
+the new ’’metadata’’ register field.
 Switches were not required to support all possible masks
 [OpenFlow 1.1, section 4.3].
 
@@ -623,15 +623,15 @@ OpenFlow 1.1
 introduced a new pseudo-field, the physical ingress port.
 The physical ingress port is only a pseudo-field because it
 cannot be used for matching. It appears only one place in
-the protocol, in the &rsquo;&rsquo;packet-in&rsquo;&rsquo;
+the protocol, in the ’’packet-in’’
 message that passes a packet received at the switch to an
 OpenFlow controller.
 
 A
-packet&rsquo;s ingress port and physical ingress port are
+packet’s ingress port and physical ingress port are
 identical except for packets processed by a switch feature
 such as bonding or tunneling that makes a packet appear to
-arrive on a &rsquo;&rsquo;virtual&rsquo;&rsquo; port
+arrive on a ’’virtual’’ port
 associated with the bond or the tunnel. For such packets,
 the ingress port is the virtual port and the physical
 ingress port is, naturally, the physical port. Open vSwitch
@@ -672,30 +672,30 @@ OpenFlow 1.1 to 1.2 and later versions.)
 OpenFlow 1.2
 added support for the following fields:
 
-&bull;
+•
 
 ARP hardware addresses (SHA and
 THA). 
 
-&bull;
+•
 
 IPv4 ECN.
 
-&bull;
+•
 
 IPv6 source and destination addresses, flow label, DSCP,
 ECN, and protocol.
 
-&bull;
+•
 
 TCP, UDP, and SCTP port numbers when encapsulated inside
 IPv6. 
 
-&bull;
+•
 
 ICMPv6 type and code.
 
-&bull;
+•
 
 ICMPv6 Neighbor Discovery target address and source and
 target Ethernet addresses.
@@ -815,7 +815,7 @@ example, for an IP address field, a value of 192.168.0.0
 followed by a mask of 255.255.0.0 would match addresses in
 the 196.168.0.0/16 subnet.
 
-&bull;
+•
 
 Some fields might not support masking at all, and some
 fields that do support masking might restrict it to certain
@@ -823,13 +823,13 @@ patterns. For example, fields that have IP address values
 might be restricted to CIDR masks. The descriptions of
 individual fields note these restrictions.
 
-&bull;
+•
 
 An OXM TLV with a mask that is all zeros is not useful
 (although it is not forbidden), because it is has the same
 effect as omitting the TLV entirely.
 
-&bull;
+•
 
 It is not meaningful to pair a 0-bit in an OXM mask with
 a 1-bit in its value, and Open vSwitch rejects such an OXM
@@ -846,7 +846,7 @@ The length is included explicitly to allow software
 to minimally parse OXM TLVs of unknown types.
 
 OXM TLVs must
-be ordered so that a field&rsquo;s prerequisites are
+be ordered so that a field’s prerequisites are
 satisfied before it is parsed. For example, an OXM TLV that
 matches on the IPv4 source address field is only allowed
 following an OXM TLV that matches on the Ethertype for IPv4.
@@ -868,26 +868,26 @@ without making any changes to how flow matches otherwise
 worked. It added OXMs for the following fields supported by
 Open vSwitch:
 
-&bull;
+•
 
 Tunnel ID for ports associated
 with e.g. VXLAN or keyed GRE.
 
-&bull;
+•
 
-MPLS &rsquo;&rsquo;bottom of stack&rsquo;&rsquo; (BOS)
+MPLS ’’bottom of stack’’ (BOS)
 bit. 
 
 OpenFlow 1.3
 also added OXMs for the following fields not documented here
 and not yet implemented by Open vSwitch:
 
-&bull;
+•
 
 IPv6 extension header
 handling. 
 
-&bull;
+•
 
 PBB I-SID.
 
@@ -898,7 +898,7 @@ OpenFlow 1.4
 added OXMs for the following fields not documented here and
 not yet implemented by Open vSwitch:
 
-&bull;
+•
 
 PBB UCA.
 
@@ -909,19 +909,19 @@ OpenFlow 1.5
 added OXMs for the following fields supported by Open
 vSwitch:
 
-&bull;
+•
 
 Packet type.
 
-&bull;
+•
 
 TCP flags.
 
-&bull;
+•
 
 Packet registers.
 
-&bull;
+•
 
 The output port in the OpenFlow action set.
 
@@ -937,23 +937,23 @@ properties:
 
 Name
 
-The field&rsquo;s name, used for
+The field’s name, used for
 parsing and formatting the field, e.g. in ovs-ofctl
 commands. For historical reasons, some fields have an
 additional name that is accepted as an alternative in
 parsing. This name, when there is one, is listed as well,
-e.g. &rsquo;&rsquo;tun (aka
-tunnel_id).&rsquo;&rsquo; 
+e.g. ’’tun (aka
+tunnel_id).’’ 
 
 Width
 
-The field&rsquo;s width, always a multiple of 8 bits.
-Some fields don&rsquo;t use all of the bits, so this may be
+The field’s width, always a multiple of 8 bits.
+Some fields don’t use all of the bits, so this may be
 accompanied by an explanation. For example, OpenFlow embeds
 the 2-bit IP ECN field as as the low bits in an 8-bit byte,
-and so its width is expressed as &rsquo;&rsquo;8 bits (only
+and so its width is expressed as ’’8 bits (only
 the least-significant 2 bits may be
-nonzero).&rsquo;&rsquo; 
+nonzero).’’ 
 
 Format
 
@@ -1011,16 +1011,16 @@ fields.
 Masking
 
 For most fields, this says
-&rsquo;&rsquo;arbitrary bitwise masks,&rsquo;&rsquo; meaning
+’’arbitrary bitwise masks,’’ meaning
 that a flow may match any combination of bits in the field.
-Some fields instead say &rsquo;&rsquo;exact match
-only,&rsquo;&rsquo; which means that a flow that matches on
+Some fields instead say ’’exact match
+only,’’ which means that a flow that matches on
 this field must match on the whole field instead of just
 certain bits. Either way, this reports masking support for
 the latest version of Open vSwitch using OXM or NXM (that
 is, either OpenFlow 1.2+ or OpenFlow 1.0 plus Open vSwitch
 NXM extensions). In particular, OpenFlow 1.0 (without NXM)
-and 1.1 don&rsquo;t always support masking even if Open
+and 1.1 don’t always support masking even if Open
 vSwitch itself does; refer to the OpenFlow 1.0 and
 OpenFlow 1.1 rows to learn about masking with these
 protocol versions.
@@ -1101,16 +1101,16 @@ ND solicit or ND advert
 The TCP, UDP,
 and SCTP prerequisites also have the special requirement
 that nw_frag is not being used to select
-&rsquo;&rsquo;later fragments.&rsquo;&rsquo; This is because
+’’later fragments.’’ This is because
 only the first fragment of a fragmented IPv4 or IPv6
 datagram contains the TCP or UDP header.
 
 Access
 
 Most fields are
-&rsquo;&rsquo;read/write,&rsquo;&rsquo; which means that
+’’read/write,’’ which means that
 common OpenFlow actions like set_field can modify
-them. Fields that are &rsquo;&rsquo;read-only&rsquo;&rsquo;
+them. Fields that are ’’read-only’’
 cannot be modified in these general-purpose ways, although
 there may be other ways that actions can modify them.
 
@@ -1120,17 +1120,17 @@ OpenFlow 1.1
 These rows report the level of
 support that OpenFlow 1.0 or OpenFlow 1.1, respectively, has
 for a field. For OpenFlow 1.0, supported fields are reported
-as either &rsquo;&rsquo;yes (exact match only)&rsquo;&rsquo;
+as either ’’yes (exact match only)’’
 for fields that do not support any bitwise masking or
-&rsquo;&rsquo;yes (CIDR match only)&rsquo;&rsquo; for fields
+’’yes (CIDR match only)’’ for fields
 that support CIDR masking. OpenFlow 1.1 supported fields
-report either &rsquo;&rsquo;yes (exact match
-only)&rsquo;&rsquo; or simply
-&rsquo;&rsquo;yes&rsquo;&rsquo; for fields that do support
+report either ’’yes (exact match
+only)’’ or simply
+’’yes’’ for fields that do support
 arbitrary masks. These OpenFlow versions supported a fixed
 collection of fields that cannot be extended, so many more
-fields are reported as &rsquo;&rsquo;not
-supported.&rsquo;&rsquo;
+fields are reported as ’’not
+supported.’’
 
 OXM
 
@@ -1138,7 +1138,7 @@ NXM
 
 These rows report the OXM and NXM code points that
 correspond to a given field. Either or both may be
-&rsquo;&rsquo;none.&rsquo;&rsquo; 
+’’none.’’ 
 
 A field that
 has only an OXM code point is usually one that was
@@ -1156,10 +1156,10 @@ supported in some other form using OXM or NXM.)
 
 Each code point
 in these rows is described in the form
-&rsquo;&rsquo;NAME (number) since OpenFlow
-spec and Open vSwitch version,&rsquo;&rsquo;
-e.g. &rsquo;&rsquo;OXM_OF_ETH_TYPE (5) since OpenFlow
-1.2 and Open vSwitch 1.7.&rsquo;&rsquo; First, NAME,
+’’NAME (number) since OpenFlow
+spec and Open vSwitch version,’’
+e.g. ’’OXM_OF_ETH_TYPE (5) since OpenFlow
+1.2 and Open vSwitch 1.7.’’ First, NAME,
 which specifies a name for the code point, starts with a
 prefix that designates a class and, in some cases, a vendor,
 as listed in the following table:
@@ -1209,8 +1209,8 @@ ip,ip_dst=h actions=controller
 Installing all
 of the above flows in a single flow table yields a
 disjunctive effect: a packet is sent to the controller if
-ip_src &isin; {a,b,c,d}
-or ip_dst &isin;
+ip_src ∈ {a,b,c,d}
+or ip_dst ∈
 {e,f,g,h} (or both).
 (Pedantically, if both of the above sets of flows are
 present in the flow table, they should have different
@@ -1221,9 +1221,9 @@ single packet.)
 Suppose, on the
 other hand, one wishes to match conjunctively, that is, to
 send a packet to the controller only if both ip_src
-&isin; {a,b,c,d} and
-ip_dst &isin; {e,f,g,h}.
-This requires 4 &times; 4 = 16 flows, one for each possible
+∈ {a,b,c,d} and
+ip_dst ∈ {e,f,g,h}.
+This requires 4 × 4 = 16 flows, one for each possible
 pairing of ip_src and ip_dst. That is
 acceptable for our small example, but it does not gracefully
 extend to larger sets or greater numbers of dimensions.
@@ -1232,8 +1232,8 @@ The
 conjunction action is a solution for conjunctive
 matches that is built into Open vSwitch. A
 conjunction action ties groups of individual OpenFlow
-flows into higher-level &rsquo;&rsquo;conjunctive
-flows&rsquo;&rsquo;. Each group corresponds to one
+flows into higher-level ’’conjunctive
+flows’’. Each group corresponds to one
 dimension, and each flow within the group matches one
 possible value for the dimension. A packet that matches one
 flow from each group matches the conjunctive flow.
@@ -1241,17 +1241,17 @@ flow from each group matches the conjunctive flow.
 To implement a
 conjunctive flow with conjunction, assign the
 conjunctive flow a 32-bit id, which must be unique
-within an OpenFlow table. Assign each of the n &ge; 2
+within an OpenFlow table. Assign each of the n ≥ 2
 dimensions a unique number from 1 to n; the ordering
 is unimportant. Add one flow to the OpenFlow flow table for
 each possible value of each dimension with
 conjunction(id,
-k/n) as the flow&rsquo;s
+k/n) as the flow’s
 actions, where k is the number assigned to the
-flow&rsquo;s dimension. Together, these flows specify the
-conjunctive flow&rsquo;s match condition. When the
+flow’s dimension. Together, these flows specify the
+conjunctive flow’s match condition. When the
 conjunctive match condition is met, Open vSwitch looks up
-one more flow that specifies the conjunctive flow&rsquo;s
+one more flow that specifies the conjunctive flow’s
 actions and receives its statistics. This flow is found by
 setting conj_id to the specified id and then
 again searching the flow table.
@@ -1279,7 +1279,7 @@ ip,ip_dst=10.0.0.8 actions=conjunction(1234, 2/2)
 Many subtleties
 exist:
 
-&bull;
+•
 
 In the example above, every flow
 in a single dimension has the same form, that is, dimension
@@ -1291,47 +1291,47 @@ ranges as bitwise matches), or even on entirely different
 fields (e.g. to match packets for TCP source port 80 or TCP
 destination port 80).
 
-&bull;
+•
 
 The flows within a dimension can vary their matches
 across more than one field, e.g. to match only specific
 pairs of IP source and destination addresses or L4 port
 numbers. 
 
-&bull;
+•
 
 A flow may have multiple conjunction actions,
 with different id values. This is useful for multiple
 conjunctive flows with overlapping sets. If one conjunctive
-flow matches packets with both ip_src &isin;
-{a,b} and ip_dst &isin;
+flow matches packets with both ip_src ∈
+{a,b} and ip_dst ∈
 {d,e} and a second conjunctive flow matches
-ip_src &isin; {b,c} and ip_dst
-&isin; {f,g}, for example, then the flow that
+ip_src ∈ {b,c} and ip_dst
+∈ {f,g}, for example, then the flow that
 matches ip_src=b would have two
 conjunction actions, one for each conjunctive flow.
 The order of conjunction actions within a list of
 actions is not significant.
 
-&bull;
+•
 
 A flow with conjunction actions may also include
 note actions for annotations, but not any other kind
 of actions. (They would not be useful because they would
 never be executed.)
 
-&bull;
+•
 
 All of the flows that constitute a conjunctive flow with
 a given id must have the same priority. (Flows with
 the same id but different priorities are currently
 treated as different conjunctive flows, that is, currently
 id values need only be unique within an OpenFlow
-table at a given priority. This behavior isn&rsquo;t
+table at a given priority. This behavior isn’t
 guaranteed to stay the same in later releases, so please use
 id values unique within an OpenFlow table.)
 
-&bull;
+•
 
 Conjunctive flows must not overlap with each other, at a
 given priority, that is, any given packet must be able to
@@ -1341,7 +1341,7 @@ Overlapping conjunctive flows yield unpredictable results.
 with those that constitute the same or another conjunctive
 flow.) 
 
-&bull;
+•
 
 Following a conjunctive flow match, the search for the
 flow with conj_id=id is done in the same
@@ -1354,7 +1354,7 @@ conj_id=id fails, Open vSwitch acts as if the
 conjunctive flow had not matched at all, and continues
 searching the flow table for other matching flows.
 
-&bull;
+•
 
 OpenFlow prerequisite checking occurs for the flow with
 conj_id=id in the same way as any other flow,
@@ -1365,26 +1365,26 @@ require adding an ip match, like this:
 conj_id=1234,ip
 actions=mod_nw_src:1.2.3.4,controller
 
-&bull;
+•
 
 OpenFlow prerequisite checking
 also occurs for the individual flows that comprise a
 conjunctive match in the same way as any other flow.
 
-&bull;
+•
 
 The flows that constitute a conjunctive flow do not have
 useful statistics. They are never updated with byte or
 packet counts, and so on. (For such a flow, therefore, the
 idle and hard timeouts work much the same way.)
 
-&bull;
+•
 
 Sometimes there is a choice of which flows include a
 particular match. For example, suppose that we added an
 extra constraint to our example, to match on ip_src
-&isin; {a,b,c,d} and
-ip_dst &isin; {e,f,g,h}
+∈ {a,b,c,d} and
+ip_dst ∈ {e,f,g,h}
 and tcp_dst = i. One way to implement this is
 to add the new constraint to the conj_id flow, like
 this: 
@@ -1398,13 +1398,13 @@ table lookup. Instead, add the constraint to the individual
 flows, either in one of the dimensions or (slightly better)
 all of them.
 
-&bull;
+•
 
 A conjunctive match must have
-n &ge; 2 dimensions (otherwise a conjunctive match is
+n ≥ 2 dimensions (otherwise a conjunctive match is
 not necessary). Open vSwitch enforces this.
 
-&bull;
+•
 
 Each dimension within a conjunctive match should
 ordinarily have more than one flow. Open vSwitch does not
@@ -1433,7 +1433,7 @@ Open vSwitch
 supports a spectrum of usage models for mapping tunnels to
 OpenFlow ports:
 
-&rsquo;&rsquo;Port-based&rsquo;&rsquo;
+’’Port-based’’
 tunnels
 
 In this model, an OpenFlow port
@@ -1466,7 +1466,7 @@ options:remote_ip=192.168.1.1 options:key=5001
 ovs-ofctl add-flow br-int in_port=1,actions=2 
 ovs-ofctl add-flow br-int in_port=2,actions=1
 
-&rsquo;&rsquo;Flow-based&rsquo;&rsquo;
+’’Flow-based’’
 tunnels
 
 In this model, one OpenFlow
@@ -1495,12 +1495,12 @@ ovs-vsctl add-port br-int allgre -- \
 set interface allgre ofport_request=3 type=gre \ 
 options:remote_ip=flow options:key=flow 
 ovs-ofctl add-flow br-int \ 
-&rsquo;in_port=1
-actions=set_tunnel:5001,set_field:192.168.1.1->tun_dst,3&rsquo;
+’in_port=1
+actions=set_tunnel:5001,set_field:192.168.1.1->tun_dst,3’
 
 ovs-ofctl add-flow br-int
-&rsquo;in_port=3,tun_src=192.168.1.1,tun_id=5001
-actions=1&rsquo;
+’in_port=3,tun_src=192.168.1.1,tun_id=5001
+actions=1’
 
 Mixed models.
 
@@ -1548,28 +1548,28 @@ Field
 Many kinds of
 tunnels support a tunnel ID:
 
-&bull;
+•
 
 VXLAN and Geneve have a 24-bit virtual network
 identifier (VNI).
 
-&bull;
+•
 
 LISP has a 24-bit instance ID.
 
-&bull;
+•
 
 GRE has an optional 32-bit key.
 
-&bull;
+•
 
 STT has a 64-bit key.
 
-&bull;
+•
 
 ERSPAN has a 10-bit key (Session ID).
 
-&bull;
+•
 
 GTPU has a 32-bit key (Tunnel Endpoint ID).
 
@@ -1585,8 +1585,8 @@ When a packet
 is output to a tunnel port, the tunnel configuration
 determines whether the tunnel ID is taken from this field or
 bound to a fixed value. See the earlier description of
-&rsquo;&rsquo;port-based&rsquo;&rsquo; and
-&rsquo;&rsquo;flow-based&rsquo;&rsquo; tunnels for more
+’’port-based’’ and
+’’flow-based’’ tunnels for more
 information.
 
 The following
@@ -1736,9 +1736,9 @@ GBP Flags
 
 Unlabeled bits are reserved and
 must be transmitted as 0. The VXLAN GBP draft defines the
-other bits&rsquo; meanings as:
+other bits’ meanings as:
 
-D (Don&rsquo;t
+D (Don’t
 Learn)
 
 When set, this bit indicates
@@ -1804,14 +1804,14 @@ Field
 
 This field is a
 20-bit index/port number associated with the ERSPAN
-traffic&rsquo;s source port and direction (ingress/egress).
+traffic’s source port and direction (ingress/egress).
 This field is platform dependent.
 
 ERSPAN
 Direction Field
 
 For ERSPAN v2,
-the mirrored traffic&rsquo;s direction: 0 for ingress
+the mirrored traffic’s direction: 0 for ingress
 traffic, 1 for egress traffic.
 
 ERSPAN
@@ -1864,7 +1864,7 @@ of the GTP-U protocol, which should be set to 1.
 PT
 
 Protocol type, used as a protocol discriminator between
-GTP (1) and GTP&rsquo; (0).
+GTP (1) and GTP’ (0).
 
 rsv
 
@@ -1889,7 +1889,7 @@ GTP-U
 Message Type Field
 
 This field indicates whether
-it&rsquo;s a signalling message used for path management, or
+it’s a signalling message used for path management, or
 a user plane message which carries the original packet. The
 complete range of message types can be referred to [3GPP TS
 29.281].
@@ -1918,7 +1918,7 @@ these options has the following wire format:
 
 header body 
 
-16 8 3 5 4&times;(length - 1) bytes 
+16 8 3 5 4×(length - 1) bytes 
 +-----+----+---+------+--------------------+ 
 |class|type|res|length| value | 
 +-----+----+---+------+--------------------+ 
@@ -2019,7 +2019,7 @@ OFPP_LOCAL
 (0xfffe or 65,534).
 
 The
-&rsquo;&rsquo;local&rsquo;&rsquo; port, which in Open
+’’local’’ port, which in Open
 vSwitch is always named the same as the bridge itself. This
 represents a connection between the switch and the local
 TCP/IP stack. This port is where an IP address is most
@@ -2039,7 +2039,7 @@ OFPP_CONTROLLER (0xfffd or 65,533).
 
 When a controller injects a
 packet into an OpenFlow switch with a
-&rsquo;&rsquo;packet-out&rsquo;&rsquo; request, it can
+’’packet-out’’ request, it can
 specify one of these ingress ports to indicate that the
 packet was generated internally rather than having been
 received on some port.
@@ -2092,12 +2092,12 @@ will never appear when receiving a packet may still be
 matched against in the flow table. There are still
 circumstances in which those flows can be matched:
 
-&bull;
+•
 
 The resubmit Open vSwitch extension action allows
 a flow table lookup with an arbitrary ingress port.
 
-&bull;
+•
 
 An action that modifies the ingress port field (see
 below), such as e.g. load or set_field,
@@ -2109,7 +2109,7 @@ This field is
 heavily used for matching in OpenFlow tables, but for packet
 egress, it has only very limited roles:
 
-&bull;
+•
 
 OpenFlow requires suppressing
 output actions to in_port. That is, the following two
@@ -2125,7 +2125,7 @@ useful for flooding to a subset of ports. Specifying
 actions=1,2,3,4, for example, outputs to ports 1, 2,
 3, and 4, omitting the ingress port.)
 
-&bull;
+•
 
 OpenFlow has a special port
 OFPP_IN_PORT (with value 0xfff8) that outputs to the
@@ -2137,7 +2137,7 @@ Because the
 ingress port field has so little influence on packet
 processing, it does not ordinarily make sense to modify the
 ingress port field. The field is writable only to support
-the occasional use case where the ingress port&rsquo;s roles
+the occasional use case where the ingress port’s roles
 in packet egress, described above, become troublesome. For
 example,
 actions=load:0->NXM_OF_IN_PORT[],output:123 will
@@ -2165,19 +2165,19 @@ and later use a 32-bit port number, so this field supplies a
 32-bit view of the ingress port. Current versions of Open
 vSwitch support only a 16-bit range of ports:
 
-&bull;
+•
 
 OpenFlow 1.0 ports 0x0000
 to 0xfeff, inclusive, map to OpenFlow 1.1 port
 numbers with the same values.
 
-&bull;
+•
 
 OpenFlow 1.0 ports 0xff00 to 0xffff,
 inclusive, map to OpenFlow 1.1 port numbers
 0xffffff00 to 0xffffffff.
 
-&bull;
+•
 
 OpenFlow 1.1 ports 0x0000ff00 to
 0xfffffeff are not mapped and not supported.
@@ -2221,7 +2221,7 @@ ovs-vswitchd.conf.db(5) for details). Ports of Open
 vSwitch to other platforms might require queue configuration
 through some separate protocol (such as a CLI). Even on
 Linux, Open vSwitch exposes only a fraction of the
-kernel&rsquo;s queuing features through OVSDB, so advanced
+kernel’s queuing features through OVSDB, so advanced
 or unusual uses might require use of separate utilities
 (e.g. tc). OpenFlow switches other than Open vSwitch
 might use OF-CONFIG or any of the configuration methods
@@ -2264,13 +2264,13 @@ another within a single host. In these cases, Open vSwitch
 maintains the output queue across the forwarding step. For
 example:
 
-&bull;
+•
 
 A hop across an Open vSwitch
-&rsquo;&rsquo;patch port&rsquo;&rsquo; (which does not
+’’patch port’’ (which does not
 actually involve queuing) preserves the output queue.
 
-&bull;
+•
 
 When a flow sets the output queue then outputs to an
 OpenFlow tunnel port, the encapsulation preserves the output
@@ -2281,7 +2281,7 @@ the encapsulated packet to another Open vSwitch bridge, then
 the output queue set previously becomes the initial output
 queue on ingress to the second bridge and will thus be used
 for further output actions (unless overridden by a new
-&rsquo;&rsquo;set queue&rsquo;&rsquo; action).
+’’set queue’’ action).
 
 (This
 description reflects the current behavior of Open vSwitch on
@@ -2300,7 +2300,7 @@ skb_mark propagates along with the packet it
 accompanies wherever the packet goes in the kernel. It has
 no predefined semantics but various kernel-user interfaces
 can set and match on it, which makes it suitable for
-&rsquo;&rsquo;marking&rsquo;&rsquo; packets at one point in
+’’marking’’ packets at one point in
 their handling and then acting on the mark later. With
 iptables, for example, one can mark some traffic
 specially at ingress and then handle that traffic
@@ -2449,7 +2449,7 @@ CONNECTION TRACKING FIELDS
 Summary:
 
 Open vSwitch
-supports &rsquo;&rsquo;connection tracking,&rsquo;&rsquo;
+supports ’’connection tracking,’’
 which allows bidirectional streams of packets to be
 statefully grouped into connections. Open vSwitch connection
 tracking, for example, identifies the patterns of TCP
@@ -2461,9 +2461,9 @@ spawned from FTP control connections.
 
 An individual
 packet passing through the pipeline may be in one of two
-states, &rsquo;&rsquo;untracked&rsquo;&rsquo; or
-&rsquo;&rsquo;tracked,&rsquo;&rsquo; which may be
-distinguished via the &rsquo;&rsquo;trk&rsquo;&rsquo; flag
+states, ’’untracked’’ or
+’’tracked,’’ which may be
+distinguished via the ’’trk’’ flag
 in ct_state. A packet is untracked at the
 beginning of the Open vSwitch pipeline and continues to be
 untracked until the pipeline invokes the ct action.
@@ -2534,8 +2534,8 @@ by conntrack from both directions.
 rel (0x04)
 
 Related to an existing
-connection, e.g. an ICMP &rsquo;&rsquo;destination
-unreachable&rsquo;&rsquo; message or an FTP data
+connection, e.g. an ICMP ’’destination
+unreachable’’ message or an FTP data
 connections. This flag will only be 1 if the connection to
 which this one is related is committed.
 
@@ -2555,23 +2555,23 @@ only be 1 if the connection is committed.
 inv (0x10)
 
 The state is invalid, meaning
-that the connection tracker couldn&rsquo;t identify the
+that the connection tracker couldn’t identify the
 connection. This flag is a catch-all for problems in the
 connection or the connection tracker, such as:
 
-&bull;
+•
 
 L3/L4 protocol handler is not loaded/unavailable. With
 the Linux kernel datapath, this may mean that the
 nf_conntrack_ipv4 or nf_conntrack_ipv6 modules
 are not loaded.
 
-&bull;
+•
 
 L3/L4 protocol handler determines that the packet is
 malformed. 
 
-&bull;
+•
 
 Packets are unexpected length for protocol.
 
@@ -2784,7 +2784,7 @@ itself.
 This field has
 an OXM code point, but OpenFlow 1.4 and earlier allow it to
 be modified only with a specialized instruction, not with a
-&rsquo;&rsquo;set-field&rsquo;&rsquo; action. OpenFlow 1.5
+’’set-field’’ action. OpenFlow 1.5
 removes this restriction. Open vSwitch does not enforce this
 restriction, regardless of OpenFlow version.
 
@@ -2803,10 +2803,10 @@ Field
 
 This is the first of the
 registers introduced in OpenFlow 1.5. OpenFlow 1.5 calls
-these fields just the &rsquo;&rsquo;packet
-registers,&rsquo;&rsquo; but Open vSwitch already had 32-bit
+these fields just the ’’packet
+registers,’’ but Open vSwitch already had 32-bit
 registers by that name, so Open vSwitch uses the name
-&rsquo;&rsquo;extended registers&rsquo;&rsquo; in an attempt
+’’extended registers’’ in an attempt
 to reduce confusion. The standard allows for up to 128
 registers, each 64 bits wide, but Open vSwitch only
 implements 4 (in versions 2.4 and 2.5) or 8 (in version 2.6
@@ -2820,9 +2820,9 @@ reg1 the least-significant. Similarly, xreg1
 overlays reg2 and reg3, and so on.
 
 The OpenFlow specification says,
-&rsquo;&rsquo;In most cases, the packet registers can not be
+’’In most cases, the packet registers can not be
 matched in tables, i.e. they usually can not be used in the
-flow entry match structure&rsquo;&rsquo; [OpenFlow 1.5,
+flow entry match structure’’ [OpenFlow 1.5,
 section 7.2.3.10], but there is no reason for a software
 switch to impose such a restriction, and Open vSwitch does
 not.
@@ -2911,7 +2911,7 @@ Type Field
 
 The most
 commonly seen Ethernet frames today use a format called
-&rsquo;&rsquo;Ethernet II,&rsquo;&rsquo; in which the last
+’’Ethernet II,’’ in which the last
 two bytes of the Ethernet header specify the Ethertype. For
 such a frame, this field is copied from those bytes of the
 header, like so:
@@ -2922,7 +2922,7 @@ Ethernet
 +---+---+----------+ 
 |dst|src| type | ... 
 +---+---+----------+ 
-&ge;0x600
+≥0x600
 
 Every Ethernet
 type has a value 0x600 (1,536) or greater. When the last two
@@ -2957,7 +2957,7 @@ Ethernet 802.1Q Ethertype
 +----+---+ +------+---+ +----------+ 
 |dst |src| | TPID |TCI| | type | ... 
 +----+---+ +------+---+ +----------+ 
-0x8100 &ge;0x600
+0x8100 ≥0x600
 
 LLC and SNAP encapsulation look
 like this with an 802.1Q header:
@@ -2974,7 +2974,7 @@ type | ...
 +--------+----------+ 
 0x8100 
 
-When a packet doesn&rsquo;t
+When a packet doesn’t
 match any of the header formats described above, Open
 vSwitch and OpenFlow set this field to 0x5ff
 (OFP_DL_TYPE_NOT_ETH_TYPE).
@@ -3014,8 +3014,8 @@ but not earlier or later versions, also requires support for
 TPID 0x88a8 (Open vSwitch
 
 does not support this). OpenFlow 1.2 through 1.5 do not
-require support for specific TPIDs (the &rsquo;&rsquo;push
-vlan header&rsquo;&rsquo; action does say that only
+require support for specific TPIDs (the ’’push
+vlan header’’ action does say that only
 0x8100 and 0x88a8 should be pushed). No
 version of OpenFlow provides a way to distinguish or match
 on the TPID.
@@ -3024,23 +3024,23 @@ The remaining 16 bits of the
 VLAN header, the TCI (Tag Control Information), is
 subdivided into three subfields:
 
-&bull;
+•
 
 PCP (Priority Control Point), is a 3-bit 802.1p
 priority. The lowest priority is value 1, the
 second-lowest is value 0, and priority increases from 2 up
 to highest priority 7.
 
-&bull;
+•
 
 CFI (Canonical Format Indicator), is a 1-bit
 field. On an Ethernet network, its value is always 0. This
 led to it later being repurposed under the name DEI
 (Drop Eligibility Indicator). By either name, OpenFlow and
-Open vSwitch don&rsquo;t provide any way to match or set
+Open vSwitch don’t provide any way to match or set
 this bit.
 
-&bull;
+•
 
 VID (VLAN IDentifier), is a 12-bit VLAN. If the
 VID is 0, then the frame is not part of a VLAN. In that
@@ -3082,13 +3082,13 @@ OpenFlow 1.0 uses two fields, called dl_vlan and
 dl_vlan_pcp, each of which can be either
 exact-matched or wildcarded, to specify VLAN matches:
 
-&bull;
+•
 
 When both dl_vlan and
 dl_vlan_pcp are wildcarded, the flow matches packets
 without an 802.1Q header or with any 802.1Q header.
 
-&bull;
+•
 
 The match dl_vlan=0xffff causes a flow to match
 only packets without an 802.1Q header. Such a flow should
@@ -3097,14 +3097,14 @@ also wildcard dl_vlan_pcp, since a packet without an
 what to do if a match on PCP is actually present, but Open
 vSwitch ignores it.
 
-&bull;
+•
 
 Otherwise, the flow matches only packets with an 802.1Q
 header. If dl_vlan is not wildcarded, then the flow
 only matches packets with the VLAN ID specified in
-dl_vlan&rsquo;s low 12 bits. If dl_vlan_pcp is
+dl_vlan’s low 12 bits. If dl_vlan_pcp is
 not wildcarded, then the flow only matches packets with the
-priority specified in dl_vlan_pcp&rsquo;s low 3
+priority specified in dl_vlan_pcp’s low 3
 bits. 
 
 OpenFlow does
@@ -3123,7 +3123,7 @@ any VLAN ID. If dl_vlan_pcp is wildcarded, the flow
 matches any packet with an 802.1Q header, regardless of VLAN
 ID or priority. If dl_vlan_pcp is not wildcarded,
 then the flow only matches packets with the priority
-specified in dl_vlan_pcp&rsquo;s low 3 bits.
+specified in dl_vlan_pcp’s low 3 bits.
 
 OpenFlow 1.1 uses the name
 OFPVID_NONE, instead of OFP_VLAN_NONE, for a
@@ -3139,7 +3139,7 @@ OpenFlow 1.2 VLAN Fields
 OpenFlow 1.2+ VLAN ID Field
 
 The OpenFlow standard describes
-this field as consisting of &rsquo;&rsquo;12+1&rsquo;&rsquo;
+this field as consisting of ’’12+1’’
 bits. On ingress, its value is 0 if no 802.1Q header is
 present, and otherwise it holds the VLAN VID in its least
 significant 12 bits, with bit 12 (0x1000 aka
@@ -3156,7 +3156,7 @@ OXM_OF_VLAN_VID
 0
 
 As a consequence of this
-field&rsquo;s format, one may use it to match the VLAN ID in
+field’s format, one may use it to match the VLAN ID in
 all of the ways available with the OpenFlow 1.0 and 1.1
 formats, and a few new ways:
 
@@ -3225,9 +3225,9 @@ VLAN TCI Field
 
 For a packet without an 802.1Q
 header, this field is zero. For a packet with an 802.1Q
-header, this field is the TCI with the bit in CFI&rsquo;s
+header, this field is the TCI with the bit in CFI’s
 position (marked P for
-&rsquo;&rsquo;present&rsquo;&rsquo; below) forced to 1.
+’’present’’ below) forced to 1.
 Thus, for a packet in VLAN 9 with priority 7, it has the
 value 0xf009:
 
@@ -3309,7 +3309,7 @@ means
 
 that the given bits are ignored
 (and conventionally 0 for wwww or yy, conventionally 1 for x
-or z). &rsquo;&rsquo;(none)&rsquo;&rsquo; means that
+or z). ’’(none)’’ means that
 OpenFlow 1.0 (or 1.1) cannot match with these criteria.
 
 OpenFlow 1.2+
@@ -3318,7 +3318,7 @@ xxxx/yyyy,zz means
 vlan_vid with value xxxx and mask yyyy, and
 vlan_pcp (which is not maskable) with value zz. --
 means that vlan_pcp is omitted.
-&rsquo;&rsquo;(none)&rsquo;&rsquo; means that OpenFlow 1.2
+’’(none)’’ means that OpenFlow 1.2
 cannot match with these criteria.
 
 NXM
@@ -3340,7 +3340,7 @@ TCI value.
 Matches only packets without an 802.1Q header.
 
 OpenFlow 1.0
-doesn&rsquo;t define the behavior if dl_vlan is set
+doesn’t define the behavior if dl_vlan is set
 to 0xffff and dl_vlan_pcp is not wildcarded.
 (Open vSwitch always ignores dl_vlan_pcp when
 dl_vlan is set to 0xffff.)
@@ -3350,7 +3350,7 @@ says explicitly to ignore dl_vlan_pcp when
 dl_vlan is set to 0xffff.
 
 OpenFlow 1.2
-doesn&rsquo;t say how to interpret a match with
+doesn’t say how to interpret a match with
 vlan_vid value 0 and a mask with
 OFPVID_PRESENT (0x1000) set to 1 and some
 other bits in the mask set to 1 also. Open vSwitch
@@ -3371,7 +3371,7 @@ Matches only packets that have
 an 802.1Q header with PCP y (and any VID).
 
 OpenFlow 1.0
-doesn&rsquo;t clearly define the behavior for this case.
+doesn’t clearly define the behavior for this case.
 Open vSwitch implements it this way.
 
 In the NXM
@@ -3467,7 +3467,7 @@ Used for quality of
 service.
 
 Bottom of stack (BOS), 1 bit
-(labeled just &rsquo;&rsquo;S&rsquo;&rsquo; above).
+(labeled just ’’S’’ above).
 
 0 indicates that another MPLS
 label follows this one.
@@ -3495,14 +3495,14 @@ MPLS Label
 Stacks 
 Unlike the other encapsulations supported by OpenFlow and
 Open vSwitch, MPLS labels are routinely used in
-&rsquo;&rsquo;stacks&rsquo;&rsquo; two or three deep and
+’’stacks’’ two or three deep and
 sometimes even deeper. Open vSwitch currently supports up to
 three labels.
 
 The OpenFlow
 specification only supports matching on the outermost MPLS
 label at any given time. To match on the second label, one
-must first &rsquo;&rsquo;pop&rsquo;&rsquo; the outer label
+must first ’’pop’’ the outer label
 and advance to another OpenFlow table, where the inner label
 may be matched. To match on the third label, one must pop
 the two outer labels, and so on.
@@ -3515,25 +3515,25 @@ inner protocol it encapsulates. Different deployments
 determine the inner protocol in different ways [RFC
 3032]:
 
-&bull;
+•
 
 A few reserved label values do indicate an inner
-protocol. Label 0, the &rsquo;&rsquo;IPv4 Explicit NULL
-Label,&rsquo;&rsquo; indicates inner IPv4. Label 2, the
-&rsquo;&rsquo;IPv6 Explicit NULL Label,&rsquo;&rsquo;
+protocol. Label 0, the ’’IPv4 Explicit NULL
+Label,’’ indicates inner IPv4. Label 2, the
+’’IPv6 Explicit NULL Label,’’
 indicates inner IPv6.
 
-&bull;
+•
 
 Some deployments use a single inner protocol
 consistently. 
 
-&bull;
+•
 
 In some deployments, the inner protocol must be inferred
 from the innermost label.
 
-&bull;
+•
 
 In some deployments, the inner protocol must be inferred
 from the innermost label and the encapsulated data, e.g.
@@ -3556,7 +3556,7 @@ MPLS Label Field
 
 The least
 significant 20 bits hold the
-&rsquo;&rsquo;label&rsquo;&rsquo; field from the MPLS label.
+’’label’’ field from the MPLS label.
 Other bits are zero:
 
 OXM_OF_MPLS_LABEL
@@ -3615,7 +3615,7 @@ processing a series of incoming MPLS labels. A flow that
 includes a pop_mpls action should generally match on
 mpls_bos:
 
-&bull;
+•
 
 When mpls_bos is 0, there
 is another MPLS label following this one, so the Ethertype
@@ -3623,7 +3623,7 @@ passed to pop_mpls should be an MPLS Ethertype. For
 example: table=0, dl_type=0x8847, mpls_bos=0,
 actions=pop_mpls:0x8847, goto_table:1
 
-&bull;
+•
 
 When mpls_bos is 1, this MPLS label is the last
 one, so the Ethertype passed to pop_mpls should be a
@@ -3784,7 +3784,7 @@ TTL or hop limit field is to detect
 whether a dec_ttl action will fail due to a TTL
 exceeded error. Another way that a controller can detect TTL
 exceeded is to listen for OFPR_INVALID_TTL
-&rsquo;&rsquo;packet-in&rsquo;&rsquo; messages via
+’’packet-in’’ messages via
 OpenFlow.
 
 IPv4/v6 Fragment Bitmask
@@ -3837,16 +3837,16 @@ possible values, this field only uses 3 of
 
 them:
 
-&bull;
+•
 
 A packet that is not an IP fragment has value 0.
 
-&bull;
+•
 
 A packet that is an IP fragment with offset 0 (the first
 fragment) has bit 0 set and thus value 1.
 
-&bull;
+•
 
 A packet that is an IP fragment with nonzero offset has
 bits 0 and 1 set and thus value 3.
@@ -3858,14 +3858,14 @@ It is important
 to understand how this field interacts with the OpenFlow
 fragment handling mode:
 
-&bull;
+•
 
 In OFPC_FRAG_DROP mode,
 the OpenFlow switch drops all IP fragments before they reach
 the flow table, so every packet that is available for
 matching will have value 0 in this field.
 
-&bull;
+•
 
 Open vSwitch does not implement
 OFPC_FRAG_REASM mode, but if it did then IP fragments
@@ -3873,14 +3873,14 @@ would be reassembled before they reached the flow table and
 again every packet available for matching would always have
 value 0.
 
-&bull;
+•
 
 In OFPC_FRAG_NORMAL mode, all three values are
-possible, but OpenFlow 1.0 says that fragments&rsquo;
+possible, but OpenFlow 1.0 says that fragments’
 transport ports are always 0, even for the first fragment,
 so this does not provide much extra information.
 
-&bull;
+•
 
 In OFPC_FRAG_NX_MATCH
 mode, all three values are possible. For fragments with
@@ -3897,8 +3897,8 @@ IPv4/IPv6 TOS
 Fields
 
 IPv4 and IPv6
-contain a one-byte &rsquo;&rsquo;type of
-service&rsquo;&rsquo; or TOS field that has the following
+contain a one-byte ’’type of
+service’’ or TOS field that has the following
 format:
 
 type of service
@@ -3979,7 +3979,7 @@ Ethernet ARP
 
 The ARP fields are also used for
 RARP, the Reverse Address Resolution Protocol, which shares
-ARP&rsquo;s wire format.
+ARP’s wire format.
 
 ARP Opcode Field
 
@@ -4327,222 +4327,222 @@ Casado
 
 M. Casado, M. J. Freedman, J.
 Pettit, J. Luo, N. McKeown, and S. Shenker,
-&rsquo;&rsquo;Ethane: Taking Control of the
+’’Ethane: Taking Control of the
 
-Enterprise,&rsquo;&rsquo; Computer Communications
+Enterprise,’’ Computer Communications
 Review, October 2007.
 
 ERSPAN
 
 M. Foschiano, K. Ghosh, M.
-Mehta, &rsquo;&rsquo;Cisco Systems&rsquo; Encapsulated
-Remote Switch Port Analyzer (ERSPAN),&rsquo;&rsquo;
+Mehta, ’’Cisco Systems’ Encapsulated
+Remote Switch Port Analyzer (ERSPAN),’’
 
-&lang; URL:
+⟨ URL:
 https://tools.ietf.org/html/draft-foschiano-erspan-03
-&rang;
+⟩
 
 .
 
 EXT-56
 
-J. Tonsing, &rsquo;&rsquo;Permit
-one of a set of prerequisites to apply, e.g. don&rsquo;t
-preclude non-Ethernet media,&rsquo;&rsquo;
+J. Tonsing, ’’Permit
+one of a set of prerequisites to apply, e.g. don’t
+preclude non-Ethernet media,’’
 
-&lang; URL:
-https://rs.opennetworking.org/bugs/browse/EXT-56 &rang; (ONF
+⟨ URL:
+https://rs.opennetworking.org/bugs/browse/EXT-56 ⟩ (ONF
 members only).
 
 EXT-112
 
 J. Tourrilhes,
-&rsquo;&rsquo;Support non-Ethernet packets throughout the
-pipeline,&rsquo;&rsquo; 
-&lang; URL:
-https://rs.opennetworking.org/bugs/browse/EXT-112 &rang;
+’’Support non-Ethernet packets throughout the
+pipeline,’’ 
+⟨ URL:
+https://rs.opennetworking.org/bugs/browse/EXT-112 ⟩
 (ONF members only).
 
 EXT-134
 
 J. Tourrilhes,
-&rsquo;&rsquo;Match first nibble of the MPLS
-payload,&rsquo;&rsquo;
+’’Match first nibble of the MPLS
+payload,’’
 
-&lang; URL:
-https://rs.opennetworking.org/bugs/browse/EXT-134 &rang;
+⟨ URL:
+https://rs.opennetworking.org/bugs/browse/EXT-134 ⟩
 (ONF members only).
 
 Geneve
 
 J. Gross, I. Ganga, and T. Sridhar, editors,
-&rsquo;&rsquo;Geneve: Generic Network Virtualization
-Encapsulation,&rsquo;&rsquo; 
+’’Geneve: Generic Network Virtualization
+Encapsulation,’’ 
 
-&lang; URL:
+⟨ URL:
 https://datatracker.ietf.org/doc/draft-ietf-nvo3-geneve/
-&rang; .
+⟩ .
 
 IEEE OUI
 
 IEEE Standards Association,
-&rsquo;&rsquo;MAC Address Block Large (MA-L),&rsquo;&rsquo;
+’’MAC Address Block Large (MA-L),’’
 
-&lang; URL:
+⟨ URL:
 https://standards.ieee.org/develop/regauth/oui/index.html
-&rang; .
+⟩ .
 
 NSH
 
-P. Quinn and U. Elzur, editors, &rsquo;&rsquo;Network
-Service Header,&rsquo;&rsquo;
+P. Quinn and U. Elzur, editors, ’’Network
+Service Header,’’
 
-&lang; URL:
-https://datatracker.ietf.org/doc/draft-ietf-sfc-nsh/ &rang;
+⟨ URL:
+https://datatracker.ietf.org/doc/draft-ietf-sfc-nsh/ ⟩
 .
 
 OpenFlow 1.0.1
 
 Open Networking Foundation,
-&rsquo;&rsquo;OpenFlow Switch Errata, Version
-1.0.1,&rsquo;&rsquo; June 2012.
+’’OpenFlow Switch Errata, Version
+1.0.1,’’ June 2012.
 
 OpenFlow 1.1
 
 OpenFlow Consortium,
-&rsquo;&rsquo;OpenFlow Switch Specification Version 1.1.0
-Implemented (Wire Protocol 0x02),&rsquo;&rsquo;
+’’OpenFlow Switch Specification Version 1.1.0
+Implemented (Wire Protocol 0x02),’’
 
 February 2011.
 
 OpenFlow 1.5
 
 Open Networking Foundation,
-&rsquo;&rsquo;OpenFlow Switch Specification Version 1.5.0
-(Protocol version 0x06),&rsquo;&rsquo; December 2014.
+’’OpenFlow Switch Specification Version 1.5.0
+(Protocol version 0x06),’’ December 2014.
 
 OpenFlow Extensions 1.3.x
 Package 2
 
 Open Networking Foundation,
-&rsquo;&rsquo;OpenFlow Extensions 1.3.x Package
-2,&rsquo;&rsquo; December 2013.
+’’OpenFlow Extensions 1.3.x Package
+2,’’ December 2013.
 
 TCP Flags Match Field
 Extension
 
 Open Networking Foundation,
-&rsquo;&rsquo;TCP flags match field Extension,&rsquo;&rsquo;
+’’TCP flags match field Extension,’’
 December 2014. In [OpenFlow Extensions 1.3.x Package 2].
 
 Pepelnjak
 
 I. Pepelnjak,
-&rsquo;&rsquo;OpenFlow and Fermi Estimates,&rsquo;&rsquo;
+’’OpenFlow and Fermi Estimates,’’
 
-&lang; URL:
+⟨ URL:
 http://blog.ipspace.net/2013/09/openflow-and-fermi-estimates.html
 
-&rang; .
+⟩ .
 
 RFC 793
 
-&rsquo;&rsquo;Transmission
-Control Protocol,&rsquo;&rsquo; 
-&lang; URL: http://www.ietf.org/rfc/rfc793.txt &rang; .
+’’Transmission
+Control Protocol,’’ 
+⟨ URL: http://www.ietf.org/rfc/rfc793.txt ⟩ .
 
 RFC 3032
 
 E. Rosen, D. Tappan, G.
 Fedorkow, Y. Rekhter, D. Farinacci, T. Li, and A. Conta,
-&rsquo;&rsquo;MPLS Label Stack Encoding,&rsquo;&rsquo;
+’’MPLS Label Stack Encoding,’’
 
-&lang; URL: http://www.ietf.org/rfc/rfc3032.txt &rang;
+⟨ URL: http://www.ietf.org/rfc/rfc3032.txt ⟩
 .
 
 RFC 3168
 
 K. Ramakrishnan, S. Floyd, and
-D. Black, &rsquo;&rsquo;The Addition of Explicit Congestion
-Notification (ECN) to IP,&rsquo;&rsquo; 
-&lang; URL: https://tools.ietf.org/html/rfc3168 &rang; .
+D. Black, ’’The Addition of Explicit Congestion
+Notification (ECN) to IP,’’ 
+⟨ URL: https://tools.ietf.org/html/rfc3168 ⟩ .
 
 RFC 3540
 
 N. Spring, D. Wetherall, and D.
-Ely, &rsquo;&rsquo;Robust Explicit Congestion Notification
-(ECN) Signaling with Nonces,&rsquo;&rsquo;
+Ely, ’’Robust Explicit Congestion Notification
+(ECN) Signaling with Nonces,’’
 
-&lang; URL: https://tools.ietf.org/html/rfc3540 &rang;
+⟨ URL: https://tools.ietf.org/html/rfc3540 ⟩
 .
 
 RFC 4632
 
 V. Fuller and T. Li,
-&rsquo;&rsquo;Classless Inter-domain Routing (CIDR): The
+’’Classless Inter-domain Routing (CIDR): The
 Internet Address Assignment and Aggregation
-Plan,&rsquo;&rsquo; 
-&lang; URL: https://tools.ietf.org/html/rfc4632 &rang; .
+Plan,’’ 
+⟨ URL: https://tools.ietf.org/html/rfc4632 ⟩ .
 
 RFC 5462
 
 L. Andersson and R. Asati,
-&rsquo;&rsquo;Multiprotocol Label Switching (MPLS) Label
-Stack Entry: &rsquo;&rsquo;EXP&rsquo;&rsquo; Field
+’’Multiprotocol Label Switching (MPLS) Label
+Stack Entry: ’’EXP’’ Field
 Renamed
 
-to &rsquo;&rsquo;Traffic Class&rsquo;&rsquo;
-Field,&rsquo;&rsquo; 
-&lang; URL: http://www.ietf.org/rfc/rfc5462.txt &rang; .
+to ’’Traffic Class’’
+Field,’’ 
+⟨ URL: http://www.ietf.org/rfc/rfc5462.txt ⟩ .
 
 RFC 6830
 
 D. Farinacci, V. Fuller, D.
-Meyer, and D. Lewis, &rsquo;&rsquo;The Locator/ID Separation
-Protocol (LISP),&rsquo;&rsquo; 
-&lang; URL: http://www.ietf.org/rfc/rfc6830.txt &rang; .
+Meyer, and D. Lewis, ’’The Locator/ID Separation
+Protocol (LISP),’’ 
+⟨ URL: http://www.ietf.org/rfc/rfc6830.txt ⟩ .
 
 RFC 7348
 
 M. Mahalingam, D. Dutt, K.
 Duda, P. Agarwal, L. Kreeger, T. Sridhar, M. Bursell, and C.
-Wright, &rsquo;&rsquo;Virtual
+Wright, ’’Virtual
 
 eXtensible Local Area Network (VXLAN): A Framework for
 Overlaying Virtualized Layer 2 Networks over Layer 3
-Networks, &rsquo;&rsquo; 
-&lang; URL: https://tools.ietf.org/html/rfc7348 &rang; .
+Networks, ’’ 
+⟨ URL: https://tools.ietf.org/html/rfc7348 ⟩ .
 
 RFC 7665
 
 J. Halpern, Ed. and C.
-Pignataro, Ed., &rsquo;&rsquo;Service Function Chaining
-(SFC) Architecture,&rsquo;&rsquo; 
-&lang; URL: https://tools.ietf.org/html/rfc7665 &rang; .
+Pignataro, Ed., ’’Service Function Chaining
+(SFC) Architecture,’’ 
+⟨ URL: https://tools.ietf.org/html/rfc7665 ⟩ .
 
 Srinivasan
 
 V. Srinivasan, S. Suriy, and G.
-Varghese, &rsquo;&rsquo;Packet Classification using Tuple
-Space Search,&rsquo;&rsquo; SIGCOMM 1999.
+Varghese, ’’Packet Classification using Tuple
+Space Search,’’ SIGCOMM 1999.
 
 Pagiamtzis
 
 K. Pagiamtzis and A.
-Sheikholeslami, &rsquo;&rsquo;Content-addressable memory
+Sheikholeslami, ’’Content-addressable memory
 (CAM) circuits and architectures: A tutorial and
-survey,&rsquo;&rsquo; IEEE Journal of Solid-State Circuits,
+survey,’’ IEEE Journal of Solid-State Circuits,
 vol. 41, no. 3, pp. 712-727, March 2006.
 
 VXLAN Group Policy Option
 
 M. Smith and L. Kreeger,
-&rsquo;&rsquo; VXLAN Group Policy Option.&rsquo;&rsquo;
+’’ VXLAN Group Policy Option.’’
 Internet-Draft. 
-&lang; URL:
+⟨ URL:
 https://tools.ietf.org/html/draft-smith-vxlan-group-policy
 
-&rang; .
+⟩ .
 
 AUTHORS
 

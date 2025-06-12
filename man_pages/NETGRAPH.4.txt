@@ -2,7 +2,7 @@ NETGRAPH(4) BSD Kernel Interfaces Manual NETGRAPH(4)
 
 NAME
 
-netgraph &mdash; graph
+netgraph — graph
 based kernel networking subsystem
 
 DESCRIPTION
@@ -20,22 +20,22 @@ The aim of
 netgraph is to supplement rather than replace the
 existing kernel networking infrastructure. It provides:
 
-&bull;
+•
 
 A flexible way of combining
 protocol and link level drivers.
 
-&bull;
+•
 
 A modular way to implement new
 protocols.
 
-&bull;
+•
 
 A common framework for kernel
 entities to inter-communicate.
 
-&bull;
+•
 
 A reasonably fast, kernel-based
 implementation.
@@ -49,7 +49,7 @@ well defined manner.
 
 Each node has a
 type, which is a static property of the node
-determined at node creation time. A node&rsquo;s type is
+determined at node creation time. A node’s type is
 described by a unique ASCII type name. The type implies what
 the node does and how it may be connected to other
 nodes.
@@ -64,7 +64,7 @@ ability to have an ASCII name).
 Nodes may be
 assigned a globally unique ASCII name which can be used to
 refer to the node. The name must not contain the characters
-&rsquo;.&rsquo; or &rsquo;:&rsquo;, and is limited to
+’.’ or ’:’, and is limited to
 NG_NODESIZ characters (including the terminating NUL
 character).
 
@@ -84,23 +84,23 @@ meaning it wants to a hook.
 Hooks have these
 properties:
 
-&bull;
+•
 
 A hook has an ASCII name which
 is unique among all hooks on that node (other hooks on other
 nodes may have the same name). The name must not contain the
-characters &rsquo;.&rsquo; or &rsquo;:&rsquo;, and is
+characters ’.’ or ’:’, and is
 limited to NG_HOOKSIZ characters (including the terminating
 NUL character).
 
-&bull;
+•
 
 A hook is always connected to
 another hook. That is, hooks are created at the time they
 are connected, and breaking an edge by removing either hook
 destroys both hooks.
 
-&bull;
+•
 
 A hook can be set into a state
 where incoming packets are always queued by the input
@@ -109,7 +109,7 @@ can be used when the data is sent from an interrupt handler,
 and processing must be quick so as not to block other
 interrupts.
 
-&bull;
+•
 
 A hook may supply overriding
 receive data and receive message functions, which should be
@@ -145,13 +145,13 @@ not required to support these conversions.
 There are three
 ways to address a control message. If there is a sequence of
 edges connecting the two nodes, the message may be
-&rsquo;&rsquo;source routed&rsquo;&rsquo; by specifying the
+’’source routed’’ by specifying the
 corresponding sequence of ASCII hook names as the
 destination address for the message (relative addressing).
 If the destination is adjacent to the source, then the
 source node may simply specify (as a pointer in the code)
 the hook across which the message should be sent. Otherwise,
-the recipient node&rsquo;s global ASCII name (or equivalent
+the recipient node’s global ASCII name (or equivalent
 ID-based name) is used as the destination address for the
 message (absolute addressing). The two types of ASCII
 addressing may be combined, by specifying an absolute start
@@ -162,13 +162,13 @@ use of direct pointers is limited to kernel modules.
 Messages often
 represent commands that are followed by a reply message in
 the reverse direction. To facilitate this, the recipient of
-a control message is supplied with a &rsquo;&rsquo;return
-address&rsquo;&rsquo; that is suitable for addressing a
+a control message is supplied with a ’’return
+address’’ that is suitable for addressing a
 reply.
 
 Each control
 message contains a 32-bit value, called a
-&rsquo;&rsquo;typecookie&rsquo;&rsquo;, indicating the type
+’’typecookie’’, indicating the type
 of the message, i.e. how to interpret it. Typically each
 type defines a unique typecookie for the messages that it
 understands. However, a node may choose to recognize and
@@ -196,8 +196,8 @@ messages are delivered by making function calls rather than
 by using queues and mailboxes. For example, if node A wishes
 to send a data mbuf to neighboring node B, it calls
 the generic netgraph data delivery function. This
-function in turn locates node B and calls B&rsquo;s
-&rsquo;&rsquo;receive data&rsquo;&rsquo; method. There are
+function in turn locates node B and calls B’s
+’’receive data’’ method. There are
 exceptions to this.
 
 Each node has an
@@ -228,21 +228,21 @@ While this mode
 of operation results in good performance, it has a few
 implications for node developers:
 
-&bull;
+•
 
 Whenever a node delivers a data
 or control message, the node may need to allow for the
 possibility of receiving a returning message before the
 original delivery function call returns.
 
-&bull;
+•
 
 Netgraph provides
 internal synchronization between nodes. Data always enters a
-&rsquo;&rsquo;graph&rsquo;&rsquo; at an edge node. An
+’’graph’’ at an edge node. An
 edge node is a node that interfaces between
 netgraph and some other part of the system. Examples
-of &rsquo;&rsquo;edge nodes&rsquo;&rsquo; include device
+of ’’edge nodes’’ include device
 drivers, the socket, ether, tty, and
 ksocket node type. In these edge nodes, the
 calling thread directly executes code in the node, and from
@@ -261,7 +261,7 @@ they have completed their operations, or by a special
 netgraph thread that is activated when there are such
 items queued.
 
-&bull;
+•
 
 It is possible for an infinite
 loop to occur if the graph contains cycles.
@@ -340,7 +340,7 @@ Preshutdown of a node
 This method is called before
 real shutdown, which is discussed below. While in this
 method, the node is fully operational and can send a
-&rsquo;&rsquo;goodbye&rsquo;&rsquo; message to its peers, or
+’’goodbye’’ message to its peers, or
 it can exclude itself from the chain and reconnect its peers
 together, like the ng_tee(4) node type does.
 
@@ -462,8 +462,8 @@ Much use has
 been made of reference counts, so that nodes being freed of
 all references are automatically freed, and this behaviour
 has been tested and debugged to present a consistent and
-trustworthy framework for the &rsquo;&rsquo;type
-module&rsquo;&rsquo; writer to use.
+trustworthy framework for the ’’type
+module’’ writer to use.
 
 Addressing
 
@@ -471,7 +471,7 @@ The netgraph framework provides an unambiguous and
 simple to use method of specifically addressing any single
 node in the graph. The naming of a node is independent of
 its type, in that another node, or external component need
-not know anything about the node&rsquo;s type in order to
+not know anything about the node’s type in order to
 address it so as to send it a generic message type. Node and
 hook names should be chosen so as to make addresses
 meaningful.
@@ -487,7 +487,7 @@ traversal at the local node.
 
 There are a
 couple of special possibilities for the node name. The name
-&rsquo;.&rsquo; (referred to as &rsquo;.:&rsquo;) always
+’.’ (referred to as ’.:’) always
 refers to the local node. Also, nodes that have no global
 name may be addressed by their ID numbers, by enclosing the
 hexadecimal representation of the ID number within the
@@ -520,15 +520,15 @@ over DLCI 20:
 
 One could always
 send a control message to node C from anywhere by using the
-name &rsquo;&rsquo;Frame1:uplink.dlci16&rsquo;&rsquo;. In
+name ’’Frame1:uplink.dlci16’’. In
 this case, node C would also be notified that the message
 reached it via its hook mux. Similarly,
-&rsquo;&rsquo;Frame1:uplink.dlci20&rsquo;&rsquo; could
+’’Frame1:uplink.dlci20’’ could
 reliably be used to reach node D, and node A could refer to
-node B as &rsquo;&rsquo;.:uplink&rsquo;&rsquo;, or simply
-&rsquo;&rsquo;uplink&rsquo;&rsquo;. Conversely, B can refer
-to A as &rsquo;&rsquo;data&rsquo;&rsquo;. The address
-&rsquo;&rsquo;mux.data&rsquo;&rsquo; could be used by both
+node B as ’’.:uplink’’, or simply
+’’uplink’’. Conversely, B can refer
+to A as ’’data’’. The address
+’’mux.data’’ could be used by both
 nodes C and D to address a message to node A.
 
 Note that this
@@ -547,12 +547,12 @@ or D.
 In a similar
 way, flow control messages may be routed in the reverse
 direction to outgoing data. For example a
-&rsquo;&rsquo;buffer nearly full&rsquo;&rsquo; message from
-&rsquo;&rsquo;Frame1:&rsquo;&rsquo; would be passed to node
+’’buffer nearly full’’ message from
+’’Frame1:’’ would be passed to node
 B which might decide to send similar messages to both nodes
 C and D. The nodes would use direct hook pointer
 addressing to route the messages. The message may have
-travelled from &rsquo;&rsquo;Frame1:&rsquo;&rsquo; to B as a
+travelled from ’’Frame1:’’ to B as a
 synchronous reply, saving time and cycles.
 
 Netgraph
@@ -605,7 +605,7 @@ NUL terminated string. If there is a value in here, it is
 the name of the node.
 
 if
-(NG_NODE_NAME(node)[0] != &rsquo;\0&rsquo;) ...
+(NG_NODE_NAME(node)[0] != ’\0’) ...
 
 if
 (strcmp(NG_NODE_NAME(node), "fred") == 0) ...
@@ -695,7 +695,7 @@ on the hook on which they are set.
 The maintenance
 of the names, reference counts, and linked list of hooks for
 each node is handled automatically by the netgraph
-subsystem. Typically a node&rsquo;s private info contains a
+subsystem. Typically a node’s private info contains a
 back-pointer to the node or hook structure, which counts as
 a new reference that must be included in the reference count
 for the node. When the node constructor is called, there is
@@ -777,7 +777,7 @@ always has the same token.
 typecookie
 
 The corresponding node
-type&rsquo;s unique 32-bit value. If a node does not
+type’s unique 32-bit value. If a node does not
 recognize the type cookie it must reject the message by
 returning EINVAL.
 
@@ -789,8 +789,8 @@ both sender and receiver; when an incompatible change in the
 header file is made, the typecookie must be changed.
 The de-facto method for generating unique type cookies is to
 take the seconds from the Epoch at the time the header file
-is written (i.e., the output of &rsquo;&rsquo;date
-&minus;u +%s&rsquo;&rsquo;).
+is written (i.e., the output of ’’date
+−u +%s’’).
 
 There is a
 predefined typecookie NGM_GENERIC_COOKIE for the
@@ -841,46 +841,46 @@ data type. Netgraph includes parsing routines to
 support some pre-defined datatypes in ASCII with this simple
 syntax:
 
-&bull;
+•
 
 Integer types are represented
 by base 8, 10, or 16 numbers.
 
-&bull;
+•
 
 Strings are enclosed in double
 quotes and respect the normal C language backslash
 escapes.
 
-&bull;
+•
 
 IP addresses have the obvious
 form.
 
-&bull;
+•
 
 Arrays are enclosed in square
 brackets, with the elements listed consecutively starting at
 index zero. An element may have an optional index and equals
-sign (&rsquo;=&rsquo;) preceding it. Whenever an element
+sign (’=’) preceding it. Whenever an element
 does not have an explicit index, the index is implicitly the
-previous element&rsquo;s index plus one.
+previous element’s index plus one.
 
-&bull;
+•
 
 Structures are enclosed in
 curly braces, and each field is specified in the form
 fieldname=value.
 
-&bull;
+•
 
 Any array element or structure
-field whose value is equal to its &rsquo;&rsquo;default
-value&rsquo;&rsquo; may be omitted. For integer types, the
+field whose value is equal to its ’’default
+value’’ may be omitted. For integer types, the
 default value is usually zero; for string types, the empty
 string.
 
-&bull;
+•
 
 Array elements and structure
 fields may be specified in any order.
@@ -932,7 +932,7 @@ NGM_RMHOOK
 
 Ask the node to break a hook
 connection to one of its neighbours. Both nodes will have
-their &rsquo;&rsquo;disconnect&rsquo;&rsquo; method invoked.
+their ’’disconnect’’ method invoked.
 Either node may elect to totally shut down as a result.
 
 NGM_NODEINFO
@@ -973,7 +973,7 @@ NGM_TEXT_STATUS
 The node may return a text
 formatted status message. The status information is
 determined entirely by the node type. It is the only
-&rsquo;&rsquo;generic&rsquo;&rsquo; message that requires
+’’generic’’ message that requires
 any support within the node itself and as such the node may
 elect to not support this message. The text response must be
 less than NG_TEXTRESPONSE bytes in length (presently 1024).
@@ -1044,9 +1044,9 @@ may be loaded at any time as KLD modules via kldload(8).
 Moreover, netgraph knows how to automatically do
 this; when a request to create a new node of unknown type
 type is made, netgraph will attempt to load
-the KLD module ng_&lang;
+the KLD module ng_⟨
 
-type &rang; .ko.
+type ⟩ .ko.
 
 Types can also
 be installed at boot time, as certain device drivers may
@@ -1056,7 +1056,7 @@ netgraph node.
 In general, new
 types can be installed at any time from within the kernel by
 calling ng_newtype(), supplying a pointer to the
-type&rsquo;s struct ng_type structure.
+type’s struct ng_type structure.
 
 The
 NETGRAPH_INIT() macro automates this process by using
@@ -1084,8 +1084,8 @@ socket address.
 HOLE
 
 Responds only
-to generic messages and is a &rsquo;&rsquo;black
-hole&rsquo;&rsquo; for data. Useful for testing. Always
+to generic messages and is a ’’black
+hole’’ for data. Useful for testing. Always
 accepts new hooks.
 
 ECHO
@@ -1099,7 +1099,7 @@ new hooks.
 TEE
 
 This node is
-useful for &rsquo;&rsquo;snooping&rsquo;&rsquo;. It has 4
+useful for ’’snooping’’. It has 4
 hooks: left, right, left2right, and
 right2left. Data entering from the right is
 passed to the left and duplicated on
@@ -1125,7 +1125,7 @@ Frame Relay frames. Has a hook for the encapsulated packets
 FRAME RELAY LMI
 
 Automatically handles frame
-relay &rsquo;&rsquo;LMI&rsquo;&rsquo; (link management
+relay ’’LMI’’ (link management
 interface) operations and packets. Automatically probes and
 detects which of several LMI standards is in use at the
 exchange.
@@ -1136,7 +1136,7 @@ This node is
 also a line discipline. It simply converts between
 mbuf frames and sequential serial data, allowing a
 TTY to appear as a netgraph node. It has a
-programmable &rsquo;&rsquo;hotkey&rsquo;&rsquo;
+programmable ’’hotkey’’
 character.
 
 ASYNC
@@ -1160,8 +1160,8 @@ This node is also a system
 networking interface. It has hooks representing each
 protocol family (IP, IPv6) and appears in the output of
 ifconfig(8). The interfaces are named
-&rsquo;&rsquo;ng0&rsquo;&rsquo;,
-&rsquo;&rsquo;ng1&rsquo;&rsquo;, etc.
+’’ng0’’,
+’’ng1’’, etc.
 
 ONE2MANY
 
@@ -1251,9 +1251,9 @@ that needs to deal with netgraph messages.
 Definitions needed to use
 netgraph socket type nodes.
 
-&lang;
+⟨
 
-type&rang; .h
+type⟩ .h
 
 Definitions needed to use
 netgraph type nodes, including the type cookie
@@ -1264,8 +1264,8 @@ definition.
 The netgraph subsystem
 loadable KLD module.
 
-/boot/kernel/ng_&lang; 
-type&rang; .ko
+/boot/kernel/ng_⟨ 
+type⟩ .ko
 
 Loadable KLD module for node
 type type.

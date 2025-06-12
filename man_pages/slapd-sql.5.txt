@@ -13,7 +13,7 @@ The primary
 purpose of this slapd(8) backend is to PRESENT
 information stored in some RDBMS as an LDAP subtree without
 any programming (some SQL and maybe stored procedures
-can&rsquo;t be considered programming, anyway ;).
+can’t be considered programming, anyway ;).
 
 That is, for
 example, when you (some ISP) have account information you
@@ -78,7 +78,7 @@ The three above options are
 generally unneeded, because this information is taken from
 the datasource specified by the dbname directive.
 They allow to override datasource settings. Also, several
-RDBMS&rsquo; drivers tend to require explicit passing of
+RDBMS’ drivers tend to require explicit passing of
 user/password, even if those are given in datasource (Note:
 dbhost is currently ignored).
 
@@ -94,7 +94,7 @@ template used to form a subtree search condition
 SQL dialect to another (see samples). By default, it is
 constructed based on the knowledge about how to normalize DN
 values (e.g. "(ldap_entries.dn)
-LIKE CONCAT(&rsquo;%&rsquo;,?)"); see
+LIKE CONCAT(’%’,?)"); see
 upper_func, upper_needs_cast,
 concat_pattern and strcast_func in
 "HELPER CONFIGURATION" for details.
@@ -107,7 +107,7 @@ template used to form a children search condition
 dialect to another (see samples). By default, it is
 constructed based on the knowledge about how to normalize DN
 values (e.g. "(ldap_entries.dn)
-LIKE CONCAT(&rsquo;%,&rsquo;,?)"); see
+LIKE CONCAT(’%,’,?)"); see
 upper_func, upper_needs_cast,
 concat_pattern and strcast_func in
 "HELPER CONFIGURATION" for details.
@@ -181,7 +181,7 @@ delete an existing entry from table ldap_entries; see
 delobjclasses_stmt 
 
 The statement that is used to
-delete an existing entry&rsquo;s ID from table
+delete an existing entry’s ID from table
 ldap_objclasses; see "METAINFORMATION USED"
 for details. The default is "DELETE FROM
 ldap_entry_objclasses WHERE entry_id=?".
@@ -223,7 +223,7 @@ applied to literal strings. A cast in the form CAST
 ( AS VARCHAR()) is used,
 where  is builtin in back-sql;
 see macro BACKSQL_MAX_DN_LEN (currently 255; note
-that slapd&rsquo;s builtin limit, in macro
+that slapd’s builtin limit, in macro
 SLAP_LDAPDN_MAXLEN, is set to 8192). This is
 experimental and may change in future releases.
 
@@ -242,7 +242,7 @@ concat_pattern
 This statement defines the
 pattern that is used to concatenate strings. The
 pattern MUST contain two question marks,
-&rsquo;?&rsquo;, that will be replaced by the two strings
+’?’, that will be replaced by the two strings
 that must be concatenated. The default value is
 CONCAT(?,?); a form that is known to be highly
 portable (IBM db2, PostgreSQL) is ?||?, but an
@@ -257,12 +257,12 @@ aliasing_keyword
 
 Define the aliasing keyword.
 Some RDBMSes use the word "AS" (the
-default), others don&rsquo;t use any.
+default), others don’t use any.
 
 aliasing_quote
 
 Define the quoting char of the
-aliasing keyword. Some RDBMSes don&rsquo;t require any (the
+aliasing keyword. Some RDBMSes don’t require any (the
 default), others may require single or double quotes.
 
 has_ldapinfo_dn_ru { NO |
@@ -385,7 +385,7 @@ The easiest way
 is to create an objectClass for each entity you had in
 ER-diagram when designing your relational schema. Any
 relational schema, no matter how normalized it is, was
-designed after some model of your application&rsquo;s domain
+designed after some model of your application’s domain
 (for instance, accounts, services etc. in ISP), and is used
 in terms of its entities, not just tables of normalized
 schema. It means that for every attribute of every such
@@ -402,7 +402,7 @@ LDAP operation requests to (a series of) SQL queries. Let us
 deal with the SEARCH operation.
 
 Example:
-Let&rsquo;s suppose that we store information about persons
+Let’s suppose that we store information about persons
 working in our organization in two tables:
 
 PERSONS PHONES
@@ -434,7 +434,7 @@ values for cn attribute given person ID, we construct the
 query:
 
 SELECT
-CONCAT(persons.first_name,&rsquo; &rsquo;,persons.last_name)
+CONCAT(persons.first_name,’ ’,persons.last_name)
 
 AS cn FROM persons WHERE persons.id=?
 
@@ -454,7 +454,7 @@ SELECT ... FROM
 persons,phones 
 WHERE persons.id=phones.pers_id 
 AND persons.id=? 
-AND phones.phone like &rsquo;%1%2%3%&rsquo;
+AND phones.phone like ’%1%2%3%’
 
 (note how the
 telephoneNumber match is expanded in multiple wildcards to
@@ -496,8 +496,8 @@ ldap_attr_mappings
 id=1 
 oc_map_id=1 
 name="cn" 
-sel_expr="CONCAT(persons.first_name,&rsquo;
-&rsquo;,persons.last_name)" 
+sel_expr="CONCAT(persons.first_name,’
+’,persons.last_name)" 
 from_tbls="persons" 
 join_where=NULL 
 ************ 
@@ -536,7 +536,7 @@ Having this
 information in parts, we are able to not only construct
 queries that load attribute values by id of entry (for this
 we could store SQL query as a whole), but to construct
-queries that load id&rsquo;s of objects that correspond to a
+queries that load id’s of objects that correspond to a
 given search filter (or at least part of it). See below for
 examples.
 
@@ -564,13 +564,13 @@ Note that such
 design (see exact SQL table creation query) implies one
 important constraint - the key must be an integer. But all
 that I know about well-designed schemas makes me think that
-it&rsquo;s not very narrow ;) If anyone needs support for
+it’s not very narrow ;) If anyone needs support for
 different types for keys - he may want to write a patch, and
-submit it to OpenLDAP ITS, then I&rsquo;ll include it.
+submit it to OpenLDAP ITS, then I’ll include it.
 
 Also, several
-users complained that they don&rsquo;t really need very
-structured trees, and they don&rsquo;t want to update one
+users complained that they don’t really need very
+structured trees, and they don’t want to update one
 more table every time they add or delete an instance in the
 relational schema. Those people can use a view instead of a
 real table for ldap_entries, something like this (by Robin
@@ -579,19 +579,19 @@ Elfrink):
 CREATE VIEW
 ldap_entries (id, dn, oc_map_id, parent, keyval) 
 AS 
-SELECT 0, UPPER(&rsquo;o=MyCompany,c=NL&rsquo;), 
-3, 0, &rsquo;baseObject&rsquo; FROM unixusers WHERE
-userid=&rsquo;root&rsquo; 
+SELECT 0, UPPER(’o=MyCompany,c=NL’), 
+3, 0, ’baseObject’ FROM unixusers WHERE
+userid=’root’ 
 UNION 
 SELECT (1000000000+userid), 
 
-UPPER(CONCAT(CONCAT(&rsquo;cn=&rsquo;,gecos),&rsquo;,o=MyCompany,c=NL&rsquo;)),
+UPPER(CONCAT(CONCAT(’cn=’,gecos),’,o=MyCompany,c=NL’)),
 
 1, 0, userid FROM unixusers 
 UNION 
 SELECT (2000000000+groupnummer), 
 
-UPPER(CONCAT(CONCAT(&rsquo;cn=&rsquo;,groupname),&rsquo;,o=MyCompany,c=NL&rsquo;)),
+UPPER(CONCAT(CONCAT(’cn=’,groupname),’,o=MyCompany,c=NL’)),
 
 2, 0, groupnummer FROM groups;
 
@@ -615,7 +615,7 @@ the following query generated (which loads candidate
 IDs)
 
 SELECT
-ldap_entries.id,persons.id, &rsquo;person&rsquo; AS
+ldap_entries.id,persons.id, ’person’ AS
 objectClass, 
 ldap_entries.dn AS dn 
 FROM ldap_entries,persons,phones 
@@ -623,11 +623,11 @@ WHERE persons.id=ldap_entries.keyval
 AND ldap_entries.objclass=? 
 AND ldap_entries.parent=? 
 AND phones.pers_id=persons.id 
-AND (phones.phone LIKE &rsquo;%1%2%3%&rsquo;)
+AND (phones.phone LIKE ’%1%2%3%’)
 
 (for ONELEVEL
 search) or "... AND dn=?" (for BASE search) or
-"... AND dn LIKE &rsquo;%?&rsquo;" (for
+"... AND dn LIKE ’%?’" (for
 SUBTREE)
 
 Then, for each
@@ -667,7 +667,7 @@ with the concepts expressed above.
 COMMON TECHNIQUES
 
 First of all,
-let&rsquo;s recall that among other major differences to the
+let’s recall that among other major differences to the
 complete LDAP data model, the above illustrated concept does
 not directly support such features as multiple objectclasses
 per entry, and referrals. Fortunately, they are easy to
