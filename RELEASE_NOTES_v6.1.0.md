@@ -1,4 +1,4 @@
-# Release v6.0.0: Performance Revolution 🚀
+# Release v6.1.0: Performance Revolution & Offline GitLab Deployment 🚀
 
 ## Major Performance Improvements
 
@@ -57,10 +57,10 @@ This release includes a complete offline package ready for GitLab Pages deployme
 ### For GitLab Pages
 ```bash
 # Download the release
-wget https://github.com/Real-Fruit-Snacks/Pages/releases/download/v6.0.0/linux-man-pages-v6.0.0.tar.gz
+wget https://github.com/Real-Fruit-Snacks/Pages/releases/download/v6.1.0/linux-man-pages-v6.1.0-offline-gitlab.tar.gz
 
 # Extract
-tar -xzf linux-man-pages-v6.0.0.tar.gz
+tar -xzf linux-man-pages-v6.1.0-offline-gitlab.tar.gz
 
 # Push to GitLab
 git init
@@ -75,7 +75,7 @@ Your GitLab Pages site will be automatically deployed!
 Simply fork the repository and enable GitHub Pages in Settings.
 
 ## Checksums
-See `checksums-v6.0.0.txt` for SHA256 verification.
+See `checksums-v6.1.0.txt` for SHA256 verification.
 
 ---
 
