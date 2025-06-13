@@ -173,6 +173,29 @@
             margin-left: 12px;
         }
 
+        .section-area {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .section-btn {
+            background: #e8f0fe;
+            color: #1967d2;
+            border: 1px solid #1967d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .section-btn:hover {
+            background: #1967d2;
+            color: white;
+        }
+
         /* Main content area with navigation */
         .content-wrapper {
             display: none;
@@ -2917,19 +2940,39 @@
                 descElement.className = 'suggestion-desc';
                 descElement.textContent = result.description || 'No description available';
                 
-                // Create section badge
-                const sectionBadge = document.createElement('span');
-                sectionBadge.className = 'section-badge';
-                const sectionText = result.sections && result.sections.length > 1
-                    ? `Sections ${result.sections.sort((a, b) => a - b).join(', ')}`
-                    : `Section ${result.section}`;
-                sectionBadge.textContent = sectionText;
+                // Create section area
+                const sectionArea = document.createElement('div');
+                sectionArea.className = 'section-area';
+                
+                if (result.sections && result.sections.length > 1) {
+                    // Multiple sections - create individual buttons
+                    const sortedSections = result.sections.sort((a, b) => a - b);
+                    sortedSections.forEach(sectionNum => {
+                        const sectionBtn = document.createElement('button');
+                        sectionBtn.className = 'section-btn';
+                        sectionBtn.textContent = `Section ${sectionNum}`;
+                        sectionBtn.dataset.command = result.command;
+                        sectionBtn.dataset.section = sectionNum;
+                        sectionBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            displayManPage(result.command, sectionNum);
+                            suggestions.style.display = 'none';
+                        };
+                        sectionArea.appendChild(sectionBtn);
+                    });
+                } else {
+                    // Single section - show badge
+                    const sectionBadge = document.createElement('span');
+                    sectionBadge.className = 'section-badge';
+                    sectionBadge.textContent = `Section ${result.section}`;
+                    sectionArea.appendChild(sectionBadge);
+                }
                 
                 // Assemble structure
                 suggestionInfo.appendChild(commandElement);
                 suggestionInfo.appendChild(descElement);
                 suggestion.appendChild(suggestionInfo);
-                suggestion.appendChild(sectionBadge);
+                suggestion.appendChild(sectionArea);
                 
                 // Store data on the element for event delegation
                 suggestion.dataset.command = result.command;
