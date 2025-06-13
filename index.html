@@ -2549,8 +2549,10 @@
                 }
                 const markdown = await fetchTLDR(command);
                 
-                // Clear loading message
-                tldrContent.removeChild(loadingDiv);
+                // Clear loading message safely
+                if (loadingDiv.parentNode === tldrContent) {
+                    tldrContent.removeChild(loadingDiv);
+                }
                 
                 if (markdown) {
                     const tldr = parseTLDRMarkdown(markdown);
@@ -3292,7 +3294,10 @@
                 addToHistory(command, allSections[0].section);
                 
                 // Update URL hash for direct linking
-                window.location.hash = command;
+                if (window.location.hash !== '#' + command) {
+                    isSettingHash = true;
+                    window.location.hash = command;
+                }
                 
                 // Scroll to top
                 manPageContent.scrollTop = 0;
@@ -5143,10 +5148,19 @@
             }
         });
 
+        // Flag to prevent recursive hash change handling
+        let isSettingHash = false;
+        
         // Handle direct linking via hash
         function handleHashChange() {
             const hash = window.location.hash.slice(1);
             if (hash) {
+                // Check if we're already handling this hash change
+                if (isSettingHash) {
+                    isSettingHash = false;
+                    return;
+                }
+                
                 // Just command name in hash now
                 const command = hash;
                 const found = searchIndex.find(item => 
