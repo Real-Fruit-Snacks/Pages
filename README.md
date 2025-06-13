@@ -49,14 +49,14 @@ tar -xzf linux-man-pages.tar.gz
 │   └── options.js     # Command options database
 ├── themes/            # 16 modular theme CSS files
 ├── man_pages/         # 10,296 man page files (including tcpdump, nmap, strace, gdb)
-├── tldr_pages/        # 1,124 TLDR summaries (18 new pages added)
+├── tldr_pages/        # 1,128 TLDR summaries
 └── scripts/           # Maintenance utilities
 ```
 
 ## 🎯 Usage
 
 ### Search Commands
-- Start typing to search 10,296+ commands
+- Start typing to search 10,296 commands
 - Use section dropdown to filter by type
 - Click suggestions or press Enter to view
 
@@ -160,13 +160,13 @@ Linux manual pages remain under their original licenses.
 
 ## 📅 Recent Updates
 
-### v6.2.0 (Latest)
-- Updated man pages collection from official Linux sources
-- Increased from 9,371 to 10,290 man pages
-- Fixed Command Explainer bug where options weren't displaying
-- Added missing traditional Unix commands (at, bg, cal, cd)
-- Improved search index with 7,429 unique commands
-- Enhanced TLDR coverage analysis
+### v6.3.0 (Latest)
+- **Repository Cleanup**: Removed 93MB of unnecessary files (node_modules, dist, cache)
+- **Enhanced .gitignore**: Added comprehensive patterns for all platforms
+- **Updated Documentation**: Refreshed README with current stats and cleanup info
+- **Improved Performance**: Cleaner codebase for faster deployment
+- **TLDR Pages**: Now includes 1,128 TLDR summaries
+- **Man Pages**: Complete collection of 10,296 Linux manual pages
 
 ---
 
