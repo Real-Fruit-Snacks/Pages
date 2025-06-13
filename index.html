@@ -1997,7 +1997,7 @@
             const results = [];
             
             // Find all sections for this command in the search index
-            const entries = searchIndex.filter(item => 
+            const entries = window.searchIndex.filter(item => 
                 (item.command || item.name) === command
             );
             
@@ -2676,7 +2676,7 @@
                 bookmarkBtn.classList.remove('active');
                 showStatus('Bookmark removed');
             } else {
-                const entry = searchIndex.find(cmd => 
+                const entry = window.searchIndex.find(cmd => 
                     cmd.command === currentManPage.command && cmd.section === currentManPage.section
                 );
                 if (entry) {
@@ -2755,7 +2755,7 @@
 
             // Ensure search index is loaded before searching
             const indexLoaded = await ensureSearchIndex();
-            if (!indexLoaded || typeof searchIndex === 'undefined') {
+            if (!indexLoaded || typeof window.searchIndex === 'undefined') {
                 console.error('Failed to load search index');
                 showStatus('Failed to load search data', 3000);
                 return [];
@@ -2797,8 +2797,8 @@
                     }
                 }
 
-                // 3. Substring search in commands and descriptions (optimized with early exit)
-                if (foundEntries.size < 10) {
+                // 3. Substring search in commands and descriptions (only if no exact matches)
+                if (foundEntries.size === 0) {
                     for (const entry of window.searchIndex) {
                         if (foundEntries.size >= 50) break; // Early exit
                         
@@ -2850,7 +2850,7 @@
                 console.log('Using fallback linear search');
                 const commandGroups = new Map();
 
-                for (const entry of searchIndex) {
+                for (const entry of window.searchIndex) {
                     if (sectionFilter && entry.section !== sectionFilter) {
                         continue;
                     }
@@ -5034,7 +5034,7 @@
                 
                 // Just command name in hash now
                 const command = hash;
-                const found = searchIndex.find(item => 
+                const found = window.searchIndex.find(item => 
                     (item.command || item.name) === command
                 );
                 if (found) {
