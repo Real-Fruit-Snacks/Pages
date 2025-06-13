@@ -598,6 +598,12 @@
             font-weight: 500;
         }
         
+        .unloaded-indicator {
+            color: #ffa500;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        
         .collapse-icon {
             font-size: 14px;
             color: #999;
@@ -846,6 +852,14 @@
             text-align: center;
             padding: 40px;
             color: #666;
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+            cursor: pointer;
         }
 
         .error {
@@ -1927,6 +1941,44 @@
 
 
         // Load all man pages for a command
+        // Cache for loaded man page sections
+        const manPageCache = new Map();
+        const MANPAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+        async function loadManPageSection(command, section) {
+            const cacheKey = `${command}_${section}`;
+            
+            // Check cache first
+            const cached = manPageCache.get(cacheKey);
+            if (cached && Date.now() - cached.timestamp < MANPAGE_CACHE_TTL) {
+                return cached.data;
+            }
+            
+            try {
+                const response = await fetch(`man_pages/${command}.${section}.txt`);
+                if (response.ok) {
+                    const content = await response.text();
+                    const data = {
+                        section: section,
+                        content: processTextManPage(content),
+                        raw: content
+                    };
+                    
+                    // Cache the result
+                    manPageCache.set(cacheKey, {
+                        data: data,
+                        timestamp: Date.now()
+                    });
+                    
+                    return data;
+                }
+            } catch (error) {
+                console.error(`Error loading ${command}(${section}):`, error);
+            }
+            
+            return null;
+        }
+
         async function loadAllManPages(command) {
             const results = [];
             
@@ -1945,22 +1997,15 @@
                 return getNumericSection(a.section) - getNumericSection(b.section);
             });
             
-            // Load each section
+            // Return section metadata for lazy loading
             for (const entry of entries) {
-                try {
-                    const response = await fetch(`man_pages/${command}.${entry.section}.txt`);
-                    if (response.ok) {
-                        const content = await response.text();
-                        results.push({
-                            section: entry.section,
-                            description: entry.description,
-                            content: processTextManPage(content),
-                            command: command
-                        });
-                    }
-                } catch (error) {
-                    console.error(`Error loading ${command}(${entry.section}):`, error);
-                }
+                results.push({
+                    section: entry.section,
+                    description: entry.description,
+                    content: null, // Content will be loaded on demand
+                    command: command,
+                    loaded: false
+                });
             }
             
             if (results.length === 0) {
@@ -2489,6 +2534,11 @@
             tldrContent.appendChild(loadingDiv);
             
             try {
+                // Ensure TLDR index is loaded
+                const tldrIndexLoaded = await ensureTldrIndex();
+                if (!tldrIndexLoaded) {
+                    throw new Error('Failed to load TLDR index');
+                }
                 const markdown = await fetchTLDR(command);
                 
                 // Clear loading message
@@ -2795,10 +2845,29 @@
             return [];
         }
 
-        // Search function using the index
+        // Optimized search function using index structures
         async function searchManPages(query, section = '') {
             if (!query || query.length < 1) {
                 return [];
+            }
+
+            // Create cache key from query and section
+            const cacheKey = `${query.toLowerCase()}_${section || 'all'}`;
+            
+            // Check cache first
+            const cachedResult = searchResultCache.get(cacheKey);
+            if (cachedResult) {
+                const { results, timestamp } = cachedResult;
+                const age = Date.now() - timestamp;
+                
+                // Return cached results if still fresh
+                if (age < SEARCH_CACHE_TTL) {
+                    console.log(`Returning cached results for: "${query}", section: ${section || 'all'}`);
+                    return results;
+                } else {
+                    // Remove stale entry
+                    searchResultCache.delete(cacheKey);
+                }
             }
 
             // Ensure search index is loaded before searching
@@ -2809,31 +2878,70 @@
                 return [];
             }
 
-            let results = [];
+            const startTime = performance.now();
             const lowerQuery = query.toLowerCase();
             const sectionFilter = section ? parseInt(section) : null;
 
-            console.log(`Searching for: "${query}", searchIndex length: ${searchIndex.length}`);
+            console.log(`Optimized search for: "${query}"`);
 
-            // Group results by command name
-            const commandGroups = new Map();
+            // Use optimized search if available, fallback to linear search
+            let results = [];
+            
+            if (searchIndexMap && searchIndexByPrefix && tokenizedDescriptions) {
+                // Fast path: Use optimized indexes
+                const commandGroups = new Map();
+                const foundEntries = new Set();
 
-            for (const entry of searchIndex) {
-                if (sectionFilter && entry.section !== sectionFilter) {
-                    continue;
+                // 1. Exact command match (O(1))
+                if (searchIndexMap.has(lowerQuery)) {
+                    for (const entry of searchIndexMap.get(lowerQuery)) {
+                        if (!sectionFilter || entry.section === sectionFilter) {
+                            foundEntries.add(entry);
+                        }
+                    }
                 }
 
-                // Handle both 'command' and 'name' properties for backward compatibility
-                const commandName = entry.command || entry.name;
-                if (!commandName) {
-                    continue; // Skip entries without a command name
+                // 2. Prefix search for short queries (O(1) lookup + O(k) iteration)
+                if (lowerQuery.length >= 2 && lowerQuery.length <= 4) {
+                    const prefixMatches = searchIndexByPrefix.get(lowerQuery);
+                    if (prefixMatches) {
+                        for (const entry of prefixMatches) {
+                            if ((!sectionFilter || entry.section === sectionFilter) && 
+                                !foundEntries.has(entry)) {
+                                foundEntries.add(entry);
+                            }
+                        }
+                    }
                 }
 
-                const description = entry.description || '';
-                if (commandName.toLowerCase().includes(lowerQuery) || 
-                    description.toLowerCase().includes(lowerQuery)) {
-                    
-                    // Group by command name, keeping the lowest section number
+                // 3. Substring search in commands and descriptions (optimized with early exit)
+                if (foundEntries.size < 10) {
+                    for (const entry of window.searchIndex) {
+                        if (foundEntries.size >= 50) break; // Early exit
+                        
+                        if (sectionFilter && entry.section !== sectionFilter) continue;
+                        if (foundEntries.has(entry)) continue;
+
+                        const commandName = entry.command || entry.name;
+                        if (!commandName) continue;
+
+                        // Check command substring match
+                        if (commandName.toLowerCase().includes(lowerQuery)) {
+                            foundEntries.add(entry);
+                            continue;
+                        }
+
+                        // Check description match using pre-tokenized data
+                        const tokenData = tokenizedDescriptions.get(entry);
+                        if (tokenData && tokenData.descLower.includes(lowerQuery)) {
+                            foundEntries.add(entry);
+                        }
+                    }
+                }
+
+                // Group by command name
+                for (const entry of foundEntries) {
+                    const commandName = entry.command || entry.name;
                     if (!commandGroups.has(commandName)) {
                         commandGroups.set(commandName, {
                             ...entry,
@@ -2843,7 +2951,6 @@
                     } else {
                         const existing = commandGroups.get(commandName);
                         existing.sections.push(entry.section);
-                        // Keep the entry with the lowest section number
                         if (entry.section < existing.section) {
                             commandGroups.set(commandName, {
                                 ...entry,
@@ -2852,27 +2959,80 @@
                             });
                         }
                     }
-                    
-                    // Debug log for specific commands
-                    if (['ls', 'cat', 'chmod'].includes(commandName)) {
-                        console.log(`Found ${commandName} matching query "${query}"`);
+                }
+
+                results = Array.from(commandGroups.values());
+            } else {
+                // Fallback: Use original linear search
+                console.log('Using fallback linear search');
+                const commandGroups = new Map();
+
+                for (const entry of searchIndex) {
+                    if (sectionFilter && entry.section !== sectionFilter) {
+                        continue;
+                    }
+
+                    const commandName = entry.command || entry.name;
+                    if (!commandName) continue;
+
+                    const description = entry.description || '';
+                    if (commandName.toLowerCase().includes(lowerQuery) || 
+                        description.toLowerCase().includes(lowerQuery)) {
+                        
+                        if (!commandGroups.has(commandName)) {
+                            commandGroups.set(commandName, {
+                                ...entry,
+                                command: commandName,
+                                sections: [entry.section]
+                            });
+                        } else {
+                            const existing = commandGroups.get(commandName);
+                            existing.sections.push(entry.section);
+                            if (entry.section < existing.section) {
+                                commandGroups.set(commandName, {
+                                    ...entry,
+                                    command: commandName,
+                                    sections: existing.sections
+                                });
+                            }
+                        }
                     }
                 }
+
+                results = Array.from(commandGroups.values());
             }
 
-            // Convert map to array
-            results = Array.from(commandGroups.values());
-
+            // Sort results
             results.sort((a, b) => {
                 const aExact = a.command.toLowerCase() === lowerQuery;
                 const bExact = b.command.toLowerCase() === lowerQuery;
                 if (aExact && !bExact) return -1;
                 if (!aExact && bExact) return 1;
+                
+                // Prioritize shorter commands
+                const lenDiff = a.command.length - b.command.length;
+                if (lenDiff !== 0) return lenDiff;
+                
                 return a.command.localeCompare(b.command);
             });
 
-            console.log(`Found ${results.length} unique commands for "${query}", returning top 10`);
-            return results.slice(0, 10);
+            const searchTime = performance.now() - startTime;
+            console.log(`Search completed in ${searchTime.toFixed(2)}ms, found ${results.length} results`);
+            
+            const topResults = results.slice(0, 10);
+            
+            // Cache the results
+            if (searchResultCache.size >= SEARCH_CACHE_MAX_SIZE) {
+                const firstKey = searchResultCache.keys().next().value;
+                searchResultCache.delete(firstKey);
+            }
+            
+            searchResultCache.set(cacheKey, {
+                results: topResults,
+                timestamp: Date.now()
+            });
+            
+            return topResults;
         }
 
         // Display suggestions with keyboard navigation
@@ -2990,6 +3150,7 @@
                     const sectionDiv = document.createElement('div');
                     sectionDiv.className = `man-section ${isFirstSection ? '' : 'collapsed'}`;
                     sectionDiv.dataset.section = sectionData.section;
+                    sectionDiv.dataset.command = command;
                     
                     // Create header
                     const headerDiv = document.createElement('div');
@@ -2998,6 +3159,7 @@
                         <div class="man-section-info">
                             <span class="man-section-title">${command}(${sectionData.section})</span>
                             <span class="section-badge">Section ${sectionData.section}</span>
+                            ${!isFirstSection ? '<span class="unloaded-indicator" title="Content will be loaded on first click">●</span>' : ''}
                         </div>
                         <span class="collapse-icon">▼</span>
                     `;
@@ -3009,11 +3171,78 @@
                     // Create inner content wrapper for padding
                     const innerContent = document.createElement('div');
                     innerContent.className = 'man-page-content';
-                    innerContent.innerHTML = sectionData.content;
+                    
+                    // For the first section, load content immediately
+                    if (isFirstSection) {
+                        innerContent.innerHTML = '<div class="loading">Loading content...</div>';
+                        loadManPageSection(command, sectionData.section).then(data => {
+                            if (data) {
+                                innerContent.innerHTML = data.content;
+                                sectionData.content = data.content;
+                                sectionData.loaded = true;
+                                
+                                // Remove unloaded indicator
+                                const indicator = headerDiv.querySelector('.unloaded-indicator');
+                                if (indicator) {
+                                    indicator.remove();
+                                }
+                                
+                                // Add cross-reference click handlers
+                                innerContent.querySelectorAll('.cross-ref').forEach(ref => {
+                                    ref.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        const refCommand = ref.dataset.command;
+                                        const refSection = ref.dataset.section;
+                                        displayManPage(refCommand, refSection);
+                                    });
+                                });
+                                
+                                // Find related commands from first section
+                                const relatedCmds = findRelatedCommands(command, data.content);
+                                displayRelatedCommands(relatedCmds);
+                            } else {
+                                innerContent.innerHTML = '<div class="error">Failed to load content</div>';
+                            }
+                        });
+                    } else {
+                        // For other sections, show placeholder
+                        innerContent.innerHTML = '<div class="loading-placeholder">Click to load content...</div>';
+                    }
+                    
                     contentDiv.appendChild(innerContent);
                     
                     // Add click handler to header
-                    headerDiv.addEventListener('click', () => {
+                    headerDiv.addEventListener('click', async () => {
+                        // If expanding and content not loaded, load it first
+                        if (sectionDiv.classList.contains('collapsed') && !sectionData.loaded) {
+                            innerContent.innerHTML = '<div class="loading">Loading content...</div>';
+                            
+                            const data = await loadManPageSection(command, sectionData.section);
+                            if (data) {
+                                innerContent.innerHTML = data.content;
+                                sectionData.content = data.content;
+                                sectionData.loaded = true;
+                                
+                                // Remove unloaded indicator
+                                const indicator = headerDiv.querySelector('.unloaded-indicator');
+                                if (indicator) {
+                                    indicator.remove();
+                                }
+                                
+                                // Add cross-reference click handlers
+                                innerContent.querySelectorAll('.cross-ref').forEach(ref => {
+                                    ref.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        const refCommand = ref.dataset.command;
+                                        const refSection = ref.dataset.section;
+                                        displayManPage(refCommand, refSection);
+                                    });
+                                });
+                            } else {
+                                innerContent.innerHTML = '<div class="error">Failed to load content</div>';
+                            }
+                        }
+                        
                         sectionDiv.classList.toggle('collapsed');
                         
                         // If expanding this section, we need to set max-height for animation
@@ -3038,16 +3267,6 @@
                     if (isFirstSection) {
                         contentDiv.style.maxHeight = 'none';
                     }
-                    
-                    // Add cross-reference click handlers
-                    innerContent.querySelectorAll('.cross-ref').forEach(ref => {
-                        ref.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const refCommand = ref.dataset.command;
-                            const refSection = ref.dataset.section;
-                            displayManPage(refCommand, refSection);
-                        });
-                    });
                 });
                 
                 // Show section navigation
@@ -3056,10 +3275,7 @@
                 // Build navigation for all sections
                 buildNavigationForAllSections(allSections);
                 
-                // Find related commands from first section
-                const firstContent = allSections[0].content;
-                const relatedCmds = findRelatedCommands(command, firstContent);
-                displayRelatedCommands(relatedCmds);
+                // Related commands will be loaded after first section content loads
                 
                 // Display TLDR summary
                 displayTLDR(command);
@@ -3158,10 +3374,20 @@
                 }
             } else if (e.key === 'Enter') {
                 e.preventDefault();
+                let targetSuggestion = null;
+                
                 if (selectedSuggestionIndex >= 0 && suggestionElements[selectedSuggestionIndex]) {
-                    suggestionElements[selectedSuggestionIndex].click();
+                    targetSuggestion = suggestionElements[selectedSuggestionIndex];
                 } else if (suggestionElements.length > 0) {
-                    suggestionElements[0].click();
+                    targetSuggestion = suggestionElements[0];
+                }
+                
+                if (targetSuggestion) {
+                    const command = targetSuggestion.dataset.command;
+                    const section = targetSuggestion.dataset.section;
+                    if (command && section) {
+                        displayManPage(command, section);
+                    }
                 }
             }
         });
@@ -3198,7 +3424,7 @@
                 if (fullTextSearchEnabled) {
                     results = await searchInContent(query, sectionSelect.value);
                 } else {
-                    results = searchManPages(query, sectionSelect.value);
+                    results = await searchManPages(query, sectionSelect.value);
                 }
                 console.log(`Search completed, found ${results.length} results`);
                 displaySuggestions(results);
@@ -3213,7 +3439,7 @@
             if (fullTextSearchEnabled) {
                 results = await searchInContent(query, sectionSelect.value);
             } else {
-                results = searchManPages(query, sectionSelect.value);
+                results = await searchManPages(query, sectionSelect.value);
             }
             
             if (results.length > 0) {
@@ -3336,6 +3562,40 @@
         // Theme loading cache to avoid duplicate requests
         const themeCache = new Map();
         let currentLoadedTheme = null;
+        
+        // Search result cache to avoid redundant searches
+        const searchResultCache = new Map();
+        const SEARCH_CACHE_MAX_SIZE = 100; // Limit cache size to prevent memory issues
+        const SEARCH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL
+        
+        // Clear search cache utility
+        function clearSearchCache() {
+            searchResultCache.clear();
+            console.log('Search result cache cleared');
+        }
+        
+        // Get cache statistics for debugging
+        function getSearchCacheStats() {
+            let totalAge = 0;
+            let expiredCount = 0;
+            const now = Date.now();
+            
+            for (const [key, value] of searchResultCache.entries()) {
+                const age = now - value.timestamp;
+                totalAge += age;
+                if (age >= SEARCH_CACHE_TTL) {
+                    expiredCount++;
+                }
+            }
+            
+            return {
+                size: searchResultCache.size,
+                avgAge: searchResultCache.size > 0 ? Math.round(totalAge / searchResultCache.size / 1000) : 0,
+                expiredCount,
+                maxSize: SEARCH_CACHE_MAX_SIZE,
+                ttl: SEARCH_CACHE_TTL / 1000
+            };
+        }
 
         async function loadThemeCSS(theme) {
             if (!theme.file) {
@@ -4883,6 +5143,11 @@
         let searchIndexLoaded = false;
         let tldrIndexLoaded = false;
         let optionsLoaded = false;
+        
+        // Optimized search index structures
+        let searchIndexMap = null; // Map for O(1) exact lookups
+        let searchIndexByPrefix = null; // Map for prefix searches
+        let tokenizedDescriptions = null; // Pre-processed descriptions
 
         // Lazy load data files on demand
         async function loadDataFile(filename, variableName) {
@@ -4920,6 +5185,12 @@
 
             const success = await loadDataFile('data/index.js', 'searchIndex');
             searchIndexLoaded = success;
+            
+            // Build optimized indexes after loading
+            if (success) {
+                buildOptimizedSearchIndex();
+            }
+            
             return success;
         }
 
@@ -4945,6 +5216,53 @@
             return success;
         }
 
+        // Build optimized search index structures
+        function buildOptimizedSearchIndex() {
+            if (!window.searchIndex || searchIndexMap) {
+                return; // Already built or no data
+            }
+
+            console.log('Building optimized search index...');
+            const startTime = performance.now();
+
+            // Initialize structures
+            searchIndexMap = new Map();
+            searchIndexByPrefix = new Map();
+            tokenizedDescriptions = new Map();
+
+            // Build indexes
+            for (const entry of window.searchIndex) {
+                const commandLower = entry.command.toLowerCase();
+                
+                // Exact command lookup map
+                if (!searchIndexMap.has(commandLower)) {
+                    searchIndexMap.set(commandLower, []);
+                }
+                searchIndexMap.get(commandLower).push(entry);
+
+                // Prefix index (first 2-4 characters)
+                for (let len = 2; len <= Math.min(4, commandLower.length); len++) {
+                    const prefix = commandLower.substring(0, len);
+                    if (!searchIndexByPrefix.has(prefix)) {
+                        searchIndexByPrefix.set(prefix, new Set());
+                    }
+                    searchIndexByPrefix.get(prefix).add(entry);
+                }
+
+                // Tokenize and index description
+                if (entry.description) {
+                    const descLower = entry.description.toLowerCase();
+                    const tokens = descLower.split(/\s+/).filter(t => t.length > 2);
+                    tokenizedDescriptions.set(entry, { descLower, tokens });
+                }
+            }
+
+            const buildTime = performance.now() - startTime;
+            console.log(`Optimized search index built in ${buildTime.toFixed(2)}ms`);
+            console.log(`- Exact lookup map: ${searchIndexMap.size} unique commands`);
+            console.log(`- Prefix index: ${searchIndexByPrefix.size} prefixes`);
+        }
+
         // Initialize
         window.addEventListener('load', async () => {
             loadSavedData();
@@ -4962,6 +5280,36 @@
         });
         
         window.addEventListener('hashchange', handleHashChange);
+        
+        // Expose cache utilities for debugging
+        window.searchCacheDebug = {
+            getStats: getSearchCacheStats,
+            clear: clearSearchCache,
+            view: () => {
+                const stats = getSearchCacheStats();
+                console.log('Search Cache Statistics:', stats);
+                console.log(`Cache entries: ${stats.size}/${stats.maxSize}`);
+                console.log(`Average age: ${stats.avgAge}s`);
+                console.log(`Expired entries: ${stats.expiredCount}`);
+                console.log(`TTL: ${stats.ttl}s`);
+                return stats;
+            },
+            inspect: (query, section) => {
+                const cacheKey = `${query.toLowerCase()}_${section || 'all'}`;
+                const entry = searchResultCache.get(cacheKey);
+                if (entry) {
+                    const age = Math.round((Date.now() - entry.timestamp) / 1000);
+                    console.log(`Cache entry for "${query}" (section: ${section || 'all'}):`);
+                    console.log(`- Results: ${entry.results.length} items`);
+                    console.log(`- Age: ${age}s`);
+                    console.log(`- Expires in: ${Math.round(SEARCH_CACHE_TTL / 1000 - age)}s`);
+                    return entry;
+                } else {
+                    console.log(`No cache entry found for "${query}" (section: ${section || 'all'})`);
+                    return null;
+                }
+            }
+        };
     </script>
 </body>
 </html>
