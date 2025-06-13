@@ -5,22 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linux Man Pages</title>
     
-    <!-- Theme CSS files -->
-    <link rel="stylesheet" href="themes/dark.css">
-    <link rel="stylesheet" href="themes/solarized-dark.css">
-    <link rel="stylesheet" href="themes/dracula.css">
-    <link rel="stylesheet" href="themes/monokai.css">
-    <link rel="stylesheet" href="themes/high-contrast.css">
-    <link rel="stylesheet" href="themes/nord.css">
-    <link rel="stylesheet" href="themes/gruvbox.css">
-    <link rel="stylesheet" href="themes/one-dark.css">
-    <link rel="stylesheet" href="themes/tokyo-night.css">
-    <link rel="stylesheet" href="themes/neon-noir.css">
-    <link rel="stylesheet" href="themes/cyber-frost.css">
-    <link rel="stylesheet" href="themes/retro-wave.css">
-    <link rel="stylesheet" href="themes/miami-sunrise.css">
-    <link rel="stylesheet" href="themes/forest-dawn.css">
-    <link rel="stylesheet" href="themes/ocean-depth.css">
+    <!-- Dynamic theme loading system will inject CSS here -->
+    <style id="theme-styles">
+        /* Default theme styles will be loaded here dynamically */
+    </style>
     <style>
         * {
             margin: 0;
@@ -1812,10 +1800,7 @@
         </div>
     </div>
 
-    <!-- Load manifest and index -->
-    <script src="data/index.js"></script>
-    <script src="data/tldr_index.js"></script>
-    <script src="data/options.js"></script>
+    <!-- Dynamic data loading will be handled by JavaScript -->
     
     <script>
         // Application state
@@ -2466,45 +2451,69 @@
         }
 
         function renderTLDR(tldr) {
-            let html = '';
+            const htmlParts = [];
             
             if (tldr.description) {
-                html += `<p class="tldr-description">${tldr.description}</p>`;
+                htmlParts.push(`<p class="tldr-description">${tldr.description}</p>`);
             }
             
             if (tldr.examples.length > 0) {
-                html += '<div class="tldr-examples">';
-                html += '<h5>Quick Examples:</h5>';
+                htmlParts.push('<div class="tldr-examples">');
+                htmlParts.push('<h5>Quick Examples:</h5>');
                 
                 for (const example of tldr.examples) {
-                    html += '<div class="tldr-example">';
-                    html += `<p class="example-description">${example.description}</p>`;
-                    html += `<pre class="example-code">${highlightTLDRCode(example.code)}</pre>`;
-                    html += '</div>';
+                    htmlParts.push('<div class="tldr-example">');
+                    htmlParts.push(`<p class="example-description">${example.description}</p>`);
+                    htmlParts.push(`<pre class="example-code">${highlightTLDRCode(example.code)}</pre>`);
+                    htmlParts.push('</div>');
                 }
                 
-                html += '</div>';
+                htmlParts.push('</div>');
             }
             
-            return html;
+            return htmlParts.join('');
         }
 
         async function displayTLDR(command) {
             tldrSection.style.display = 'block';
-            tldrContent.innerHTML = '<div class="tldr-loading">Loading TLDR summary...</div>';
+            
+            // Clear content efficiently
+            while (tldrContent.firstChild) {
+                tldrContent.removeChild(tldrContent.firstChild);
+            }
+            
+            // Create loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'tldr-loading';
+            loadingDiv.textContent = 'Loading TLDR summary...';
+            tldrContent.appendChild(loadingDiv);
             
             try {
                 const markdown = await fetchTLDR(command);
                 
+                // Clear loading message
+                tldrContent.removeChild(loadingDiv);
+                
                 if (markdown) {
                     const tldr = parseTLDRMarkdown(markdown);
+                    // Use innerHTML here since renderTLDR returns safe, controlled HTML
                     tldrContent.innerHTML = renderTLDR(tldr);
                 } else {
-                    tldrContent.innerHTML = '<div class="no-tldr">No TLDR summary available for this command.</div>';
+                    const noTldrDiv = document.createElement('div');
+                    noTldrDiv.className = 'no-tldr';
+                    noTldrDiv.textContent = 'No TLDR summary available for this command.';
+                    tldrContent.appendChild(noTldrDiv);
                 }
             } catch (error) {
                 console.error('Error displaying TLDR:', error);
-                tldrContent.innerHTML = '<div class="no-tldr">Failed to load TLDR summary.</div>';
+                // Clear any existing content
+                while (tldrContent.firstChild) {
+                    tldrContent.removeChild(tldrContent.firstChild);
+                }
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'no-tldr';
+                errorDiv.textContent = 'Failed to load TLDR summary.';
+                tldrContent.appendChild(errorDiv);
             }
         }
 
@@ -2787,14 +2796,16 @@
         }
 
         // Search function using the index
-        function searchManPages(query, section = '') {
+        async function searchManPages(query, section = '') {
             if (!query || query.length < 1) {
                 return [];
             }
 
-            // Check if searchIndex is loaded
-            if (typeof searchIndex === 'undefined') {
-                console.error('searchIndex is not loaded');
+            // Ensure search index is loaded before searching
+            const indexLoaded = await ensureSearchIndex();
+            if (!indexLoaded || typeof searchIndex === 'undefined') {
+                console.error('Failed to load search index');
+                showStatus('Failed to load search data', 3000);
                 return [];
             }
 
@@ -2869,7 +2880,11 @@
         
         function displaySuggestions(results) {
             console.log(`displaySuggestions called with ${results.length} results`);
-            suggestions.innerHTML = '';
+            
+            // Clear suggestions efficiently
+            while (suggestions.firstChild) {
+                suggestions.removeChild(suggestions.firstChild);
+            }
             selectedSuggestionIndex = -1;
             
             if (results.length === 0) {
@@ -2878,33 +2893,52 @@
                 return;
             }
 
+            // Use DocumentFragment for batch DOM operations
+            const fragment = document.createDocumentFragment();
+
             results.forEach((result, index) => {
                 const suggestion = document.createElement('div');
                 suggestion.className = 'suggestion';
                 suggestion.dataset.index = index;
                 
-                const descriptionText = result.description || 'No description available';
+                // Create suggestion info container
+                const suggestionInfo = document.createElement('div');
+                suggestionInfo.className = 'suggestion-info';
                 
-                // Show all available sections if multiple exist
-                const sectionBadge = result.sections && result.sections.length > 1
+                // Create command element
+                const commandElement = document.createElement('div');
+                commandElement.className = 'suggestion-command';
+                commandElement.textContent = result.command || '';
+                
+                // Create description element
+                const descElement = document.createElement('div');
+                descElement.className = 'suggestion-desc';
+                descElement.textContent = result.description || 'No description available';
+                
+                // Create section badge
+                const sectionBadge = document.createElement('span');
+                sectionBadge.className = 'section-badge';
+                const sectionText = result.sections && result.sections.length > 1
                     ? `Sections ${result.sections.sort((a, b) => a - b).join(', ')}`
                     : `Section ${result.section}`;
+                sectionBadge.textContent = sectionText;
                 
-                suggestion.innerHTML = `
-                    <div class="suggestion-info">
-                        <div class="suggestion-command">${result.command}</div>
-                        <div class="suggestion-desc">${descriptionText}</div>
-                    </div>
-                    <span class="section-badge">${sectionBadge}</span>
-                `;
+                // Assemble structure
+                suggestionInfo.appendChild(commandElement);
+                suggestionInfo.appendChild(descElement);
+                suggestion.appendChild(suggestionInfo);
+                suggestion.appendChild(sectionBadge);
                 
-                suggestion.addEventListener('click', () => {
-                    displayManPage(result.command, result.section);
-                });
+                // Store data on the element for event delegation
+                suggestion.dataset.command = result.command;
+                suggestion.dataset.section = result.section;
                 
-                suggestions.appendChild(suggestion);
+                // Add to fragment instead of directly to DOM
+                fragment.appendChild(suggestion);
             });
             
+            // Single DOM operation to add all suggestions
+            suggestions.appendChild(fragment);
             suggestions.style.display = 'block';
         }
 
@@ -3132,6 +3166,19 @@
             }
         });
 
+        // Set up event delegation for suggestions container
+        suggestions.addEventListener('click', (e) => {
+            // Find the clicked suggestion element (handles clicks on child elements)
+            const suggestion = e.target.closest('.suggestion');
+            if (suggestion) {
+                const command = suggestion.dataset.command;
+                const section = suggestion.dataset.section;
+                if (command && section) {
+                    displayManPage(command, section);
+                }
+            }
+        });
+
         // Event listeners
         searchInput.addEventListener('input', async (e) => {
             const query = e.target.value;
@@ -3262,22 +3309,22 @@
 
         // Theme toggle handling
         const themes = [
-            { name: 'Cyber Frost', class: 'cyber-frost', icon: '❄️' },
-            { name: 'Dark', class: 'dark-mode', icon: '🌙' },
-            { name: 'Dracula', class: 'dracula', icon: '🧛' },
-            { name: 'Forest Dawn', class: 'forest-dawn', icon: '🌲' },
-            { name: 'Gruvbox', class: 'gruvbox', icon: '🍂' },
-            { name: 'High Contrast', class: 'high-contrast', icon: '⚡' },
-            { name: 'Light', class: '', icon: '☀️' },
-            { name: 'Miami Sunrise', class: 'miami-sunrise', icon: '🌺' },
-            { name: 'Monokai', class: 'monokai', icon: '🎨' },
-            { name: 'Neon Noir', class: 'neon-noir', icon: '🌆' },
-            { name: 'Nord', class: 'nord', icon: '🏔️' },
-            { name: 'Ocean Depth', class: 'ocean-depth', icon: '🌊' },
-            { name: 'One Dark', class: 'one-dark', icon: '🌑' },
-            { name: 'Retro Wave', class: 'retro-wave', icon: '🌴' },
-            { name: 'Solarized', class: 'solarized-dark', icon: '🌅' },
-            { name: 'Tokyo Night', class: 'tokyo-night', icon: '🌃' }
+            { name: 'Cyber Frost', class: 'cyber-frost', icon: '❄️', file: 'themes/cyber-frost.css' },
+            { name: 'Dark', class: 'dark-mode', icon: '🌙', file: 'themes/dark.css' },
+            { name: 'Dracula', class: 'dracula', icon: '🧛', file: 'themes/dracula.css' },
+            { name: 'Forest Dawn', class: 'forest-dawn', icon: '🌲', file: 'themes/forest-dawn.css' },
+            { name: 'Gruvbox', class: 'gruvbox', icon: '🍂', file: 'themes/gruvbox.css' },
+            { name: 'High Contrast', class: 'high-contrast', icon: '⚡', file: 'themes/high-contrast.css' },
+            { name: 'Light', class: '', icon: '☀️', file: null },
+            { name: 'Miami Sunrise', class: 'miami-sunrise', icon: '🌺', file: 'themes/miami-sunrise.css' },
+            { name: 'Monokai', class: 'monokai', icon: '🎨', file: 'themes/monokai.css' },
+            { name: 'Neon Noir', class: 'neon-noir', icon: '🌆', file: 'themes/neon-noir.css' },
+            { name: 'Nord', class: 'nord', icon: '🏔️', file: 'themes/nord.css' },
+            { name: 'Ocean Depth', class: 'ocean-depth', icon: '🌊', file: 'themes/ocean-depth.css' },
+            { name: 'One Dark', class: 'one-dark', icon: '🌑', file: 'themes/one-dark.css' },
+            { name: 'Retro Wave', class: 'retro-wave', icon: '🌴', file: 'themes/retro-wave.css' },
+            { name: 'Solarized', class: 'solarized-dark', icon: '🌅', file: 'themes/solarized-dark.css' },
+            { name: 'Tokyo Night', class: 'tokyo-night', icon: '🌃', file: 'themes/tokyo-night.css' }
         ];
         
         let currentThemeIndex = 11; // Ocean Depth as default
@@ -3286,42 +3333,77 @@
         
         // Theme name tooltip removed - using modal instead
         
-        // Load saved theme or apply default
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            const themeIndex = themes.findIndex(t => t.class === savedTheme);
-            if (themeIndex !== -1) {
-                currentThemeIndex = themeIndex;
-                applyTheme(currentThemeIndex);
-            } else {
-                // Saved theme not found, apply default
-                applyTheme(currentThemeIndex);
+        // Theme loading cache to avoid duplicate requests
+        const themeCache = new Map();
+        let currentLoadedTheme = null;
+
+        async function loadThemeCSS(theme) {
+            if (!theme.file) {
+                // Light theme - no CSS file needed
+                return '';
             }
-        } else {
-            // No saved theme, apply default
-            applyTheme(currentThemeIndex);
+
+            // Check cache first
+            if (themeCache.has(theme.file)) {
+                return themeCache.get(theme.file);
+            }
+
+            try {
+                const response = await fetch(theme.file);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${theme.file}: ${response.status}`);
+                }
+                
+                const css = await response.text();
+                themeCache.set(theme.file, css);
+                return css;
+            } catch (error) {
+                console.error('Error loading theme CSS:', error);
+                return '';
+            }
+        }
+
+        async function applyTheme(index) {
+            const theme = themes[index];
+            const themeStylesElement = document.getElementById('theme-styles');
+            
+            try {
+                // Load theme CSS dynamically
+                const css = await loadThemeCSS(theme);
+                
+                // Replace theme styles
+                themeStylesElement.textContent = css;
+                currentLoadedTheme = theme.file;
+                
+                // Update icon
+                themeIcon.textContent = theme.icon;
+                
+                // Save preference
+                localStorage.setItem('theme', theme.class || '');
+                
+                console.log(`Theme applied: ${theme.name}`);
+            } catch (error) {
+                console.error('Error applying theme:', error);
+            }
         }
         
-        function applyTheme(index) {
-            // Remove all theme classes
-            themes.forEach(theme => {
-                if (theme.class) {
-                    document.body.classList.remove(theme.class);
+        // Load saved theme or apply default after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                const themeIndex = themes.findIndex(t => t.class === savedTheme);
+                if (themeIndex !== -1) {
+                    currentThemeIndex = themeIndex;
+                    applyTheme(currentThemeIndex);
+                } else {
+                    // Saved theme not found, apply default
+                    applyTheme(currentThemeIndex);
                 }
-            });
-            
-            // Apply new theme
-            const theme = themes[index];
-            if (theme.class) {
-                document.body.classList.add(theme.class);
+            } else {
+                // No saved theme, apply default
+                applyTheme(currentThemeIndex);
             }
-            
-            // Update icon
-            themeIcon.textContent = theme.icon;
-            
-            // Save preference
-            localStorage.setItem('theme', theme.class || '');
-        }
+        });
         
         // Theme modal elements
         const themeModal = document.getElementById('themeModal');
@@ -4796,16 +4878,83 @@
             }
         }
 
+        // Lazy loading cache and state
+        const dataCache = new Map();
+        let searchIndexLoaded = false;
+        let tldrIndexLoaded = false;
+        let optionsLoaded = false;
+
+        // Lazy load data files on demand
+        async function loadDataFile(filename, variableName) {
+            if (dataCache.has(filename)) {
+                return dataCache.get(filename);
+            }
+
+            try {
+                showStatus(`Loading ${filename}...`);
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${filename}: ${response.status}`);
+                }
+                
+                const script = await response.text();
+                
+                // Execute the script to create global variables
+                eval(script);
+                
+                dataCache.set(filename, true);
+                showStatus(`${filename} loaded successfully`);
+                return true;
+            } catch (error) {
+                console.error(`Error loading ${filename}:`, error);
+                showStatus(`Error loading ${filename}`, 3000);
+                return false;
+            }
+        }
+
+        // Load search index only when needed
+        async function ensureSearchIndex() {
+            if (searchIndexLoaded && typeof window.searchIndex !== 'undefined') {
+                return true;
+            }
+
+            const success = await loadDataFile('data/index.js', 'searchIndex');
+            searchIndexLoaded = success;
+            return success;
+        }
+
+        // Load TLDR index only when needed
+        async function ensureTldrIndex() {
+            if (tldrIndexLoaded && typeof window.tldrIndex !== 'undefined') {
+                return true;
+            }
+
+            const success = await loadDataFile('data/tldr_index.js', 'tldrIndex');
+            tldrIndexLoaded = success;
+            return success;
+        }
+
+        // Load command options only when needed
+        async function ensureOptions() {
+            if (optionsLoaded && typeof window.commandOptions !== 'undefined') {
+                return true;
+            }
+
+            const success = await loadDataFile('data/options.js', 'commandOptions');
+            optionsLoaded = success;
+            return success;
+        }
+
         // Initialize
         window.addEventListener('load', async () => {
             loadSavedData();
             
-            if (typeof searchIndex === 'undefined') {
-                showStatus('Warning: Search index not found.', 5000);
-            } else {
-                showStatus(`Ready: ${searchIndex.length} man pages available`);
-                
-                // Check for direct link
+            // Show initial ready state without loading data
+            showStatus('Ready - Search to load man pages');
+            
+            // Check for direct link - load search index if needed
+            if (window.location.hash) {
+                await ensureSearchIndex();
                 handleHashChange();
             }
             
