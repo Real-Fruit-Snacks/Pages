@@ -7,7 +7,7 @@ A blazing-fast, fully self-contained web application for searching and viewing L
 ## ✨ Key Features
 
 - **🔍 Instant Search** - Real-time search with intelligent suggestions
-- **📚 10,290 Man Pages** - Comprehensive Linux command documentation from official sources
+- **📚 10,296 Man Pages** - Comprehensive Linux command documentation from official sources
 - **📋 TLDR Integration** - Quick practical examples for common commands
 - **🎨 16 Beautiful Themes** - From dark modes to high contrast
 - **⚡ Lightning Fast** - 32ms page load, instant search results
@@ -48,15 +48,15 @@ tar -xzf linux-man-pages.tar.gz
 │   ├── tldr_index.js  # TLDR pages index
 │   └── options.js     # Command options database
 ├── themes/            # 16 modular theme CSS files
-├── man_pages/         # 10,290 man page files
-├── tldr_pages/        # 1,106 TLDR summaries
+├── man_pages/         # 10,296 man page files (including tcpdump, nmap, strace, gdb)
+├── tldr_pages/        # 1,124 TLDR summaries (18 new pages added)
 └── scripts/           # Maintenance utilities
 ```
 
 ## 🎯 Usage
 
 ### Search Commands
-- Start typing to search 10,290+ commands
+- Start typing to search 10,296+ commands
 - Use section dropdown to filter by type
 - Click suggestions or press Enter to view
 

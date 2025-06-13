@@ -1,4 +1,3 @@
-// TLDR pages index
 window.tldrIndex = {
   "common": [
     "!",
@@ -550,14 +549,19 @@ window.tldrIndex = {
     "crontab",
     "crunch",
     "cryfs",
+    "curl",
+    "cut",
     "diff",
     "echo",
+    "file",
     "find",
     "grep",
     "gunzip",
     "gzip",
     "head",
+    "kill",
     "less",
+    "ln",
     "ls",
     "man",
     "mkdir",
@@ -565,13 +569,16 @@ window.tldrIndex = {
     "mv",
     "pwd",
     "rm",
+    "rsync",
     "sort",
+    "ssh",
     "tail",
     "tar",
     "touch",
     "uniq",
     "unzip",
     "wc",
+    "wget",
     "which",
     "zip"
   ],
@@ -1114,6 +1121,14 @@ window.tldrIndex = {
     "iwctl",
     "iwinfo",
     "iwlist",
-    "jhead"
+    "jhead",
+    "lsof",
+    "mount",
+    "passwd",
+    "ping",
+    "ps",
+    "sudo",
+    "top",
+    "umount"
   ]
 };
