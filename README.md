@@ -2,10 +2,10 @@
 
 A modern, fully self-contained web application for searching and viewing Linux manual pages. Features instant search, TLDR summaries, and beautiful themes - all working completely offline.
 
-![Version](https://img.shields.io/badge/version-6.4.0-blue.svg)
+![Version](https://img.shields.io/badge/version-7.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Man Pages](https://img.shields.io/badge/man%20pages-9%2C371-orange.svg)
-![Themes](https://img.shields.io/badge/themes-26-purple.svg)
+![Themes](https://img.shields.io/badge/themes-31-purple.svg)
 
 ## 🚀 Features
 
@@ -19,16 +19,17 @@ A modern, fully self-contained web application for searching and viewing Linux m
 - **Command explainer** - Break down complex command syntax
 
 ### User Experience
-- **26 beautiful themes** - From classic dark to vibrant synthwave
-- **Keyboard shortcuts** - Navigate efficiently with hotkeys
+- **31 beautiful themes** - From classic dark to vibrant synthwave
+- **Ultra-modern keyboard shortcuts modal** - Sleek, searchable interface with categories
 - **History tracking** - Access recently viewed pages
 - **Bookmarks** - Save frequently used commands
 - **Responsive design** - Works on desktop and mobile
 - **No build process** - Pure HTML/CSS/JS
+- **Enhanced modal system** - ESC key support and exclusive modal display
 
 ## 🎨 Themes
 
-Choose from 26 carefully crafted themes:
+Choose from 31 carefully crafted themes:
 
 ### Dark Themes
 - Ayu Mirage - Warm colors with orange accents
@@ -176,11 +177,27 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Theme inspirations from various popular editor themes
 - Icons and emojis from standard Unicode sets
 
+## 🆕 What's New in v7.0.0
+
+### Major Updates
+- **5 New Themes**: Ayu Mirage, Palenight, Synthwave '84, Everforest, and Kanagawa
+- **Revamped Theme Modal**: Live terminal previews and search functionality
+- **Ultra-Modern Keyboard Shortcuts Modal**: Futuristic design with categories and search
+- **Enhanced Modal System**: ESC key support and exclusive modal display
+- **Fixed Bookmarks Panel**: No longer shows on initial page load
+- **Improved Section Dropdown**: Modern glassmorphism styling
+
+### UX Improvements
+- Modal exclusivity - opening a new modal closes others
+- Smooth animations throughout the interface
+- Better keyboard navigation
+- Consistent visual design language
+
 ## 📊 Statistics
 
 - **Total Size**: ~50MB (uncompressed)
 - **Man Pages**: 9,371 commands
-- **Themes**: 26 unique styles
+- **Themes**: 31 unique styles
 - **Load Time**: < 1 second
 - **Browser Support**: All modern browsers
 
