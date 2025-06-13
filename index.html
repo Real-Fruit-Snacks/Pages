@@ -463,31 +463,6 @@
             color: #333;
         }
 
-        /* In-page search */
-        .search-in-page {
-            display: none;
-            position: sticky;
-            top: 0;
-            background: #fffbe5;
-            border-bottom: 1px solid #f0dc00;
-            padding: 8px 24px;
-            align-items: center;
-            gap: 12px;
-            z-index: 10;
-        }
-
-        .search-in-page input {
-            flex: 1;
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .search-in-page-info {
-            font-size: 14px;
-            color: #666;
-        }
 
         .man-page-content {
             padding: 20px 30px;
@@ -672,11 +647,6 @@
             border-radius: 4px;
         }
 
-        .man-page-content .highlight {
-            background: #fff3cd;
-            border-radius: 2px;
-            padding: 0 2px;
-        }
 
 
         .man-page-content .placeholder {
@@ -1693,18 +1663,10 @@
                 <div class="man-page-header">
                     <h2 class="man-page-title" id="manPageTitle"></h2>
                     <div class="header-actions">
-                        <button class="action-button" id="searchInPageBtn" title="Search in page (Ctrl+F)">🔍</button>
                         <button class="action-button" id="tldrJumpBtn" title="Jump to TLDR">📋</button>
                         <button class="action-button" id="bookmarkBtn" title="Bookmark this page">⭐</button>
                         <button class="close-button" id="closeButton">&times;</button>
                     </div>
-                </div>
-                <div class="search-in-page" id="searchInPage">
-                    <input type="text" id="searchInPageInput" placeholder="Search in this page...">
-                    <span class="search-in-page-info" id="searchInPageInfo"></span>
-                    <button class="action-button" id="searchInPagePrev">↑</button>
-                    <button class="action-button" id="searchInPageNext">↓</button>
-                    <button class="action-button" id="searchInPageClose">✕</button>
                 </div>
                 <div class="man-page-content" id="manPageContent"></div>
                 <div class="related-commands" id="relatedCommands" style="display: none;">
@@ -1751,7 +1713,7 @@
             </tr>
             <tr>
                 <td><kbd>Ctrl</kbd> + <kbd>F</kbd></td>
-                <td>Search in current page</td>
+                <td>Search in current page (browser search)</td>
             </tr>
             <tr>
                 <td><kbd>Esc</kbd></td>
@@ -1831,9 +1793,6 @@
         let currentManPage = null;
         let history = [];
         let bookmarks = [];
-        let searchInPageActive = false;
-        let searchInPageResults = [];
-        let searchInPageCurrentIndex = -1;
 
         // DOM elements
         const container = document.getElementById('container');
@@ -1855,10 +1814,6 @@
         const historyContent = document.getElementById('historyContent');
         const bookmarksContent = document.getElementById('bookmarksContent');
         const bookmarkBtn = document.getElementById('bookmarkBtn');
-        const searchInPageBtn = document.getElementById('searchInPageBtn');
-        const searchInPage = document.getElementById('searchInPage');
-        const searchInPageInput = document.getElementById('searchInPageInput');
-        const searchInPageInfo = document.getElementById('searchInPageInfo');
         const shortcutsHelp = document.getElementById('shortcutsHelp');
         const overlay = document.getElementById('overlay');
         const tldrSection = document.getElementById('tldrSection');
@@ -2703,147 +2658,6 @@
             }
         };
 
-        // Search in page functionality
-        function toggleSearchInPage() {
-            searchInPageActive = !searchInPageActive;
-            searchInPage.style.display = searchInPageActive ? 'flex' : 'none';
-            
-            if (searchInPageActive) {
-                searchInPageInput.focus();
-                searchInPageInput.select();
-            } else {
-                clearSearchInPage();
-            }
-        }
-
-        function clearSearchInPage() {
-            // Remove all highlights
-            const highlights = manPageContent.querySelectorAll('.highlight');
-            highlights.forEach(el => {
-                const parent = el.parentNode;
-                parent.replaceChild(document.createTextNode(el.textContent), el);
-                parent.normalize();
-            });
-            searchInPageResults = [];
-            searchInPageCurrentIndex = -1;
-            updateSearchInPageInfo();
-        }
-
-        function searchInCurrentPage(query) {
-            if (!query) {
-                clearSearchInPage();
-                return;
-            }
-            
-            clearSearchInPage();
-            
-            // Show the search navigation bar
-            searchInPageActive = true;
-            searchInPage.style.display = 'flex';
-            searchInPageInput.value = query;
-            
-            console.log('Searching for:', query);
-            
-            const walker = document.createTreeWalker(
-                manPageContent,
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
-            
-            let node;
-            const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-            
-            while (node = walker.nextNode()) {
-                const matches = [...node.textContent.matchAll(regex)];
-                if (matches.length > 0) {
-                    const parent = node.parentNode;
-                    // Skip text nodes that are already inside highlight spans or empty parents
-                    if (!parent || (parent.classList && parent.classList.contains('highlight'))) {
-                        continue;
-                    }
-                    
-                    let lastIndex = 0;
-                    const fragment = document.createDocumentFragment();
-                    
-                    matches.forEach(match => {
-                        if (match.index > lastIndex) {
-                            fragment.appendChild(
-                                document.createTextNode(node.textContent.slice(lastIndex, match.index))
-                            );
-                        }
-                        
-                        const span = document.createElement('span');
-                        span.className = 'highlight';
-                        span.textContent = match[0];
-                        fragment.appendChild(span);
-                        searchInPageResults.push(span);
-                        
-                        lastIndex = match.index + match[0].length;
-                    });
-                    
-                    if (lastIndex < node.textContent.length) {
-                        fragment.appendChild(
-                            document.createTextNode(node.textContent.slice(lastIndex))
-                        );
-                    }
-                    
-                    parent.replaceChild(fragment, node);
-                }
-            }
-            
-            console.log('Search completed. Found', searchInPageResults.length, 'highlights');
-            
-            if (searchInPageResults.length > 0) {
-                searchInPageCurrentIndex = 0;
-                highlightCurrentResult();
-            }
-            
-            updateSearchInPageInfo();
-        }
-
-        function highlightCurrentResult() {
-            searchInPageResults.forEach((el, index) => {
-                el.style.backgroundColor = index === searchInPageCurrentIndex ? '#ff9632' : '#fff3cd';
-                // Check if any dark theme is active
-                const isDarkTheme = document.body.classList.contains('dark-mode') || 
-                                  document.body.classList.contains('solarized-dark') ||
-                                  document.body.classList.contains('dracula') ||
-                                  document.body.classList.contains('monokai') ||
-                                  document.body.classList.contains('high-contrast');
-                if (isDarkTheme) {
-                    el.style.backgroundColor = index === searchInPageCurrentIndex ? '#ff6b00' : '#524c00';
-                }
-            });
-            
-            if (searchInPageResults[searchInPageCurrentIndex]) {
-                searchInPageResults[searchInPageCurrentIndex].scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }
-        }
-
-        function updateSearchInPageInfo() {
-            if (searchInPageResults.length === 0) {
-                searchInPageInfo.textContent = 'No results';
-            } else {
-                searchInPageInfo.textContent = `${searchInPageCurrentIndex + 1} of ${searchInPageResults.length}`;
-            }
-        }
-
-        function navigateSearchInPage(direction) {
-            if (searchInPageResults.length === 0) return;
-            
-            if (direction === 'next') {
-                searchInPageCurrentIndex = (searchInPageCurrentIndex + 1) % searchInPageResults.length;
-            } else {
-                searchInPageCurrentIndex = (searchInPageCurrentIndex - 1 + searchInPageResults.length) % searchInPageResults.length;
-            }
-            
-            highlightCurrentResult();
-            updateSearchInPageInfo();
-        }
 
         // Full-text search in content
         async function searchInContent(query, section = '') {
@@ -3324,9 +3138,6 @@
             searchInput.focus();
             window.location.hash = '';
             
-            if (searchInPageActive) {
-                toggleSearchInPage();
-            }
         }
 
         // Keyboard event handlers
@@ -3343,8 +3154,6 @@
                 if (shortcutsHelp.style.display === 'block') {
                     shortcutsHelp.style.display = 'none';
                     overlay.style.display = 'none';
-                } else if (searchInPageActive) {
-                    toggleSearchInPage();
                 } else if (sidePanel.classList.contains('open')) {
                     sidePanel.classList.remove('open');
                 } else if (currentState === 'viewing') {
@@ -3433,16 +3242,8 @@
             
             console.log(`Input event: query="${query}", fullTextSearch=${fullTextSearchEnabled}`);
             
-            // If we're viewing a man page, search within it instead
+            // When viewing a man page, disable search and suggest browser search
             if (currentState === 'viewing') {
-                if (query.length > 0) {
-                    searchInCurrentPage(query);
-                } else {
-                    // Clear search when input is empty
-                    clearSearchInPage();
-                    searchInPageActive = false;
-                    searchInPage.style.display = 'none';
-                }
                 return;
             }
             
@@ -3483,31 +3284,6 @@
 
         closeButton.addEventListener('click', closeManPage);
 
-        // Search in page event listeners
-        searchInPageBtn.addEventListener('click', toggleSearchInPage);
-        
-        searchInPageInput.addEventListener('input', (e) => {
-            searchInCurrentPage(e.target.value);
-        });
-        
-        searchInPageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                navigateSearchInPage(e.shiftKey ? 'prev' : 'next');
-            } else if (e.key === 'Escape') {
-                toggleSearchInPage();
-            }
-        });
-        
-        document.getElementById('searchInPagePrev').addEventListener('click', () => {
-            navigateSearchInPage('prev');
-        });
-        
-        document.getElementById('searchInPageNext').addEventListener('click', () => {
-            navigateSearchInPage('next');
-        });
-        
-        document.getElementById('searchInPageClose').addEventListener('click', toggleSearchInPage);
 
         // Bookmark button
         bookmarkBtn.addEventListener('click', toggleBookmark);
