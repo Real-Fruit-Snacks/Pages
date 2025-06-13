@@ -2797,10 +2797,14 @@
                     }
                 }
 
-                // 3. Substring search in commands and descriptions
+                // 3. Substring search in commands and descriptions (prioritize command matches)
                 if (foundEntries.size < 50) {
+                    const commandMatches = [];
+                    const descriptionMatches = [];
+                    
+                    // First pass: collect command name and description matches separately
                     for (const entry of window.searchIndex) {
-                        if (foundEntries.size >= 50) break; // Early exit
+                        if (foundEntries.size + commandMatches.length + descriptionMatches.length >= 50) break;
                         
                         if (sectionFilter && entry.section !== sectionFilter) continue;
                         if (foundEntries.has(entry)) continue;
@@ -2808,17 +2812,29 @@
                         const commandName = entry.command || entry.name;
                         if (!commandName) continue;
 
-                        // Check command substring match
+                        // Check command substring match first
                         if (commandName.toLowerCase().includes(lowerQuery)) {
-                            foundEntries.add(entry);
+                            commandMatches.push(entry);
                             continue;
                         }
 
                         // Check description match using pre-tokenized data
                         const tokenData = tokenizedDescriptions.get(entry);
                         if (tokenData && tokenData.descLower.includes(lowerQuery)) {
-                            foundEntries.add(entry);
+                            descriptionMatches.push(entry);
                         }
+                    }
+                    
+                    // Add command matches first (higher priority)
+                    for (const entry of commandMatches) {
+                        if (foundEntries.size >= 50) break;
+                        foundEntries.add(entry);
+                    }
+                    
+                    // Then add description matches (lower priority)
+                    for (const entry of descriptionMatches) {
+                        if (foundEntries.size >= 50) break;
+                        foundEntries.add(entry);
                     }
                 }
 
@@ -2885,16 +2901,32 @@
                 results = Array.from(commandGroups.values());
             }
 
-            // Sort results
+            // Sort results - prioritize command name matches over description matches
             results.sort((a, b) => {
                 const aExact = a.command.toLowerCase() === lowerQuery;
                 const bExact = b.command.toLowerCase() === lowerQuery;
                 if (aExact && !bExact) return -1;
                 if (!aExact && bExact) return 1;
                 
-                // Prioritize shorter commands
-                const lenDiff = a.command.length - b.command.length;
-                if (lenDiff !== 0) return lenDiff;
+                // Check if command name contains the query (vs just description)
+                const aCommandMatch = a.command.toLowerCase().includes(lowerQuery);
+                const bCommandMatch = b.command.toLowerCase().includes(lowerQuery);
+                if (aCommandMatch && !bCommandMatch) return -1;
+                if (!aCommandMatch && bCommandMatch) return 1;
+                
+                // Among command matches, prioritize those that start with query
+                if (aCommandMatch && bCommandMatch) {
+                    const aStartsWith = a.command.toLowerCase().startsWith(lowerQuery);
+                    const bStartsWith = b.command.toLowerCase().startsWith(lowerQuery);
+                    if (aStartsWith && !bStartsWith) return -1;
+                    if (!aStartsWith && bStartsWith) return 1;
+                    
+                    // Among prefix matches, prioritize shorter commands
+                    if (aStartsWith && bStartsWith) {
+                        const lenDiff = a.command.length - b.command.length;
+                        if (lenDiff !== 0) return lenDiff;
+                    }
+                }
                 
                 return a.command.localeCompare(b.command);
             });
