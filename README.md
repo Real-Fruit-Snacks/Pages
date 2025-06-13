@@ -2,7 +2,7 @@
 
 A modern, fully self-contained web application for searching and viewing Linux manual pages. Features instant search, TLDR summaries, and beautiful themes - all working completely offline.
 
-![Version](https://img.shields.io/badge/version-7.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-7.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Man Pages](https://img.shields.io/badge/man%20pages-9%2C371-orange.svg)
 ![Themes](https://img.shields.io/badge/themes-31-purple.svg)
@@ -20,7 +20,7 @@ A modern, fully self-contained web application for searching and viewing Linux m
 
 ### User Experience
 - **31 beautiful themes** - From classic dark to vibrant synthwave
-- **Ultra-modern keyboard shortcuts modal** - Sleek, searchable interface with categories
+- **Clean keyboard shortcuts modal** - Professional, easy-to-read design
 - **History tracking** - Access recently viewed pages
 - **Bookmarks** - Save frequently used commands
 - **Responsive design** - Works on desktop and mobile
@@ -177,19 +177,23 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Theme inspirations from various popular editor themes
 - Icons and emojis from standard Unicode sets
 
-## 🆕 What's New in v7.0.0
+## 🆕 What's New in v7.1.0
 
-### Major Updates
+### Latest Updates (v7.1.0)
+- **Simplified Keyboard Shortcuts Modal**: Clean, basic design matching professional standards
+- **Removed unnecessary features**: No search or categories in shortcuts modal for cleaner UX
+- **Improved performance**: Removed animations from shortcuts modal
+
+### Previous Updates (v7.0.0)
 - **5 New Themes**: Ayu Mirage, Palenight, Synthwave '84, Everforest, and Kanagawa
 - **Revamped Theme Modal**: Live terminal previews and search functionality
-- **Ultra-Modern Keyboard Shortcuts Modal**: Futuristic design with categories and search
 - **Enhanced Modal System**: ESC key support and exclusive modal display
 - **Fixed Bookmarks Panel**: No longer shows on initial page load
 - **Improved Section Dropdown**: Modern glassmorphism styling
 
 ### UX Improvements
 - Modal exclusivity - opening a new modal closes others
-- Smooth animations throughout the interface
+- Clean, professional interface design
 - Better keyboard navigation
 - Consistent visual design language
 
