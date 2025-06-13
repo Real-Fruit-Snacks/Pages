@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Search Highlighting</title>
+</head>
+<body>
+    <h1>Testing Search Highlighting</h1>
+    <p>Open the developer console to see results.</p>
+    
+    <iframe id="testFrame" src="index.html" width="100%" height="600"></iframe>
+    
+    <script>
+        // Wait for iframe to load
+        document.getElementById('testFrame').onload = async function() {
+            const frame = this.contentWindow;
+            
+            console.log('1. Waiting for page to initialize...');
+            await new Promise(r => setTimeout(r, 1000));
+            
+            console.log('2. Loading tcpdump man page...');
+            frame.displayManPage('tcpdump', '1');
+            
+            await new Promise(r => setTimeout(r, 2000));
+            
+            console.log('3. Checking content...');
+            const content = frame.document.getElementById('manPageContent');
+            const text = content.textContent;
+            const pMatches = text.match(/-p/g);
+            console.log('   Total -p occurrences:', pMatches ? pMatches.length : 0);
+            
+            console.log('4. Searching for -p...');
+            const searchInput = frame.document.getElementById('searchInput');
+            searchInput.value = '-p';
+            searchInput.dispatchEvent(new Event('input'));
+            
+            await new Promise(r => setTimeout(r, 1000));
+            
+            console.log('5. Checking highlights...');
+            const highlights = frame.document.querySelectorAll('.highlight');
+            console.log('   Total highlights:', highlights.length);
+            
+            console.log('6. Search info display:');
+            const searchBar = frame.document.getElementById('searchInPage');
+            console.log('   Search bar visible:', searchBar.style.display);
+            const searchInfo = frame.document.getElementById('searchInPageInfo');
+            console.log('   Search info text:', searchInfo.textContent);
+            
+            console.log('\n7. Summary:');
+            console.log('   Expected:', pMatches ? pMatches.length : 0);
+            console.log('   Found:', highlights.length);
+            console.log('   Status:', (pMatches && highlights.length === pMatches.length) ? '✓ ALL FOUND' : '✗ MISMATCH');
+            
+            // Show first few highlights
+            console.log('\n8. First few highlights:');
+            Array.from(highlights).slice(0, 5).forEach((h, i) => {
+                let context = h.parentElement.textContent.substring(0, 80);
+                console.log(`   ${i+1}. "${h.textContent}" in: "${context}..."`);
+            });
+        };
+    </script>
+</body>
+</html>

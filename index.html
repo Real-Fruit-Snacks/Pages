@@ -2737,6 +2737,13 @@
             
             clearSearchInPage();
             
+            // Show the search navigation bar
+            searchInPageActive = true;
+            searchInPage.style.display = 'flex';
+            searchInPageInput.value = query;
+            
+            console.log('Searching for:', query);
+            
             const walker = document.createTreeWalker(
                 manPageContent,
                 NodeFilter.SHOW_TEXT,
@@ -2751,10 +2758,9 @@
                 const matches = [...node.textContent.matchAll(regex)];
                 if (matches.length > 0) {
                     const parent = node.parentNode;
-                    if (parent.classList && (parent.classList.contains('section-header') || 
-                        parent.classList.contains('option') || 
-                        parent.classList.contains('command'))) {
-                        continue; // Skip already styled elements
+                    // Skip text nodes that are already inside highlight spans or empty parents
+                    if (!parent || (parent.classList && parent.classList.contains('highlight'))) {
+                        continue;
                     }
                     
                     let lastIndex = 0;
@@ -2785,6 +2791,8 @@
                     parent.replaceChild(fragment, node);
                 }
             }
+            
+            console.log('Search completed. Found', searchInPageResults.length, 'highlights');
             
             if (searchInPageResults.length > 0) {
                 searchInPageCurrentIndex = 0;
@@ -3426,8 +3434,15 @@
             console.log(`Input event: query="${query}", fullTextSearch=${fullTextSearchEnabled}`);
             
             // If we're viewing a man page, search within it instead
-            if (currentState === 'viewing' && query.length > 0) {
-                searchInCurrentPage(query);
+            if (currentState === 'viewing') {
+                if (query.length > 0) {
+                    searchInCurrentPage(query);
+                } else {
+                    // Clear search when input is empty
+                    clearSearchInPage();
+                    searchInPageActive = false;
+                    searchInPage.style.display = 'none';
+                }
                 return;
             }
             
