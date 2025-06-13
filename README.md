@@ -160,13 +160,16 @@ Linux manual pages remain under their original licenses.
 
 ## 📅 Recent Updates
 
-### v6.3.0 (Latest)
-- **Repository Cleanup**: Removed 93MB of unnecessary files (node_modules, dist, cache)
-- **Enhanced .gitignore**: Added comprehensive patterns for all platforms
-- **Updated Documentation**: Refreshed README with current stats and cleanup info
-- **Improved Performance**: Cleaner codebase for faster deployment
-- **TLDR Pages**: Now includes 1,128 TLDR summaries
-- **Man Pages**: Complete collection of 10,296 Linux manual pages
+### v6.4.0 (Latest)
+- **Enhanced Search Experience**: Complete overhaul of search functionality
+  - Multi-section commands now grouped with individual section buttons
+  - Search while viewing man pages (no need to close current page)
+  - Improved result prioritization (command names before description matches)
+  - Fixed "printf" appearing when searching "print"
+- **Smooth UI Animations**: Added fade transitions to status toast messages
+- **Visual Consistency**: Multi-section buttons now match single-section badge styling
+- **Repository Maintenance**: Updated .gitignore, cleaned temporary files
+- **Bug Fixes**: Resolved search blocking and styling inconsistencies
 
 ---
 
