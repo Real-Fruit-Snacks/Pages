@@ -1,161 +1,126 @@
-NAME
+Ppmtobmp User Manual(1)     General Commands Manual    Ppmtobmp User Manual(1)
 
-ppmtobmp -
-convert a PPM image into a BMP file
+NAME
+       ppmtobmp - convert a PPM image into a BMP file
 
 SYNOPSIS
+       ppmtobmp
 
-ppmtobmp
+       [-windows]
 
-[-windows]
+       [-os2]
 
-[-os2]
+       [-bpp=bits_per_pixel]
 
-[-bpp=bits_per_pixel]
+       [-mapfile=filename]
 
-[-mapfile=filename]
+       [ppmfile]
 
-[ppmfile]
-
-Minimum unique
-abbreviation of option is acceptable. You may use double
-hyphens instead of single hyphen to denote options. You may
-use white space in place of the equals sign to separate an
-option name from its value.
+       Minimum  unique abbreviation of option is acceptable.  You may use dou‐
+       ble hyphens instead of single hyphen to denote options.   You  may  use
+       white space in place of the equals sign to separate an option name from
+       its value.
 
 DESCRIPTION
+       This program is part of Netpbm(1).
 
-This program is
-part of Netpbm(1).
-
-ppmtobmp
-reads a PPM image as input and produces a Microsoft Windows
-or OS/2 BMP file as output.
+       ppmtobmp reads a PPM image as input and produces a Microsoft Windows or
+       OS/2 BMP file as output.
 
 OPTIONS
+       In  addition  to  the options common to all programs based on libnetpbm
+       (most notably -quiet, see
+        Common Options ⟨index.html#commonoptions⟩ ), ppmtobmp  recognizes  the
+       following command line options:
 
-In addition to
-the options common to all programs based on libnetpbm (most
-notably -quiet, see
- Common Options ),
-ppmtobmp recognizes the following command line
-options: 
--windows
+       -windows
+              Tells  the  program  to  produce  a  Microsoft Windows BMP file.
+              (This is the default.)
 
-Tells the program to produce a
-Microsoft Windows BMP file. (This is the default.)
+       -os2   Tells the program to produce an OS/2 BMP file.   (Before  August
+              2000, this was the default).
 
--os2
+       -bpp   This tells how many bits per pixel you want the BMP file to con‐
+              tain.  Only 1, 4, 8, and 24 are possible.  By default,  ppmtobmp
+              chooses  the smallest number with which it can represent all the
+              colors in the input image.  If you specify a number too small to
+              represent  all the colors in the input image, ppmtobmp tells you
+              and terminates.  You can use pnmquant or ppmdither to reduce the
+              number of colors in the image.
 
-Tells the program to produce an OS/2 BMP file. (Before
-August 2000, this was the default).
+              Before  Netpbm  10.85 (December 2018), ppmtobmp ignores this op‐
+              tion if the input is PBM and produces  a  BMP  with  1  bit  per
+              pixel.   With  these  versions,  if you want more than that, use
+              pbmtopgm to convert the PBM to PGM first.
 
--bpp
+       -mapfile=filename
+              This identifies a file to use as  the  BMP  palette  (aka  "col‐
+              ormap").   In  one BMP subformat, the BMP stream contains a pal‐
+              ette of up to 256 colors, and represents the image raster as in‐
+              dices  into that palette.  Normally, ppmtobmp takes care of com‐
+              puting a suitable palette, but if you are going to  dissect  the
+              BMP output in some way, you may want certain values for the pal‐
+              ette indices.  E.g. you might want red to be 13, where  ppmtobmp
+              would  (arbitrarily) choose 39.  In that case, you can construct
+              the palette yourself and use this option to tell ppmtobmp to use
+              your palette.
 
-This tells how many bits per pixel you want the BMP file
-to contain. Only 1, 4, 8, and 24 are possible. By default,
-ppmtobmp chooses the smallest number with which it
-can represent all the colors in the input image. If you
-specify a number too small to represent all the colors in
-the input image, ppmtobmp tells you and terminates.
-You can use pnmquant or ppmdither to reduce
-the number of colors in the image.
+              This option does not control what colors are in the output.  The
+              colors in the output are exactly those in  the  input,  and  the
+              palette you supply must contain at least all the colors that are
+              in the input.  You can use pnmremap to adjust your  input  image
+              so that it contains only colors from your palette.
 
-Before Netpbm
-10.85 (December 2018), ppmtobmp ignores this option
-if the input is PBM and produces a BMP with 1 bit per pixel.
-With these versions, if you want more than that, use
-pbmtopgm to convert the PBM to PGM first.
+              The palette file is a Netpbm format file with one pixel per pal‐
+              ette entry.  Each pixel must have a distinct color (no repeats).
+              The  order of the BMP palette ppmtobmp generates is the order of
+              the pixels in the palette file, going from top to  bottom,  left
+              to right.
 
--mapfile=filename
+              A  BMP  palette may have at most 256 colors, so the palette file
+              must have at most 256 pixels.
 
-This identifies a file to use
-as the BMP palette (aka "colormap"). In one BMP
-subformat, the BMP stream contains a palette of up to 256
-colors, and represents the image raster as indices into that
-palette. Normally, ppmtobmp takes care of computing a
-suitable palette, but if you are going to dissect the BMP
-output in some way, you may want certain values for the
-palette indices. E.g. you might want red to be 13, where
-ppmtobmp would (arbitrarily) choose 39. In that case,
-you can construct the palette yourself and use this option
-to tell ppmtobmp to use your palette.
+              You may find pnmcolormap useful in generating the palette  file.
+              pamseq too.
 
-This option
-does not control what colors are in the output. The
-colors in the output are exactly those in the input, and the
-palette you supply must contain at least all the colors that
-are in the input. You can use pnmremap to adjust your
-input image so that it contains only colors from your
-palette.
+              In  the  case  of grayscale image, if you are processing the BMP
+              image, it
+                may be convenient for you to have the actual  gray  values  in
+              the raster
+                part  of  the  image rather than arbitrary indices into a pal‐
+              ette.  There is
+                no BMP format specifically for that, but you can achieve it by
+              using a
+                palette  in  which  each  index  is  equal to the indexed gray
+              value, and then
+                ignoring the palette when you process the BMP image.
 
-The palette
-file is a Netpbm format file with one pixel per palette
-entry. Each pixel must have a distinct color (no repeats).
-The order of the BMP palette ppmtobmp generates is
-the order of the pixels in the palette file, going from top
-to bottom, left to right.
+              Here is an example of doing that:
 
-A BMP palette
-may have at most 256 colors, so the palette file must have
-at most 256 pixels.
+                  $ pamseq 1 255 > mapfile.pgm
 
-You may find
-pnmcolormap useful in generating the palette file.
-pamseq too.
+                  $ ppmtobmp -mapfile=mapfile.pgm input.pgm > output.bmp
 
-In the case of
-grayscale image, if you are processing the BMP image, it
-
-may be convenient for you to have the actual gray values in
-the raster 
-part of the image rather than arbitrary indices into a
-palette. There is 
-no BMP format specifically for that, but you can achieve it
-by using a 
-palette in which each index is equal to the indexed gray
-value, and then 
-ignoring the palette when you process the BMP image.
-
-Here is an
-example of doing that:
-
-$ pamseq 1 255
-> mapfile.pgm
-
-$ ppmtobmp
--mapfile=mapfile.pgm input.pgm > output.bmp
-
-This option was
-new in Netpbm 10.45 (December 2008).
+              This option was new in Netpbm 10.45 (December 2008).
 
 NOTES
+       To get a faithful reproduction of the input image, the  maxval  of  the
+       input  image  must  be 255.  If it is something else, the colors in the
+       BMP file may be slightly different from the colors in the input.
 
-To get a
-faithful reproduction of the input image, the maxval of the
-input image must be 255. If it is something else, the colors
-in the BMP file may be slightly different from the colors in
-the input.
-
-Windows icons
-are not BMP files. Use ppmtowinicon to create
-those.
+       Windows icons are not BMP files.  Use ppmtowinicon to create those.
 
 SEE ALSO
-
-bmptoppm(1),
-ppmtowinicon(1), pnmquant(1),
-ppmdither(1), pnmremap(1), ppm(1)
+       bmptoppm(1), ppmtowinicon(1), pnmquant(1),  ppmdither(1),  pnmremap(1),
+       ppm(1)
 
 AUTHOR
-
-Copyright (C)
-1992 by David W. Sanderson.
+       Copyright (C) 1992 by David W. Sanderson.
 
 DOCUMENT SOURCE
+       This  manual  page was generated by the Netpbm tool 'makeman' from HTML
+       source.  The master documentation is at
 
-This manual
-page was generated by the Netpbm tool ’makeman’
-from HTML source. The master documentation is at
+              http://netpbm.sourceforge.net/doc/ppmtobmp.html
 
-http://netpbm.sourceforge.net/doc/ppmtobmp.html
+netpbm documentation           20 December 2018        Ppmtobmp User Manual(1)

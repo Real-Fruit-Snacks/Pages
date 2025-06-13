@@ -1,139 +1,94 @@
-NAME
+Mirror/redirect action in tc(8)      Linux     Mirror/redirect action in tc(8)
 
-mirred -
-mirror/redirect action
+NAME
+       mirred - mirror/redirect action
 
 SYNOPSIS
+       tc ... action mirred DIRECTION ACTION [ index INDEX ] TARGET
 
-tc ...
-action mirred DIRECTION ACTION [ index
-INDEX ] TARGET
+       DIRECTION := { ingress | egress }
 
-DIRECTION
-:= { ingress | egress }
+       TARGET := { DEV | BLOCK }
 
-TARGET
-:= { DEV | BLOCK }
+       DEV := dev DEVICENAME
 
-DEV :=
-dev DEVICENAME
+       BLOCK := blockid BLOCKID
 
-BLOCK :=
-blockid BLOCKID
-
-ACTION
-:= { mirror | redirect }
+       ACTION := { mirror | redirect }
 
 DESCRIPTION
-
-The
-mirred action allows packet mirroring (copying) or
-redirecting (stealing) the packet it receives. Mirroring is
-what is sometimes referred to as Switch Port Analyzer (SPAN)
-and is commonly used to analyze and/or debug flows. When
-mirroring to a tc block, the packet will be mirrored to all
-the ports in the block with exception of the port where the
-packet ingressed, if that port is part of the tc block.
-Redirecting is similar to mirroring except that the
-behaviour is to mirror to the first N - 1 ports in the block
-and redirect to the last one (note that the port in which
-the packet arrived is not going to be mirrored or redirected
-to).
+       The  mirred  action  allows  packet  mirroring (copying) or redirecting
+       (stealing) the packet it receives. Mirroring is what is  sometimes  re‐
+       ferred  to  as Switch Port Analyzer (SPAN) and is commonly used to ana‐
+       lyze and/or debug flows.  When mirroring to a tc block, the packet will
+       be  mirrored  to  all the ports in the block with exception of the port
+       where the packet ingressed, if that port is part of the tc block. Redi‐
+       recting  is similar to mirroring except that the behaviour is to mirror
+       to the first N - 1 ports in the block and  redirect  to  the  last  one
+       (note that the port in which the packet arrived is not going to be mir‐
+       rored or redirected to).
 
 OPTIONS
+       ingress
+       egress Specify the direction in which the packet shall  appear  on  the
+              destination interface.
 
-ingress
+       mirror
+       redirect
+              Define  whether  the  packet  should be copied (mirror) or moved
+              (redirect) to the destination interface or block.
 
-egress
+       index INDEX
+              Assign a unique ID to this action instead of letting the  kernel
+              choose  one  automatically.   INDEX  is a 32bit unsigned integer
+              greater than zero.
 
-Specify the direction in which the packet shall appear
-on the destination interface.
+       dev DEVICENAME
+              Specify the network interface to redirect or mirror to.
 
-mirror
-
-redirect
-
-Define whether the packet
-should be copied (mirror) or moved (redirect)
-to the destination interface or block.
-
-index INDEX
-
-Assign a unique ID to this
-action instead of letting the kernel choose one
-automatically. INDEX is a 32bit unsigned integer
-greater than zero.
-
-dev
-DEVICENAME
-
-Specify the network interface
-to redirect or mirror to.
-
-blockid
-BLOCKID
-
-Specify the tc block to
-redirect or mirror to.
+       blockid BLOCKID
+              Specify the tc block to redirect or mirror to.
 
 EXAMPLES
+       Limit ingress bandwidth on eth0 to 1mbit/s, redirect exceeding  traffic
+       to lo for debugging purposes:
 
-Limit ingress
-bandwidth on eth0 to 1mbit/s, redirect exceeding traffic to
-lo for debugging purposes:
+              # tc qdisc add dev eth0 handle ffff: clsact
+              # tc filter add dev eth0 ingress u32 \
+                   match u32 0 0 \
+                   action police rate 1mbit burst 100k conform-exceed pipe \
+                   action mirred egress redirect dev lo
 
-# tc qdisc add
-dev eth0 handle ffff: clsact 
-# tc filter add dev eth0 ingress u32 \
+       Mirror all incoming ICMP packets on eth0 to a dummy interface for exam‐
+       ination with e.g. tcpdump:
 
-match u32 0 0 \
+              # ip link add dummy0 type dummy
+              # ip link set dummy0 up
+              # tc qdisc add dev eth0 handle ffff: clsact
+              # tc filter add dev eth0 ingress protocol ip \
+                   u32 match ip protocol 1 0xff \
+                   action mirred egress mirror dev dummy0
 
-action police rate 1mbit burst 100k conform-exceed pipe
-\ 
+       Using an ifb interface, it is possible to send ingress traffic  through
+       an instance of sfq:
 
-action mirred egress redirect dev lo
-
-Mirror all
-incoming ICMP packets on eth0 to a dummy interface for
-examination with e.g. tcpdump:
-
-# ip link add
-dummy0 type dummy 
-# ip link set dummy0 up 
-# tc qdisc add dev eth0 handle ffff: clsact 
-# tc filter add dev eth0 ingress protocol ip \
-
-u32 match ip protocol 1 0xff \
-
-action mirred egress mirror dev dummy0
-
-Using an
-ifb interface, it is possible to send ingress traffic
-through an instance of sfq:
-
-# modprobe ifb
-
-# ip link set ifb0 up 
-# tc qdisc add dev ifb0 root sfq 
-# tc qdisc add dev eth0 handle ffff: clsact 
-# tc filter add dev eth0 ingress u32 \
-
-match u32 0 0 \
-
-action mirred egress redirect dev ifb0
+              # modprobe ifb
+              # ip link set ifb0 up
+              # tc qdisc add dev ifb0 root sfq
+              # tc qdisc add dev eth0 handle ffff: clsact
+              # tc filter add dev eth0 ingress u32 \
+                   match u32 0 0 \
+                   action mirred egress redirect dev ifb0
 
 LIMITATIONS
+       The  kernel  restricts  nesting  to  four levels to avoid the chance of
+       nesting loops.
 
-The kernel
-restricts nesting to four levels to avoid the chance of
-nesting loops.
-
-Do not redirect
-for one IFB device to another. IFB is a very specialized
-case of packet redirecting device. Redirecting from
-ifbX->ifbY will cause all packets to be dropped.
+       Do not redirect for one IFB device to another.  IFB is a very  special‐
+       ized  case  of  packet redirecting device.  Redirecting from ifbX->ifbY
+       will cause all packets to be dropped.
 
 SEE ALSO
+       tc(8), tc-u32(8)
 
-tc(8),
-tc-u32(8)
+iproute2                          11 Jan 2015  Mirror/redirect action in tc(8)

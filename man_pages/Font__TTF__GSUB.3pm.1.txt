@@ -1,0 +1,88 @@
+Font::TTF::GSUB(3pm)  User Contributed Perl Documentation Font::TTF::GSUB(3pm)
+
+NAME
+       Font::TTF::GSUB - Module support for the GSUB table in conjunction with
+       TTOpen
+
+DESCRIPTION
+       Handles the GSUB subtables in relation to Ttopen tables. Due to the
+       variety of different lookup types, the data structures are not all that
+       straightforward, although I have tried to make life easy for myself
+       when using this!
+
+INSTANCE VARIABLES
+       The structure of a GSUB table is the same as that given in
+       Font::TTF::Ttopen.  Here we give some of the semantics specific to GSUB
+       lookups.
+
+       ACTION_TYPE
+           This is a string taking one of 4 values indicating the nature of
+           the information in the ACTION array of the rule:
+
+           g       The action contains a string of glyphs to replace the match
+                   string by
+
+           l       The action array contains a list of offsets and lookups to
+                   run, in order, on the matched string
+
+           a       The action array is an unordered set of optional
+                   replacements for the matched glyph. The application should
+                   make the selection somehow.
+
+           o       The action array is empty (in fact there is no rule array
+                   for this type of rule) and the ADJUST value should be added
+                   to the glyph id to find the replacement glyph id value
+
+           r       The action array is a list of replacement glyphs in
+                   coverage order. This ACTION_TYPE is used only for Type 8
+                   Reverse Chaining lookups which, by design, are single glyph
+                   substitution.
+
+       MATCH_TYPE
+           This indicates which type of information the various MATCH arrays
+           (MATCH, PRE, POST) hold in the rule:
+
+           g       The array holds a string of glyph ids which should match
+                   exactly
+
+           c       The array holds a sequence of class definitions which each
+                   glyph should correspondingly match to
+
+           o       The array holds offsets to coverage tables
+
+CORRESPONDANCE TO LAYOUT TYPES
+       The following table gives the values for ACTION_TYPE and MATCH_TYPE for
+       each of the 12 different lookup types found in the GSUB table
+       definition:
+
+                       1.1 1.2  2  3  4  5.1 5.2 5.3  6.1 6.2 6.3  8
+         ACTION_TYPE    o   g   g  a  g   l   l   l    l   l   l   r
+         MATCH_TYPE                   g   g   c   o    g   c   o   o
+
+       Hopefully, the rest of the uses of the variables should make sense from
+       this table.
+
+METHODS
+   $t->read_sub($fh, $lookup, $index)
+       Asked by the superclass to read in from the given file the indexth
+       subtable from lookup number lookup. The file is positioned ready for
+       the read.
+
+   $t->extension
+       Returns the table type number for the extension table
+
+   $t->out_sub($fh, $lookup, $index)
+       Passed the filehandle to output to, suitably positioned, the lookup and
+       subtable index, this function outputs the subtable to $fh at that
+       point.
+
+AUTHOR
+       Martin Hosken <http://scripts.sil.org/FontUtils>.
+
+LICENSING
+       Copyright (c) 1998-2016, SIL International (http://www.sil.org)
+
+       This module is released under the terms of the Artistic License 2.0.
+       For details, see the full text of the license in the file LICENSE.
+
+perl v5.34.0                      2022-06-14              Font::TTF::GSUB(3pm)

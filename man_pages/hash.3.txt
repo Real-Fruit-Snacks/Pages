@@ -1,195 +1,100 @@
-NAME
+hash(3)                    Library Functions Manual                    hash(3)
 
-FBB::Hash -
-Various mapping template classes using hashing
+NAME
+       hash - hash database access method
+
+LIBRARY
+       Standard C library (libc, -lc)
 
 SYNOPSIS
-
-#include
+       #include <sys/types.h>
+       #include <db.h>
 
 DESCRIPTION
+       Note  well: This page documents interfaces provided up until glibc 2.1.
+       Since glibc 2.2, glibc no longer provides these interfaces.   Probably,
+       you are looking for the APIs provided by the libdb library instead.
 
-The
-FBB:Hash group of template classes offer
-hashing-based mapping. Various variants are available, all
-based on the facilities offered by the
-unordered_map.
+       The  routine dbopen(3) is the library interface to database files.  One
+       of the supported file formats is hash files.  The  general  description
+       of  the  database  access methods is in dbopen(3), this manual page de‐
+       scribes only the hash-specific information.
 
-The hash-map
-offered in the unordered_map container has a fairly
-complex construction interface, and Hash is an
-attempt to simplify this part of its interface. In practice,
-hashing uses a textual key, which may be std::string
-or char * based, and the keys may be used either case
-sensitively or case insensitively. Hash merely
-requires its users to specify the map’s value type,
-while the key may be a char const * or
-std::string, used case sensitively or case
-insensitively.
+       The hash data structure is an extensible, dynamic hashing scheme.
 
-NAMESPACE
+       The access-method-specific data structure provided to dbopen(3) is  de‐
+       fined in the <db.h> include file as follows:
 
-FBB 
-All constructors, members, operators and manipulators,
-mentioned in this man-page, are defined in the namespace
-FBB.
+           typedef struct {
+               unsigned int       bsize;
+               unsigned int       ffactor;
+               unsigned int       nelem;
+               unsigned int       cachesize;
+               uint32_t         (*hash)(const void *, size_t);
+               int         lorder;
+           } HASHINFO;
 
-INHERITS FROM
+       The elements of this structure are as follows:
 
-std::unordered_map,
-using various instantiations.
+       bsize     defines  the  hash table bucket size, and is, by default, 256
+                 bytes.  It may be preferable to increase the  page  size  for
+                 disk-resident tables and tables with large data items.
 
-TYPE
+       ffactor   indicates  a desired density within the hash table.  It is an
+                 approximation of the number of keys allowed to accumulate  in
+                 any  one  bucket,  determining  when  the hash table grows or
+                 shrinks.  The default value is 8.
 
-All variants
-define value_type as the corresponding
-unordered_map value_type. In practice a
-value_type defines a std::pair, where Key represents the hash’s
-key-type and Value represents the hash’s value
-type.
+       nelem     is an estimate of the final size of the hash table.   If  not
+                 set  or  set  too  low, hash tables will expand gracefully as
+                 keys are entered, although a slight  performance  degradation
+                 may be noticed.  The default value is 1.
 
-CONSTRUCTORS
+       cachesize is the suggested maximum size, in bytes, of the memory cache.
+                 This value is only advisory, and the access method will allo‐
+                 cate more memory rather than fail.
 
-Variants of the
-FBB::Hash container are available for char const
-* or std::string keys, used case sensitively or
-case insensitively.
+       hash      is a user-defined hash function.  Since no hash function per‐
+                 forms equally well on all possible data, the  user  may  find
+                 that  the  built-in hash function does poorly on a particular
+                 data set.  A user-specified hash functions must take two  ar‐
+                 guments  (a pointer to a byte string and a length) and return
+                 a 32-bit quantity to be used as the hash value.
 
-All variants
-support default and move construction (as well as move
-assignment), support construction from initializer lists.
-and support construction from iterators defining a half-open
-range of value_type values.
+       lorder    is the byte order for integers in the stored  database  meta‐
+                 data.   The  number should represent the order as an integer;
+                 for example, big endian order would be the number 4,321.   If
+                 lorder  is  0 (no order is specified), the current host order
+                 is used.  If the file already exists, the specified value  is
+                 ignored  and the value specified when the tree was created is
+                 used.
 
-The following
-variants are available (showing their default constructors).
-Value refers to the value type stored in the hash
-table.
+       If the file already exists (and the O_TRUNC flag is not specified), the
+       values  specified for bsize, ffactor, lorder, and nelem are ignored and
+       the values specified when the tree was created are used.
 
-o
+       If a hash function is specified, hash_open attempts to determine if the
+       hash  function specified is the same as the one with which the database
+       was created, and fails if it is not.
 
-HashCharPtr():
+       Backward-compatible interfaces to the routines described in dbm(3), and
+       ndbm(3)  are provided, however these interfaces are not compatible with
+       previous file formats.
 
-this hash table uses case
-sensitive char const * keys;
-
-o
-
-HashCharCasePtr(): 
-
-this hash table uses case
-insensitive char const * keys;
-
-o
-
-HashString(): 
-
-this hash table uses case
-sensitive std::string keys;
-
-o
-
-HashStringCase(): 
-
-this hash table uses case
-insensitive std::string keys;
-
-OVERLOADED OPERATOR
-
-In addition to
-the index operator inherited from unordered_map the
-overloaded copy and move assignment operators are available
-for all Hash containers.
-
-MEMBER FUNCTIONS
-
-All members of
-the unordered_map container are available, as
-Hash inherits from this template class.
-
-EXAMPLE
-
-#include
-
-#include 
-
-using namespace
-std; 
-using namespace FBB;
-
-pair ap[] = 
-{ 
-pair("one", 1), 
-pair("two", 2), 
-};
-
-int main() 
-{ 
-HashCharPtr hcp; 
-HashCharPtr hcp2(ap, ap + 2); 
-HashCharPtr hcp3(hcp2);
-
-hcp = hcp2;
-
-cout 
-}
-
-FILES
-
-bobcat/hash
-- defines the class interface
-
-SEE ALSO
-
-bobcat(7)
+ERRORS
+       The hash access method routines may fail and set errno for any  of  the
+       errors specified for the library routine dbopen(3).
 
 BUGS
+       Only big and little endian byte order are supported.
 
-None
-Reported.
+SEE ALSO
+       btree(3), dbopen(3), mpool(3), recno(3)
 
-BOBCAT PROJECT FILES
+       Dynamic  Hash  Tables, Per-Ake Larson, Communications of the ACM, April
+       1988.
 
-o
+       A New Hash Package for UNIX, Margo Seltzer, USENIX Proceedings,  Winter
+       1991.
 
-https://fbb-git.gitlab.io/bobcat/:
-gitlab project page;
-
-o
-
-bobcat_6.06.01-x.dsc: detached signature;
-
-o
-
-bobcat_6.06.01-x.tar.gz: source archive;
-
-o
-
-bobcat_6.06.01-x_i386.changes: change log;
-
-o
-
-libbobcat1_6.06.01-x_*.deb: debian package
-containing the libraries;
-
-o
-
-libbobcat1-dev_6.06.01-x_*.deb: debian package
-containing the libraries, headers and manual pages;
-
-BOBCAT
-
-Bobcat is an
-acronym of ’Brokken’s Own Base Classes And
-Templates’.
-
-COPYRIGHT
-
-This is free
-software, distributed under the terms of the GNU General
-Public License (GPL).
-
-AUTHOR
-
-Frank B.
-Brokken (f.b.brokken [AT] rug.nl).
+4.4 Berkeley Distribution         2022-12-04                           hash(3)

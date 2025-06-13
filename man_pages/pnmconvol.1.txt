@@ -1,492 +1,369 @@
-NAME
+Pnmconvol User Manual(1)    General Commands Manual   Pnmconvol User Manual(1)
 
-pnmconvol -
-general MxN convolution on a Netpbm image
+NAME
+       pnmconvol - general MxN convolution on a Netpbm image
 
 SYNOPSIS
+       pnmconvol  {  -matrix=convolution_matrix  | -matrixfile=filename[,file‐
+       name[, ...]]  } [-normalize] [-bias=n]
 
-pnmconvol
-{ -matrix=convolution_matrix |
--matrixfile=filename[,filename[,
-...]] } [-normalize] [-bias=n]
+       [netpbmfile]
 
-[netpbmfile]
+       pnmconvol convolution_matrix_file [-normalize] [-nooffset] [netpbmfile]
 
-pnmconvol
-convolution_matrix_file [-normalize]
-[-nooffset] [netpbmfile]
-
-Minimum unique
-abbreviation of option is acceptable. You may use double
-hyphens instead of single hyphen to denote options. You may
-use white space in place of the equals sign to separate an
-option name from its value.
+       Minimum unique abbreviation of option is acceptable.  You may use  dou‐
+       ble  hyphens  instead  of single hyphen to denote options.  You may use
+       white space in place of the equals sign to separate an option name from
+       its value.
 
 DESCRIPTION
+       This program is part of Netpbm(1).
 
-This program is
-part of Netpbm(1).
+       pnmconvol  reads a Netpbm image as input, convolves it with a specified
+       convolution matrix, and writes a Netpbm image as output.
 
-pnmconvol
-reads a Netpbm image as input, convolves it with a specified
-convolution matrix, and writes a Netpbm image as output.
+       A command use for convolution is blurring.  See examples  in  the  pam‐
+       gauss(1) manual.
 
-A command use
-for convolution is blurring. See examples in the
-pamgauss(1) manual.
+       Convolution  means  replacing each pixel with a weighted average of the
+       nearby pixels.  The weights and the area to average are  determined  by
+       the  convolution  matrix (sometimes called a convolution kernel), which
+       you supply in one of several ways.  See
+        Convolution Matrix ⟨#convolmatrix⟩ .
 
-Convolution
-means replacing each pixel with a weighted average of the
-nearby pixels. The weights and the area to average are
-determined by the convolution matrix (sometimes called a
-convolution kernel), which you supply in one of several
-ways. See  Convolution Matrix
-.
+       At the edges of the convolved image, where the convolution matrix would
+       extend over the edge of the image, pnmconvol just copies the input pix‐
+       els directly to the output.  It's often better to deal with the  pixels
+       near  an  edge  by  assuming  some blank or background color beyond the
+       edge.  To do that, use pnmpad to add a margin all around whose size  is
+       half  that of your convolution matrix size, not counting its center, in
+       the same dimension.  (E.g. if your convolution matrix is 5  wide  by  3
+       high,  use  pnmpad  -left=2  -right=2 -top=1 -bottom=1).  Feed that en‐
+       larged image to pnmconvol, then use pamcut to chop the  edges  off  the
+       convolved  output,  getting  back  to  your  original image dimensions.
+       (E.g.  pamcut -left=2 -right=-2 -top=1 -bottom=-1).
 
-At the edges of
-the convolved image, where the convolution matrix would
-extend over the edge of the image, pnmconvol just
-copies the input pixels directly to the output. It’s
-often better to deal with the pixels near an edge by
-assuming some blank or background color beyond the edge. To
-do that, use pnmpad to add a margin all around whose
-size is half that of your convolution matrix size, not
-counting its center, in the same dimension. (E.g. if your
-convolution matrix is 5 wide by 3 high, use pnmpad -left=2
--right=2 -top=1 -bottom=1). Feed that enlarged image to
-pnmconvol, then use pamcut to chop the edges
-off the convolved output, getting back to your original
-image dimensions. (E.g. pamcut -left=2 -right=-2 -top=1
--bottom=-1).
+       The convolution computation can result in a value which is outside  the
+       range  representable  in the output.  When that happens, pnmconvol just
+       clips the output, which means brightness is not conserved.
 
-The convolution
-computation can result in a value which is outside the range
-representable in the output. When that happens,
-pnmconvol just clips the output, which means
-brightness is not conserved.
+       To avoid clipping, you may want to scale your input values.  For  exam‐
+       ple,  if  your convolution matrix might produce an output value as much
+       as double the maximum value in the input, then make sure the maxval  of
+       the  input  (which  is also the maxval of the output) is at least twice
+       the actual maximum value in the input.
 
-To avoid
-clipping, you may want to scale your input values. For
-example, if your convolution matrix might produce an output
-value as much as double the maximum value in the input, then
-make sure the maxval of the input (which is also the maxval
-of the output) is at least twice the actual maximum value in
-the input.
+       Clipping negative numbers deserves special consideration.  If your con‐
+       volution matrix includes negative numbers, it is possible for pnmconvol
+       to calculate an output pixel as a negative value, which pnmconvol would
+       of  course clip to zero, since Netpbm formats cannot represent negative
+       numbers.
 
-Clipping
-negative numbers deserves special consideration. If your
-convolution matrix includes negative numbers, it is possible
-for pnmconvol to calculate an output pixel as a
-negative value, which pnmconvol would of course clip
-to zero, since Netpbm formats cannot represent negative
-numbers.
+   Convolution Matrix
+       There are three ways to specify the convolution matrix:
 
-Convolution
-Matrix 
-There are three ways to specify the convolution matrix:
+       •      directly with a -matrix option.
 
-•
+       •      In a file (or set of them) named by a -matrixfile option,  whose
+              contents are similar to a -matrix option value.
 
-directly with a -matrix option.
+       •      With a special PNM file.
 
-•
+       The  PNM  file  option  is  the  hardest, and exists only because until
+       Netpbm 10.49 (December 2009), it was the only way.
 
-In a file (or set of them) named by a -matrixfile
-option, whose contents are similar to a -matrix
-option value.
+       The regular convolution matrix file is slightly easier to read than the
+       -matrix  option  value, and makes your command line less messy, but re‐
+       quires you to manage a separate file.  With the file, you can have sep‐
+       arate  convolution  matrices for the individual color components, which
+       you can't do with -matrix.
 
-•
+       In any case, the convolution matrix pnmconvol uses is a matrix of  real
+       numbers.  They can be whole or fractional, positive, negative, or zero.
 
-With a special PNM file.
+       The  convolution  matrix  always  has  an odd width and height, so that
+       there is a center element.  pnmconvol figuratively places  that  center
+       element  over a pixel of the input image and weights that pixel and its
+       neighbors as indicated by the convolution matrix to produce  the  pixel
+       in the same location of the output image.
 
-The PNM file
-option is the hardest, and exists only because until Netpbm
-10.49 (December 2009), it was the only way.
+       For  a  normal convolution, where you're neither adding nor subtracting
+       total value from the image, but merely moving it around, you'll want to
+       make  sure  that  all  the  numbers in the matrix add up to 1.  If they
+       don't, pnmconvol warns you.
 
-The regular
-convolution matrix file is slightly easier to read than the
--matrix option value, and makes your command line
-less messy, but requires you to manage a separate file. With
-the file, you can have separate convolution matrices for the
-individual color components, which you can’t do with
--matrix.
+       The elements of the matrix are actually tuples, one for each sample  in
+       the  input.   (I.e.  if  the input is an RGB image, each element of the
+       convolution matrix has one weight for red, one for green, and  one  for
+       blue.
 
-In any case,
-the convolution matrix pnmconvol uses is a matrix of
-real numbers. They can be whole or fractional, positive,
-negative, or zero.
+       Directly On the Command Line
 
-The convolution
-matrix always has an odd width and height, so that there is
-a center element. pnmconvol figuratively places that
-center element over a pixel of the input image and weights
-that pixel and its neighbors as indicated by the convolution
-matrix to produce the pixel in the same location of the
-output image.
+       Here are examples of a -matrix option:
 
-For a normal
-convolution, where you’re neither adding nor
-subtracting total value from the image, but merely moving it
-around, you’ll want to make sure that all the numbers
-in the matrix add up to 1. If they don’t,
-pnmconvol warns you.
+           -matrix=0,.2,0;.2,.2,.2;0,.2,0
 
-The elements of
-the matrix are actually tuples, one for each sample in the
-input. (I.e. if the input is an RGB image, each element of
-the convolution matrix has one weight for red, one for
-green, and one for blue.
+           -matrix=-1,3,-1
 
-Directly On
-the Command Line
+       The  value consists of each row of the matrix from top to bottom, sepa‐
+       rated by semicolons.  Each row consists of the elements of the row from
+       left  to  right, separated by commas.  You must of course have the same
+       number of elements in each row.  Each element  is  a  decimal  floating
+       point  number  and  is  the weight to give to each component of a pixel
+       that corresponds to that matrix location.
 
-Here are
-examples of a -matrix option:
+       Note that when you supply this option  via  a  shell,  semicolon  (";")
+       probably means something to the shell, so use quotation marks.
 
--matrix=0,.2,0;.2,.2,.2;0,.2,0
+       There  is no way with this method to have different weights for differ‐
+       ent components of a pixel.
 
--matrix=-1,3,-1
+       The -normalize option is often quite handy with -matrix because it lets
+       you  quickly throw together the command without working out the math to
+       make sure the matrix isn't biased.  Note that if you use the -normalize
+       option, the weights in the matrix aren't actually the numbers you spec‐
+       ify in the -matrix option.
 
-The value
-consists of each row of the matrix from top to bottom,
-separated by semicolons. Each row consists of the elements
-of the row from left to right, separated by commas. You must
-of course have the same number of elements in each row. Each
-element is a decimal floating point number and is the weight
-to give to each component of a pixel that corresponds to
-that matrix location.
+       Regular Matrix File
 
-Note that when
-you supply this option via a shell, semicolon
-(";") probably means something to the shell, so
-use quotation marks.
+       Specify the name of the matrix file  with  a  -matrixfile  option.   Or
+       specify a list of them, one for each plane of the image.
 
-There is no way
-with this method to have different weights for different
-components of a pixel.
+       Examples:
 
-The
--normalize option is often quite handy with
--matrix because it lets you quickly throw together
-the command without working out the math to make sure the
-matrix isn’t biased. Note that if you use the
--normalize option, the weights in the matrix
-aren’t actually the numbers you specify in the
--matrix option.
+           -matrixfile=mymatrix
 
-Regular
-Matrix File
+           -matrixfile=myred,mygreen,myblue
 
-Specify the
-name of the matrix file with a -matrixfile option. Or
-specify a list of them, one for each plane of the image.
+       Each file applies to one plane of the image (e.g. red, green, or blue),
+       in order.  The matrix in each file must have the same  dimensions.   If
+       the  input  image has more planes than the number of files you specify,
+       the first file applies to the extra planes as well.
 
-Examples:
+       pnmconvol interprets the file as text, with  lines  delimited  by  Unix
+       newline characters (line feeds).
 
--matrixfile=mymatrix
+       Each  line  of  the file is one row of the matrix, in order from top to
+       bottom.
 
--matrixfile=myred,mygreen,myblue
+       For each row, the file contains a floating  point  decimal  number  for
+       each element in the row, from left to right, separated by spaces.  This
+       is not just any old white space -- it is exactly one space.  Two spaces
+       in  a  row mean you've specified a null string for an element (which is
+       invalid).  If you want to line up your matrix visually, use leading and
+       trailing zeroes in the floating point numbers to do it.
 
-Each file
-applies to one plane of the image (e.g. red, green, or
-blue), in order. The matrix in each file must have the same
-dimensions. If the input image has more planes than the
-number of files you specify, the first file applies to the
-extra planes as well.
+       There  is no way to put comments in the file.  There is no signature or
+       any other metadata in the file.
 
-pnmconvol
-interprets the file as text, with lines delimited by Unix
-newline characters (line feeds).
+       Note that if you use the -normalize option, the weights in  the  matrix
+       aren't actually what is in the file.
 
-Each line of
-the file is one row of the matrix, in order from top to
-bottom.
+       PNM File
 
-For each row,
-the file contains a floating point decimal number for each
-element in the row, from left to right, separated by spaces.
-This is not just any old white space -- it is exactly one
-space. Two spaces in a row mean you’ve specified a
-null string for an element (which is invalid). If you want
-to line up your matrix visually, use leading and trailing
-zeroes in the floating point numbers to do it.
+       Before Netpbm 10.49 (December 2009), this was the only way to specify a
+       convolution matrix.  pnmconvol used this method in an  attempt  to  ex‐
+       ploit  the generic matrix processing capabilities of Netpbm, but as the
+       Netpbm formats don't directly allow matrices with the kinds of  numbers
+       you  need  in  a  convolution matrix, it is quite cumbersome.  In fact,
+       there simply is no way to specify some convolution matrices with a  le‐
+       gal Netpbm image, so to make it work, pnmconvol has to relax the Netpbm
+       file requirement that sample values be no greater than the image's max‐
+       val.  I.e. it isn't even a real PNM file.
 
-There is no way
-to put comments in the file. There is no signature or any
-other metadata in the file.
+       The  way  you select this method of supplying the convolution matrix is
+       to not specify -matrix or -matrixfile.  When  you  do  that,  you  must
+       specify  a  second  non-option  argument -- that is the name of the PNM
+       file (or PNM equivalent PAM file).
 
-Note that if
-you use the -normalize option, the weights in the
-matrix aren’t actually what is in the file.
+       There are two ways pnmconvol interprets the PNM convolution matrix  im‐
+       age pixels as weights: with offsets, and without offsets.
 
-PNM
-File
+       The  simpler  of the two is without offsets.  That is what happens when
+       you specify the -nooffset option.  In that case, pnmconvol simply  nor‐
+       malizes the sample values in the PNM image by dividing by the maxval.
 
-Before Netpbm
-10.49 (December 2009), this was the only way to specify a
-convolution matrix. pnmconvol used this method in an
-attempt to exploit the generic matrix processing
-capabilities of Netpbm, but as the Netpbm formats
-don’t directly allow matrices with the kinds of
-numbers you need in a convolution matrix, it is quite
-cumbersome. In fact, there simply is no way to specify some
-convolution matrices with a legal Netpbm image, so to make
-it work, pnmconvol has to relax the Netpbm file
-requirement that sample values be no greater than the
-image’s maxval. I.e. it isn’t even a real PNM
-file.
+       For  example,  here  is a sample convolution file that causes an output
+       pixel to be a simple average of its corresponding input pixel and its 8
+       neighbors, resulting in a smoothed image:
 
-The way you
-select this method of supplying the convolution matrix is to
-not specify -matrix or -matrixfile.
-When you do that, you must specify the name of the PNM file
-(or PNM equivalent PAM file) as a non-option argument
-(before the optional input file name).
+           P2
+           3 3
+           18
+           2 2 2
+           2 2 2
+           2 2 2
 
-There are two
-ways pnmconvol interprets the PNM convolution matrix
-image pixels as weights: with offsets, and without
-offsets.
+       (Note  that  the  above  text  is an actual PGM file -- you can cut and
+       paste it.  If you're not familiar with the plain PGM  format,  see  the
+       PGM format specification(1)).
 
-The simpler of
-the two is without offsets. That is what happens when you
-specify the -nooffset option. In that case,
-pnmconvol simply normalizes the sample values in the
-PNM image by dividing by the maxval.
+       pnmconvol  divides  each of the sample values (2) by the maxval (18) so
+       the weight of each of the 9 input pixels gets is 1/9, which is  exactly
+       what  you  want  to  keep the overall brightness of the image the same.
+       pnmconvol creates an output pixel by multiplying the values of each  of
+       9 pixels by 1/9 and adding.
 
-For example,
-here is a sample convolution file that causes an output
-pixel to be a simple average of its corresponding input
-pixel and its 8 neighbors, resulting in a smoothed
-image:
+       Note that with maxval 18, the range of possible values is 0 to 18.  Af‐
+       ter scaling, the range is 0 to 1.
 
-P2 
-3 3 
-18 
-2 2 2 
-2 2 2 
-2 2 2
+       For a normal convolution, where you're neither adding  nor  subtracting
+       total value from the image, but merely moving it around, you'll want to
+       make sure that all the scaled values in (each plane of)  your  convolu‐
+       tion  PNM  add up to 1, which means all the actual sample values add up
+       to the maxval.  Alternatively, you can use  the  -normalize  option  to
+       scale  the scaled values further to make them all add up to 1 automati‐
+       cally.
 
-(Note that the
-above text is an actual PGM file -- you can cut and paste
-it. If you’re not familiar with the plain PGM format,
-see the PGM format specification(1)).
+       When you don't specify -nooffset, pnmconvol applies an offset, the pur‐
+       pose  of which is to allow you to indicate negative weights even though
+       PNM sample values are never negative.  In  this  case,  pnmconvol  sub‐
+       tracts half the maxval from each sample and then normalizes by dividing
+       by half the maxval.  So to get the same result as  we  did  above  with
+       -nooffset,  the  convolution  matrix  PNM image would have to look like
+       this:
 
-pnmconvol
-divides each of the sample values (2) by the maxval (18) so
-the weight of each of the 9 input pixels gets is 1/9, which
-is exactly what you want to keep the overall brightness of
-the image the same. pnmconvol creates an output pixel
-by multiplying the values of each of 9 pixels by 1/9 and
-adding.
+           P2
+           3 3
+           18
+           10 10 10
+           10 10 10
+           10 10 10
 
-Note that with
-maxval 18, the range of possible values is 0 to 18. After
-scaling, the range is 0 to 1.
+       To see how this works, do the above-mentioned offset: 10 -  18/2  gives
+       1.   The  normalization  step divides by 18/2 = 9, which makes it 1/9 -
+       exactly what you want.  The equivalent matrix for 5x5  smoothing  would
+       have maxval 50 and be filled with 26.
 
-For a normal
-convolution, where you’re neither adding nor
-subtracting total value from the image, but merely moving it
-around, you’ll want to make sure that all the scaled
-values in (each plane of) your convolution PNM add up to 1,
-which means all the actual sample values add up to the
-maxval. Alternatively, you can use the -normalize
-option to scale the scaled values further to make them all
-add up to 1 automatically.
+       Note that with maxval 18, the range of possible values is 0 to 18.  Af‐
+       ter offset, that's -9 to 9, and after normalizing, the range is  -1  to
+       1.
 
-When you
-don’t specify -nooffset,
-pnmconvol applies an offset, the purpose of which is
-to allow you to indicate negative weights even though PNM
-sample values are never negative. In this case,
-pnmconvol subtracts half the maxval from each sample
-and then normalizes by dividing by half the maxval. So to
-get the same result as we did above with -nooffset,
-the convolution matrix PNM image would have to look like
-this:
+       The  convolution  file will usually be a PGM, so that the same convolu‐
+       tion gets applied to each color component.  However, if you want to use
+       a  PPM and do a different convolution to different colors, you can cer‐
+       tainly do that.
 
-P2 
-3 3 
-18 
-10 10 10 
-10 10 10 
-10 10 10
+   Other Forms of Convolution
+       pnmconvol does only arithmetic, linear combination convolution.   There
+       are other forms of convolution that are especially useful in image pro‐
+       cessing.
 
-To see how this
-works, do the above-mentioned offset: 10 - 18/2 gives 1. The
-normalization step divides by 18/2 = 9, which makes it 1/9 -
-exactly what you want. The equivalent matrix for 5x5
-smoothing would have maxval 50 and be filled with 26.
+       pgmmedian does median filtering, which is a form of  convolution  where
+       the  output  pixel value, rather than being a linear combination of the
+       pixels in the window, is the median of a certain subset of them.
 
-Note that with
-maxval 18, the range of possible values is 0 to 18. After
-offset, that’s -9 to 9, and after normalizing, the
-range is -1 to 1.
-
-The convolution
-file will usually be a PGM, so that the same convolution
-gets applied to each color component. However, if you want
-to use a PPM and do a different convolution to different
-colors, you can certainly do that.
-
-Other Forms
-of Convolution 
-pnmconvol does only arithmetic, linear combination
-convolution. There are other forms of convolution that are
-especially useful in image processing.
-
-pgmmedian
-does median filtering, which is a form of convolution where
-the output pixel value, rather than being a linear
-combination of the pixels in the window, is the median of a
-certain subset of them.
-
-pgmmorphconv
-does dilation and erosion, which is like the median filter
-but the output value is the minimum or maximum of the values
-in the window.
+       pgmmorphconv does dilation and erosion, which is like the median filter
+       but  the  output  value  is the minimum or maximum of the values in the
+       window.
 
 OPTIONS
+       In addition to the options common to all programs  based  on  libnetpbm
+       (most notably -quiet, see
+        Common  Options ⟨index.html#commonoptions⟩ ), pnmconvol recognizes the
+       following command line options:
 
-In addition to
-the options common to all programs based on libnetpbm (most
-notably -quiet, see
- Common Options ),
-pnmconvol recognizes the following command line
-options: 
--matrix=convolution_matrix
+       -matrix=convolution_matrix
+              The value of the convolution  matrix.   See  Convolution  Matrix
+              ⟨#matrixopt⟩ .
 
-The value of the convolution
-matrix. See Convolution Matrix
-.
+              You may not specify both this and -matrixfile.
 
-You may not
-specify both this and -matrixfile.
+              This  option  was  new  in Netpbm 10.49 (December 2009).  Before
+              that, use a PNM file for the convolution matrix.
 
-This option was
-new in Netpbm 10.49 (December 2009). Before that, use a PNM
-file for the convolution matrix.
+       -matrixfile=filename
+              This specifies that you are supplying the convolution matrix  in
+              a   file   and   names   that   file.   See  Convolution  Matrix
+              ⟨#matrixfile⟩ .
 
--matrixfile=filename
+              You may not specify both this and -matrix.
 
-This specifies that you are
-supplying the convolution matrix in a file and names that
-file. See Convolution Matrix .
+              This option was new in Netpbm  10.49  (December  2009).   Before
+              that, use a PNM file for the convolution matrix.
 
-You may not
-specify both this and -matrix.
+       -normalize
+              This  option  says to adjust the weights in your convolution ma‐
+              trix so they all add up to one.  You usually want them to add up
+              to one so that the convolved result tends to have the same over‐
+              all brightness as the input.  With -normalize, pnmconvol  scales
+              all the weights by the same factor to make the sum one.  It does
+              this for each plane.
 
-This option was
-new in Netpbm 10.49 (December 2009). Before that, use a PNM
-file for the convolution matrix.
+              This can be quite convenient because you can just throw  numbers
+              into the matrix that have roughly the right relationship to each
+              other and let pnmconvol do the work of  normalizing  them.   And
+              you  can  adjust a matrix by raising or lowering certain weights
+              without having to modify all the other weights to maintain  nor‐
+              malcy.  And you can use friendly integers.
 
--normalize
+              Example:
 
-This option says to adjust the
-weights in your convolution matrix so they all add up to
-one. You usually want them to add up to one so that the
-convolved result tends to have the same overall brightness
-as the input. With -normalize, pnmconvol
-scales all the weights by the same factor to make the sum
-one. It does this for each plane.
+                  $ pnmconvol myimage.ppm -normalize -matrix=1,1,1;1,1,1;1,1,1
 
-This can be
-quite convenient because you can just throw numbers into the
-matrix that have roughly the right relationship to each
-other and let pnmconvol do the work of normalizing
-them. And you can adjust a matrix by raising or lowering
-certain weights without having to modify all the other
-weights to maintain normalcy. And you can use friendly
-integers.
+              This is of course a basic 3x3 average, but without you having to
+              specify 1/9 (.1111111) for each weight.
 
-Example:
+              This option was new in Netpbm 10.50 (March  2010).   But  before
+              Netpbm  10.79 (June 2017), it has no effect when you specify the
+              convolution matrix via pseudo-PNM file.
 
-$ pnmconvol
-myimage.ppm -normalize -matrix=1,1,1;1,1,1;1,1,1
+       -bias=n
 
-This is of
-course a basic 3x3 average, but without you having to
-specify 1/9 (.1111111) for each weight.
+              This specifies an amount to add to the convolved value for  each
+              sample.
 
-This option was
-new in Netpbm 10.50 (March 2010). But before Netpbm 10.79
-(June 2017), it has no effect when you specify the
-convolution matrix via pseudo-PNM file.
+              The purpose of this addition is normally to handle negative con‐
+              volution results.  Because the convolution  matrix  can  contain
+              negative numbers, the convolved value for a pixel could be nega‐
+              tive.  But Netpbm formats cannot contain negative sample values,
+              so  without  any  bias,  such samples would get clipped to zero.
+              The bias allows the output image to retain the information,  and
+              a  program  that  pocesses  that output, knowing the bias value,
+              could reconstruct the real convolved values.
 
--bias=n
+              For example, with bias=100, a sample whose convolved value is -5
+              appears  as  95  in the output, whereas a sample whose convolved
+              value is 5 appears as 105 in the output.
 
-This specifies
-an amount to add to the convolved value for each sample.
+              A typical value for the bias is half the  maxval,  allowing  the
+              same range on either side of zero.
 
-The purpose of
-this addition is normally to handle negative convolution
-results. Because the convolution matrix can contain negative
-numbers, the convolved value for a pixel could be negative.
-But Netpbm formats cannot contain negative sample values, so
-without any bias, such samples would get clipped to zero.
-The bias allows the output image to retain the information,
-and a program that pocesses that output, knowing the bias
-value, could reconstruct the real convolved values.
+              If  the  sample value, after adding the bias, is still less than
+              zero, pnmconvol clips it to zero.  If it exceeds the  maxval  of
+              the output image, it clips it to the maxval.
 
-For example,
-with bias=100, a sample whose convolved value is -5
-appears as 95 in the output, whereas a sample whose
-convolved value is 5 appears as 105 in the output.
+              The default is zero.
 
-A typical value
-for the bias is half the maxval, allowing the same range on
-either side of zero.
+              This option was new in Netpbm 10.68 (September 2014).
 
-If the sample
-value, after adding the bias, is still less than zero,
-pnmconvol clips it to zero. If it exceeds the maxval
-of the output image, it clips it to the maxval.
-
-The default is
-zero.
-
-This option was
-new in Netpbm 10.68 (September 2014).
-
--nooffset=
-
-This is part of the obsolete
-PNM image method of specifying the convolution matrix. See
-Convolution Matrix .
+       -nooffset=
+              This  is part of the obsolete PNM image method of specifying the
+              convolution matrix.  See Convolution Matrix ⟨#matrixpnm⟩ .
 
 HISTORY
-
-The
--nooffset option was new in Netpbm 10.23 (July 2004),
-making it substantially easier to specify a convolution
-matrix, but still hard. In Netpbm 10.49 (December 2009), the
-PNM convolution matrix tyranny was finally ended with the
--matrix and -matrixfile options. In between,
-pnmconvol was broken for a while because the Netpbm
-library started enforcing the requirement that a sample
-value not exceed the maxval of the image. pnmconvol
-used the Netpbm library to read the PNM convolution matrix
-file, but in the pseudo-PNM format that pnmconvol
-uses, a sample value sometimes has to exceed the maxval.
+       The -nooffset option was new in Netpbm 10.23  (July  2004),  making  it
+       substantially  easier  to specify a convolution matrix, but still hard.
+       In Netpbm 10.49 (December 2009), the PNM convolution matrix tyranny was
+       finally  ended  with  the -matrix and -matrixfile options.  In between,
+       pnmconvol was broken for a while because the Netpbm library started en‐
+       forcing  the  requirement  that a sample value not exceed the maxval of
+       the image.  pnmconvol used the Netpbm library to read the PNM  convolu‐
+       tion  matrix  file, but in the pseudo-PNM format that pnmconvol uses, a
+       sample value sometimes has to exceed the maxval.
 
 SEE ALSO
-
-pnmsmooth(1),
-pgmmorphconv(1), pgmmedian(1),
-pnmnlfilt(1), pgmkernel(1),
-pamgauss(1), pammasksharpen(1),
-pnmpad(1), pamcut(1), pnm(1)
+       pnmsmooth(1),  pgmmorphconv(1),  pgmmedian(1),  pnmnlfilt(1),   pgmker‐
+       nel(1), pamgauss(1), pammasksharpen(1), pnmpad(1), pamcut(1), pnm(1)
 
 AUTHORS
-
-Copyright (C)
-1989, 1991 by Jef Poskanzer. Modified 26 November 1994 by
-Mike Burns, burns [AT] chem.edu
+       Copyright  (C)  1989, 1991 by Jef Poskanzer.  Modified 26 November 1994
+       by Mike Burns, burns@chem.psu.edu
 
 DOCUMENT SOURCE
+       This manual page was generated by the Netpbm tool 'makeman'  from  HTML
+       source.  The master documentation is at
 
-This manual
-page was generated by the Netpbm tool ’makeman’
-from HTML source. The master documentation is at
+              http://netpbm.sourceforge.net/doc/pnmconvol.html
 
-http://netpbm.sourceforge.net/doc/pnmconvol.html
+netpbm documentation           30 November 2018       Pnmconvol User Manual(1)

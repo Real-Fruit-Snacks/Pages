@@ -1,383 +1,203 @@
-Name
-
-grotty -
-groff output driver for typewriter-like (terminal)
-devices
-
-Synopsis
-
-grotty
-
-[-dfho]
-[-i|-r] [-F dir]
-[file ...]
-
-grotty
-
--c [-bBdfhouU]
-[-F dir] [file ...]
-
-grotty
---help
-
-grotty -v
-
-grotty --version
-
-Description
-
-The GNU
-roff TTY (“Teletype”) output driver
-translates the output of troff(1) into a form
-suitable for typewriter-like devices, including terminal
-emulators. Normally, grotty is invoked by
-groff(1) when the latter is given one of the
-“-T ascii”,
-“-T latin1”, -Tlatin1, or
-“-T utf8” options on systems using
-ISO character encoding standards, or with
-“-T cp1047” or
-“-T utf8” on EBCDIC-based hosts. (In
-this installation, ps is the default output device.)
-Use groff’s -P option to pass any
-options shown above to grotty. If no file
-arguments are given, or if file is “-”,
-grotty reads the standard input stream. Output is
-written to the standard output stream.
-
-By default,
-grotty emits SGR escape sequences (from
-ISO 6429, popularly called “ANSI escapes”)
-to change text attributes (bold, italic, underline, reverse
-video [“negative image”] and colors). Devices
-supporting the appropriate sequences can view roff
-documents using eight different background and foreground
-colors. Following ISO 6429, the following colors are
-defined in tty.tmac: black, white, red, green, blue,
-yellow, magenta, and cyan. Unrecognized colors are mapped to
-the default color, which is dependent on the settings of the
-terminal. OSC 8 hyperlinks are produced for these
-devices.
-
-In keeping with
-long-standing practice and the rarity of terminals (and
-emulators) that support oblique or italic fonts, italicized
-text is represented with underlining by default—but
-see the -i option below.
-
-SGR and OSC
-support in pagers 
-When paging grotty’s output with
-less(1), the latter program must be instructed to
-pass SGR and OSC sequences through to the device; its
--R option is one way to achieve this (less
-version 566 or later is required for OSC 8 support).
-Consequently, programs like man(1) that page
-roff documents with less must call it with an
-appropriate option.
-
-Legacy
-output format 
-The -c option tells grotty to use an output
-format compatible with paper terminals, like the Teletype
-machines for which roff and nroff were first
-developed but which are no longer in wide use. SGR escape
-sequences are not emitted; bold, italic, and underlining
-character attributes are thus not manipulated. Instead,
-grotty overstrikes, representing a bold character
-c with the sequence
-“c BACKSPACE c”, an
-italic character c with the sequence
-“_ BACKSPACE c”, and
-bold italics with
-“_ BACKSPACE c
-BACKSPACE c”. This rendering is inherently
-ambiguous when the character c is itself the
-underscore.
-
-The legacy
-output format can be rendered on a video terminal (or
-emulator) by piping grotty’s output through
-ul(1), which may render bold italics as reverse
-video. Some implementations of more(1) are also able
-to display these sequences; you may wish to experiment with
-that command’s -b option. less renders
-legacy bold and italics without requiring options. In
-contrast to the terminal output drivers of some other
-roff implementations, grotty never outputs
-reverse line feeds. There is therefore no need to filter its
-output through col(1).
-
-Device
-control commands 
-grotty understands one device control function produced
-by the roff \X escape sequence in a document.
-
-\X'tty: link
-[uri [key=value]
-...]'
-
-Embed a hyperlink using the OSC
-8 terminal escape sequence. Specifying uri starts
-hyperlinked text, and omitting it ends the hyperlink. When
-uri is present, any number of additional key/value
-pairs can be specified; their interpretation is the
-responsibility of the pager or terminal. Spaces or tabs
-cannot appear literally in uri, key, or
-value; they must be represented in an alternate
-form.
-
-Device
-description files 
-If the DESC file for the character encoding contains
-the “unicode” directive, grotty
-emits Unicode characters in UTF-8 encoding. Otherwise, it
-emits characters in a single-byte encoding depending on the
-data in the font description files. See
-groff_font(5).
-
-A font
-description file may contain a directive
-“internalname n” where
-n is a decimal integer. If the 01 bit in n is
-set, then the font is treated as an italic font; if the 02
-bit is set, then it is treated as a bold font.
+GROTTY(1)                   General Commands Manual                  GROTTY(1)
+
+NAME
+       grotty - groff driver for typewriter-like devices
+
+SYNOPSIS
+       grotty [-bBcdfhioruUv] [-F dir] [file ...]
+
+DESCRIPTION
+       grotty  translates  the  output  of  GNU troff into a form suitable for
+       typewriter-like devices.  Normally grotty should be  invoked  by  using
+       the  groff  command  with a -Tascii, -Tlatin1 or -Tutf8 option on ASCII
+       based systems, and with -Tcp1047 and -Tutf8 on EBCDIC based hosts.   If
+       no  files  are given, grotty reads the standard input.  A filename of -
+       also causes grotty to read the standard input.  Output  is  written  to
+       the standard output.
+
+       By  default,  grotty  emits  SGR  escape sequences (from ISO 6429, also
+       called ANSI color escapes) to change  text  attributes  (bold,  italic,
+       colors).  This makes it possible to have eight different background and
+       foreground colors; additionally, bold and italic attributes can be used
+       at the same time (by using the BI font).
+
+       The following colors are defined in tty.tmac: black, white, red, green,
+       blue, yellow, magenta, cyan.  Unknown colors are mapped to the  default
+       color  (which  is  dependent  on  the settings of the terminal; in most
+       cases, this is black for the foreground and white for the background).
+
+       Use the -c switch to revert to the old behaviour, printing a bold char‐
+       acter  c with the sequence “c BACKSPACE c” and an italic character c by
+       the sequence “_ BACKSPACE c”.  At the same time, color output  is  dis‐
+       abled.   The  same  effect  can  be  achieved  by  setting  either  the
+       GROFF_NO_SGR environment variable or using the ‘sgr’ X command (see be‐
+       low).
+
+       (Debian-specific:  The  old behaviour is the default when using the man
+       and mdoc macro packages, because most pagers either fail to  cope  with
+       SGR  escape sequences or need special options to do so.  SGR output can
+       be  re-enabled  permanently   by   editing   /etc/groff/man.local   and
+       /etc/groff/mdoc.local, or temporarily by setting the GROFF_SGR environ‐
+       ment variable to something non-empty.)
+
+       For SGR support, it is necessary to use the -R  option  of  less(1)  to
+       disable  the  interpretation  of  grotty's  old  output format.  Conse‐
+       quently, all programs which use less as the pager program have to  pass
+       this  option  to  it.   For  man(1) in particular, either add -R to the
+       PAGER environment variable, e.g.
+
+              PAGER="/usr/bin/less -R"
+              export PAGER
+
+       or use the -P option of man to set the pager  executable  and  its  op‐
+       tions,  or  modify  the configuration file of man in a similar fashion.
+       Note that with some man(1) versions, you have to use the MANPAGER envi‐
+       ronment variable instead.
+
+       grotty's  old  output  format  can be displayed on a terminal by piping
+       through ul(1).  Pagers such as more(1) or less(1) are also able to dis‐
+       play  these  sequences.   Use either -B or -U when piping into less(1);
+       use -b when piping into more(1).  There is no need to filter the output
+       through col(1) since grotty never outputs reverse line feeds.
+
+       The font description file may contain a command
+
+              internalname n
+
+       where n is a decimal integer.  If the 01 bit in n is set, then the font
+       is treated as an italic font; if the 02 bit is set, then it is  treated
+       as a bold font.  The code field in the font description field gives the
+       code which is used to output the character.  This code can also be used
+       in the \N escape sequence in troff.
+
+       If  the  DESC  file  contains the keyword unicode, grotty emits Unicode
+       characters in UTF-8 encoding.  Otherwise, it emits characters in a sin‐
+       gle-byte  encoding depending on the data in the font description files.
+       See the groff_font(5) man page for more details.
+
+OPTIONS
+       Whitespace is permitted between a command-line option and its argument.
+
+       -b     Suppress the use of overstriking for bold  characters.   Ignored
+              if -c isn't used.
+
+       -B     Use only overstriking for bold-italic characters.  Ignored if -c
+              isn't used.
+
+       -c     Use grotty's old output format (see above).  This also  disables
+              color  output.   (Debian-specific: This option is enabled by de‐
+              fault when using the man and mdoc macro  packages.   It  can  be
+              disabled  by default permanently by editing /etc/groff/man.local
+              and  /etc/groff/mdoc.local,  or  temporarily  by   setting   the
+              GROFF_SGR environment variable to something non-empty.)
 
-Typefaces
-
-grotty supports the standard four styles: R
-(roman), I (italic), B (bold),
-and BI (bold-italic). Because the
-output driver operates in nroff mode, attempts to set
-or change the font family or type size are ignored.
+       -d     Ignore  all  \D  commands.  Without this grotty renders \D'l...'
+              commands that have at least one zero argument (and so are either
+              horizontal or vertical) using -, |, and + characters.  In a sim‐
+              ilar way, grotty handles \D'p...'  commands  which  consist  en‐
+              tirely of horizontal and vertical lines.
 
-Options
+       -f     Use  form feeds in the output.  A form feed is output at the end
+              of each page that has no output on its last line.
 
---help
-displays a usage message, while -v and
---version show version information; all exit
-afterward.
+       -Fdir  Prepend directory dir/devname to the search path  for  font  and
+              device  description  files; name is the name of the device, usu‐
+              ally ascii, latin1, utf8, or cp1047.
 
--b
+       -h     Use horizontal tabs in the output.  Tabs are assumed to  be  set
+              every 8 columns.
 
-Suppress the use of overstriking for bold characters in
-legacy output format.
+       -i     Use escape sequences to set the italic text attribute instead of
+              the underline attribute for italic fonts (‘I’ and  ‘BI’).   Note
+              that  most  terminals (including xterm) don't support this.  Ig‐
+              nored if -c is active.
 
--B
+       -o     Suppress overstriking (other than for bold or underlined charac‐
+              ters in case the old output format has been activated with -c).
 
-Use only overstriking for bold-italic characters in
-legacy output format.
+       -r     Use  escape  sequences to set the reverse text attribute instead
+              of the underline attribute for italic fonts (‘I’ and ‘BI’).  Ig‐
+              nored if -c is active.
 
--c
+       -u     Suppress  the use of underlining for italic characters.  Ignored
+              if -c isn't used.
 
-Use grotty’s legacy output format (see
-subsection “Legacy output format” above). SGR
-and OSC escape sequences are not emitted.
+       -U     Use only underlining for bold-italic characters.  Ignored if  -c
+              isn't used.
 
--d
+       -v     Print the version number.
 
-Ignore all \D drawing escape sequences in the
-input. By default, grotty renders
-\D'l...' escape sequences that have at least
-one zero argument (and so are either horizontal or vertical)
-using Unicode box drawing characters (for the utf8
-device) or the -, |, and + characters
-(for all other devices). grotty handles
-\D'p...' escape sequences that consist
-entirely of horizontal and vertical lines similarly.
+USAGE
+       grotty  understands a single X command produced using the \X escape se‐
+       quence.
 
--f
+       \X'tty: sgr n'
+              If n is non-zero or missing, enable SGR output (this is the  de‐
+              fault), otherwise use the old drawing scheme for bold and under‐
+              line.
 
-Emit a form feed at the end of each page having no
-output on its last line.
+ENVIRONMENT
+       GROFF_NO_SGR
+              If set, the old drawing scheme for bold and underline (using the
+              backspace character) is active.  Colors are disabled.
 
--F dir
+       GROFF_FONT_PATH
+              A  list of directories in which to search for the devname direc‐
+              tory  in  addition  to  the  default  ones.   See  troff(1)  and
+              groff_font(5) for more details.
 
-Prepend directory dir/devname to the search path
-for font and device description files; name describes
-the output device’s character encoding, one of
-ascii, latin1, utf8, or
-cp1047. 
+FILES
+       /usr/share/groff/1.22.4/font/devascii/DESC
+              Device description file for the ascii device.
 
--h
+       /usr/share/groff/1.22.4/font/devascii/F
+              Font description file for font F of the ascii device.
 
-Use literal horizontal tab characters in the output.
-Tabs are assumed to be set every 8 columns.
+       /usr/share/groff/1.22.4/font/devlatin1/DESC
+              Device description file for the latin1 device.
 
--i
+       /usr/share/groff/1.22.4/font/devlatin1/F
+              Font description file for font F of the latin1 device.
 
-Render oblique-styled fonts (I and BI)
-with the SGR attribute for italic text rather than
-underlined text. Many terminals don’t support this
-attribute; however, xterm(1), since patch #314
-(2014-12-28), does. Ignored if -c is also
-specified. 
+       /usr/share/groff/1.22.4/font/devutf8/DESC
+              Device description file for the utf8 device.
 
--o
+       /usr/share/groff/1.22.4/font/devutf8/F
+              Font description file for font F of the utf8 device.
 
-Suppress overstriking (other than for bold and/or
-underlined characters when the legacy output format is in
-use). 
+       /usr/share/groff/1.22.4/font/devcp1047/DESC
+              Device description file for the cp1047 device.
 
--r
+       /usr/share/groff/1.22.4/font/devcp1047/F
+              Font description file for font F of the cp1047 device.
 
-Render oblique-styled fonts (I and BI)
-with the SGR attribute for reverse video text rather than
-underlined text. Ignored if -c or -i is also
-specified. 
+       /usr/share/groff/1.22.4/tmac/tty.tmac
+              Macros for use with grotty.
 
--u
+       /usr/share/groff/1.22.4/tmac/tty-char.tmac
+              Additional character definitions for use with grotty.
 
-Suppress the use of underlining for italic characters in
-legacy output format.
+       Note  that  on  EBCDIC  hosts,  only files for the cp1047 device is in‐
+       stalled.
 
--U
+BUGS
+       grotty is intended only for simple documents.
 
-Use only underlining for bold-italic characters in
-legacy output format.
+       There is no support for fractional horizontal or vertical motions.
 
-Environment
+       There is no support for \D commands other than horizontal and  vertical
+       lines.
 
-GROFF_FONT_PATH
+       Characters  above  the  first line (i.e. with a vertical position of 0)
+       cannot be printed.
 
-A list of directories in which
-to seek the selected output device’s directory of
-device and font description files. See troff(1) and
-groff_font(5).
+       Color handling differs from grops(1).  \M doesn't set  the  fill  color
+       for  closed  graphic  objects (which grotty doesn't support anyway) but
+       changes the background color of the character cell, affecting all  sub‐
+       sequent operations.
 
-GROFF_NO_SGR
+SEE ALSO
+       groff(1),  troff(1), groff_out(5), groff_font(5), groff_char(7), ul(1),
+       more(1), man(1), less(1)
 
-If set, grotty’s
-legacy output format is used just as if the -c option
-were specified; see subsection “Legacy output
-format” above.
-
-Files
-
-/usr/share/groff/1.23.0/font/devascii/DESC
-
-describes the ascii
-output device.
-
-/usr/share/groff/1.23.0/font/devascii/F
-
-describes the font known
-as F on device ascii.
-
-/usr/share/groff/1.23.0/font/devcp1047/DESC
-
-describes the cp1047
-output device.
-
-/usr/share/groff/1.23.0/font/devcp1047/F
-
-describes the font known
-as F on device cp1047.
-
-/usr/share/groff/1.23.0/font/devlatin1/DESC
-
-describes the latin1
-output device.
-
-/usr/share/groff/1.23.0/font/devlatin1/F
-
-describes the font known
-as F on device latin1.
-
-/usr/share/groff/1.23.0/font/devutf8/DESC
-
-describes the utf8
-output device.
-
-/usr/share/groff/1.23.0/font/devutf8/F
-
-describes the font known
-as F on device utf8.
-
-/usr/share/groff/1.23.0/tmac/tty.tmac
-
-defines macros for use with the
-ascii, cp1047, latin1, and utf8
-output devices. It is automatically loaded by troffrc
-when any of those output devices is selected.
-
-/usr/share/groff/1.23.0/tmac/tty-char.tmac
-
-defines fallback characters for
-use with grotty. See nroff(1).
-
-Limitations
-
-grotty
-is intended only for simple documents.
-
-•
-
-There is no support for fractional horizontal or
-vertical motions.
-
-•
-
-roff \D escape sequences producing
-anything other than horizontal and vertical lines are not
-supported. 
-
-•
-
-Characters above the first line (that is, with a
-vertical drawing position of 0) cannot be rendered.
-
-•
-
-Color handling differs from other output drivers. The
-groff requests and escape sequences that set the
-stroke and fill colors instead set the foreground and
-background character cell colors, respectively.
-
-Examples
-
-The following
-groff document exercises several features for which
-output device support varies: (1) bold style;
-(2) italic (underline) style; (3) bold-italic
-style; (4) character composition by overstriking
-(“coöperate”); (5) foreground color;
-(6) background color; and (7) horizontal and
-vertical line-drawing.
-
-You might see
-\f[B]bold\f[] and \f[I]italic\f[]. 
-Some people see \f[BI]both\f[]. 
-If the output device does (not) co\z\[ad]operate, 
-you might see \m[red]red\m[]. 
-Black on cyan can have a \M[cyan]\m[black]prominent\m[]\M[]
-
-\D'l 1i 0'\D'l 0 2i'\D'l 1i 0' look. 
-.\" If in nroff mode, end page now. 
-.if n .pl \n[nl]u
-
-Given the
-foregoing input, compare and contrast the output of the
-following.
-
-$ groff -T
-ascii file 
-$ groff -T utf8 -P -i file 
-$ groff -T utf8 -P -c file | ul
-
-See also
-
-“Control
-Functions for Coded Character Sets” (ECMA-48)
-5th edition, Ecma International, June 1991. A
-gratis version of ISO 6429, this document includes a
-normative description of SGR escape sequences. Available at
-http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-048.pdf">http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-048.pdf.
-
-https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda">“Hyperlinks
-in Terminal Emulators”, Egmont Koblinger.
-
-groff(1),
-troff(1), groff_out(5), groff_font(5),
-groff_char(7), ul(1), more(1),
-less(1), man(1)
+groff 1.22.4                     7 March 2023                        GROTTY(1)

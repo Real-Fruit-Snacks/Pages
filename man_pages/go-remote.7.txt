@@ -1,170 +1,124 @@
-NAME
+GO-REMOTE(7)           Miscellaneous Information Manual           GO-REMOTE(7)
 
-go - tool for
-managing Go source code
+NAME
+       go - tool for managing Go source code
 
 DESCRIPTION
+       An  import  path (see go-importpath(1)) denotes a package stored in the
+       local file system.  Certain import paths also describe  how  to  obtain
+       the source code for the package using a revision control system.
 
-An import path
-(see go-importpath(1)) denotes a package stored in
-the local file system. Certain import paths also describe
-how to obtain the source code for the package using a
-revision control system.
+       A few common code hosting sites have special syntax:
 
-A few common
-code hosting sites have special syntax: 
-BitBucket (Mercurial)
+       BitBucket (Mercurial)
+              import "bitbucket.org/user/project"
+              import "bitbucket.org/user/project/sub/directory"
 
-import
-"bitbucket.org/user/project" 
-import
-"bitbucket.org/user/project/sub/directory"
+       GitHub (Git)
+              import "github.com/user/project"
+              import "github.com/user/project/sub/directory"
 
-GitHub (Git)
+       Google Code Project Hosting (Git, Mercurial, Subversion)
+              import "code.google.com/p/project"
+              import "code.google.com/p/project/sub/directory"
 
-import
-"github.com/user/project" 
-import "github.com/user/project/sub/directory"
+              import "code.google.com/p/project.subrepository"
+              import "code.google.com/p/project.subrepository/sub/directory"
 
-Google Code Project Hosting
-(Git, Mercurial, Subversion)
+       Launchpad (Bazaar)
 
-import
-"code.google.com/p/project" 
-import
-"code.google.com/p/project/sub/directory"
+              import "launchpad.net/project"
+              import "launchpad.net/project/series"
+              import "launchpad.net/project/series/sub/directory"
 
-import
-"code.google.com/p/project.subrepository" 
-import
-"code.google.com/p/project.subrepository/sub/directory"
+              import "launchpad.net/~user/project/branch"
+              import "launchpad.net/~user/project/branch/sub/directory"
 
-Launchpad (Bazaar)
+       For  code hosted on other servers, import paths may either be qualified
+       with the version control type, or the go tool can dynamically fetch the
+       import  path over https/http and discover where the code resides from a
+       <meta> tag in the HTML.
 
-import
-"launchpad.net/project" 
-import "launchpad.net/project/series" 
-import
-"launchpad.net/project/series/sub/directory"
+       To declare the code location, an import path of the form
 
-import
-"launchpad.net/~user/project/branch" 
-import
-"launchpad.net/~user/project/branch/sub/directory"
+           repository.vcs/path
 
-For code hosted
-on other servers, import paths may either be qualified with
-the version control type, or the go tool can dynamically
-fetch the import path over https/http and discover where the
-code resides from a  tag in the HTML.
+       specifies the given repository, with or without the .vcs suffix,  using
+       the named version control system, and then the path inside that reposi‐
+       tory.  The supported version control systems are:
 
-To declare the
-code location, an import path of the form
+       Bazaar
+               .bzr
 
-repository.vcs/path
+       Git
+               .git
 
-specifies the
-given repository, with or without the .vcs suffix, using the
-named version control system, and then the path inside that
-repository. The supported version control systems are:
+       Mercurial
+               .hg
 
-Bazaar
+       Subversion
+               .svn
 
-.bzr
+       For example,
 
-Git
+           import "example.org/user/foo.hg"
 
-.git
+       denotes the  root  directory  of  the  Mercurial  repository  at  exam‐
+       ple.org/user/foo or foo.hg, and
 
-Mercurial
+           import "example.org/repo.git/foo/bar"
 
-.hg
+       denotes the foo/bar directory of the Git repository at example.com/repo
+       or repo.git.
 
-Subversion
+       When a version control system  supports  multiple  protocols,  each  is
+       tried  in  turn  when  downloading.   For example, a Git download tries
+       git://, then https://, then http://.
 
-.svn
+       If the import path is not a known code hosting site and  also  lacks  a
+       version  control  qualifier,  the  go tool attempts to fetch the import
+       over https/http and looks for a  <meta>  tag  in  the  document's  HTML
+       <head>.
 
-For
-example,
+       The meta tag has the form:
 
-import
-"example.org/user/foo.hg"
+           <meta name="go-import" content="import-prefix vcs repo-root">
 
-denotes the
-root directory of the Mercurial repository at
-example.org/user/foo or foo.hg, and
+       The  import-prefix  is  the import path corresponding to the repository
+       root. It must be a prefix or  an  exact  match  of  the  package  being
+       fetched with "go get". If it's not an exact match, another http request
+       is made at the prefix to verify the <meta> tags match.
 
-import
-"example.org/repo.git/foo/bar"
+       The vcs is one of "git", "hg", "svn", etc,
 
-denotes the
-foo/bar directory of the Git repository at example.com/repo
-or repo.git.
+       The repo-root is the root of the version control  system  containing  a
+       scheme and not containing a .vcs qualifier.
 
-When a version
-control system supports multiple protocols, each is tried in
-turn when downloading. For example, a Git download tries
-git://, then https://, then http://.
+       For example,
 
-If the import
-path is not a known code hosting site and also lacks a
-version control qualifier, the go tool attempts to fetch the
-import over https/http and looks for a  tag in
-the document’s HTML .
+           import "example.org/pkg/foo"
 
-The meta tag
-has the form:
+       will result in the following request(s):
 
-The
-import-prefix is the import path corresponding to the
-repository root. It must be a prefix or an exact match of
-the package being fetched with "go get". If
-it’s not an exact match, another http request is made
-at the prefix to verify the  tags match.
+           https://example.org/pkg/foo?go-get=1 (preferred)
+           http://example.org/pkg/foo?go-get=1  (fallback)
 
-The vcs is one
-of "git", "hg", "svn",
-etc,
+       If that page contains the meta tag
 
-The repo-root
-is the root of the version control system containing a
-scheme and not containing a .vcs qualifier.
+           <meta name="go-import" content="example.org git https://code.org/r/p/exproj">
 
-For
-example,
+       the go tool will verify that https://example.org/?go-get=1 contains the
+       same meta tag  and  then  git  clone  https://code.org/r/p/exproj  into
+       GOPATH/src/example.org.
 
-import
-"example.org/pkg/foo"
+       New  downloaded  packages  are written to the first directory listed in
+       the GOPATH environment variable (see go-path(1)).
 
-will result in
-the following request(s):
-
-https://example.org/pkg/foo?go-get=1
-(preferred) 
-http://example.org/pkg/foo?go-get=1 (fallback)
-
-If that page
-contains the meta tag
-
-https://code.org/r/p/exproj">
-
-the go tool
-will verify that https://example.org/?go-get=1 contains the
-same meta tag and then git clone https://code.org/r/p/exproj
-into GOPATH/src/example.org.
-
-New downloaded
-packages are written to the first directory listed in the
-GOPATH environment variable (see go-path(1)).
-
-The go command
-attempts to download the version of the package appropriate
-for the Go release being used. See go-install(1) for
-more.
+       The go command attempts to download the version of the  package  appro‐
+       priate for the Go release being used.  See go-install(1) for more.
 
 AUTHOR
+       This  manual  page  was  written  by Michael Stapelberg <stapelberg@de‐
+       bian.org>, for the Debian project (and may be used by others).
 
-This manual
-page was written by Michael Stapelberg
-stapelberg [AT] debian.org>, for the Debian project (and
-may be used by others).
+                                  2012-05-13                      GO-REMOTE(7)

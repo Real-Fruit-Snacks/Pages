@@ -1,151 +1,150 @@
-NAME
+strcpy(3)                  Library Functions Manual                  strcpy(3)
 
-strcpy, strncpy
-- copy a string
+NAME
+       stpcpy, strcpy, strcat - copy or catenate a string
+
+LIBRARY
+       Standard C library (libc, -lc)
 
 SYNOPSIS
+       #include <string.h>
 
-#include
+       char *stpcpy(char *restrict dst, const char *restrict src);
+       char *strcpy(char *restrict dst, const char *restrict src);
+       char *strcat(char *restrict dst, const char *restrict src);
 
-char
-*strcpy(char *dest, const char
-*src);
+   Feature Test Macro Requirements for glibc (see feature_test_macros(7)):
 
-char
-*strncpy(char *dest, const char
-*src, size_t n);
+       stpcpy():
+           Since glibc 2.10:
+               _POSIX_C_SOURCE >= 200809L
+           Before glibc 2.10:
+               _GNU_SOURCE
 
 DESCRIPTION
+       stpcpy()
+       strcpy()
+              These functions copy the string pointed to by src, into a string
+              at the buffer pointed to by dst.  The programmer is  responsible
+              for  allocating  a  destination  buffer  large  enough, that is,
+              strlen(src) + 1.  For the difference between the two  functions,
+              see RETURN VALUE.
 
-The
-strcpy() function copies the string pointed to by
-src, including the terminating null byte ('\0'), to
-the buffer pointed to by dest. The strings may not
-overlap, and the destination string dest must be
-large enough to receive the copy. Beware of buffer
-overruns! (See BUGS.)
+       strcat()
+              This  function catenates the string pointed to by src, after the
+              string pointed to  by  dst  (overwriting  its  terminating  null
+              byte).   The programmer is responsible for allocating a destina‐
+              tion buffer large enough, that is, strlen(dst) +  strlen(src)  +
+              1.
 
-The
-strncpy() function is similar, except that at most
-n bytes of src are copied. Warning: If
-there is no null byte among the first n bytes of
-src, the string placed in dest will not be
-null-terminated.
+       An implementation of these functions might be:
 
-If the length
-of src is less than n, strncpy() writes
-additional null bytes to dest to ensure that a total
-of n bytes are written.
+           char *
+           stpcpy(char *restrict dst, const char *restrict src)
+           {
+               char  *p;
 
-A simple
-implementation of strncpy() might be:
-char *
-strncpy(char *dest, const char *src, size_t n)
-{
-    size_t i;
+               p = mempcpy(dst, src, strlen(src));
+               *p = '\0';
 
-    for (i = 0; i 
+               return p;
+           }
+
+           char *
+           strcpy(char *restrict dst, const char *restrict src)
+           {
+               stpcpy(dst, src);
+               return dst;
+           }
+
+           char *
+           strcat(char *restrict dst, const char *restrict src)
+           {
+               stpcpy(dst + strlen(dst), src);
+               return dst;
+           }
 
 RETURN VALUE
+       stpcpy()
+              This  function returns a pointer to the terminating null byte of
+              the copied string.
 
-The
-strcpy() and strncpy() functions return a
-pointer to the destination string dest.
+       strcpy()
+       strcat()
+              These functions return dst.
 
 ATTRIBUTES
+       For an  explanation  of  the  terms  used  in  this  section,  see  at‐
+       tributes(7).
 
-For an
-explanation of the terms used in this section, see
-attributes(7).
+       ┌────────────────────────────────────────────┬───────────────┬─────────┐
+       │Interface                                   │ Attribute     │ Value   │
+       ├────────────────────────────────────────────┼───────────────┼─────────┤
+       │stpcpy(), strcpy(), strcat()                │ Thread safety │ MT-Safe │
+       └────────────────────────────────────────────┴───────────────┴─────────┘
 
-CONFORMING TO
+STANDARDS
+       stpcpy()
+              POSIX.1-2008.
 
-POSIX.1-2001,
-POSIX.1-2008, C89, C99, SVr4, 4.3BSD.
+       strcpy()
+       strcat()
+              POSIX.1-2001, POSIX.1-2008, C99, SVr4, 4.3BSD.
 
-NOTES
+CAVEATS
+       The strings src and dst may not overlap.
 
-Some
-programmers consider strncpy() to be inefficient and
-error prone. If the programmer knows (i.e., includes code to
-test!) that the size of dest is greater than the
-length of src, then strcpy() can be used.
+       If  the  destination  buffer is not large enough, the behavior is unde‐
+       fined.  See _FORTIFY_SOURCE in feature_test_macros(7).
 
-One valid (and
-intended) use of strncpy() is to copy a C string to a
-fixed-length buffer while ensuring both that the buffer is
-not overflowed and that unused bytes in the destination
-buffer are zeroed out (perhaps to prevent information leaks
-if the buffer is to be written to media or transmitted to
-another process via an interprocess communication
-technique).
+       strcat() can be very  inefficient.   Read  about  Shlemiel  the painter
+       ⟨https://www.joelonsoftware.com/2001/12/11/back-to-basics/⟩.
 
-If there is no
-terminating null byte in the first n bytes of
-src, strncpy() produces an unterminated string
-in dest. If buf has length buflen, you
-can force termination using something like the
-following:
+EXAMPLES
+       #include <err.h>
+       #include <stdio.h>
+       #include <stdlib.h>
+       #include <string.h>
 
-if (buflen > 0) {
-    strncpy(buf, str, buflen - 1);
-    buf[buflen - 1]= '\0';
-}
+       int
+       main(void)
+       {
+           char    *p;
+           char    *buf1;
+           char    *buf2;
+           size_t  len, maxsize;
 
-(Of course, the
-above technique ignores the fact that, if src
-contains more than buflen - 1 bytes,
-information is lost in the copying to dest.)
+           maxsize = strlen("Hello ") + strlen("world") + strlen("!") + 1;
+           buf1 = malloc(sizeof(*buf1) * maxsize);
+           if (buf1 == NULL)
+               err(EXIT_FAILURE, "malloc()");
+           buf2 = malloc(sizeof(*buf2) * maxsize);
+           if (buf2 == NULL)
+               err(EXIT_FAILURE, "malloc()");
 
-strlcpy()
+           p = buf1;
+           p = stpcpy(p, "Hello ");
+           p = stpcpy(p, "world");
+           p = stpcpy(p, "!");
+           len = p - buf1;
 
-Some systems (the BSDs, Solaris, and others) provide the
-following function:
+           printf("[len = %zu]: ", len);
+           puts(buf1);  // "Hello world!"
+           free(buf1);
 
-size_t
-strlcpy(char *dest, const char *src, size_t size);
+           strcpy(buf2, "Hello ");
+           strcat(buf2, "world");
+           strcat(buf2, "!");
+           len = strlen(buf2);
 
-This function
-is similar to strncpy(), but it copies at most
-size-1 bytes to dest, always adds a
-terminating null byte, and does not pad the destination with
-(further) null bytes. This function fixes some of the
-problems of strcpy() and strncpy(), but the
-caller must still handle the possibility of data loss if
-size is too small. The return value of the function
-is the length of src, which allows truncation to be
-easily detected: if the return value is greater than or
-equal to size, truncation occurred. If loss of data
-matters, the caller must either check the arguments
-before the call, or test the function return value.
-strlcpy() is not present in glibc and is not
-standardized by POSIX, but is available on Linux via the
-libbsd library.
+           printf("[len = %zu]: ", len);
+           puts(buf2);  // "Hello world!"
+           free(buf2);
 
-BUGS
-
-If the
-destination string of a strcpy() is not large enough,
-then anything might happen. Overflowing fixed-length string
-buffers is a favorite cracker technique for taking complete
-control of the machine. Any time a program reads or copies
-data into a buffer, the program first needs to check that
-there’s enough space. This may be unnecessary if you
-can show that overflow is impossible, but be careful:
-programs can get changed over time, in ways that may make
-the impossible possible.
+           exit(EXIT_SUCCESS);
+       }
 
 SEE ALSO
+       strdup(3), string(3), wcscpy(3), string_copying(7)
 
-bcopy(3),
-memccpy(3), memcpy(3), memmove(3),
-stpcpy(3), stpncpy(3), strdup(3),
-string(3), wcscpy(3), wcsncpy(3)
-
-COLOPHON
-
-This page is
-part of release 5.09 of the Linux man-pages project.
-A description of the project, information about reporting
-bugs, and the latest version of this page, can be found at
-https://www.kernel.org/doc/man-pages/.
+Linux man-pages 6.03              2023-02-05                         strcpy(3)

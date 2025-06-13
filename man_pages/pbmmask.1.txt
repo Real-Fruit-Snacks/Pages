@@ -1,121 +1,85 @@
-NAME
+Pbmmask User Manual(1)      General Commands Manual     Pbmmask User Manual(1)
 
-pbmmask -
-create a mask bitmap from a regular bitmap
+NAME
+       pbmmask - create a mask bitmap from a regular bitmap
 
 SYNOPSIS
-
-pbmmask
-[-expand] [pbmfile]
+       pbmmask [-expand] [pbmfile]
 
 DESCRIPTION
+       This program is part of Netpbm(1).
 
-This program is
-part of Netpbm(1).
+       pbmmask  reads  a PBM image as input and generates a corresponding mask
+       of the foreground areas as another PBM image.
 
-pbmmask
-reads a PBM image as input and generates a corresponding
-mask of the foreground areas as another PBM image.
+       This is probably obsoleted by pambackground.
 
-This is
-probably obsoleted by pambackground.
+       The color to be interpreted as  "background"  is  determined  automati‐
+       cally.  Regardless of which color is background, the mask will be white
+       where the background is and black where the figure is.
 
-The color to be
-interpreted as "background" is determined
-automatically. Regardless of which color is background, the
-mask will be white where the background is and black where
-the figure is.
+       This lets you do a masked paste like this, for  objects  with  a  black
+       background:
 
-This lets you
-do a masked paste like this, for objects with a black
-background:
+           pbmmask obj > objmask
+           pnmpaste < dest -and objmask <x> <y> | pnmpaste -or obj <x> <y>
 
-pbmmask obj
-> objmask 
-pnmpaste   |
-pnmpaste -or obj  
+       For  objects with a white background, you can either invert them or add
+       a step:
+           pbmmask obj > objmask
+           pnminvert objmask | pnmpaste -and obj 0 0 > blackback
+           pnmpaste < dest -and objmask <x> <y> | pnmpaste -or blackback <x> <y>
 
-For objects
-with a white background, you can either invert them or add a
-step: 
-pbmmask obj > objmask 
-pnminvert objmask | pnmpaste -and obj 0 0 > blackback
+       Note that this three-step version works for objects  with  black  back‐
+       grounds too, if you don't care about the wasted time.
 
-pnmpaste   |
-pnmpaste -or blackback  
+       You  can  also use masks with grayscale and color images, using the pn‐
+       marith tool.  For instance:
 
-Note that this
-three-step version works for objects with black backgrounds
-too, if you don’t care about the wasted time.
+           ppmtopgm obj.ppm | pamditherbw -threshold | pbmmask > objmask.pbm
+           pnmarith -multiply dest.ppm objmask.pbm > t1.ppm
+           pnminvert objmask.pbm | pnmarith -multiply obj.ppm - > t2.ppm
+           pnmarith -add t1.ppm t2.ppm
 
-You can also
-use masks with grayscale and color images, using the
-pnmarith tool. For instance:
-
-ppmtopgm
-obj.ppm | pamditherbw -threshold | pbmmask > objmask.pbm
-
-pnmarith -multiply dest.ppm objmask.pbm > t1.ppm 
-pnminvert objmask.pbm | pnmarith -multiply obj.ppm - >
-t2.ppm 
-pnmarith -add t1.ppm t2.ppm
-
-An interesting
-variation on this is to pipe the mask through
-pnmsmooth before using it. This makes the boundary
-between the two images less sharp.
+       An interesting variation on this is to pipe the mask through  pnmsmooth
+       before  using  it.  This makes the boundary between the two images less
+       sharp.
 
 OPTIONS
+       In addition to the options common to all programs  based  on  libnetpbm
+       (most notably -quiet, see
+        Common  Options  ⟨index.html#commonoptions⟩  ), pbmmask recognizes the
+       following command line option:
 
-In addition to
-the options common to all programs based on libnetpbm (most
-notably -quiet, see
- Common Options ),
-pbmmask recognizes the following command line option:
-
--expand
-
-Expands the mask by one pixel
-out from the image. This is useful if you want a little
-white border around your image. (A better solution might be
-to turn the pbmlife program into a general cellular
-automaton tool...)
+       -expand
+              Expands the mask by one pixel out from the image.  This is  use‐
+              ful  if  you  want  a little white border around your image.  (A
+              better solution might be to turn the pbmlife program into a gen‐
+              eral cellular automaton tool...)
 
 SEE ALSO
-
-pambackground(1)
-ppmcolormask(1), pnmpaste(1),
-pnminvert(1), pnmarith(1), pnmsmooth(1)
-pbm(1),
+       pambackground(1)   ppmcolormask(1),   pnmpaste(1),   pnminvert(1),  pn‐
+       marith(1), pnmsmooth(1) pbm(1),
 
 AUTHOR
-
-Copyright (C)
-1988 by Jef Poskanzer.
+       Copyright (C) 1988 by Jef Poskanzer.
 
 HISTORY
+       pbmmask is one of the oldest programs in Netpbm.  In September 2021,
+         the date on this manual was August 8, 1989 (being  the  date  of  the
+       last
+         substantial update).  We updated the page  then just to add this his‐
+       torical
+         information and recommend pambackground.
 
-pbmmask
-is one of the oldest programs in Netpbm. In September 2021,
-
-the date on this manual was August 8, 1989 (being the date
-of the last 
-substantial update). We updated the page then just to add
-this historical 
-information and recommend pambackground.
-
-It is likely
-that when Bryan wrote pambackground in 2006, he was
-
-unaware pbmmask existed. Otherwise, he would
-presumably have 
-replaced pbmmask with a wrapper around
-pambackground.
+       It is likely that when Bryan wrote pambackground in 2006, he was
+         unaware pbmmask existed.  Otherwise, he would presumably have
+         replaced pbmmask with a wrapper around pambackground.
 
 DOCUMENT SOURCE
+       This manual page was generated by the Netpbm tool 'makeman'  from  HTML
+       source.  The master documentation is at
 
-This manual
-page was generated by the Netpbm tool ’makeman’
-from HTML source. The master documentation is at
+              http://netpbm.sourceforge.net/doc/pbmmask.html
 
-http://netpbm.sourceforge.net/doc/pbmmask.html
+netpbm documentation           28 September 2021        Pbmmask User Manual(1)

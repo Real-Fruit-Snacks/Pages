@@ -1,319 +1,306 @@
-NAME
+SED(1)                           User Commands                          SED(1)
 
-sed - stream
-editor
+NAME
+       sed - stream editor for filtering and transforming text
 
 SYNOPSIS
-
-sed [
--gln ] [ -e script ] [ -f
-sfile ] [ file ... ]
+       sed [-V] [--version] [--help] [-n] [--quiet] [--silent]
+           [-l N] [--line-length=N] [-u] [--unbuffered]
+           [-E] [-r] [--regexp-extended]
+           [-e script] [--expression=script]
+           [-f script-file] [--file=script-file]
+           [script-if-no-other-script]
+           [file...]
 
 DESCRIPTION
+       Sed  is a stream editor.  A stream editor is used to perform basic text
+       transformations on an input stream (a file or input from  a  pipeline).
+       While  in  some  ways similar to an editor which permits scripted edits
+       (such as ed), sed works by making only one pass over the input(s),  and
+       is consequently more efficient.  But it is sed's ability to filter text
+       in a pipeline which particularly distinguishes it from other  types  of
+       editors.
 
-Sed
-copies the named files (standard input default) to
-the standard output, edited according to a script of
-commands. The -f option causes the script to be taken
-from file sfile; these options accumulate. If there
-is just one -e option and no -f’s, the
-flag -e may be omitted. The -n option
-suppresses the default output; -g causes all
-substitutions to be global, as if suffixed g. The
--l option causes sed to flush its output
-buffer after every newline.
+       -n, --quiet, --silent
 
-A script
-consists of editing commands, one per line, of the following
-form:
+              suppress automatic printing of pattern space
 
-[address
-[, address] ] function [argument
-...]
+       --debug
 
-In normal
-operation sed cyclically copies a line of input into
-a pattern space (unless there is something left after
-a command), applies in sequence all commands whose
-addresses select that pattern space, and at the end
-of the script copies the pattern space to the standard
-output (except under -n) and deletes the pattern
-space.
+              annotate program execution
 
-An
-address is either a decimal number that counts input
-lines cumulatively across files, a that addresses the last
-line of input, or a context address,
-/regular-expression/, in the style of
-regexp(7), with the added convention that matches a
-newline embedded in the pattern space.
+       -e script, --expression=script
 
-A command line
-with no addresses selects every pattern space.
+              add the script to the commands to be executed
 
-A command line
-with one address selects each pattern space that matches the
-address.
+       -f script-file, --file=script-file
 
-A command line
-with two addresses selects the inclusive range from the
-first pattern space that matches the first address through
-the next pattern space that matches the second. (If the
-second address is a number less than or equal to the line
-number first selected, only one line is selected.)
-Thereafter the process is repeated, looking again for the
-first address.
+              add the contents of script-file to the commands to be executed
 
-Editing
-commands can be applied to non-selected pattern spaces by
-use of the negation function (below).
+       --follow-symlinks
 
-An argument
-denoted text consists of one or more lines, all but
-the last of which end with to hide the newline. Backslashes
-in text are treated like backslashes in the replacement
-string of an command, and may be used to protect initial
-blanks and tabs against the stripping that is done on every
-script line.
+              follow symlinks when processing in place
 
-An argument
-denoted rfile or wfile must terminate the
-command line and must be preceded by exactly one blank. Each
-wfile is created before processing begins. There can
-be at most 120 distinct wfile arguments.
+       -i[SUFFIX], --in-place[=SUFFIX]
 
-a\
+              edit files in place (makes backup if SUFFIX supplied)
 
-text
+       -l N, --line-length=N
 
-Append. Place text on the output before reading
-the next input line.
+              specify the desired line-wrap length for the `l' command
 
-b label
+       --posix
 
-Branch to the : command bearing the label.
-If label is empty, branch to the end of the
-script. 
+              disable all GNU extensions.
 
-c\
+       -E, -r, --regexp-extended
 
-text
+              use  extended regular expressions in the script (for portability
+              use POSIX -E).
 
-Change. Delete the pattern space. With 0 or 1 address or
-at the end of a 2-address range, place text on the
-output. Start the next cycle.
+       -s, --separate
 
-d
+              consider files as separate rather than as a  single,  continuous
+              long stream.
 
-Delete the pattern space. Start the next cycle.
+       --sandbox
 
-D
+              operate in sandbox mode (disable e/r/w commands).
 
-Delete the initial segment of the pattern space through
-the first newline. Start the next cycle.
+       -u, --unbuffered
 
-g
+              load  minimal amounts of data from the input files and flush the
+              output buffers more often
 
-Replace the contents of the pattern space by the
-contents of the hold space.
+       -z, --null-data
 
-G
+              separate lines by NUL characters
 
-Append the contents of the hold space to the pattern
-space. 
+       --help
+              display this help and exit
 
-h
+       --version
+              output version information and exit
 
-Replace the contents of the hold space by the contents
-of the pattern space.
+       If no -e, --expression, -f, or --file option is given, then  the  first
+       non-option  argument  is taken as the sed script to interpret.  All re‐
+       maining arguments are names of input files; if no input files are spec‐
+       ified, then the standard input is read.
 
-H
+       GNU  sed  home page: <https://www.gnu.org/software/sed/>.  General help
+       using GNU software: <https://www.gnu.org/gethelp/>.  E-mail bug reports
+       to: <bug-sed@gnu.org>.
 
-Append the contents of the pattern space to the hold
-space. 
+       Packaged by Debian Copyright © 2022 Free Software Foundation, Inc.  Li‐
+       cense  GPLv3+:  GNU  GPL  version  3  or   later   <https://gnu.org/li‐
+       censes/gpl.html>.   This  is  free software: you are free to change and
+       redistribute it.  There is NO WARRANTY, to the extent permitted by law.
 
-i\
+COMMAND SYNOPSIS
+       This is just a brief synopsis of sed commands to serve as a reminder to
+       those  who  already  know sed; other documentation (such as the texinfo
+       document) must be consulted for fuller descriptions.
 
-text
+   Zero-address ``commands''
+       : label
+              Label for b and t commands.
 
-Insert. Place text on the standard output.
+       #comment
+              The comment extends until the next newline (or the end of  a  -e
+              script fragment).
 
-n
+       }      The closing bracket of a { } block.
 
-Copy the pattern space to the standard output. Replace
-the pattern space with the next line of input.
+   Zero- or One- address commands
+       =      Print the current line number.
 
-N
+       a \
 
-Append the next line of input to the pattern space with
-an embedded newline. (The current line number changes.)
+       text   Append text, which has each embedded newline preceded by a back‐
+              slash.
 
-p
+       i \
 
-Print. Copy the pattern space to the standard
-output. 
+       text   Insert text, which has each embedded newline preceded by a back‐
+              slash.
 
-P
+       q [exit-code]
+              Immediately  quit the sed script without processing any more in‐
+              put, except that if auto-print is not disabled the current  pat‐
+              tern space will be printed.  The exit code argument is a GNU ex‐
+              tension.
 
-Copy the initial segment of the pattern space through
-the first newline to the standard output.
+       Q [exit-code]
+              Immediately quit the sed script without processing any more  in‐
+              put.  This is a GNU extension.
 
-q
+       r filename
+              Append text read from filename.
 
-Quit. Branch to the end of the script. Do not start a
-new cycle.
+       R filename
+              Append  a  line read from filename.  Each invocation of the com‐
+              mand reads a line from the file.  This is a GNU extension.
 
-r rfile
+   Commands which accept address ranges
+       {      Begin a block of commands (end with a }).
 
-Read the contents of rfile. Place them on the
-output before reading the next input line.
+       b label
+              Branch to label; if label is omitted, branch to end of script.
 
-s/regular-expression/replacement/flags
+       c \
 
-Substitute the
-replacement string for instances of the
-regular-expression in the pattern space. Any
-character may be used instead of For a fuller description
-see regexp(7). Flags is zero or more of
+       text   Replace the selected lines with text, which  has  each  embedded
+              newline preceded by a backslash.
 
-g
+       d      Delete pattern space.  Start next cycle.
 
-Global. Substitute for all non-overlapping instances of
-the regular expression rather than just the first
-one. 
+       D      If  pattern  space contains no newline, start a normal new cycle
+              as if the d command was issued.  Otherwise, delete text  in  the
+              pattern  space  up  to the first newline, and restart cycle with
+              the resultant pattern space, without reading a new line  of  in‐
+              put.
 
-p
+       h H    Copy/append pattern space to hold space.
 
-Print the pattern space if a replacement was made.
+       g G    Copy/append hold space to pattern space.
 
-w wfile
+       l      List out the current line in a ``visually unambiguous'' form.
 
-Write. Append the pattern space
-to wfile if a replacement was made.
+       l width
+              List  out  the  current line in a ``visually unambiguous'' form,
+              breaking it at width characters.  This is a GNU extension.
 
-t label
+       n N    Read/append the next line of input into the pattern space.
 
-Test. Branch to the command bearing the label if
-any substitutions have been made since the most recent
-reading of an input line or execution of a If label
-is empty, branch to the end of the script.
+       p      Print the current pattern space.
 
-w
+       P      Print up to the first embedded newline of  the  current  pattern
+              space.
 
-wfile
+       s/regexp/replacement/
+              Attempt  to match regexp against the pattern space.  If success‐
+              ful, replace that portion matched  with  replacement.   The  re‐
+              placement  may  contain the special character & to refer to that
+              portion of the pattern space which matched, and the special  es‐
+              capes  \1 through \9 to refer to the corresponding matching sub-
+              expressions in the regexp.
 
-Write. Append the pattern space
-to wfile.
+       t label
+              If a s/// has done a successful substitution since the last  in‐
+              put line was read and since the last t or T command, then branch
+              to label; if label is omitted, branch to end of script.
 
-x
+       T label
+              If no s/// has done a successful substitution since the last in‐
+              put line was read and since the last t or T command, then branch
+              to label; if label is omitted, branch to end of script.  This is
+              a GNU extension.
 
-Exchange the contents of the
-pattern and hold spaces.
+       w filename
+              Write the current pattern space to filename.
 
-y/string1/string2/
+       W filename
+              Write  the  first line of the current pattern space to filename.
+              This is a GNU extension.
 
-Transform. Replace all
-occurrences of characters in string1 with the
-corresponding character in string2. The lengths of
-string1 and string2 must be equal.
+       x      Exchange the contents of the hold and pattern spaces.
 
-!function
+       y/source/dest/
+              Transliterate the characters in the pattern space  which  appear
+              in source to the corresponding character in dest.
 
-Don’t. Apply the function (or group, if
-function is only to lines not selected by the
-address(es). 
+Addresses
+       Sed  commands can be given with no addresses, in which case the command
+       will be executed for all input lines; with one address, in  which  case
+       the  command will only be executed for input lines which match that ad‐
+       dress; or with two addresses, in which case the command  will  be  exe‐
+       cuted  for  all  input  lines  which match the inclusive range of lines
+       starting from the first address and continuing to the  second  address.
+       Three  things  to  note about address ranges: the syntax is addr1,addr2
+       (i.e., the addresses are separated by a comma); the  line  which  addr1
+       matched will always be accepted, even if addr2 selects an earlier line;
+       and if addr2 is a regexp, it will not be tested against the  line  that
+       addr1 matched.
 
-: label
+       After  the address (or address-range), and before the command, a !  may
+       be inserted, which specifies that the command shall only be executed if
+       the address (or address-range) does not match.
 
-This command does nothing; it bears a label for
-b and t commands to branch to.
+       The following address types are supported:
 
-=
+       number Match  only  the specified line number (which increments cumula‐
+              tively across files, unless the -s option is  specified  on  the
+              command line).
 
-Place the current line number on the standard output as
-a line.
+       first~step
+              Match every step'th line starting with line first.  For example,
+              ``sed -n 1~2p'' will print all the odd-numbered lines in the in‐
+              put  stream,  and  the  address 2~5 will match every fifth line,
+              starting with the second.  first can be zero; in this case,  sed
+              operates as if it were equal to step.  (This is an extension.)
 
-{
+       $      Match the last line.
 
-Execute the following commands through a matching only
-when the pattern space is selected.
+       /regexp/
+              Match lines matching the regular expression regexp.  Matching is
+              performed on the current pattern space, which  can  be  modified
+              with commands such as ``s///''.
 
-An empty command is ignored.
+       \cregexpc
+              Match  lines  matching the regular expression regexp.  The c may
+              be any character.
 
-EXAMPLES
+       GNU sed also supports some special 2-address forms:
 
-sed 10q
-file
+       0,addr2
+              Start out in "matched  first  address"  state,  until  addr2  is
+              found.  This is similar to 1,addr2, except that if addr2 matches
+              the very first line of input the 0,addr2 form will be at the end
+              of  its range, whereas the 1,addr2 form will still be at the be‐
+              ginning of its range.  This works only when addr2 is  a  regular
+              expression.
 
-Print the first 10 lines of the
-file.
+       addr1,+N
+              Will match addr1 and the N lines following addr1.
 
-sed
-’/^$/d’
+       addr1,~N
+              Will  match  addr1  and the lines following addr1 until the next
+              line whose input line number is a multiple of N.
 
-Delete empty lines from
-standard input.
-
-sed ’s/UNIX/&
-system/g’
-
-Replace every instance of
-by
-
-sed ’s/
-*$// drop trailing blanks
-
-/^$/d
-
-drop empty lines
-
-s/ */\
-
-replace blanks by newlines
-
-/g 
-/^$/d’ chapter*
-
-Print the files
-chapter1, chapter2, etc. one word to a
-line.
-
-nroff -ms
-manuscript | sed ’ 
-${
-
-/^$/p
-
-if last line of file is empty, print it
-
-}
-
-//N
-
-if current line is empty, append next line
-
-/^\n$/D’
-
-if two lines are empty, delete the first
-
-Delete all but one of each
-group of empty lines from a formatted manuscript.
-
-SOURCE
-
-/src/cmd/sed.c
-
-SEE ALSO
-
-ed(1),
-grep(1), awk(1), lex(1), sam(1),
-regexp(7) 
-L. E. McMahon, ’SED — A Non-interactive Text
-Editor’, Unix Research System Programmer’s
-Manual, Volume 2.
+REGULAR EXPRESSIONS
+       POSIX.2 BREs should be supported, but they aren't completely because of
+       performance  problems.  The \n sequence in a regular expression matches
+       the newline character, and similarly for \a, \t, and  other  sequences.
+       The  -E  option switches to using extended regular expressions instead;
+       it has been supported for years by GNU sed,  and  is  now  included  in
+       POSIX.
 
 BUGS
+       E-mail bug reports to bug-sed@gnu.org.  Also, please include the output
+       of ``sed --version'' in the body of your report if at all possible.
 
-If input is
-from a pipe, buffering may consume characters beyond a line
-on which a command is executed.
+AUTHOR
+       Written by Jay Fenlason, Tom Lord, Ken Pizzini, Paolo Bonzini, Jim Mey‐
+       ering, and Assaf Gordon.
+
+       This  sed  program was built with SELinux support.  SELinux is disabled
+       on this system.
+
+       GNU sed home page: <https://www.gnu.org/software/sed/>.   General  help
+       using GNU software: <https://www.gnu.org/gethelp/>.  E-mail bug reports
+       to: <bug-sed@gnu.org>.
+
+SEE ALSO
+       awk(1), ed(1), grep(1), tr(1),  perlre(1),  sed.info,  any  of  various
+       books on sed, the sed FAQ (http://sed.sf.net/grabbag/tutorials/sed‐
+       faq.txt), http://sed.sf.net/grabbag/.
+
+       The full documentation for sed is maintained as a Texinfo manual.  If
+       the info and sed programs are properly installed at your site, the com‐
+       mand
+
+              info sed
+
+       should give you access to the complete manual.
+
+GNU sed 4.9                      January 2023                           SED(1)

@@ -1,613 +1,136 @@
-NAME
+rand(3)                    Library Functions Manual                    rand(3)
 
-rand - Pseudo
-random number generation.
+NAME
+       rand, rand_r, srand - pseudo-random number generator
+
+LIBRARY
+       Standard C library (libc, -lc)
+
+SYNOPSIS
+       #include <stdlib.h>
+
+       int rand(void);
+       void srand(unsigned int seed);
+
+       [[deprecated]] int rand_r(unsigned int *seedp);
+
+   Feature Test Macro Requirements for glibc (see feature_test_macros(7)):
+
+       rand_r():
+           Since glibc 2.24:
+               _POSIX_C_SOURCE >= 199506L
+           glibc 2.23 and earlier
+               _POSIX_C_SOURCE
 
 DESCRIPTION
+       The  rand()  function returns a pseudo-random integer in the range 0 to
+       RAND_MAX inclusive (i.e., the mathematical range [0, RAND_MAX]).
+
+       The srand() function sets its argument as the seed for a  new  sequence
+       of  pseudo-random  integers  to be returned by rand().  These sequences
+       are repeatable by calling srand() with the same seed value.
+
+       If no seed value is provided,  the  rand()  function  is  automatically
+       seeded with a value of 1.
+
+       The  function  rand() is not reentrant, since it uses hidden state that
+       is modified on each call.  This might just be the seed value to be used
+       by the next call, or it might be something more elaborate.  In order to
+       get reproducible behavior in a threaded application, this state must be
+       made explicit; this can be done using the reentrant function rand_r().
+
+       Like  rand(),  rand_r()  returns  a  pseudo-random integer in the range
+       [0, RAND_MAX].  The seedp argument is a pointer to an unsigned int that
+       is  used  to store state between calls.  If rand_r() is called with the
+       same initial value for the integer pointed to by seedp, and that  value
+       is  not  modified  between  calls, then the same pseudo-random sequence
+       will result.
+
+       The value pointed to by the seedp argument of rand_r() provides only  a
+       very small amount of state, so this function will be a weak pseudo-ran‐
+       dom generator.  Try drand48_r(3) instead.
+
+RETURN VALUE
+       The rand() and rand_r() functions return a value between 0 and RAND_MAX
+       (inclusive).  The srand() function returns no value.
+
+ATTRIBUTES
+       For  an  explanation  of  the  terms  used  in  this  section,  see at‐
+       tributes(7).
+
+       ┌────────────────────────────────────────────┬───────────────┬─────────┐
+       │Interface                                   │ Attribute     │ Value   │
+       ├────────────────────────────────────────────┼───────────────┼─────────┤
+       │rand(), rand_r(), srand()                   │ Thread safety │ MT-Safe │
+       └────────────────────────────────────────────┴───────────────┴─────────┘
+
+STANDARDS
+       The  functions  rand()  and  srand()  conform  to  SVr4,  4.3BSD,  C99,
+       POSIX.1-2001.     The   function   rand_r()   is   from   POSIX.1-2001.
+       POSIX.1-2008 marks rand_r() as obsolete.
+
+NOTES
+       The versions of rand() and srand() in the Linux C Library use the  same
+       random number generator as random(3) and srandom(3), so the lower-order
+       bits should be as random as the higher-order bits.  However,  on  older
+       rand()  implementations,  and  on  current implementations on different
+       systems, the lower-order bits are much less random than the  higher-or‐
+       der bits.  Do not use this function in applications intended to be por‐
+       table when good randomness is needed.  (Use random(3) instead.)
+
+EXAMPLES
+       POSIX.1-2001 gives the following example of an implementation of rand()
+       and  srand(),  possibly  useful when one needs the same sequence on two
+       different machines.
+
+           static unsigned long next = 1;
+
+           /* RAND_MAX assumed to be 32767 */
+           int myrand(void) {
+               next = next * 1103515245 + 12345;
+               return((unsigned)(next/65536) % 32768);
+           }
+
+           void mysrand(unsigned int seed) {
+               next = seed;
+           }
+
+       The following program can be used to display the pseudo-random sequence
+       produced  by rand() when given a particular seed.  When the seed is -1,
+       the program uses a random seed.
+
+           #include <stdio.h>
+           #include <stdlib.h>
+
+           int
+           main(int argc, char *argv[])
+           {
+               int           r;
+               unsigned int  seed, nloops;
+
+               if (argc != 3) {
+                   fprintf(stderr, "Usage: %s <seed> <nloops>\n", argv[0]);
+                   exit(EXIT_FAILURE);
+               }
+
+               seed = atoi(argv[1]);
+               nloops = atoi(argv[2]);
+
+               if (seed == -1) {
+                   seed = arc4random();
+                   printf("seed: %u\n", seed);
+               }
+
+               srand(seed);
+               for (unsigned int j = 0; j < nloops; j++) {
+                   r =  rand();
+                   printf("%d\n", r);
+               }
 
-This module
-provides a pseudo random number generator. The module
-contains a number of algorithms. The uniform distribution
-algorithms are based on the Xoroshiro and Xorshift
-algorithms by Sebastiano Vigna. The normal distribution
-algorithm uses the Ziggurat Method by Marsaglia and Tsang on
-top of the uniform distribution algorithm.
+               exit(EXIT_SUCCESS);
+           }
 
-For most
-algorithms, jump functions are provided for generating
-non-overlapping sequences for parallel computations. The
-jump functions perform calculations equivalent to perform a
-large number of repeated calls for calculating new
-states.
+SEE ALSO
+       drand48(3), random(3)
 
-The following
-algorithms are provided:
-
-exsss:
-
-Xorshift116**, 58 bits
-precision and period of 2^116-1
-
-Jump function:
-equivalent to 2^64 calls
-
-This is the
-Xorshift116 generator combined with the StarStar scrambler
-from the 2018 paper by David Blackman and Sebastiano Vigna:
-Scrambled Linear Pseudorandom Number Generators
-
-The generator
-does not need 58-bit rotates so it is faster than the
-Xoroshiro116 generator, and when combined with the StarStar
-scrambler it does not have any weak low bits like
-exrop (Xoroshiro116+).
-
-Alas, this
-combination is about 10% slower than exrop, but is
-despite that the default algorithm thanks to its statistical
-qualities.
-
-exro928ss:
-
-Xoroshiro928**, 58 bits
-precision and a period of 2^928-1
-
-Jump function:
-equivalent to 2^512 calls
-
-This is a 58
-bit version of Xoroshiro1024**, from the 2018 paper by David
-Blackman and Sebastiano Vigna: Scrambled Linear Pseudorandom
-Number Generators that on a 64 bit Erlang system executes
-only about 40% slower than the default exsss
-algorithm but with much longer period and better statistical
-properties, and on the flip side a larger state.
-
-Many thanks to
-Sebastiano Vigna for his help with the 58 bit adaption.
-
-exrop:
-
-Xoroshiro116+, 58 bits
-precision and period of 2^116-1
-
-Jump function:
-equivalent to 2^64 calls
-
-exs1024s:
-
-Xorshift1024*, 64 bits
-precision and a period of 2^1024-1
-
-Jump function:
-equivalent to 2^512 calls
-
-exsp:
-
-Xorshift116+, 58 bits precision
-and period of 2^116-1
-
-Jump function:
-equivalent to 2^64 calls
-
-This is a
-corrected version of the previous default algorithm, that
-now has been superseded by Xoroshiro116+ (exrop).
-Since there is no native 58 bit rotate instruction this
-algorithm executes a little (say exrop. See the algorithms’ homepage.
-
-The default
-algorithm is exsss (Xorshift116**). If a specific
-algorithm is required, ensure to always use seed/1 to
-initialize the state.
-
-Undocumented
-(old) algorithms are deprecated but still implemented so old
-code relying on them will produce the same pseudo random
-sequences as before.
-
-Note:
-
-There were a number of problems
-in the implementation of the now undocumented algorithms,
-which is why they are deprecated. The new algorithms are a
-bit slower but do not have these problems:
-
-Uniform integer
-ranges had a skew in the probability distribution that was
-not noticable for small ranges but for large ranges less
-than the generator’s precision the probability to
-produce a low number could be twice the probability for a
-high.
-
-Uniform integer
-ranges larger than or equal to the generator’s
-precision used a floating point fallback that only
-calculated with 52 bits which is smaller than the requested
-range and therefore were not all numbers in the requested
-range even possible to produce.
-
-Uniform floats
-had a non-uniform density so small values i.e less than 0.5
-had got smaller intervals decreasing as the generated value
-approached 0.0 although still uniformly distributed for
-sufficiently large subranges. The new algorithms produces
-uniformly distributed floats on the form N * 2.0^(-53) hence
-equally spaced.
-
-Every time a
-random number is requested, a state is used to calculate it
-and a new state is produced. The state can either be
-implicit or be an explicit argument and return value.
-
-The functions
-with implicit state use the process dictionary variable
-rand_seed to remember the current state.
-
-If a process
-calls uniform/0, uniform/1 or
-uniform_real/0 without setting a seed first,
-seed/1 is called automatically with the default
-algorithm and creates a non-constant seed.
-
-The functions
-with explicit state never use the process dictionary.
-
-Examples:
-
-Simple use;
-creates and seeds the default algorithm with a non-constant
-seed if not already done:
-
-R0 =
-rand:uniform(), 
-R1 = rand:uniform(),
-
-Use a specified
-algorithm:
-
-_ =
-rand:seed(exs928ss), 
-R2 = rand:uniform(),
-
-Use a specified
-algorithm with a constant seed:
-
-_ =
-rand:seed(exs928ss, {123, 123534, 345345}), 
-R3 = rand:uniform(),
-
-Use the
-functional API with a non-constant seed:
-
-S0 =
-rand:seed_s(exsss), 
-{R4, S1} = rand:uniform_s(S0),
-
-Textbook basic
-form Box-Muller standard normal deviate
-
-R5 =
-rand:uniform_real(), 
-R6 = rand:uniform(), 
-SND0 = math:sqrt(-2 * math:log(R5)) * math:cos(math:pi() *
-R6)
-
-Create a
-standard normal deviate:
-
-{SND1, S2} =
-rand:normal_s(S1),
-
-Create a normal
-deviate with mean -3 and variance 0.5:
-
-{ND0, S3} =
-rand:normal_s(-3, 0.5, S2),
-
-Note:
-
-The builtin random number
-generator algorithms are not cryptographically strong. If a
-cryptographically strong random number generator is needed,
-use something like crypto:rand_seed/0.
-
-For all these
-generators except exro928ss and exsss the
-lowest bit(s) has got a slightly less random behaviour than
-all other bits. 1 bit for exrop (and exsp),
-and 3 bits for exs1024s. See for example the
-explanation in the Xoroshiro128+ generator source code:
-
-Beside passing
-BigCrush, this generator passes the PractRand test suite
-
-up to (and included) 16TB, with the exception of binary rank
-tests, 
-which fail due to the lowest bit being an LFSR; all other
-bits pass all 
-tests. We suggest to use a sign test to extract a random
-Boolean value.
-
-If this is a
-problem; to generate a boolean with these algorithms use
-something like this:
-
-(rand:uniform(16)
-> 8)
-
-And for a
-general range, with N = 1 for exrop, and N
-= 3 for exs1024s:
-
-(((rand:uniform(Range
-bsl N) - 1) bsr N) + 1)
-
-The floating
-point generating functions in this module waste the lowest
-bits when converting from an integer so they avoid this
-snag.
-
-DATA TYPES
-
-builtin_alg()
-= 
-exsss | exro928ss | exrop | exs1024s | exsp | exs64 | 
-exsplus | exs1024
-
-alg() =
-builtin_alg() | atom()
-
-alg_handler()
-= 
-#{type := alg(), 
-bits => integer() >= 0, 
-weak_low_bits => integer() >= 0, 
-max => integer() >= 0, 
-next := 
-fun((alg_state()) -> {integer() >= 0, alg_state()}),
-
-uniform => fun((state()) -> {float(), state()}), 
-uniform_n => 
-fun((integer() >= 1, state()) -> {integer() >= 1,
-state()}), 
-jump => fun((state()) -> state())}
-
-alg_state()
-= 
-exsplus_state() | 
-exro928_state() | 
-exrop_state() | 
-exs1024_state() | 
-exs64_state() | 
-term()
-
-state()
-= {alg_handler(), alg_state()}
-
-Algorithm-dependent
-state.
-
-export_state()
-= {alg(), alg_state()}
-
-Algorithm-dependent
-state that can be printed or saved to file.
-
-seed() =
-
-[integer()] | integer() | {integer(), integer(),
-integer()}
-
-A seed value
-for the generator.
-
-A list of
-integers sets the generator’s internal state directly,
-after algorithm-dependent checks of the value and masking to
-the proper word size.
-
-An integer is
-used as the initial state for a SplitMix64 generator. The
-output values of that is then used for setting the
-generator’s internal state after masking to the proper
-word size and if needed avoiding zero values.
-
-A traditional
-3-tuple of integers seed is passed through
-algorithm-dependent hashing functions to create the
-generator’s initial state.
-
-exsplus_state()
-
-Algorithm
-specific internal state
-
-exro928_state()
-
-Algorithm
-specific internal state
-
-exrop_state()
-
-Algorithm
-specific internal state
-
-exs1024_state()
-
-Algorithm
-specific internal state
-
-exs64_state()
-
-Algorithm
-specific internal state
-
-EXPORTS
-
-export_seed()
--> undefined | export_state()
-
-Returns the
-random number state in an external format. To be used with
-seed/1.
-
-export_seed_s(State
-:: state()) -> export_state()
-
-Returns the
-random number generator state in an external format. To be
-used with seed/1.
-
-jump() ->
-NewState :: state()
-
-Returns the
-state after performing jump calculation to the state in the
-process dictionary.
-
-This function
-generates a not_implemented error exception when the
-jump function is not implemented for the algorithm specified
-in the state in the process dictionary.
-
-jump(State
-:: state()) -> NewState :: state()
-
-Returns the
-state after performing jump calculation to the given
-state.
-
-This function
-generates a not_implemented error exception when the
-jump function is not implemented for the algorithm specified
-in the state.
-
-normal()
--> float()
-
-Returns a
-standard normal deviate float (that is, the mean is 0 and
-the standard deviation is 1) and updates the state in the
-process dictionary.
-
-normal(Mean
-:: number(), Variance :: number()) -> float()
-
-Returns a
-normal N(Mean, Variance) deviate float and updates the state
-in the process dictionary.
-
-normal_s(State
-:: state()) -> {float(), NewState :: state()}
-
-Returns, for a
-specified state, a standard normal deviate float (that is,
-the mean is 0 and the standard deviation is 1) and a new
-state.
-
-normal_s(Mean
-:: number(), 
-Variance :: number(), 
-State0 :: state()) -> 
-{float(), NewS :: state()}
-
-Returns, for a
-specified state, a normal N(Mean, Variance) deviate float
-and a new state.
-
-seed(AlgOrStateOrExpState
-:: 
-builtin_alg() | state() | export_state()) -> 
-state()
-
-Seeds random
-number generation with the specifed algorithm and
-time-dependent data if AlgOrStateOrExpState is an
-algorithm.
-
-Otherwise
-recreates the exported seed in the process dictionary, and
-returns the state. See also export_seed/0.
-
-seed(Alg ::
-builtin_alg(), Seed :: seed()) -> state()
-
-Seeds random
-number generation with the specified algorithm and integers
-in the process dictionary and returns the state.
-
-seed_s(AlgOrStateOrExpState
-:: 
-builtin_alg() | state() | export_state()) -> 
-state()
-
-Seeds random
-number generation with the specifed algorithm and
-time-dependent data if AlgOrStateOrExpState is an
-algorithm.
-
-Otherwise
-recreates the exported seed and returns the state. See also
-export_seed/0.
-
-seed_s(Alg
-:: builtin_alg(), Seed :: seed()) -> state()
-
-Seeds random
-number generation with the specified algorithm and integers
-and returns the state.
-
-uniform()
--> X :: float()
-
-Returns a
-random float uniformly distributed in the value range 0.0
-= and updates the state in the process
-dictionary.
-
-The generated
-numbers are on the form N * 2.0^(-53), that is; equally
-spaced in the interval.
-
-Warning:
-
-This function may return
-exactly 0.0 which can be fatal for certain
-applications. If that is undesired you can use (1.0 -
-rand:uniform()) to get the interval 0.0 , or instead use uniform_real/0.
-
-If neither
-endpoint is desired you can test and re-try like this:
-
-my_uniform()
--> 
-case rand:uniform() of 
-0.0 -> my_uniform();
-
-X -> X
-
-end 
-end.
-
-uniform_real()
--> X :: float()
-
-Returns a
-random float uniformly distributed in the value range
-DBL_MIN = and updates the state in the
-process dictionary.
-
-Conceptually, a
-random real number R is generated from the interval
-0 = and then the closest rounded down
-normalized number in the IEEE 754 Double precision format is
-returned.
-
-Note:
-
-The generated numbers from this
-function has got better granularity for small numbers than
-the regular uniform/0 because all bits in the
-mantissa are random. This property, in combination with the
-fact that exactly zero is never returned is useful for
-algoritms doing for example 1.0 / X or
-math:log(X).
-
-See
-uniform_real_s/1 for more explanation.
-
-uniform(N ::
-integer() >= 1) -> X :: integer() >= 1
-
-Returns, for a
-specified integer N >= 1, a random integer
-uniformly distributed in the value range 1 = and updates the state in the process dictionary.
-
-uniform_s(State
-:: state()) -> {X :: float(), NewState ::
-state()}
-
-Returns, for a
-specified state, random float uniformly distributed in the
-value range 0.0 = and a new state.
-
-The generated
-numbers are on the form N * 2.0^(-53), that is; equally
-spaced in the interval.
-
-Warning:
-
-This function may return
-exactly 0.0 which can be fatal for certain
-applications. If that is undesired you can use (1.0 -
-rand:uniform(State)) to get the interval 0.0 , or instead use uniform_real_s/1.
-
-If neither
-endpoint is desired you can test and re-try like this:
-
-my_uniform(State)
--> 
-case rand:uniform(State) of 
-{0.0, NewState} -> my_uniform(NewState);
-
-Result -> Result
-
-end 
-end.
-
-uniform_real_s(State
-:: state()) -> 
-{X :: float(), NewState :: state()}
-
-Returns, for a
-specified state, a random float uniformly distributed in the
-value range DBL_MIN = and updates the
-state in the process dictionary.
-
-Conceptually, a
-random real number R is generated from the interval
-0 = and then the closest rounded down
-normalized number in the IEEE 754 Double precision format is
-returned.
-
-Note:
-
-The generated numbers from this
-function has got better granularity for small numbers than
-the regular uniform_s/1 because all bits in the
-mantissa are random. This property, in combination with the
-fact that exactly zero is never returned is useful for
-algoritms doing for example 1.0 / X or
-math:log(X).
-
-The concept
-implicates that the probability to get exactly zero is
-extremely low; so low that this function is in fact
-guaranteed to never return zero. The smallest number that it
-might return is DBL_MIN, which is 2.0^(-1022).
-
-The value range
-stated at the top of this function description is
-technically correct, but 0.0 = is a
-better description of the generated numbers’
-statistical distribution. Except that exactly 0.0 is never
-returned, which is not possible to observe
-statistically.
-
-For example;
-for all sub ranges N*2.0^(-53) = where 0 = the probability is the same. Compare that with
-the form of the numbers generated by uniform_s/1.
-
-Having to
-generate extra random bits for small numbers costs a little
-performance. This function is about 20% slower than the
-regular uniform_s/1
-
-uniform_s(N
-:: integer() >= 1, State :: state()) -> 
-{X :: integer() >= 1, NewState :: state()}
-
-Returns, for a
-specified integer N >= 1 and a state, a random
-integer uniformly distributed in the value range 1 = and a new state.
+Linux man-pages 6.03              2023-02-05                           rand(3)

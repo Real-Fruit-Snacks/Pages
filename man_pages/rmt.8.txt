@@ -1,127 +1,159 @@
-RMT(8) BSD System Manager’s Manual RMT(8)
+RMT(8)                          GNU TAR Manual                          RMT(8)
 
 NAME
-
-rmt — remote
-magtape protocol module
+       rmt - remote magnetic tape server
 
 SYNOPSIS
-
-rmt
+       rmt
 
 DESCRIPTION
+       Rmt  provides  remote  access to files and devices for tar(1), cpio(1),
+       and similar backup utilities.  It is normally called by running  rsh(1)
+       or  ssh(1)  to  the  remote machine, optionally using a different login
+       name if one is supplied.
 
-rmt is a program used by
-the remote dump and restore programs in manipulating a
-magnetic tape drive through an interprocess communication
-connection. rmt is normally started up with an
-rexec(3) or rcmd(3) call.
+       The calling program communicates with rmt by sending  requests  on  its
+       standard input and reading replies from the standard output.  A request
+       consists of a request letter followed by an argument (if required)  and
+       a  newline character.  Additional data, if any, are sent after the new‐
+       line.  On success, rmt returns
 
-The rmt
-program accepts requests specific to the manipulation of
-magnetic tapes, performs the commands, then responds with a
-status indication. All responses are in ASCII and in one of
-two forms. Successful commands have responses of:
+           Anumber\n
 
-Anumber\n
+       where number is an ASCII representation of a decimal return code.   Ad‐
+       ditional  data  are  returned after this line.  On error, the following
+       response is returned:
 
-Number is
-an ASCII representation of a decimal number. Unsuccessful
-commands are responded to with:
+           Eerrno\nerror-message\n
 
-Eerror-number\nerror-message\n
+       where errno is one of the system error codes, as described in errno(3),
+       and  error-message  is a one-line human-readable description of the er‐
+       ror, as printed by perror(3).
 
-Error-number
-is one of the possible error numbers described in intro(2)
-and error-message is the corresponding error string
-as printed from a call to perror(3). The protocol is
-comprised of the following commands, which are sent as
-indicated - no spaces are supplied between the command and
-its arguments, or between its arguments, and
-’\n’ indicates that a newline should be
-supplied:
+       Available commands and possible responses are discussed  in  detail  in
+       the subsequent section.
 
-Odevice\nmode\n
+COMMANDS
+       Odevice\nflags\n
+              Opens  the device with given flags. If a device had already been
+              opened, it is closed before opening the new one.
 
-Open the specified
-deviceusing the indicated mode.Deviceis
-a full pathname and modeis an ASCIIrepresentation of
-a decimal number suitable for passing to open(2).If a device
-had already been opened, it is closed before a new open is
-performed.
+              Arguments
 
-Cdevice\n
+              device The name of the device to open.
 
-Close the currently open
-device. The devicespecified is ignored.
+              flags  Flags for open(2): a decimal number,  or  any  valid  O_*
+                     constant from fcntl.h (the initial O_ may be omitted), or
+                     a bitwise or (using |) of any number of these, e.g.:
+                         576
+                         64|512
+                         CREAT|TRUNC
+                     In addition, a combined form is also allowed, i.e. a dec‐
+                     imal  mode  followed  by its symbolic representation.  In
+                     this case the symbolic representation  is  given  prefer‐
+                     ence.
 
-Loffset\nwhence\n
+              Reply
+                     A0\n on success.
 
-Perform an lseek(2) operation
-using the specified parameters. The response value is that
-returned from the lseek call.
+              Extensions
+                     BSD version allows only decimal number as flags.
 
-Wcount\n
+       C[device]\n
+              Close the currently open device.
 
-Write data onto the open
-device. rmt reads count bytes from the
-connection, aborting if a premature end-of-file is
-encountered. The response value is that returned from the
-write(2) call.
+              Arguments
+                     Any arguments are silently ignored.
 
-Rcount\n
+              Reply
+                     A0\n on success.
 
-Read count bytes of data
-from the open device. If count exceeds the size of
-the data buffer (10 kilobytes), it is truncated to the data
-buffer size. rmt then performs the requested read(2)
-and responds with Acount-read\n if the read
-was successful; otherwise an error in the standard format is
-returned. If the read was successful, the data read is then
-sent.
+       Lwhence\noffset\n
+              Performs an lseek(2) on the currently open device with the spec‐
+              ified parameters.
 
-Ioperation\ncount\n
+              Arguments
 
-Perform a MTIOCOP ioctl(2)
-command using the specified parameters. The parameters are
-interpreted as the ASCII representations of the decimal
-values to place in the mt_op and mt_count
-fields of the structure used in the ioctl call. The return
-value is the count parameter when the operation is
-successful.
+                     whence Where to measure offset from. Valid values are:
 
-S
+                             0, SET, SEEK_SET   seek from the file beginning
+                             1, CUR, SEEK_CUR   seek from the current location
+                             2, END, SEEK_END   seek from the file end
 
-Return the
-status of the open device, as obtained with a MTIOCGET ioctl
-call. If the operation was successful, an
-’’ack’’ is sent with the size of the
-status buffer, then the status buffer is sent (in
-binary).
+              Reply
+                     Aoffset\n on success. The offset is  the  new  offset  in
+                     file.
 
-Any other
-command causes rmt to exit.
+              Extensions
+                     BSD version allows only 0,1,2 as whence.
 
-DIAGNOSTICS
+       Rcount\n
+              Read count bytes of data from the current device.
 
-All responses are of the form
-described above.
+              Arguments
+
+                     count  number of bytes to read.
+
+              Reply
+                     On success:
+
+                         Ardcount\n
+
+                     followed by rdcount bytes of data read from the device.
+
+       Wcount\n
+              Writes data onto the current device.  The command is followed by
+              count bytes of input data.
+
+              Arguments
+
+                     count  Number of bytes to write.
+
+              Reply
+                     On success: Awrcount\n, where wrcount is  the  number  of
+                     bytes actually written.
+
+       Iopcode\ncount\n
+              Perform   a   MTIOCOP   ioctl(2)   command  with  the  specified
+              paramedters.
+
+              Arguments
+
+                     opcode MTIOCOP operation code.
+
+                     count  mt_count.
+
+              Reply
+                     On success: A0\n.
+
+       S\n    Returns the status of the currently  open  device,  as  obtained
+              from a MTIOCGET ioctl(2) call.
+
+              Arguments
+                     None
+
+              Reply
+                     On success: Acount\n followed by count bytes of data.
 
 SEE ALSO
-
-rcmd(3), rexec(3), mtio(4),
-rdump(8), rrestore(8)
+       tar(1).
 
 BUGS
+       Using this utility as a general-purpose remote file access tool is dis‐
+       couraged.
 
-People should be discouraged
-from using this for a remote file access protocol.
+BUG REPORTS
+       Report bugs to <bug-tar@gnu.org>.
 
 HISTORY
+       The rmt command appeared in  4.2BSD.   The  GNU  rmt  is  written  from
+       scratch, using the BSD specification.
 
-The rmt command appeared
-in 4.2BSD.
+COPYRIGHT
+       Copyright © 2013, 2018 Free Software Foundation, Inc.
+       License GPLv3+: GNU GPL version 3 or later <http://gnu.org/li‐
+       censes/gpl.html>
+       This is free software: you are free  to  change  and  redistribute  it.
+       There is NO WARRANTY, to the extent permitted by law.
 
-4.2 Berkeley
-Distribution June 1, 1994 4.2 Berkeley
-Distribution
+RMT                             March 24, 2018                          RMT(8)

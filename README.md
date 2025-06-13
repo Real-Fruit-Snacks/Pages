@@ -7,7 +7,7 @@ A blazing-fast, fully self-contained web application for searching and viewing L
 ## ✨ Key Features
 
 - **🔍 Instant Search** - Real-time search with intelligent suggestions
-- **📚 9,371 Man Pages** - Comprehensive Linux command documentation
+- **📚 10,290 Man Pages** - Comprehensive Linux command documentation from official sources
 - **📋 TLDR Integration** - Quick practical examples for common commands
 - **🎨 16 Beautiful Themes** - From dark modes to high contrast
 - **⚡ Lightning Fast** - 32ms page load, instant search results
@@ -44,19 +44,19 @@ tar -xzf linux-man-pages.tar.gz
 ```
 ├── index.html          # Complete application (16KB)
 ├── data/              
-│   ├── index.js       # Search index (741KB - loaded on demand)
+│   ├── index.js       # Search index (7,429 commands - loaded on demand)
 │   ├── tldr_index.js  # TLDR pages index
 │   └── options.js     # Command options database
 ├── themes/            # 16 modular theme CSS files
-├── man_pages/         # 9,915 man page files
-├── tldr_pages/        # TLDR summaries
+├── man_pages/         # 10,290 man page files
+├── tldr_pages/        # 1,106 TLDR summaries
 └── scripts/           # Maintenance utilities
 ```
 
 ## 🎯 Usage
 
 ### Search Commands
-- Start typing to search 9,371+ commands
+- Start typing to search 10,290+ commands
 - Use section dropdown to filter by type
 - Click suggestions or press Enter to view
 
@@ -157,6 +157,16 @@ Linux manual pages remain under their original licenses.
 - Linux man-pages project
 - [TLDR Pages](https://github.com/tldr-pages/tldr) community
 - All contributors and testers
+
+## 📅 Recent Updates
+
+### v6.2.0 (Latest)
+- Updated man pages collection from official Linux sources
+- Increased from 9,371 to 10,290 man pages
+- Fixed Command Explainer bug where options weren't displaying
+- Added missing traditional Unix commands (at, bg, cal, cd)
+- Improved search index with 7,429 unique commands
+- Enhanced TLDR coverage analysis
 
 ---
 

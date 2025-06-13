@@ -1,0 +1,181 @@
+Mouse::Util::TypeConstUsertContributed Perl DMouse::Util::TypeConstraints(3pm)
+
+NAME
+       Mouse::Util::TypeConstraints - Type constraint system for Mouse
+
+VERSION
+       This document describes Mouse version v2.5.10
+
+   SYNOPSIS
+         use Mouse::Util::TypeConstraints;
+
+         subtype 'Natural'
+             => as 'Int'
+             => where { $_ > 0 };
+
+         subtype 'NaturalLessThanTen'
+             => as 'Natural'
+             => where { $_ < 10 }
+             => message { "This number ($_) is not less than ten!" };
+
+         coerce 'Num'
+             => from 'Str'
+               => via { 0+$_ };
+
+         enum 'RGBColors' => qw(red green blue);
+
+         no Mouse::Util::TypeConstraints;
+
+DESCRIPTION
+       This module provides Mouse with the ability to create custom type
+       constraints to be used in attribute definition.
+
+   Important Caveat
+       This is NOT a type system for Perl 5. These are type constraints, and
+       they are not used by Mouse unless you tell it to. No type inference is
+       performed, expressions are not typed, etc. etc. etc.
+
+       A type constraint is at heart a small "check if a value is valid"
+       function. A constraint can be associated with an attribute. This
+       simplifies parameter validation, and makes your code clearer to read,
+       because you can refer to constraints by name.
+
+   Slightly Less Important Caveat
+       It is always a good idea to quote your type names.
+
+       This prevents Perl from trying to execute the call as an indirect
+       object call. This can be an issue when you have a subtype with the same
+       name as a valid class.
+
+       For instance:
+
+         subtype DateTime => as Object => where { $_->isa('DateTime') };
+
+       will just work, while this:
+
+         use DateTime;
+         subtype DateTime => as Object => where { $_->isa('DateTime') };
+
+       will fail silently and cause many headaches. The simple way to solve
+       this, as well as future proof your subtypes from classes which have yet
+       to have been created, is to quote the type name:
+
+         use DateTime;
+         subtype 'DateTime' => as 'Object' => where { $_->isa('DateTime') };
+
+   Default Type Constraints
+       This module also provides a simple hierarchy for Perl 5 types, here is
+       that hierarchy represented visually.
+
+        Any
+         Item
+             Bool
+             Maybe[`a]
+             Undef
+             Defined
+                 Value
+                     Str
+                         Num
+                             Int
+                         ClassName
+                         RoleName
+                 Ref
+                     ScalarRef
+                     ArrayRef[`a]
+                     HashRef[`a]
+                     CodeRef
+                     RegexpRef
+                     GlobRef
+                         FileHandle
+                     Object
+
+       NOTE: Any type followed by a type parameter "[`a]" can be
+       parameterized, this means you can say:
+
+         ArrayRef[Int]    # an array of integers
+         HashRef[CodeRef] # a hash of str to CODE ref mappings
+         Maybe[Str]       # value may be a string, may be undefined
+
+       If Mouse finds a name in brackets that it does not recognize as an
+       existing type, it assumes that this is a class name, for example
+       "ArrayRef[DateTime]".
+
+       NOTE: The "Undef" type constraint for the most part works correctly
+       now, but edge cases may still exist, please use it sparingly.
+
+       NOTE: The "ClassName" type constraint does a complex package existence
+       check. This means that your class must be loaded for this type
+       constraint to pass.
+
+       NOTE: The "RoleName" constraint checks a string is a package name which
+       is a role, like 'MyApp::Role::Comparable'. The "Role" constraint checks
+       that an object does the named role.
+
+   Type Constraint Naming
+       Type name declared via this module can only contain alphanumeric
+       characters, colons (:), and periods (.).
+
+       Since the types created by this module are global, it is suggested that
+       you namespace your types just as you would namespace your modules. So
+       instead of creating a Color type for your My::Graphics module, you
+       would call the type My::Graphics::Types::Color instead.
+
+   Use with Other Constraint Modules
+       This module can play nicely with other constraint modules with some
+       slight tweaking. The "where" clause in types is expected to be a "CODE"
+       reference which checks it's first argument and returns a boolean. Since
+       most constraint modules work in a similar way, it should be simple to
+       adapt them to work with Mouse.
+
+       For instance, this is how you could use it with
+       Declare::Constraints::Simple to declare a completely new type.
+
+         type 'HashOfArrayOfObjects',
+             {
+             where => IsHashRef(
+                 -keys   => HasLength,
+                 -values => IsArrayRef(IsObject)
+             )
+         };
+
+       Here is an example of using Test::Deep and it's non-test related
+       "eq_deeply" function.
+
+         type 'ArrayOfHashOfBarsAndRandomNumbers'
+             => where {
+                 eq_deeply($_,
+                     array_each(subhashof({
+                         bar           => isa('Bar'),
+                         random_number => ignore()
+                     })))
+               };
+
+METHODS
+   "list_all_builtin_type_constraints -> (Names)"
+       Returns the names of builtin type constraints.
+
+   "list_all_type_constraints -> (Names)"
+       Returns the names of all the type constraints.
+
+FUNCTIONS
+       "type $name => where { } ... -> Mouse::Meta::TypeConstraint"
+       "subtype $name => as $parent => where { } ... ->
+       Mouse::Meta::TypeConstraint"
+       "subtype as $parent => where { } ...  -> Mouse::Meta::TypeConstraint"
+       "class_type ($class, ?$options) -> Mouse::Meta::TypeConstraint"
+       "role_type ($role, ?$options) -> Mouse::Meta::TypeConstraint"
+       "duck_type($name, @methods | \@methods) -> Mouse::Meta::TypeConstraint"
+       "duck_type(\@methods) -> Mouse::Meta::TypeConstraint"
+       "enum($name, @values | \@values) -> Mouse::Meta::TypeConstraint"
+       "enum (\@values) -> Mouse::Meta::TypeConstraint"
+       "coerce $type => from $another_type, via { }, ..."
+       "find_type_constraint(Type) -> Mouse::Meta::TypeConstraint"
+
+THANKS
+       Much of this documentation was taken from
+       "Moose::Util::TypeConstraints"
+
+SEE ALSO
+       Moose::Util::TypeConstraints
+
+perl v5.36.0                      2022-10-20 Mouse::Util::TypeConstraints(3pm)

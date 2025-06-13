@@ -1,270 +1,122 @@
-NAME
+GP-COLLECT-APP(1)                User Commands               GP-COLLECT-APP(1)
 
-gp-collect-app
-- Collect performance data for the target application
+NAME
+       gp-collect-app - collect performance data for the target application
 
 SYNOPSIS
-
-gprofng
-collect app [option(s)] target
-[target-option(s)]
+       gprofng collect app [OPTION(S)] TARGET [TARGET_ARGUMENTS]
 
 DESCRIPTION
-
-Collect
-performance data on the target program. In addition to
-Program Counter (PC) sampling, hardware event counters and
-various tracing options are supported.
-
-For example,
-this command collects performance data for an executable
-called a.out and stores the data collected in an
-experiment directory with the name example.er.
-
-$ gprofng
-collect app -o example.er ./a.out
+       Collect  performance data on the target program. In addition to Program
+       Counter PC) sampling, hardware event counters and various  tracing  op‐
+       tions are supported.
 
 OPTIONS
+       --version
+              print the version number and exit.
 
---version
+       --help print usage information and exit.
 
-Print the version number and
-exit.
+       --verbose {on|off}
+              enable (on) or disable (off) verbose mode; the default is "off".
 
---help
+       -p {off|on|lo|hi|<value>}
+              disable  (off)  or  enable  (on) clock-profiling using a default
+              sampling granularity, or enable  clock-profiling  implicitly  by
+              setting the sampling granularity (lo, hi, or a specific value in
+              ms); by default clock profiling is enabled.
 
-Print usage information and
-exit.
+       -h {<ctr_def>...,<ctr_n_def>}
+              enable  hardware  event  counter  profiling   and   select   the
+              counter(s); to see the supported counters on this system use the
+              -h option without other arguments.
 
--v, --verbose
+       -o <exp_name>
+              specify the name for (and path to) the experiment directory; the
+              the default path is the current directory.
 
-By default, verbose mode is
-disabled. This option enables it.
+       -O <exp_name>
+              the  same as -o, but unlike the -o option, silently overwrite an
+              existing experiment directory with the same name.
 
--p {off | on | lo[w] |
-hi[gh] | }
+       -C <label>
+              add up to 10 comment labels to the experiment;  comments  appear
+              in the notes section of the header.
 
-Disable (off) or enable
-(on) clock profiling using a default sampling
-granularity, or enable clock profiling implicitly by setting
-the sampling granularity (lo[w], hi[gh], or a
-specific value in ms). By default, clock profiling is
-enabled (-p on).
+       -j  {on|off|<path>}  enable  (on), or disable (off) Java profiling when
+       the target
+              program is a JVM; optionally set the  <path>  to  a  non-default
+              JVM; the default is "-j on".
 
--h
-[,]
+       -J <java-args>
+              specify arguments to the JVM.
 
-Enable hardware event counter
-profiling and select one or more counter(s). To see the
-supported counters on this system, use the -h option
-without other arguments.
+       -t <duration>[m|s]
+              specify the duration over which to record data; the default unit
+              is seconds (s), but can be set to minutes (m).
 
--o
+       -n     dry run; display several run-time settings, but do not  run  the
+              target, or collect performance data.
 
-Specify the name for the
-experiment directory. The name has to end with .er
-and may contain an absolute path (e.g.
-/tmp/experiment.er). An existing experiment with the
-same name will not be overwritten.
+       -y <signal>[,r]
+              specify delayed initialization and a pause/resume signal; by de‐
+              fault the target starts in paused mode; if the optional  r  key‐
+              word is provided, start in resumed mode.
 
--O
+       -F {off|on|=<regex>}
+              control  to  follow  descendant processes; disable (off), enable
+              (on), or collect data on all  descendant  processes  whose  name
+              matches  the  specified  regular  expression; the default is "-F
+              on".
 
-This is the same as the
--o option, but unlike this option, silently
-overwrites an existing experiment directory with the same
-name.
+       -a {off|on|ldobjects|src|usedldobjects|usedsrc}
+              specify archiving of binaries and other files;  in  addition  to
+              disable  this feature (off), or enable archiving off all loadob‐
+              jects and sources (on), the other options support a more refined
+              selection.  All  of these options enable archiving, but the key‐
+              word controls what exactly is selected: all load objects  (ldob‐
+              jects),  all source files (src), the loadobjects asscoiated with
+              a program counter (usedldobjects), or the source  files  associ‐
+              ated  with a program counter (usedsrc); the default is "-a ldob‐
+              jects".
 
--C
+       -S {off|on|<seconds>}
+              disable (off) or enable (on) periodic sampling  of  process-wide
+              resource  utilization;  by default sampling occurs every second;
+              use the <seconds> option to change this; the default is "-S on".
 
-Add up to 10 comment strings to
-the experiment. These comments appear in the notes section
-of the header and can be retrieved with the gprofng
-display text command using the -header
-option.
+       -l <signal>
+              specify a signal that will trigger a sample of process-wide  re‐
+              source utilization.
 
--j {on | off |
-}
+       -s <option>[,<API>]
+              enable  synchronization wait tracing; <option> is used to define
+              the specifics of the tracing (on,  off,  <threshold>,  or  all);
+              <API>  is  used  to select the API: "n" selects native/Pthreads,
+              "j" selects Java, and "nj" selects  both;  the  default  is  "-s
+              off".
 
-Controls Java profiling when
-the target is a JVM machine. The allowed values for this
-option are:
+       -H {off|on}
+              disable  (off),  or enable (on) heap tracing; the default is "-H
+              off".
 
-on
+       -i {off|on}
+              disable (off), or enable (on) I/O tracing; the  default  is  "-i
+              off".
 
-Record profiling data for the JVM machine, and recognize
-methods compiled by the Java HotSpot virtual machine. Also
-record Java call stacks.
-
-off
-
-Do not record Java profiling data. Profiling data for
-native call stacks is still recorded.
-
-Records profiling data for the
-JVM, and use the JVM as installed in
-.
-
-The default is
--j on.
-
--J
-
-Specifies one or more
-additional options to be passed to the JVM used. The
-jvm-option(s) list must be enclosed in quotation
-marks if it contains more than one option. The items in the
-list need to be separated by spaces or tabs. Each item is
-passed as a separate option to the JVM. Note that this
-option implies -j on.
-
--t
-[m|s]
-
-Collects data for the specified
-duration. The duration can be a single number, optionally
-followed by either m to specify minutes, or s
-to specify seconds, which is the default.
-
-The duration
-can also consists of two numbers separated by a minus (-)
-sign. If a single number is given, data is collected from
-the start of the run until the given time. If two numbers
-are given, data is collected from the first time to the
-second. In case the second time is zero, data is collected
-until the end of the run. If two non-zero numbers are given,
-the first must be less than the second.
-
--n
-
-This is used for a dry run. Several run-time settings
-are displayed, but the target is not executed and no
-performance data is collected.
-
--F
-{off|on|=regex}
-
-Control whether descendant
-processes should have their data recorded. To disable/enable
-this feature, use off/on. Use
-=regex to record data on those processes whose
-executable name matches the regular expression. Only the
-basename of the executable is used, not the full path. If
-spaces or characters interpreted by the shell are used,
-enclose the regex in single quotes. The default is
--F on.
-
--a
-{off|on|ldobjects|src|usedldobjects|usedsrc}
-
-Specify archiving of binaries
-and other files. In addition to disable this feature
-(off), or enable archiving off all loadobjects and
-sources (on), the other options support a more
-refined selection.
-
-All of these
-options enable archiving, but the keyword controls what
-exactly is selected: all load objects (ldobjects), all
-source files (src), the loadobjects asscoiated with a
-program counter (usedldobjects), or the source files
-associated with a program counter (usedsrc). The default is
--a ldobjects.
-
--S
-{off|on|}
-
-Disable (off), or enable (on)
-periodic sampling of process-wide resource utilization. By
-default, sampling occurs every second. Use the
- option to change this. The default is
--S on.
-
--y
-[,r]
-
-Controls recording of data with
-the signal named , referred to as the
-pause-resume signal. Whenever the given signal is delivered
-to the process, switch between paused (no data is recorded)
-and resumed (data is recorded) states.
-
-By default,
-data collection begins in the paused state. If the optional
-r is given, data collection begins in the resumed
-state and data collection begins immediately.
-
-SIGUSR1 or
-SIGUSR2 are recommended for this use, but any signal that is
-not used by the target can be used.
-
--l
-
-Specify a signal that will
-trigger a sample of process-wide resource utilization. When
-the named  is delivered to the process,
-a sample is recorded.
-
-The signal can
-be specified using the full name, without the initial
-letters "SIG", or the signal number. Note that the
-kill command can be used to deliver a signal.
-
-If both the
--l and -y options are used, the signal must be
-different.
-
--s
-[,]
-
-Enable synchronization wait
-tracing, where  is used to define the
-specifics of the tracing (on, off, ,
-or all). The API is selected through the setting for
-: n selects native/Pthreads,
-j selects Java, and nj selects both. The
-default is -s off.
-
--H {off|on}
-
-Disable (off), or enable (on)
-heap tracing. The default is -H off.
-
--i {off|on}
-
-Disable (off), or enable (on)
-I/O tracing. The default is -i off.
-
-NOTES
-
-Any executable
-in the ELF (Executable and Linkable Format) object format
-can be used for profiling with gprofng. If debug information
-is available, gprofng can provide more details, but this is
-not a requirement.
+DOCUMENTATION
+       A  getting started guide for gprofng is maintained as a Texinfo manual.
+       If the info and gprofng programs are properly installed at  your  site,
+       the command "info gprofng" should give you access to this document.
 
 SEE ALSO
-
-gprofng(1),
-gp-archive(1), gp-display-gui(1),
-gp-display-html(1), gp-display-src(1),
-gp-display-text(1)
-
-The user guide
-for gprofng is maintained as a Texinfo manual. If the
-info and gprofng programs are correctly
-installed, the command info gprofng should give
-access to this document.
+       gprofng(1),   gp-archive(1),   gp-display-html(1),   gp-display-src(1),
+       gp-display-text(1)
 
 COPYRIGHT
+       Copyright © 2023 Free Software Foundation, Inc.   License  GPLv3+:  GNU
+       GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+       This  is  free  software:  you  are free to change and redistribute it.
+       There is NO WARRANTY, to the extent permitted by law.
 
-Copyright (c)
-2022-2024 Free Software Foundation, Inc.
-
-Permission is
-granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License,
-Version 1.3 or any later version published by the Free
-Software Foundation; with no Invariant Sections, with no
-Front-Cover Texts, and with no Back-Cover Texts. A copy of
-the license is included in the section entitled "GNU
-Free Documentation License".
+GNU gp-collect-app binutils versiJanuary.2023                GP-COLLECT-APP(1)

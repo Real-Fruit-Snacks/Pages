@@ -1,1450 +1,822 @@
-NAME
+X11PERF(1)                  General Commands Manual                 X11PERF(1)
 
-x11perf - X11
-server performance test program
+NAME
+       x11perf - X11 server performance test program
 
 SYNTAX
-
-x11perf
-[ -option ... ]
+       x11perf [ -option ... ]
 
 DESCRIPTION
+       The  x11perf program runs one or more performance tests and reports how
+       fast an X server can execute the tests.
 
-The
-x11perf program runs one or more performance tests
-and reports how fast an X server can execute the tests.
+       Many graphics benchmarks assume that the graphics  device  is  used  to
+       display the output of a single fancy graphics application, and that the
+       user gets his work done on some other device, like  a  terminal.   Such
+       benchmarks  usually  measure  drawing  speed for lines, polygons, text,
+       etc.
 
-Many graphics
-benchmarks assume that the graphics device is used to
-display the output of a single fancy graphics application,
-and that the user gets his work done on some other device,
-like a terminal. Such benchmarks usually measure drawing
-speed for lines, polygons, text, etc.
+       Since workstations are not used as standalone graphics engines, but  as
+       super-terminals, x11perf measures window management performance as well
+       as traditional graphics performance.  x11perf includes  benchmarks  for
+       the  time  it  takes to create and map windows (as when you start up an
+       application); to map a pre-existing set of windows onto the screen  (as
+       when  you  deiconify an application or pop up a menu); and to rearrange
+       windows (as when you slosh windows to and fro trying to  find  the  one
+       you want).
 
-Since
-workstations are not used as standalone graphics engines,
-but as super-terminals, x11perf measures window
-management performance as well as traditional graphics
-performance. x11perf includes benchmarks for the time
-it takes to create and map windows (as when you start up an
-application); to map a pre-existing set of windows onto the
-screen (as when you deiconify an application or pop up a
-menu); and to rearrange windows (as when you slosh windows
-to and fro trying to find the one you want).
+       x11perf  also measures graphics performance for operations not normally
+       used in standalone graphics displays, but  are  nonetheless  used  fre‐
+       quently  by X applications.  Such operations include CopyPlane (used to
+       map bitmaps into pixels), scrolling (used in text windows), and various
+       stipples and tiles (used for CAD and color half-toning, respectively).
 
-x11perf
-also measures graphics performance for operations not
-normally used in standalone graphics displays, but are
-nonetheless used frequently by X applications. Such
-operations include CopyPlane (used to map bitmaps into
-pixels), scrolling (used in text windows), and various
-stipples and tiles (used for CAD and color half-toning,
-respectively).
+       x11perf  should  be used to analyze particular strengths and weaknesses
+       of servers, and is most useful to a server writer who wants to  analyze
+       and  improve  a  server.   x11perf is meant to comprehensively exercise
+       just about every X11 operation you can perform; it does not purport  to
+       be  a representative sample of the operations that X11 applications ac‐
+       tually use.  While it can be used as a benchmark, it was written and is
+       intended as a performance testing tool.
 
-x11perf
-should be used to analyze particular strengths and
-weaknesses of servers, and is most useful to a server writer
-who wants to analyze and improve a server. x11perf is
-meant to comprehensively exercise just about every X11
-operation you can perform; it does not purport to be a
-representative sample of the operations that X11
-applications actually use. While it can be used as a
-benchmark, it was written and is intended as a performance
-testing tool.
+       As such, x11perf DOES NOT whittle down measurements to a single ``HeXS‐
+       tones'' or ``MeXops'' number.  We consider such numbers to be  uninfor‐
+       mative  at  best  and misleading at worst.  Some servers which are very
+       fast for certain applications can be very slow for others.   No  single
+       number  or small set of numbers are sufficient to characterize how an X
+       implementation will perform on all applications.  However, by knowledge
+       of  your  favorite  application,  you  may  be  able to use the numbers
+       x11perf reports to predict its performance on a given X implementation.
 
-As such,
-x11perf DOES NOT whittle down measurements to a
-single ’’HeXStones’’ or
-’’MeXops’’ number. We consider such
-numbers to be uninformative at best and misleading at worst.
-Some servers which are very fast for certain applications
-can be very slow for others. No single number or small set
-of numbers are sufficient to characterize how an X
-implementation will perform on all applications. However, by
-knowledge of your favorite application, you may be able to
-use the numbers x11perf reports to predict its
-performance on a given X implementation.
+       That said, you might also want to look at x11perfcomp(1), a program  to
+       compare  the  outputs of different x11perf runs.  You provide a list of
+       files containing results from x11perf, and it lays them out in  a  nice
+       tabular format.
 
-That said, you
-might also want to look at x11perfcomp(1), a program
-to compare the outputs of different x11perf runs. You
-provide a list of files containing results from
-x11perf, and it lays them out in a nice tabular
-format.
+       For  repeatable results, x11perf should be run using a local connection
+       on a freshly-started server.  The default configuration runs each  test
+       5  times,  in  order  to see if each trial takes approximately the same
+       amount of time.  Strange glitches should be examined; if non-repeatable
+       one  might chalk them up to daemons and network traffic.  Each trial is
+       run for 5 seconds, in order to reduce  random  time  differences.   The
+       number  of  objects  processed per second is displayed to 3 significant
+       digits, but you'll be lucky on most UNIX system if the numbers are  ac‐
+       tually  consistent  to  2  digits.  x11perf moves the cursor out of the
+       test window; you should be careful not to bump the mouse  and  move  it
+       back into the window.  (A prize to people who correctly explain why!!).
 
-For repeatable
-results, x11perf should be run using a local
-connection on a freshly-started server. The default
-configuration runs each test 5 times, in order to see if
-each trial takes approximately the same amount of time.
-Strange glitches should be examined; if non-repeatable one
-might chalk them up to daemons and network traffic. Each
-trial is run for 5 seconds, in order to reduce random time
-differences. The number of objects processed per second is
-displayed to 3 significant digits, but you’ll be lucky
-on most UNIX system if the numbers are actually consistent
-to 2 digits. x11perf moves the cursor out of the test
-window; you should be careful not to bump the mouse and move
-it back into the window. (A prize to people who correctly
-explain why!!).
+       Before  running  a test, x11perf determines what the round trip time to
+       the server is, and factors this out of the final timing  reported.   It
+       ensures  that  the  server has actually performed the work requested by
+       fetching a pixel back from the test window, which  means  that  servers
+       talking  to graphics accelerators can't claim that they are done, while
+       in the meantime the accelerator is painting madly.
 
-Before running
-a test, x11perf determines what the round trip time
-to the server is, and factors this out of the final timing
-reported. It ensures that the server has actually performed
-the work requested by fetching a pixel back from the test
-window, which means that servers talking to graphics
-accelerators can’t claim that they are done, while in
-the meantime the accelerator is painting madly.
+       By default x11perf automatically calibrates the number  of  repetitions
+       of each test, so that each should take approximately the same length of
+       time to run across servers of widely differing speeds.  However,  since
+       each  test  must  be run to completion at least once, some slow servers
+       may take a very long time, particularly on the window moving and resiz‐
+       ing tests, and on the arc drawing tests.
 
-By default
-x11perf automatically calibrates the number of
-repetitions of each test, so that each should take
-approximately the same length of time to run across servers
-of widely differing speeds. However, since each test must be
-run to completion at least once, some slow servers may take
-a very long time, particularly on the window moving and
-resizing tests, and on the arc drawing tests.
+       All  timing reports are for the smallest object involved.  For example,
+       the line tests use a PolyLine request to paint several lines  at  once,
+       but report how many lines per second the server can paint, not how many
+       PolyLine requests per second.  Text tests paint a line  of  characters,
+       but  report  on the number of characters per second.  Some window tests
+       map, unmap, or move a single parent window,  but  report  on  how  many
+       children windows per second the server can map, unmap, or move.
 
-All timing
-reports are for the smallest object involved. For example,
-the line tests use a PolyLine request to paint several lines
-at once, but report how many lines per second the server can
-paint, not how many PolyLine requests per second. Text tests
-paint a line of characters, but report on the number of
-characters per second. Some window tests map, unmap, or move
-a single parent window, but report on how many children
-windows per second the server can map, unmap, or move.
-
-The current
-program is mostly the responsibility of Joel McCormack. It
-is based upon the x11perf developed by Phil Karlton, Susan
-Angebranndt, Chris Kent, Mary Walker, and Todd Newman, who
-wanted to assess performance differences between various
-servers. Several tests were added in order to write and tune
-the PMAX (DECStation 3100) servers. For a general release to
-the world, x11perf was rewritten to ease making
-comparisons between widely varying machines, to cover most
-important (and unimportant) X functionality, and to exercise
-graphics operations in as many different orientations and
-alignments as possible.
+       The current program is mostly the responsibility of Joel McCormack.  It
+       is based upon the x11perf developed by Phil Karlton, Susan Angebranndt,
+       Chris  Kent, Mary Walker, and Todd Newman, who wanted to assess perfor‐
+       mance differences between various servers.  Several  tests  were  added
+       in  order  to write and tune the PMAX (DECStation 3100) servers.  For a
+       general release to the world, x11perf was rewritten to ease making com‐
+       parisons  between widely varying machines, to cover most important (and
+       unimportant) X functionality, and to exercise graphics operations in as
+       many different orientations and alignments as possible.
 
 OPTIONS
+       x11perf is solely Xlib based, and accepts the options listed below:
 
-x11perf
-is solely Xlib based, and accepts the options listed below:
+       -display host:dpy
+                     Specifies which display to use.
 
--display host:dpy
+       -sync         Runs the tests in synchronous mode.  Normally only useful
+                     for debugging x11perf .
 
-Specifies which display to
-use.
+       -pack         Runs rectangle tests so that they pack  rectangles  right
+                     next  to  each other.  This makes it easy to debug server
+                     code for stipples and tiles...if the pattern looks  ugly,
+                     you've got alignment problems.
 
--sync
+       -repeat <n>   Repeats  each test n times (by default each test is run 5
+                     times).
 
-Runs the tests in synchronous mode. Normally only useful
-for debugging x11perf .
+       -time <s>     Specifies how long in seconds each  test  should  be  run
+                     (default 5 seconds).
 
--pack
+       -pause <s>    Specifies how long, in seconds, to pause for between each
+                     run.
 
-Runs rectangle tests so that they pack rectangles right
-next to each other. This makes it easy to debug server code
-for stipples and tiles...if the pattern looks ugly,
-you’ve got alignment problems.
+       -all          Runs all tests.  This may take a while.
 
--repeat 
+       -range <test1>[,<test2>]
+                     Runs all the tests starting from the specified name test1
+                     until the name test2, including both the specified tests.
+                     The testnames should be one of the options starting  from
+                     -dot. (eg) -range line100 will perform the tests from the
+                     100 pixel line test, and go on till the last test, -range
+                     line100,dline10   will  do  the  tests  from  line100  to
+                     dline10.
 
-Repeats each test n times (by default each test
-is run 5 times).
+       -labels       Generates just the descriptive labels for each test spec‐
+                     ified.  See x11perfcomp for more details.
 
--time 
+       -fg color-or-pixel
+                     Specifies the foreground color or pixel value to use.
 
-Specifies how long in seconds each test should be run
-(default 5 seconds).
+       -bg color-or-pixel
+                     Specifies the background color or pixel value to use.
 
--pause 
+       -clips default
+                     Default number of clip windows.
 
-Specifies how long, in seconds, to pause for between
-each run.
+       -ddbg color-or-pixel
+                     Specifies the color or pixel value to use for drawing the
+                     odd segments of a DoubleDashed line or  arc.   This  will
+                     default to the bg color.
 
--all
+       -rop <rop0 rop1 ...>
+                     Use  specified  raster ops (default is GXcopy).  This op‐
+                     tion only affects graphics benchmarks in which the graph‐
+                     ics function is actually used.
 
-Runs all tests. This may take a while.
+       -pm <pm0 pm1 ...>
+                     Use  specified  planemasks  (default is ~0).  This option
+                     only affects graphics benchmarks in which  the  planemask
+                     is actually used.
 
--range
-[,]
+       -depth <depth>
+                     Use  a  visual  with <depth> planes per pixel (default is
+                     the default visual).
 
-Runs all the tests starting
-from the specified name test1 until the name
-test2, including both the specified tests. The
-testnames should be one of the options starting from -dot.
-(eg) -range line100 will perform the tests from the 100
-pixel line test, and go on till the last test, -range
-line100,dline10 will do the tests from line100 to
-dline10.
+       -vclass <vclass>
+                     Use a visual with of class  <vclass>.   <vclass>  can  be
+                     StaticGray,  GrayScale,  StaticColor,  PseudoColor, True‐
+                     Color, or DirectColor.  (default is the default visual).
 
--labels
+       -reps <n>     Specify the repetition  count  (Default  is  number  that
+                     takes approx. 5 seconds)
 
-Generates just the descriptive labels for each test
-specified. See x11perfcomp for more details.
+       -subs <s0 s1 ...>
+                     Specify  the  number  of sub windows to use in the Window
+                     tests.  Default is  4, 16, 25, 50, 75, 100 and 200.
 
--fg
-color-or-pixel
+       -v1.2         Perform only x11perf Version 1.2 tests using Version  1.2
+                     semantics.
 
-Specifies the foreground color
-or pixel value to use.
+       -v1.3         Perform  only x11perf Version 1.3 tests using Version 1.3
+                     semantics.
 
--bg
-color-or-pixel
+       -su           Set the save_under window attribute to True on  all  win‐
+                     dows created by x11perf.  Default is False.
 
-Specifies the background color
-or pixel value to use.
+       -bs <backing_store_hint>
+                     Set the backing_store window attribute to the given value
+                     on all windows created by  x11perf.  <backing_store_hint>
+                     can be WhenMapped or Always.  Default is NotUseful.
 
--clips
-default
+       -dot          Dot.
 
-Default number of clip
-windows.
+       -rect1        1x1 solid-filled rectangle.
 
--ddbg
-color-or-pixel
+       -rect10       10x10 solid-filled rectangle.
 
-Specifies the color or pixel
-value to use for drawing the odd segments of a DoubleDashed
-line or arc. This will default to the bg color.
+       -rect100      100x100 solid-filled rectangle.
 
--rop 
+       -rect500      500x500 solid-filled rectangle.
 
-Use specified raster ops
-(default is GXcopy). This option only affects graphics
-benchmarks in which the graphics function is actually
-used.
+       -srect1       1x1 transparent stippled rectangle, 8x8 stipple pattern.
 
--pm 
+       -srect10      10x10  transparent  stippled  rectangle, 8x8 stipple pat‐
+                     tern.
 
-Use specified planemasks
-(default is ~0). This option only affects graphics
-benchmarks in which the planemask is actually used.
+       -srect100     100x100 transparent stippled rectangle, 8x8 stipple  pat‐
+                     tern.
 
--depth 
+       -srect500     500x500  transparent stippled rectangle, 8x8 stipple pat‐
+                     tern.
 
-Use a visual with 
-planes per pixel (default is the default visual).
+       -osrect1      1x1 opaque stippled rectangle, 8x8 stipple pattern.
 
--vclass
+       -osrect10     10x10 opaque stippled rectangle, 8x8 stipple pattern.
 
-Use a visual with of class
-.  can be StaticGray, GrayScale,
-StaticColor, PseudoColor, TrueColor, or DirectColor.
-(default is the default visual).
+       -osrect100    100x100 opaque stippled rectangle, 8x8 stipple pattern.
 
--reps 
+       -osrect500    500x500 opaque stippled rectangle, 8x8 stipple pattern.
 
-Specify the repetition count (Default is number that
-takes approx. 5 seconds)
+       -tilerect1    1x1 tiled rectangle, 4x4 tile pattern.
 
--subs 
+       -tilerect10   10x10 tiled rectangle, 4x4 tile pattern.
 
-Specify the number of sub
-windows to use in the Window tests. Default is 4, 16, 25,
-50, 75, 100 and 200.
+       -tilerect100  100x100 tiled rectangle, 4x4 tile pattern.
 
--v1.2
+       -tilerect500  500x500 tiled rectangle, 4x4 tile pattern.
 
-Perform only x11perf Version 1.2 tests using Version 1.2
-semantics. 
+       -oddsrect1    1x1 transparent stippled rectangle,  17x15  stipple  pat‐
+                     tern.
 
--v1.3
+       -oddsrect10   10x10  transparent stippled rectangle, 17x15 stipple pat‐
+                     tern.
 
-Perform only x11perf Version 1.3 tests using Version 1.3
-semantics. 
+       -oddsrect100  100x100 transparent  stippled  rectangle,  17x15  stipple
+                     pattern.
 
--su
+       -oddsrect500  500x500  transparent  stippled  rectangle,  17x15 stipple
+                     pattern.
 
-Set the save_under window attribute to True on all
-windows created by x11perf. Default is False.
+       -oddosrect1   1x1 opaque stippled rectangle, 17x15 stipple pattern.
 
--bs
+       -oddosrect10  10x10 opaque stippled rectangle, 17x15 stipple pattern.
 
-Set the backing_store window
-attribute to the given value on all windows created by
-x11perf.  can be WhenMapped or
-Always. Default is NotUseful.
+       -oddosrect100 100x100 opaque stippled rectangle, 17x15 stipple pattern.
 
--dot
+       -oddosrect500 500x500 opaque stippled rectangle, 17x15 stipple pattern.
 
-Dot.
+       -oddtilerect1 1x1 tiled rectangle, 17x15 tile pattern.
 
--rect1
+       -oddtilerect10
+                     10x10 tiled rectangle, 17x15 tile pattern.
 
-1x1 solid-filled rectangle.
+       -oddtilerect100
+                     100x100 tiled rectangle, 17x15 tile pattern.
 
--rect10
+       -oddtilerect500
+                     500x500 tiled rectangle, 17x15 tile pattern.
 
-10x10 solid-filled rectangle.
+       -bigsrect1    1x1 stippled rectangle, 161x145 stipple pattern.
 
--rect100
+       -bigsrect10   10x10 stippled rectangle, 161x145 stipple pattern.
 
-100x100 solid-filled rectangle.
+       -bigsrect100  100x100 stippled rectangle, 161x145 stipple pattern.
 
--rect500
+       -bigsrect500  500x500 stippled rectangle, 161x145 stipple pattern.
 
-500x500 solid-filled rectangle.
+       -bigosrect1   1x1 opaque stippled rectangle, 161x145 stipple pattern.
 
--srect1
+       -bigosrect10  10x10 opaque stippled rectangle, 161x145 stipple pattern.
 
-1x1 transparent stippled rectangle, 8x8 stipple
-pattern. 
+       -bigosrect100 100x100 opaque stippled rectangle, 161x145  stipple  pat‐
+                     tern.
 
--srect10
+       -bigosrect500 500x500  opaque  stippled rectangle, 161x145 stipple pat‐
+                     tern.
 
-10x10 transparent stippled rectangle, 8x8 stipple
-pattern. 
+       -bigtilerect1 1x1 tiled rectangle, 161x145 tile pattern.
 
--srect100
+       -bigtilerect10
+                     10x10 tiled rectangle, 161x145 tile pattern.
 
-100x100 transparent stippled rectangle, 8x8 stipple
-pattern. 
+       -bigtilerect100
+                     100x100 tiled rectangle, 161x145 tile pattern.
 
--srect500
+       -bigtilerect500
+                     500x500 tiled rectangle, 161x145 tile pattern.
 
-500x500 transparent stippled rectangle, 8x8 stipple
-pattern. 
+       -eschertilerect1
+                     1x1 tiled rectangle, 215x208 tile pattern.
 
--osrect1
+       -eschertilerect10
+                     10x10 tiled rectangle, 215x208 tile pattern.
 
-1x1 opaque stippled rectangle, 8x8 stipple pattern.
+       -eschertilerect100
+                     100x100 tiled rectangle, 215x208 tile pattern.
 
--osrect10
+       -eschertilerect500
+                     500x500 tiled rectangle, 215x208 tile pattern.
 
-10x10 opaque stippled rectangle, 8x8 stipple
-pattern. 
+       -seg1         1-pixel thin line segment.
 
--osrect100
+       -seg10        10-pixel thin line segment.
 
-100x100 opaque stippled rectangle, 8x8 stipple
-pattern. 
+       -seg100       100-pixel thin line segment.
 
--osrect500
+       -seg500       500-pixel thin line segment.
 
-500x500 opaque stippled rectangle, 8x8 stipple
-pattern. 
+       -seg100c1     100-pixel thin line segment (1 obscuring rectangle).
 
--tilerect1
+       -seg100c2     100-pixel thin line segment (2 obscuring rectangles).
 
-1x1 tiled rectangle, 4x4 tile pattern.
+       -seg100c3     100-pixel thin line segment (3 obscuring rectangles).
 
--tilerect10
+       -dseg10       10-pixel thin dashed segment (3 on, 2 off).
 
-10x10 tiled rectangle, 4x4 tile pattern.
+       -dseg100      100-pixel thin dashed segment (3 on, 2 off).
 
--tilerect100
+       -ddseg100     100-pixel thin double-dashed segment (3 fg, 2 bg).
 
-100x100 tiled rectangle, 4x4 tile pattern.
+       -hseg10       10-pixel thin horizontal line segment.
 
--tilerect500
+       -hseg100      100-pixel thin horizontal line segment.
 
-500x500 tiled rectangle, 4x4 tile pattern.
+       -hseg500      500-pixel thin horizontal line segment.
 
--oddsrect1
+       -vseg10       10-pixel thin vertical line segment.
 
-1x1 transparent stippled rectangle, 17x15 stipple
-pattern. 
+       -vseg100      100-pixel thin vertical line segment.
 
--oddsrect10
+       -vseg500      500-pixel thin vertical line segment.
 
-10x10 transparent stippled rectangle, 17x15 stipple
-pattern. 
+       -whseg10      10-pixel wide horizontal line segment.
 
--oddsrect100
+       -whseg100     100-pixel wide horizontal line segment.
 
-100x100 transparent stippled rectangle, 17x15 stipple
-pattern. 
+       -whseg500     500-pixel wide horizontal line segment.
 
--oddsrect500
+       -wvseg10      10-pixel wide vertical line segment.
 
-500x500 transparent stippled rectangle, 17x15 stipple
-pattern. 
+       -wvseg100     100-pixel wide vertical line segment.
 
--oddosrect1
+       -wvseg500     500-pixel wide vertical line segment.
 
-1x1 opaque stippled rectangle, 17x15 stipple
-pattern. 
+       -line1        1-pixel thin (width 0) line.
 
--oddosrect10
+       -line10       10-pixel thin line.
 
-10x10 opaque stippled rectangle, 17x15 stipple
-pattern. 
+       -line100      100-pixel thin line.
 
--oddosrect100
+       -line500      500-pixel thin line.
 
-100x100 opaque stippled rectangle, 17x15 stipple
-pattern. 
+       -dline10      10-pixel thin dashed line (3 on, 2 off).
 
--oddosrect500
+       -dline100     100-pixel thin dashed line (3 on, 2 off).
 
-500x500 opaque stippled rectangle, 17x15 stipple
-pattern. 
+       -ddline100    100-pixel thin double-dashed line (3 fg, 2 bg).
 
--oddtilerect1
+       -wline10      10-pixel line, line width 1.
 
-1x1 tiled rectangle, 17x15 tile pattern.
+       -wline100     100-pixel line, line width 10.
 
--oddtilerect10
+       -wline500     500-pixel line, line width 50.
 
-10x10 tiled rectangle, 17x15
-tile pattern.
+       -wdline100    100-pixel dashed line, line width 10 (30 on, 20 off).
 
--oddtilerect100
+       -wddline100   100-pixel double-dashed line, line width 10  (30  fg,  20
+                     bg).
 
-100x100 tiled rectangle, 17x15
-tile pattern.
+       -orect10      10x10 thin rectangle outline.
 
--oddtilerect500
+       -orect100     100-pixel thin vertical line segment.
 
-500x500 tiled rectangle, 17x15
-tile pattern.
+       -orect500     500-pixel thin vertical line segment.
 
--bigsrect1
+       -worect10     10x10 wide rectangle outline.
 
-1x1 stippled rectangle, 161x145 stipple pattern.
+       -worect100    100-pixel wide vertical line segment.
 
--bigsrect10
+       -worect500    500-pixel wide vertical line segment.
 
-10x10 stippled rectangle, 161x145 stipple pattern.
+       -circle1      1-pixel diameter thin (line width 0) circle.
 
--bigsrect100
+       -circle10     10-pixel diameter thin circle.
 
-100x100 stippled rectangle, 161x145 stipple pattern.
+       -circle100    100-pixel diameter thin circle.
 
--bigsrect500
+       -circle500    500-pixel diameter thin circle.
 
-500x500 stippled rectangle, 161x145 stipple pattern.
+       -dcircle100   100-pixel diameter thin dashed circle (3 on, 2 off).
 
--bigosrect1
+       -ddcircle100  100-pixel  diameter  thin  double-dashed  circle (3 fg, 2
+                     bg).
 
-1x1 opaque stippled rectangle, 161x145 stipple
-pattern. 
+       -wcircle10    10-pixel diameter circle, line width 1.
 
--bigosrect10
+       -wcircle100   100-pixel diameter circle, line width 10.
 
-10x10 opaque stippled rectangle, 161x145 stipple
-pattern. 
+       -wcircle500   500-pixel diameter circle, line width 50.
 
--bigosrect100
+       -wdcircle100  100-pixel diameter dashed circle, line width 10  (30  on,
+                     20 off).
 
-100x100 opaque stippled rectangle, 161x145 stipple
-pattern. 
+       -wddcircle100 100-pixel  diameter  double-dashed  circle, line width 10
+                     (30 fg, 20 bg).
 
--bigosrect500
+       -pcircle10    10-pixel diameter thin partial  circle,  orientation  and
+                     arc angle evenly distributed.
 
-500x500 opaque stippled rectangle, 161x145 stipple
-pattern. 
+       -pcircle100   100-pixel diameter thin partial circle.
 
--bigtilerect1
+       -wpcircle10   10-pixel diameter wide partial circle.
 
-1x1 tiled rectangle, 161x145 tile pattern.
+       -wpcircle100  100-pixel diameter wide partial circle.
 
--bigtilerect10
+       -fcircle1     1-pixel diameter filled circle.
 
-10x10 tiled rectangle, 161x145
-tile pattern.
+       -fcircle10    10-pixel diameter filled circle.
 
--bigtilerect100
+       -fcircle100   100-pixel diameter filled circle.
 
-100x100 tiled rectangle,
-161x145 tile pattern.
+       -fcircle500   500-pixel diameter filled circle.
 
--bigtilerect500
+       -fcpcircle10  10-pixel diameter partial filled circle, chord fill, ori‐
+                     entation and arc angle evenly distributed.
 
-500x500 tiled rectangle,
-161x145 tile pattern.
+       -fcpcircle100 100-pixel diameter partial filled circle, chord fill.
 
--eschertilerect1
+       -fspcircle10  10-pixel diameter partial filled circle, pie slice  fill,
+                     orientation and arc angle evenly distributed.
 
-1x1 tiled rectangle, 215x208
-tile pattern.
+       -fspcircle100 100-pixel diameter partial filled circle, pie slice fill.
 
--eschertilerect10
+       -ellipse10    10-pixel  diameter thin (line width 0) ellipse, major and
+                     minor axis sizes evenly distributed.
 
-10x10 tiled rectangle, 215x208
-tile pattern.
+       -ellipse100   100-pixel diameter thin ellipse.
 
--eschertilerect100
+       -ellipse500   500-pixel diameter thin ellipse.
 
-100x100 tiled rectangle,
-215x208 tile pattern.
+       -dellipse100  100-pixel diameter thin dashed ellipse (3 on, 2 off).
 
--eschertilerect500
+       -ddellipse100 100-pixel diameter thin double-dashed ellipse  (3  fg,  2
+                     bg).
 
-500x500 tiled rectangle,
-215x208 tile pattern.
+       -wellipse10   10-pixel diameter ellipse, line width 1.
 
--seg1
+       -wellipse100  100-pixel diameter ellipse, line width 10.
 
-1-pixel thin line segment.
+       -wellipse500  500-pixel diameter ellipse, line width 50.
 
--seg10
+       -wdellipse100 100-pixel  diameter dashed ellipse, line width 10 (30 on,
+                     20 off).
 
-10-pixel thin line segment.
+       -wddellipse100
+                     100-pixel diameter double-dashed ellipse, line  width  10
+                     (30 fg, 20 bg).
 
--seg100
+       -pellipse10   10-pixel diameter thin partial ellipse.
 
-100-pixel thin line segment.
+       -pellipse100  100-pixel diameter thin partial ellipse.
 
--seg500
+       -wpellipse10  10-pixel diameter wide partial ellipse.
 
-500-pixel thin line segment.
+       -wpellipse100 100-pixel diameter wide partial ellipse.
 
--seg100c1
+       -fellipse10   10-pixel diameter filled ellipse.
 
-100-pixel thin line segment (1 obscuring rectangle).
+       -fellipse100  100-pixel diameter filled ellipse.
 
--seg100c2
+       -fellipse500  500-pixel diameter filled ellipse.
 
-100-pixel thin line segment (2 obscuring
-rectangles). 
+       -fcpellipse10 10-pixel diameter partial filled ellipse, chord fill.
 
--seg100c3
+       -fcpellipse100
+                     100-pixel diameter partial filled ellipse, chord fill.
 
-100-pixel thin line segment (3 obscuring
-rectangles). 
+       -fspellipse10 10-pixel diameter partial filled ellipse, pie slice fill.
 
--dseg10
+       -fspellipse100
+                     100-pixel  diameter  partial  filled  ellipse,  pie slice
+                     fill.
 
-10-pixel thin dashed segment (3 on, 2 off).
+       -triangle1    Fill 1-pixel/side triangle.
 
--dseg100
+       -triangle10   Fill 10-pixel/side triangle.
 
-100-pixel thin dashed segment (3 on, 2 off).
+       -triangle100  Fill 100-pixel/side triangle.
 
--ddseg100
+       -trap1        Fill 1x1 trapezoid.
 
-100-pixel thin double-dashed segment (3 fg, 2 bg).
+       -trap10       Fill 10x10 trapezoid.
 
--hseg10
+       -trap100      Fill 100x100 trapezoid.
 
-10-pixel thin horizontal line segment.
+       -trap300      Fill 300x300 trapezoid.
 
--hseg100
+       -strap1       Fill 1x1 transparent stippled trapezoid, 8x8 stipple pat‐
+                     tern.
 
-100-pixel thin horizontal line segment.
+       -strap10      Fill  10x10  transparent  stippled trapezoid, 8x8 stipple
+                     pattern.
 
--hseg500
+       -strap100     Fill 100x100 transparent stippled trapezoid, 8x8  stipple
+                     pattern.
 
-500-pixel thin horizontal line segment.
+       -strap300     Fill  300x300 transparent stippled trapezoid, 8x8 stipple
+                     pattern.
 
--vseg10
+       -ostrap1      Fill 10x10 opaque stippled trapezoid,  8x8  stipple  pat‐
+                     tern.
 
-10-pixel thin vertical line segment.
+       -ostrap10     Fill  10x10  opaque  stippled trapezoid, 8x8 stipple pat‐
+                     tern.
 
--vseg100
+       -ostrap100    Fill 100x100 opaque stippled trapezoid, 8x8 stipple  pat‐
+                     tern.
 
-100-pixel thin vertical line segment.
+       -ostrap300    Fill  300x300 opaque stippled trapezoid, 8x8 stipple pat‐
+                     tern.
 
--vseg500
+       -tiletrap1    Fill 10x10 tiled trapezoid, 4x4 tile pattern.
 
-500-pixel thin vertical line segment.
+       -tiletrap10   Fill 10x10 tiled trapezoid, 4x4 tile pattern.
 
--whseg10
+       -tiletrap100  Fill 100x100 tiled trapezoid, 4x4 tile pattern.
 
-10-pixel wide horizontal line segment.
+       -tiletrap300  Fill 300x300 tiled trapezoid, 4x4 tile pattern.
 
--whseg100
+       -oddstrap1    Fill 1x1 transparent stippled  trapezoid,  17x15  stipple
+                     pattern.
 
-100-pixel wide horizontal line segment.
+       -oddstrap10   Fill  10x10 transparent stippled trapezoid, 17x15 stipple
+                     pattern.
 
--whseg500
+       -oddstrap100  Fill 100x100 transparent stippled trapezoid, 17x15  stip‐
+                     ple pattern.
 
-500-pixel wide horizontal line segment.
+       -oddstrap300  Fill  300x300 transparent stippled trapezoid, 17x15 stip‐
+                     ple pattern.
 
--wvseg10
+       -oddostrap1   Fill 10x10 opaque stippled trapezoid, 17x15 stipple  pat‐
+                     tern.
 
-10-pixel wide vertical line segment.
+       -oddostrap10  Fill  10x10 opaque stippled trapezoid, 17x15 stipple pat‐
+                     tern.
 
--wvseg100
+       -oddostrap100 Fill 100x100 opaque  stippled  trapezoid,  17x15  stipple
+                     pattern.
 
-100-pixel wide vertical line segment.
+       -oddostrap300 Fill  300x300  opaque  stippled  trapezoid, 17x15 stipple
+                     pattern.
 
--wvseg500
+       -oddtiletrap1 Fill 10x10 tiled trapezoid, 17x15 tile pattern.
 
-500-pixel wide vertical line segment.
+       -oddtiletrap10
+                     Fill 10x10 tiled trapezoid, 17x15 tile pattern.
 
--line1
+       -oddtiletrap100
+                     Fill 100x100 tiled trapezoid, 17x15 tile pattern.
 
-1-pixel thin (width 0) line.
+       -oddtiletrap300
+                     Fill 300x300 tiled trapezoid, 17x15 tile pattern.
 
--line10
+       -bigstrap1    Fill 1x1 transparent stippled trapezoid, 161x145  stipple
+                     pattern.
 
-10-pixel thin line.
+       -bigstrap10   Fill  10x10 transparent stippled trapezoid, 161x145 stip‐
+                     ple pattern.
 
--line100
+       -bigstrap100  Fill  100x100  transparent  stippled  trapezoid,  161x145
+                     stipple pattern.
 
-100-pixel thin line.
+       -bigstrap300  Fill  300x300  transparent  stippled  trapezoid,  161x145
+                     stipple pattern.
 
--line500
+       -bigostrap1   Fill 10x10 opaque  stippled  trapezoid,  161x145  stipple
+                     pattern.
 
-500-pixel thin line.
+       -bigostrap10  Fill  10x10  opaque  stippled  trapezoid, 161x145 stipple
+                     pattern.
 
--dline10
+       -bigostrap100 Fill 100x100 opaque stippled trapezoid,  161x145  stipple
+                     pattern.
 
-10-pixel thin dashed line (3 on, 2 off).
+       -bigostrap300 Fill  300x300  opaque stippled trapezoid, 161x145 stipple
+                     pattern.
 
--dline100
+       -bigtiletrap1 Fill 10x10 tiled trapezoid, 161x145 tile pattern.
 
-100-pixel thin dashed line (3 on, 2 off).
+       -bigtiletrap10
+                     Fill 10x10 tiled trapezoid, 161x145 tile pattern.
 
--ddline100
+       -bigtiletrap100
+                     Fill 100x100 tiled trapezoid, 161x145 tile pattern.
 
-100-pixel thin double-dashed line (3 fg, 2 bg).
+       -bigtiletrap300
+                     Fill 300x300 tiled trapezoid, 161x145 tile pattern.
 
--wline10
+       -eschertiletrap1
+                     Fill 1x1 tiled trapezoid, 216x208 tile pattern.
 
-10-pixel line, line width 1.
+       -eschertiletrap10
+                     Fill 10x10 tiled trapezoid, 216x208 tile pattern.
 
--wline100
+       -eschertiletrap100
+                     Fill 100x100 tiled trapezoid, 216x208 tile pattern.
 
-100-pixel line, line width 10.
+       -eschertiletrap300
+                     Fill 300x300 tiled trapezoid, 216x208 tile pattern.
 
--wline500
+       -complex10    Fill 10-pixel/side complex polygon.
 
-500-pixel line, line width 50.
+       -complex100   Fill 100-pixel/side complex polygon.
 
--wdline100
+       -64poly10convex
+                     Fill 10x10 convex 64-gon.
 
-100-pixel dashed line, line width 10 (30 on, 20
-off). 
+       -64poly100convex
+                     Fill 100x100 convex 64-gon.
 
--wddline100
+       -64poly10complex
+                     Fill 10x10 complex 64-gon.
 
-100-pixel double-dashed line, line width 10 (30 fg, 20
-bg). 
+       -64poly100complex
+                     Fill 100x100 complex 64-gon.
 
--orect10
+       -ftext        Character in 80-char line (6x13).
 
-10x10 thin rectangle outline.
+       -f8text       Character in 70-char line (8x13).
 
--orect100
+       -f9text       Character in 60-char line (9x15).
 
-100-pixel thin vertical line segment.
+       -f14text16    2-byte character in 40-char line (k14).
 
--orect500
+       -tr10text     Character in 80-char line (Times-Roman 10).
 
-500-pixel thin vertical line segment.
+       -tr24text     Character in 30-char line (Times-Roman 24).
 
--worect10
+       -polytext     Character in 20/40/20 line (6x13, Times-Roman 10, 6x13).
 
-10x10 wide rectangle outline.
+       -polytext16   2-byte character in 7/14/7 line (k14, k24).
 
--worect100
+       -fitext       Character in 80-char image line (6x13).
 
-100-pixel wide vertical line segment.
+       -f8itext      Character in 70-char image line (8x13).
 
--worect500
+       -f9itext      Character in 60-char image line (9x15).
 
-500-pixel wide vertical line segment.
+       -f14itext16   2-byte character in 40-char image line (k14).
 
--circle1
+       -f24itext16   2-byte character in 23-char image line (k24).
 
-1-pixel diameter thin (line width 0) circle.
+       -tr10itext    Character in 80-char image line (Times-Roman 10).
 
--circle10
+       -tr24itext    Character in 30-char image line (Times-Roman 24).
 
-10-pixel diameter thin circle.
+       -scroll10     Scroll 10x10 pixels vertically.
 
--circle100
+       -scroll100    Scroll 100x100 pixels vertically.
 
-100-pixel diameter thin circle.
+       -scroll500    Scroll 500x500 pixels vertically.
 
--circle500
+       -copywinwin10 Copy 10x10 square from window to window.
 
-500-pixel diameter thin circle.
+       -copywinwin100
+                     Copy 100x100 square from window to window.
 
--dcircle100
+       -copywinwin500
+                     Copy 500x500 square from window to window.
 
-100-pixel diameter thin dashed circle (3 on, 2 off).
+       -copypixwin10 Copy 10x10 square from pixmap to window.
 
--ddcircle100
+       -copypixwin100
+                     Copy 100x100 square from pixmap to window.
 
-100-pixel diameter thin double-dashed circle (3 fg, 2
-bg). 
+       -copypixwin500
+                     Copy 500x500 square from pixmap to window.
 
--wcircle10
+       -copywinpix10 Copy 10x10 square from window to pixmap.
 
-10-pixel diameter circle, line width 1.
+       -copywinpix100
+                     Copy 100x100 square from window to pixmap.
 
--wcircle100
+       -copywinpix500
+                     Copy 500x500 square from window to pixmap.
 
-100-pixel diameter circle, line width 10.
+       -copypixpix10 Copy 10x10 square from pixmap to pixmap.
 
--wcircle500
+       -copypixpix100
+                     Copy 100x100 square from pixmap to pixmap.
 
-500-pixel diameter circle, line width 50.
+       -copypixpix500
+                     Copy 500x500 square from pixmap to pixmap.
 
--wdcircle100
+       -copyplane10  Copy 10x10 1-bit deep plane.
 
-100-pixel diameter dashed circle, line width 10 (30 on,
-20 off).
+       -copyplane100 Copy 100x100 1-bit deep plane.
 
--wddcircle100
+       -copyplane500 Copy 500x500 1-bit deep plane.
 
-100-pixel diameter double-dashed circle, line width 10
-(30 fg, 20 bg).
+       -putimage10   PutImage 10x10 square.
 
--pcircle10
+       -putimage100  PutImage 100x100 square.
 
-10-pixel diameter thin partial circle, orientation and
-arc angle evenly distributed.
+       -putimage500  PutImage 500x500 square.
 
--pcircle100
+       -putimagexy10 PutImage XY format 10x10 square.
 
-100-pixel diameter thin partial circle.
+       -putimagexy100
+                     PutImage XY format 100x100 square.
 
--wpcircle10
+       -putimagexy500
+                     PutImage XY format 500x500 square.
 
-10-pixel diameter wide partial circle.
+       -shmput10     PutImage 10x10 square, MIT shared memory extension.
 
--wpcircle100
+       -shmput100    PutImage 100x100 square, MIT shared memory extension.
 
-100-pixel diameter wide partial circle.
+       -shmput500    PutImage 500x500 square, MIT shared memory extension.
 
--fcircle1
+       -shmputxy10   PutImage XY format 10x10 square, MIT shared memory exten‐
+                     sion.
 
-1-pixel diameter filled circle.
+       -shmputxy100  PutImage  XY format 100x100 square, MIT shared memory ex‐
+                     tension.
 
--fcircle10
+       -shmputxy500  PutImage XY format 500x500 square, MIT shared memory  ex‐
+                     tension.
 
-10-pixel diameter filled circle.
+       -getimage10   GetImage 10x10 square.
 
--fcircle100
+       -getimage100  GetImage 100x100 square.
 
-100-pixel diameter filled circle.
+       -getimage500  GetImage 500x500 square.
 
--fcircle500
+       -getimagexy10 GetImage XY format 10x10 square.
 
-500-pixel diameter filled circle.
+       -getimagexy100
+                     GetImage XY format 100x100 square.
 
--fcpcircle10
+       -getimagexy500
+                     GetImage XY format 500x500 square.
 
-10-pixel diameter partial filled circle, chord fill,
-orientation and arc angle evenly distributed.
+       -compwinwin10 Composite 10x10 from window to window.
 
--fcpcircle100
+       -compwinwin100
+                     Composite 100x100 from window to window.
 
-100-pixel diameter partial filled circle, chord
-fill. 
+       -compwinwin500
+                     Composite 500x500 from window to window.
 
--fspcircle10
+       -comppixwin10 Composite 10x10 from pixmap to window.
 
-10-pixel diameter partial filled circle, pie slice fill,
-orientation and arc angle evenly distributed.
+       -comppixwin100
+                     Composite 100x100 from pixmap to window.
 
--fspcircle100
+       -comppixwin500
+                     Composite 500x500 from pixmap to window.
 
-100-pixel diameter partial filled circle, pie slice
-fill. 
+       -magpixwin10  Scale 5x5 from pixmap to 10x10 window.
 
--ellipse10
+       -magpixwin100 Scale 50x50 from pixmap to 100x100 window.
 
-10-pixel diameter thin (line width 0) ellipse, major and
-minor axis sizes evenly distributed.
+       -magpixwin500 Scale 250x250 from pixmap to 500x500 window.
 
--ellipse100
+       -minpixwin10  Scale 10x10 from pixmap to 5x5 window.
 
-100-pixel diameter thin ellipse.
+       -minpixwin100 Scale 100x100 from pixmap to 50x50 window.
 
--ellipse500
+       -minpixwin500 Scale 500x500 from pixmap to 250x250 window.
 
-500-pixel diameter thin ellipse.
+       -noop         X protocol NoOperation.
 
--dellipse100
+       -atom         GetAtomName.
 
-100-pixel diameter thin dashed ellipse (3 on, 2
-off). 
+       -pointer      QueryPointer.
 
--ddellipse100
+       -prop         GetProperty.
 
-100-pixel diameter thin double-dashed ellipse (3 fg, 2
-bg). 
+       -gc           Change graphics context.
 
--wellipse10
+       -create       Create child window and map using MapSubwindows.
 
-10-pixel diameter ellipse, line width 1.
+       -ucreate      Create unmapped window.
 
--wellipse100
+       -map          Map child window via MapWindow on parent.
 
-100-pixel diameter ellipse, line width 10.
+       -unmap        Unmap child window via UnmapWindow on parent.
 
--wellipse500
+       -destroy      Destroy child window via DestroyWindow parent.
 
-500-pixel diameter ellipse, line width 50.
+       -popup        Hide/expose window via Map/Unmap popup window.
 
--wdellipse100
+       -move         Move window.
 
-100-pixel diameter dashed ellipse, line width 10 (30 on,
-20 off).
+       -umove        Moved unmapped window.
 
--wddellipse100
+       -movetree     Move window via MoveWindow on parent.
 
-100-pixel diameter
-double-dashed ellipse, line width 10 (30 fg, 20 bg).
+       -resize       Resize window.
 
--pellipse10
+       -uresize      Resize unmapped window.
 
-10-pixel diameter thin partial ellipse.
+       -circulate    Circulate lowest window to top.
 
--pellipse100
-
-100-pixel diameter thin partial ellipse.
-
--wpellipse10
-
-10-pixel diameter wide partial ellipse.
-
--wpellipse100
-
-100-pixel diameter wide partial ellipse.
-
--fellipse10
-
-10-pixel diameter filled ellipse.
-
--fellipse100
-
-100-pixel diameter filled ellipse.
-
--fellipse500
-
-500-pixel diameter filled ellipse.
-
--fcpellipse10
-
-10-pixel diameter partial filled ellipse, chord
-fill. 
-
--fcpellipse100
-
-100-pixel diameter partial
-filled ellipse, chord fill.
-
--fspellipse10
-
-10-pixel diameter partial filled ellipse, pie slice
-fill. 
-
--fspellipse100
-
-100-pixel diameter partial
-filled ellipse, pie slice fill.
-
--triangle1
-
-Fill 1-pixel/side triangle.
-
--triangle10
-
-Fill 10-pixel/side triangle.
-
--triangle100
-
-Fill 100-pixel/side triangle.
-
--trap1
-
-Fill 1x1 trapezoid.
-
--trap10
-
-Fill 10x10 trapezoid.
-
--trap100
-
-Fill 100x100 trapezoid.
-
--trap300
-
-Fill 300x300 trapezoid.
-
--strap1
-
-Fill 1x1 transparent stippled trapezoid, 8x8 stipple
-pattern. 
-
--strap10
-
-Fill 10x10 transparent stippled trapezoid, 8x8 stipple
-pattern. 
-
--strap100
-
-Fill 100x100 transparent stippled trapezoid, 8x8 stipple
-pattern. 
-
--strap300
-
-Fill 300x300 transparent stippled trapezoid, 8x8 stipple
-pattern. 
-
--ostrap1
-
-Fill 10x10 opaque stippled trapezoid, 8x8 stipple
-pattern. 
-
--ostrap10
-
-Fill 10x10 opaque stippled trapezoid, 8x8 stipple
-pattern. 
-
--ostrap100
-
-Fill 100x100 opaque stippled trapezoid, 8x8 stipple
-pattern. 
-
--ostrap300
-
-Fill 300x300 opaque stippled trapezoid, 8x8 stipple
-pattern. 
-
--tiletrap1
-
-Fill 10x10 tiled trapezoid, 4x4 tile pattern.
-
--tiletrap10
-
-Fill 10x10 tiled trapezoid, 4x4 tile pattern.
-
--tiletrap100
-
-Fill 100x100 tiled trapezoid, 4x4 tile pattern.
-
--tiletrap300
-
-Fill 300x300 tiled trapezoid, 4x4 tile pattern.
-
--oddstrap1
-
-Fill 1x1 transparent stippled trapezoid, 17x15 stipple
-pattern. 
-
--oddstrap10
-
-Fill 10x10 transparent stippled trapezoid, 17x15 stipple
-pattern. 
-
--oddstrap100
-
-Fill 100x100 transparent stippled trapezoid, 17x15
-stipple pattern.
-
--oddstrap300
-
-Fill 300x300 transparent stippled trapezoid, 17x15
-stipple pattern.
-
--oddostrap1
-
-Fill 10x10 opaque stippled trapezoid, 17x15 stipple
-pattern. 
-
--oddostrap10
-
-Fill 10x10 opaque stippled trapezoid, 17x15 stipple
-pattern. 
-
--oddostrap100
-
-Fill 100x100 opaque stippled trapezoid, 17x15 stipple
-pattern. 
-
--oddostrap300
-
-Fill 300x300 opaque stippled trapezoid, 17x15 stipple
-pattern. 
-
--oddtiletrap1
-
-Fill 10x10 tiled trapezoid, 17x15 tile pattern.
-
--oddtiletrap10
-
-Fill 10x10 tiled trapezoid,
-17x15 tile pattern.
-
--oddtiletrap100
-
-Fill 100x100 tiled trapezoid,
-17x15 tile pattern.
-
--oddtiletrap300
-
-Fill 300x300 tiled trapezoid,
-17x15 tile pattern.
-
--bigstrap1
-
-Fill 1x1 transparent stippled trapezoid, 161x145 stipple
-pattern. 
-
--bigstrap10
-
-Fill 10x10 transparent stippled trapezoid, 161x145
-stipple pattern.
-
--bigstrap100
-
-Fill 100x100 transparent stippled trapezoid, 161x145
-stipple pattern.
-
--bigstrap300
-
-Fill 300x300 transparent stippled trapezoid, 161x145
-stipple pattern.
-
--bigostrap1
-
-Fill 10x10 opaque stippled trapezoid, 161x145 stipple
-pattern. 
-
--bigostrap10
-
-Fill 10x10 opaque stippled trapezoid, 161x145 stipple
-pattern. 
-
--bigostrap100
-
-Fill 100x100 opaque stippled trapezoid, 161x145 stipple
-pattern. 
-
--bigostrap300
-
-Fill 300x300 opaque stippled trapezoid, 161x145 stipple
-pattern. 
-
--bigtiletrap1
-
-Fill 10x10 tiled trapezoid, 161x145 tile pattern.
-
--bigtiletrap10
-
-Fill 10x10 tiled trapezoid,
-161x145 tile pattern.
-
--bigtiletrap100
-
-Fill 100x100 tiled trapezoid,
-161x145 tile pattern.
-
--bigtiletrap300
-
-Fill 300x300 tiled trapezoid,
-161x145 tile pattern.
-
--eschertiletrap1
-
-Fill 1x1 tiled trapezoid,
-216x208 tile pattern.
-
--eschertiletrap10
-
-Fill 10x10 tiled trapezoid,
-216x208 tile pattern.
-
--eschertiletrap100
-
-Fill 100x100 tiled trapezoid,
-216x208 tile pattern.
-
--eschertiletrap300
-
-Fill 300x300 tiled trapezoid,
-216x208 tile pattern.
-
--complex10
-
-Fill 10-pixel/side complex polygon.
-
--complex100
-
-Fill 100-pixel/side complex polygon.
-
--64poly10convex
-
-Fill 10x10 convex 64-gon.
-
--64poly100convex
-
-Fill 100x100 convex 64-gon.
-
--64poly10complex
-
-Fill 10x10 complex 64-gon.
-
--64poly100complex
-
-Fill 100x100 complex
-64-gon.
-
--ftext
-
-Character in 80-char line (6x13).
-
--f8text
-
-Character in 70-char line (8x13).
-
--f9text
-
-Character in 60-char line (9x15).
-
--f14text16
-
-2-byte character in 40-char line (k14).
-
--tr10text
-
-Character in 80-char line (Times-Roman 10).
-
--tr24text
-
-Character in 30-char line (Times-Roman 24).
-
--polytext
-
-Character in 20/40/20 line (6x13, Times-Roman 10,
-6x13). 
-
--polytext16
-
-2-byte character in 7/14/7 line (k14, k24).
-
--fitext
-
-Character in 80-char image line (6x13).
-
--f8itext
-
-Character in 70-char image line (8x13).
-
--f9itext
-
-Character in 60-char image line (9x15).
-
--f14itext16
-
-2-byte character in 40-char image line (k14).
-
--f24itext16
-
-2-byte character in 23-char image line (k24).
-
--tr10itext
-
-Character in 80-char image line (Times-Roman 10).
-
--tr24itext
-
-Character in 30-char image line (Times-Roman 24).
-
--scroll10
-
-Scroll 10x10 pixels vertically.
-
--scroll100
-
-Scroll 100x100 pixels vertically.
-
--scroll500
-
-Scroll 500x500 pixels vertically.
-
--copywinwin10
-
-Copy 10x10 square from window to window.
-
--copywinwin100
-
-Copy 100x100 square from window
-to window.
-
--copywinwin500
-
-Copy 500x500 square from window
-to window.
-
--copypixwin10
-
-Copy 10x10 square from pixmap to window.
-
--copypixwin100
-
-Copy 100x100 square from pixmap
-to window.
-
--copypixwin500
-
-Copy 500x500 square from pixmap
-to window.
-
--copywinpix10
-
-Copy 10x10 square from window to pixmap.
-
--copywinpix100
-
-Copy 100x100 square from window
-to pixmap.
-
--copywinpix500
-
-Copy 500x500 square from window
-to pixmap.
-
--copypixpix10
-
-Copy 10x10 square from pixmap to pixmap.
-
--copypixpix100
-
-Copy 100x100 square from pixmap
-to pixmap.
-
--copypixpix500
-
-Copy 500x500 square from pixmap
-to pixmap.
-
--copyplane10
-
-Copy 10x10 1-bit deep plane.
-
--copyplane100
-
-Copy 100x100 1-bit deep plane.
-
--copyplane500
-
-Copy 500x500 1-bit deep plane.
-
--putimage10
-
-PutImage 10x10 square.
-
--putimage100
-
-PutImage 100x100 square.
-
--putimage500
-
-PutImage 500x500 square.
-
--putimagexy10
-
-PutImage XY format 10x10 square.
-
--putimagexy100
-
-PutImage XY format 100x100
-square.
-
--putimagexy500
-
-PutImage XY format 500x500
-square.
-
--shmput10
-
-PutImage 10x10 square, MIT shared memory extension.
-
--shmput100
-
-PutImage 100x100 square, MIT shared memory
-extension. 
-
--shmput500
-
-PutImage 500x500 square, MIT shared memory
-extension. 
-
--shmputxy10
-
-PutImage XY format 10x10 square, MIT shared memory
-extension. 
-
--shmputxy100
-
-PutImage XY format 100x100 square, MIT shared memory
-extension. 
-
--shmputxy500
-
-PutImage XY format 500x500 square, MIT shared memory
-extension. 
-
--getimage10
-
-GetImage 10x10 square.
-
--getimage100
-
-GetImage 100x100 square.
-
--getimage500
-
-GetImage 500x500 square.
-
--getimagexy10
-
-GetImage XY format 10x10 square.
-
--getimagexy100
-
-GetImage XY format 100x100
-square.
-
--getimagexy500
-
-GetImage XY format 500x500
-square.
-
--compwinwin10
-
-Composite 10x10 from window to window.
-
--compwinwin100
-
-Composite 100x100 from window
-to window.
-
--compwinwin500
-
-Composite 500x500 from window
-to window.
-
--comppixwin10
-
-Composite 10x10 from pixmap to window.
-
--comppixwin100
-
-Composite 100x100 from pixmap
-to window.
-
--comppixwin500
-
-Composite 500x500 from pixmap
-to window.
-
--magpixwin10
-
-Scale 5x5 from pixmap to 10x10 window.
-
--magpixwin100
-
-Scale 50x50 from pixmap to 100x100 window.
-
--magpixwin500
-
-Scale 250x250 from pixmap to 500x500 window.
-
--minpixwin10
-
-Scale 10x10 from pixmap to 5x5 window.
-
--minpixwin100
-
-Scale 100x100 from pixmap to 50x50 window.
-
--minpixwin500
-
-Scale 500x500 from pixmap to 250x250 window.
-
--noop
-
-X protocol NoOperation.
-
--atom
-
-GetAtomName.
-
--pointer
-
-QueryPointer.
-
--prop
-
-GetProperty.
-
--gc
-
-Change graphics context.
-
--create
-
-Create child window and map using MapSubwindows.
-
--ucreate
-
-Create unmapped window.
-
--map
-
-Map child window via MapWindow on parent.
-
--unmap
-
-Unmap child window via UnmapWindow on parent.
-
--destroy
-
-Destroy child window via DestroyWindow parent.
-
--popup
-
-Hide/expose window via Map/Unmap popup window.
-
--move
-
-Move window.
-
--umove
-
-Moved unmapped window.
-
--movetree
-
-Move window via MoveWindow on parent.
-
--resize
-
-Resize window.
-
--uresize
-
-Resize unmapped window.
-
--circulate
-
-Circulate lowest window to top.
-
--ucirculate
-
-Circulate unmapped window to top.
+       -ucirculate   Circulate unmapped window to top.
 
 X DEFAULTS
-
-There are no X
-defaults used by this program.
+       There are no X defaults used by this program.
 
 SEE ALSO
-
-X(7),
-x11perfcomp(1)
+       X(7), x11perfcomp(1)
 
 AUTHORS
+       Joel McCormack
+       Phil Karlton
+       Susan Angebranndt
+       Chris Kent
+       Keith Packard
+       Graeme Gill
 
-Joel McCormack
-
-Phil Karlton 
-Susan Angebranndt 
-Chris Kent 
-Keith Packard 
-Graeme Gill
+X Version 11                     x11perf 1.6.1                      X11PERF(1)

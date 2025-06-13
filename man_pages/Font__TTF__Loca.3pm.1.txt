@@ -1,0 +1,69 @@
+Font::TTF::Loca(3pm)  User Contributed Perl Documentation Font::TTF::Loca(3pm)
+
+NAME
+       Font::TTF::Loca - the Locations table, which is intimately tied to the
+       glyf table
+
+DESCRIPTION
+       The location table holds the directory of locations of each glyph
+       within the glyf table. Due to this relationship and the unimportance of
+       the actual locations when it comes to holding glyphs in memory, reading
+       the location table results in the creation of glyph objects for each
+       glyph and stores them here.  So if you are looking for glyphs, do not
+       look in the "glyf" table, look here instead.
+
+       Things get complicated if you try to change the glyph list within the
+       one table.  The recommendation is to create another clean location
+       object to replace this table in the font, ensuring that the old table
+       is read first and to transfer or copy glyphs across from the read table
+       to the new table.
+
+INSTANCE VARIABLES
+       The instance variables do not start with a space
+
+       glyphs
+           An array of glyph objects for each glyph.
+
+       glyphtype
+           A string containing the class name to create for each new glyph. If
+           empty, defaults to Font::TTF::Glyph.
+
+METHODS
+   $t->new
+       Creates a new location table making sure it has a glyphs array
+
+   $t->read
+       Reads the location table creating glyph objects (Font::TTF::Glyph) for
+       each glyph allowing their later reading.
+
+   $t->out($fh)
+       Writes the location table out to $fh. Notice that not having read the
+       location table implies that the glyf table has not been read either, so
+       the numbers in the location table are still valid. Let's hope that
+       "maxp/numGlyphs" and "head/indexToLocFmt" haven't changed otherwise we
+       are in big trouble.
+
+       The function uses the OUTLOC location in the glyph calculated when the
+       glyf table was attempted to be output.
+
+   $t->out_xml($context, $depth)
+       No need to output a loca table, this is dynamically generated
+
+   $t->glyphs_do(&func)
+       Calls func for each glyph in this location table in numerical order:
+
+           &func($glyph, $glyph_num)
+
+BUGS
+       None known
+
+AUTHOR
+       Martin Hosken <http://scripts.sil.org/FontUtils>.
+
+LICENSING
+       Copyright (c) 1998-2016, SIL International (http://www.sil.org)
+
+       This module is released under the terms of the Artistic License 2.0.
+       For details, see the full text of the license in the file LICENSE.
+
+perl v5.34.0                      2022-06-14              Font::TTF::Loca(3pm)

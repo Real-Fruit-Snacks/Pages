@@ -1,297 +1,209 @@
-NAME
+Ppmtoarbtxt User Manual(1)  General Commands Manual Ppmtoarbtxt User Manual(1)
 
-ppmtoarbtxt -
-generate image in arbitrary text format from PPM image
+NAME
+       ppmtoarbtxt - generate image in arbitrary text format from PPM image
 
 SYNOPSIS
-
-ppmtoarbtxt
-bodytmpl [-hd headtmpl] [-tl
-tailtmpl] [ppmfile]
+       ppmtoarbtxt bodytmpl [-hd headtmpl] [-tl tailtmpl] [ppmfile]
 
 DESCRIPTION
+       This program is part of Netpbm(1).
 
-This program is
-part of Netpbm(1).
+       ppmtoarbtxt  generates simple text-based graphics formats based on for‐
+       mat descriptions given as input.  A text-based graphics format  is  one
+       in  which  an  image is represented by text (like PNM plain format, but
+       unlike PNM raw format).
 
-ppmtoarbtxt
-generates simple text-based graphics formats based on format
-descriptions given as input. A text-based graphics format is
-one in which an image is represented by text (like PNM plain
-format, but unlike PNM raw format).
+       ppmtoarbtxt reads a PPM image as input.  For each pixel in  the  image,
+       ppmtoarbtxt  writes  the  contents  of the template file bodytmpl, with
+       certain substitutions based on the value of the pixel, to Standard Out‐
+       put.
 
-ppmtoarbtxt
-reads a PPM image as input. For each pixel in the image,
-ppmtoarbtxt writes the contents of the template file
-bodytmpl, with certain substitutions based on the
-value of the pixel, to Standard Output.
+       You  may  also  supply  a head template file, in which case ppmtoarbtxt
+       generates text from the template file, based on the  image  dimensions,
+       and includes it in the output before anything else.
 
-You may also
-supply a head template file, in which case
-ppmtoarbtxt generates text from the template file,
-based on the image dimensions, and includes it in the output
-before anything else.
+       Likewise,  you  may  supply  a  tail  template file to cause text to be
+       placed at the end of the output.
 
-Likewise, you
-may supply a tail template file to cause text to be placed
-at the end of the output.
+   Template Files
+       The text that ppmtoarbtxt generates from a template file is the literal
+       text  of the template file, except with substitution specifier replaced
+       with something else.  The program recognizes a  substitution  specifier
+       as text of the form #(...).
 
-Template
-Files 
-The text that ppmtoarbtxt generates from a template
-file is the literal text of the template file, except with
-substitution specifier replaced with something else. The
-program recognizes a substitution specifier as text of the
-form #(...).
+       ppmtoarbtxt  treats  white  space in the template files the same as any
+       other characters, placing it in the output, with one exception: If  the
+       template  file ends with a newline character, ppmtoarbtxt ignores it --
+       it does not include it in the output.
 
-ppmtoarbtxt
-treats white space in the template files the same as any
-other characters, placing it in the output, with one
-exception: If the template file ends with a newline
-character, ppmtoarbtxt ignores it -- it does not
-include it in the output.
+       Many substitution specifiers use format strings (another form  of  tem‐
+       plate)  to  specify  the  substitution.   You  should make these format
+       strings as minimal as possible, placing literal text outside  the  sub‐
+       stitution specifier instead of inside the format string.  For example,
 
-Many
-substitution specifiers use format strings (another form of
-template) to specify the substitution. You should make these
-format strings as minimal as possible, placing literal text
-outside the substitution specifier instead of inside the
-format string. For example,
+       Wrong: #(flum %%%2.2f 0 1)
 
-Wrong: #(flum
-%%%2.2f 0 1)
+       Right: %#(flum %2.2f 0 1)
 
-Right: %#(flum
-%2.2f 0 1)
+       The  valid  substitution  specifiers are as follows.  Text that has the
+       form of a substitution  specifier  but  is  not  actually  valid  (e.g.
+       #(random  junk)  usually just specifies its literal value, but if it is
+       close enough to something valid, ppmtoarbtxt assumes you made a mistake
+       and fails.
 
-The valid
-substitution specifiers are as follows. Text that has the
-form of a substitution specifier but is not actually valid
-(e.g. #(random junk) usually just specifies its
-literal value, but if it is close enough to something valid,
-ppmtoarbtxt assumes you made a mistake and fails.
+       Useful  in  a  body template, to do substitutions based on a particular
+       pixel:
 
-Useful in a
-body template, to do substitutions based on a particular
-pixel: 
-#(ired format blackref whiteref)
+       #(ired format blackref whiteref)
+              generates an integer in the range blackref to whiteref in a for‐
+              mat  specified  by  format representing the red intensity of the
+              pixel.  A red intensity of 0 becomes blackref; a  red  intensity
+              of  maxval becomes whiteref, with the rest linearly interpolated
+              in between.
 
-generates an integer in the
-range blackref to whiteref in a format
-specified by format representing the red intensity of
-the pixel. A red intensity of 0 becomes blackref; a
-red intensity of maxval becomes whiteref, with the
-rest linearly interpolated in between.
+              format is a printf-like format specifier like "%d".  ppmtoarbtxt
+              uses as the entire format string to a fprintf POSIX library call
+              whose only other argument is the red itensity as an integer data
+              type.   ppmtoarbtxt does not necessarily verify that your format
+              string makes sense; there are  values  you  could  specify  that
+              could  even  crash  the  program.  To avoid unexpected behavior,
+              keep format strings simple and hardcoded, and  never  include  a
+              per cent sign or newline.
 
-format
-is a printf-like format specifier like "%d".
-ppmtoarbtxt uses as the entire format string to a
-fprintf POSIX library call whose only other argument
-is the red itensity as an integer data type.
-ppmtoarbtxt does not necessarily verify that your
-format string makes sense; there are values you could
-specify that could even crash the program. To avoid
-unexpected behavior, keep format strings simple and
-hardcoded, and never include a per cent sign or newline.
+              #(ired) is equivalent to #(ired %d 0 255).
 
-#(ired)
-is equivalent to #(ired %d 0 255).
+       #(igreen format blackref whiteref)
+              Same as #(ired..., but for green.
 
-#(igreen format
-blackref whiteref)
+       #(iblue format blackref whiteref)
+              Same as #(ired..., but for blue.
 
-Same as #(ired..., but
-for green.
+       #(ilum format blackref whiteref)
+              Same   as   #(ired...,  but  representing  the  luminance  value
+              (0.299*red + 0.587*green + 0.114*blue) of the pixel.
 
-#(iblue format
-blackref whiteref)
+       #(fred format blackref whiteref)
+              Same as #(ired..., but generates a floating point number instead
+              of an integer.
 
-Same as #(ired..., but
-for blue.
+              In  this case, the second argument to the fprintf that uses for‐
+              mat has a double precision floating point data type.
 
-#(ilum format
-blackref whiteref)
+              #(fred) is equivalent to #(fred %f 0.0 1.0).
 
-Same as #(ired..., but
-representing the luminance value (0.299*red + 0.587*green +
-0.114*blue) of the pixel.
+       #(fgreen format blackref whiteref)
+              Same as #(fred..., but for green.
 
-#(fred format
-blackref whiteref)
+       #(fblue format blackref whiteref)
+              Same as #(fred..., but for blue.
 
-Same as #(ired..., but
-generates a floating point number instead of an integer.
+       #(flum format blackref whiteref)
+              Same  as  #(fred...,  but  representing  the   luminance   value
+              (0.299*red + 0.587*green + 0.114*blue) of the pixel.
 
-In this case,
-the second argument to the fprintf that uses
-format has a double precision floating point data
-type.
+       #(posx format)
+              Generates  the  horizontal position of the pixel, in pixels from
+              the left edge of the image.
 
-#(fred)
-is equivalent to #(fred %f 0.0 1.0).
+              The second argument to the fprintf that uses format has  an  un‐
+              signed integer data type.
 
-#(fgreen format
-blackref whiteref)
+              format defaults to %u
 
-Same as #(fred..., but
-for green.
+       #(posy format)
+              Same as #(width..., but for the vertical position.
 
-#(fblue format
-blackref whiteref)
+       If  you  use any of the above substitution specifiers in a head or tail
+       template, the result is undefined.
 
-Same as #(fred..., but
-for blue.
+       Useful in a head or tail template, to do substitutions based on  whole-
+       image attributes:
 
-#(flum format
-blackref whiteref)
+       #(width format)
+              Generates the width in pixels of the image.
 
-Same as #(fred..., but
-representing the luminance value (0.299*red + 0.587*green +
-0.114*blue) of the pixel.
+              The  second  argument to the fprintf that uses format has an un‐
+              signed integer data type.
 
-#(posx
-format)
+              format defaults to %u
 
-Generates the horizontal
-position of the pixel, in pixels from the left edge of the
-image.
-
-The second
-argument to the fprintf that uses format has
-an unsigned integer data type.
-
-format
-defaults to %u
-
-#(posy
-format)
-
-Same as #(width..., but
-for the vertical position.
-
-If you use any
-of the above substitution specifiers in a head or tail
-template, the result is undefined.
-
-Useful in a
-head or tail template, to do substitutions based on
-whole-image attributes: 
-#(width format)
-
-Generates the width in pixels
-of the image.
-
-The second
-argument to the fprintf that uses format has
-an unsigned integer data type.
-
-format
-defaults to %u
-
-#(height
-format)
-
-Same as #(width..., but
-for the height of the image.
+       #(height format)
+              Same as #(width..., but for the height of the image.
 
 OPTIONS
+       In addition to the options common to all programs  based  on  libnetpbm
+       (most notably -quiet, see
+        Common  Options  ⟨index.html#commonoptions⟩  ), ppmtoarbtxt recognizes
+       the following command line options:
 
-In addition to
-the options common to all programs based on libnetpbm (most
-notably -quiet, see
- Common Options ),
-ppmtoarbtxt recognizes the following command line
-options: 
--hd headtmpl
+       -hd headtmpl
+              This option specifies a head template (headtmpl is the  name  of
+              the head template file); it causes ppmtoarbtxt to place the con‐
+              tents of the file named headtmpl at the beginning of the output
 
-This option specifies a head
-template (headtmpl is the name of the head template
-file); it causes ppmtoarbtxt to place the contents of
-the file named headtmpl at the beginning of the
-output
-
--tl tailtmpl
-
-This option specifies a tail
-template; it is analogous to -hd.
+       -tl tailtmpl
+              This option specifies a tail template; it is analogous to -hd.
 
 EXAMPLES
+   gray inversion
+       Here we generate a PGM plain-format image  with  gray  inversion  (like
+       ppmtopgm | pnminvert).
 
-gray
-inversion 
-Here we generate a PGM plain-format image with gray
-inversion (like ppmtopgm | pnminvert).
+       Contents of our head template file:
 
-Contents of our
-head template file:
+       P2
+       #(width) #(height)
+       255
 
-P2 
-#(width) #(height) 
-255
+       Contents of our body skeleton file:
 
-Contents of our
-body skeleton file:
+       #(ilum %d 255 0)
 
-#(ilum %d 255
-0)
+   povray file
+       Here  we  generate  a  povray file where each pixel is represented by a
+       sphere at location (x,y,z) = (posx,height-posy,luminance).   The  color
+       of the sphere is the color of the pixel.
 
-povray
-file 
-Here we generate a povray file where each pixel is
-represented by a sphere at location (x,y,z) =
-(posx,height-posy,luminance). The color of the sphere is the
-color of the pixel.
+       Contents of our head skeleton:
 
-Contents of our
-head skeleton:
+       #include "colors.inc"
+       #include "textures.inc"
+       camera {
+          location  <#(width) * 0.6, #(height) * 0.7, 80>
+          look_at   <#(width) * 0.5, #(height) * 0.5, 0>
+       }
 
-#include
-"colors.inc" 
-#include "textures.inc" 
-camera { 
-location  
-look_at  
-}
+       light_source { <#(width) * 0.5, #(height) * 0.5, 25> color White
+       }
 
-light_source {
- color White 
-}
+       Contents of our body skeleton:
 
-Contents of our
-body skeleton:
-
-sphere {
-, 0.5 
-texture { 
-pigment { 
-color rgb  
-} 
-finish { 
-phong 1 
-} 
-} 
-}
+       sphere { <#(posx),#(height)-#(posy),#(ilum %d 0 10)>, 0.5
+         texture {
+           pigment {
+             color rgb <#(fred),#(fgreen),#(fblue)>
+           }
+           finish {
+             phong 1
+           }
+         }
+       }
 
 SEE ALSO
-
-pnmtoplainpnm(1)
-pamtable(1) ppm(1)
+       pnmtoplainpnm(1) pamtable(1) ppm(1)
 
 HISTORY
-
-ppmtoarbtxt
-was added to Netpbm in Release 10.14 (March 2003). It
-existed under the name ppmtotxt since 1995.
+       ppmtoarbtxt  was added to Netpbm in Release 10.14 (March 2003).  It ex‐
+       isted under the name ppmtotxt since 1995.
 
 AUTHOR
-
-Copyright (C)
-1995 by Peter Kirchgessner
+       Copyright (C) 1995 by Peter Kirchgessner
 
 DOCUMENT SOURCE
+       This manual page was generated by the Netpbm tool 'makeman'  from  HTML
+       source.  The master documentation is at
 
-This manual
-page was generated by the Netpbm tool ’makeman’
-from HTML source. The master documentation is at
+              http://netpbm.sourceforge.net/doc/ppmtoarbtxt.html
 
-http://netpbm.sourceforge.net/doc/ppmtoarbtxt.html
+netpbm documentation           26 November 2014     Ppmtoarbtxt User Manual(1)

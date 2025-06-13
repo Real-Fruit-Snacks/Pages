@@ -1,154 +1,170 @@
+LIST(3)                    Library Functions Manual                    LIST(3)
+
 NAME
+       LIST_EMPTY,    LIST_ENTRY,    LIST_FIRST,    LIST_FOREACH,   LIST_HEAD,
+       LIST_HEAD_INITIALIZER,  LIST_INIT,  LIST_INSERT_AFTER,  LIST_INSERT_BE‐
+       FORE,  LIST_INSERT_HEAD,  LIST_NEXT,  LIST_REMOVE - implementation of a
+       doubly linked list
 
-LIST_HEAD_INIT,
-LIST_HEAD, INIT_LIST_HEAD, list_add, list_add_tail,
-list_del, list_del_init, list_empty, list_join, list_sort,
-list_entry, list_for_each, list_for_each_prev - manipulate
-linked lists
-
-LIBRARIES
-
-Abz Library
-(-labz), Debug Library (-ldebug)
+LIBRARY
+       Standard C library (libc, -lc)
 
 SYNOPSIS
+       #include <sys/queue.h>
 
-#include
+       LIST_ENTRY(TYPE);
 
-LIST_HEAD_INIT(name)
+       LIST_HEAD(HEADNAME, TYPE);
+       LIST_HEAD LIST_HEAD_INITIALIZER(LIST_HEAD head);
+       void LIST_INIT(LIST_HEAD *head);
 
-LIST_HEAD(name) 
-void INIT_LIST_HEAD(struct list_head *head);
+       int LIST_EMPTY(LIST_HEAD *head);
 
-void list_add(struct list_head *entry, struct
-list_head *head); 
-void list_add_tail(struct list_head *entry,
-struct list_head *head); 
-void list_del(struct list_head *entry); 
-void list_del_init(struct list_head *entry);
+       void LIST_INSERT_HEAD(LIST_HEAD *head,
+                               struct TYPE *elm, LIST_ENTRY NAME);
+       void LIST_INSERT_BEFORE(struct TYPE *listelm,
+                               struct TYPE *elm, LIST_ENTRY NAME);
+       void LIST_INSERT_AFTER(struct TYPE *listelm,
+                               struct TYPE *elm, LIST_ENTRY NAME);
 
-int list_empty(struct list_head *head); 
-void list_join(struct list_head *list, struct
-list_head *head); 
-void list_sort(struct list_head *head,
+       struct TYPE *LIST_FIRST(LIST_HEAD *head);
+       struct TYPE *LIST_NEXT(struct TYPE *elm, LIST_ENTRY NAME);
 
-int(*"compar)(struct
-list_head *,struct list_head *));
+       LIST_FOREACH(struct TYPE *var, LIST_HEAD *head, LIST_ENTRY NAME);
 
-type
-*list_entry(ptr,type,member); 
-list_for_each(pos,tmp,head) 
-list_for_each_prev(pos,tmp,head)
+       void LIST_REMOVE(struct TYPE *elm, LIST_ENTRY NAME);
 
 DESCRIPTION
+       These macros define and operate on doubly linked lists.
 
-These routines
-and macros can be used to implement and manipulate doubly
-linked lists.
+       In the macro definitions, TYPE is the name of a user-defined structure,
+       that must contain a field of type LIST_ENTRY, named NAME.  The argument
+       HEADNAME is the name of a user-defined structure that must be  declared
+       using the macro LIST_HEAD().
 
-Initialization
+   Creation
+       A list is headed by a structure defined by the LIST_HEAD() macro.  This
+       structure contains a single pointer to the first element on  the  list.
+       The  elements are doubly linked so that an arbitrary element can be re‐
+       moved without traversing the list.  New elements can be  added  to  the
+       list  after  an existing element, before an existing element, or at the
+       head of the list.  A LIST_HEAD structure is declared as follows:
 
-There are three macros to help you declare and initialize a
-linked list.
+           LIST_HEAD(HEADNAME, TYPE) head;
 
-struct
-list_head list = LIST_HEAD_INIT(list); 
-LIST_HEAD(list); 
-struct list_head list; INIT_LIST_HEAD(&list);
+       where struct HEADNAME is the structure to be defined, and  struct  TYPE
+       is  the  type of the elements to be linked into the list.  A pointer to
+       the head of the list can later be declared as:
 
-The three lines
-above all accomplish the same thing.
+           struct HEADNAME *headp;
 
-Manipulation
+       (The names head and headp are user selectable.)
 
-You would normally declare a structure with all the relevant
-members and at least one list_head pointer for use by the
-functions below. For example:
+       LIST_ENTRY() declares a structure that connects  the  elements  in  the
+       list.
 
-struct my_list
-{
+       LIST_HEAD_INITIALIZER() evaluates to an initializer for the list head.
 
-...
+       LIST_INIT() initializes the list referenced by head.
 
-struct list_head node;
+       LIST_EMPTY() evaluates to true if there are no elements in the list.
 
-};
+   Insertion
+       LIST_INSERT_HEAD() inserts the new element elm at the head of the list.
 
-Once the
-structure have been added to the list, you can get a pointer
-to your structure using the list_entry() macro. For
-example:
+       LIST_INSERT_BEFORE()  inserts  the  new  element elm before the element
+       listelm.
 
-struct
-list_head *ctr,*tmp; 
-struct my_list *entry;
+       LIST_INSERT_AFTER() inserts the new element elm after the element  lis‐
+       telm.
 
-list_for_each(ctr,tmp,&list)
-{
+   Traversal
+       LIST_FIRST() returns the first element in the list, or NULL if the list
+       is empty.
 
-entry = list_entry(ctr,struct my_list,node);
+       LIST_NEXT() returns the next element in the list, or NULL  if  this  is
+       the last.
 
-/* entry points to your ’struct my_list’
-*/ 
+       LIST_FOREACH() traverses the list referenced by head in the forward di‐
+       rection, assigning each element in turn to var.
 
-}
+   Removal
+       LIST_REMOVE() removes the element elm from the list.
 
-list_add()
-adds a new entry after the specified head. This is
-good for implementing stacks.
+RETURN VALUE
+       LIST_EMPTY() returns nonzero if the list is empty, and zero if the list
+       contains at least one entry.
 
-list_add_tail()
-adds a new entry before the specified head. This is
-good for implementing queues.
+       LIST_FIRST(),  and  LIST_NEXT()  return  a pointer to the first or next
+       TYPE structure, respectively.
 
-list_del()
-deletes an antry. list_empty() on entry does
-not return true after this. The entry is in an undefined
-state.
+       LIST_HEAD_INITIALIZER() returns an initializer that can be assigned  to
+       the list head.
 
-list_del_init()
-deletes an entry and reinitializes init.
+STANDARDS
+       Not  in  POSIX.1,  POSIX.1-2001,  or POSIX.1-2008.  Present on the BSDs
+       (LIST macros first appeared in 4.4BSD).
 
-list_join()
-joins two lists. list will be prepended to
-head. list is undefined after this
-operation.
+BUGS
+       LIST_FOREACH() doesn't allow var to be  removed  or  freed  within  the
+       loop,  as  it would interfere with the traversal.  LIST_FOREACH_SAFE(),
+       which is present on the BSDs but is not present in  glibc,  fixes  this
+       limitation by allowing var to safely be removed from the list and freed
+       from within the loop without interfering with the traversal.
 
-list_sort()
-sorts a list. The contents of the list are sorted in
-ascending order according to a comparison function pointed
-to by compar, which is called with two arguments that
-point to the objects being compared.
+EXAMPLES
+       #include <stddef.h>
+       #include <stdio.h>
+       #include <stdlib.h>
+       #include <sys/queue.h>
 
-The comparison
-function must return an integer less than, equal to, or
-greater than zero if the first argument is considered to be
-respectively less than, equal to, or greater than the
-second. If two members compare as equal, their order in the
-sorted list is undefined.
+       struct entry {
+           int data;
+           LIST_ENTRY(entry) entries;              /* List */
+       };
 
-Traversal
+       LIST_HEAD(listhead, entry);
 
-Two for-loop macros are provided to traverse lists.
+       int
+       main(void)
+       {
+           struct entry *n1, *n2, *n3, *np;
+           struct listhead head;                   /* List head */
+           int i;
 
-list_for_each
-iterates over a list. pos is the &struct
-list_head to use as a loop counter, tmp is another
-&struct list_head to use as temporary storage, and
-head is the head of the list.
+           LIST_INIT(&head);                       /* Initialize the list */
 
-list_for_each_prev
-iterates over a list in reverse order. The parameters are
-the same as those in the list_for_each macro.
+           n1 = malloc(sizeof(struct entry));      /* Insert at the head */
+           LIST_INSERT_HEAD(&head, n1, entries);
 
-NOTES
+           n2 = malloc(sizeof(struct entry));      /* Insert after */
+           LIST_INSERT_AFTER(n1, n2, entries);
 
-None of the
-libabz routines are thread-safe. I’m not planning to
-change this either! For more information, please see
-http://threading.2038bug.com/
+           n3 = malloc(sizeof(struct entry));      /* Insert before */
+           LIST_INSERT_BEFORE(n2, n3, entries);
 
-AUTHOR
+           i = 0;                                  /* Forward traversal */
+           LIST_FOREACH(np, &head, entries)
+               np->data = i++;
 
-Written by
-Abraham vd Merwe abz [AT] blio.com>
+           LIST_REMOVE(n2, entries);               /* Deletion */
+           free(n2);
+                                                   /* Forward traversal */
+           LIST_FOREACH(np, &head, entries)
+               printf("%i\n", np->data);
+                                                   /* List deletion */
+           n1 = LIST_FIRST(&head);
+           while (n1 != NULL) {
+               n2 = LIST_NEXT(n1, entries);
+               free(n1);
+               n1 = n2;
+           }
+           LIST_INIT(&head);
+
+           exit(EXIT_SUCCESS);
+       }
+
+SEE ALSO
+       insque(3), queue(7)
+
+Linux man-pages 6.03              2022-10-30                           LIST(3)

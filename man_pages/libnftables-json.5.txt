@@ -1,2037 +1,1423 @@
-NAME
+LIBNFTABLES-JSON(5)                                        LIBNFTABLES-JSON(5)
 
-libnftables-json
-- Supported JSON schema by libnftables
+NAME
+       libnftables-json - Supported JSON schema by libnftables
 
 SYNOPSIS
+       { "nftables": [ OBJECTS ] }
 
-{
-"nftables": [ OBJECTS ] }
+       OBJECTS := LIST_OBJECTS | CMD_OBJECTS
 
-OBJECTS
-:= LIST_OBJECTS | CMD_OBJECTS
+       LIST_OBJECTS := LIST_OBJECT [ , LIST_OBJECTS ]
 
-LIST_OBJECTS
-:= LIST_OBJECT [ , LIST_OBJECTS ]
+       CMD_OBJECTS := CMD_OBJECT [ , CMD_OBJECTS ]
 
-CMD_OBJECTS
-:= CMD_OBJECT [ , CMD_OBJECTS ]
+       CMD_OBJECT := { CMD: LIST_OBJECT } | METAINFO_OBJECT
 
-CMD_OBJECT
-:= { CMD: LIST_OBJECT } |
-METAINFO_OBJECT
+       CMD := "add" | "replace" | "create" | "insert" | "delete" | "list" |
+       "reset" | "flush" | "rename"
 
-CMD :=
-"add" | "replace" |
-"create" | "insert" |
-"delete" | "list" |
-"reset" | "flush" |
-"rename"
-
-LIST_OBJECT
-:= TABLE | CHAIN | RULE | SET |
-MAP | ELEMENT | FLOWTABLE |
-COUNTER | QUOTA | CT_HELPER |
-LIMIT | METAINFO_OBJECT | CT_TIMEOUT |
-CT_EXPECTATION
+       LIST_OBJECT := TABLE | CHAIN | RULE | SET | MAP | ELEMENT | FLOWTABLE |
+       COUNTER | QUOTA | CT_HELPER | LIMIT | METAINFO_OBJECT | CT_TIMEOUT |
+       CT_EXPECTATION
 
 DESCRIPTION
+       libnftables supports JSON formatted input and output. This is
+       implemented as an alternative frontend to the standard CLI syntax
+       parser, therefore basic behaviour is identical and, for (almost) any
+       operation available in standard syntax, there should be an equivalent
+       one in JSON.
 
-libnftables
-supports JSON formatted input and output. This is
-implemented as an alternative frontend to the standard CLI
-syntax parser, therefore basic behaviour is identical and,
-for (almost) any operation available in standard syntax,
-there should be an equivalent one in JSON.
+       JSON input may be provided in a single string as parameter to
+       nft_run_cmd_from_buffer() or in a file identified by the filename
+       parameter of the nft_run_cmd_from_filename() function.
 
-JSON input may
-be provided in a single string as parameter to
-nft_run_cmd_from_buffer() or in a file identified by
-the filename parameter of the
-nft_run_cmd_from_filename() function.
-
-JSON output has
-to be enabled via the nft_ctx_output_set_json()
-function, turning library standard output into JSON format.
-Error output remains unaffected.
+       JSON output has to be enabled via the nft_ctx_output_set_json()
+       function, turning library standard output into JSON format. Error
+       output remains unaffected.
 
 GLOBAL STRUCTURE
+       In general, any JSON input or output is enclosed in an object with a
+       single property named nftables. Its value is an array containing
+       commands (for input) or ruleset elements (for output).
 
-In general, any
-JSON input or output is enclosed in an object with a single
-property named nftables. Its value is an array
-containing commands (for input) or ruleset elements (for
-output).
-
-A command is an
-object with a single property whose name identifies the
-command. Its value is a ruleset element - basically
-identical to output elements, apart from certain properties
-which may be interpreted differently or are required when
-output generally omits them.
+       A command is an object with a single property whose name identifies the
+       command. Its value is a ruleset element - basically identical to output
+       elements, apart from certain properties which may be interpreted
+       differently or are required when output generally omits them.
 
 METAINFO OBJECT
+       In output, the first object in an nftables array is a special one
+       containing library information. Its content is as follows:
 
-In output, the
-first object in an nftables array is a special one
-containing library information. Its content is as
-follows:
+           { "metainfo": {
+                   "version": STRING,
+                   "release_name": STRING,
+                   "json_schema_version": NUMBER
+           }}
 
-{
-"metainfo": { 
-"version": STRING, 
-"release_name": STRING, 
-"json_schema_version": NUMBER 
-}}
+       The values of version and release_name properties are equal to the
+       package version and release name as printed by nft -v. The value of the
+       json_schema_version property is an integer indicating the schema
+       version.
 
-The values of
-version and release_name properties are equal
-to the package version and release name as printed by nft
--v. The value of the json_schema_version property
-is an integer indicating the schema version.
-
-If supplied in
-library input, the parser will verify the
-json_schema_version value to not exceed the
-internally hardcoded one (to make sure the given schema is
-fully understood). In future, a lower number than the
-internal one may activate compatibility mode to parse
-outdated and incompatible JSON input.
+       If supplied in library input, the parser will verify the
+       json_schema_version value to not exceed the internally hardcoded one
+       (to make sure the given schema is fully understood). In future, a lower
+       number than the internal one may activate compatibility mode to parse
+       outdated and incompatible JSON input.
 
 COMMAND OBJECTS
+       The structure accepts an arbitrary amount of commands which are
+       interpreted in order of appearance. For instance, the following
+       standard syntax input:
 
-The structure
-accepts an arbitrary amount of commands which are
-interpreted in order of appearance. For instance, the
-following standard syntax input:
+           flush ruleset
+           add table inet mytable
+           add chain inet mytable mychain
+           add rule inet mytable mychain tcp dport 22 accept
 
-flush ruleset
+       translates into JSON as such:
 
-add table inet mytable 
-add chain inet mytable mychain 
-add rule inet mytable mychain tcp dport 22 accept
+           { "nftables": [
+                   { "flush": { "ruleset": null }},
+                   { "add": { "table": {
+                                   "family": "inet",
+                                   "name": "mytable"
+                   }}},
+                   { "add": { "chain": {
+                                   "family": "inet",
+                                   "table": "mytable",
+                                   "name": "mychain"
+                   }}},
+                   { "add": { "rule": {
+                                   "family": "inet",
+                                   "table": "mytable",
+                                   "chain": "mychain",
+                                   "expr": [
+                                           { "match": {
+                                                   "op": "==",
+                                                   "left": { "payload": {
+                                                                   "protocol": "tcp",
+                                                                   "field": "dport"
+                                                   }},
+                                                   "right": 22
+                                           }},
+                                           { "accept": null }
+                                   ]
+                   }}}
+           ]}
 
-translates into
-JSON as such:
+   ADD
+           { "add": ADD_OBJECT }
 
-{
-"nftables": [ 
-{ "flush": { "ruleset": null }}, 
-{ "add": { "table": { 
-"family": "inet", 
-"name": "mytable" 
-}}}, 
-{ "add": { "chain": { 
-"family": "inet", 
-"table": "mytable", 
-"name": "mychain" 
-}}}, 
-{ "add": { "rule": { 
-"family": "inet", 
-"table": "mytable", 
-"chain": "mychain", 
-"expr": [ 
-{ "match": { 
-"op": "==", 
-"left": { "payload": { 
-"protocol": "tcp", 
-"field": "dport" 
-}}, 
-"right": 22 
-}}, 
-{ "accept": null } 
-] 
-}}} 
-]}
+           ADD_OBJECT := TABLE | CHAIN | RULE | SET | MAP | ELEMENT |
+                           FLOWTABLE | COUNTER | QUOTA | CT_HELPER | LIMIT |
+                           CT_TIMEOUT | CT_EXPECTATION
 
-ADD
+       Add a new ruleset element to the kernel.
 
-{ "add":
-ADD_OBJECT }
+   REPLACE
+           { "replace": RULE }
 
-ADD_OBJECT
-:= TABLE | CHAIN | RULE | SET |
-MAP | ELEMENT | 
-FLOWTABLE | COUNTER | QUOTA |
-CT_HELPER | LIMIT | 
-CT_TIMEOUT | CT_EXPECTATION
+       Replace a rule. In RULE, the handle property is mandatory and
+       identifies the rule to be replaced.
 
-Add a new
-ruleset element to the kernel.
+   CREATE
+           { "create": ADD_OBJECT }
 
-REPLACE
+       Identical to add command, but returns an error if the object already
+       exists.
 
-{ "replace":
-RULE }
+   INSERT
+           { "insert": RULE }
 
-Replace a rule.
-In RULE, the handle property is mandatory and
-identifies the rule to be replaced.
+       This command is identical to add for rules, but instead of appending
+       the rule to the chain by default, it inserts at first position. If a
+       handle or index property is given, the rule is inserted before the rule
+       identified by those properties.
 
-CREATE
+   DELETE
+           { "delete": ADD_OBJECT }
 
-{ "create":
-ADD_OBJECT }
+       Delete an object from the ruleset. Only the minimal number of
+       properties required to uniquely identify an object is generally needed
+       in ADD_OBJECT. For most ruleset elements, this is family and table plus
+       either handle or name (except rules since they don’t have a name).
 
-Identical to
-add command, but returns an error if the object
-already exists.
+   LIST
+           { "list": LIST_OBJECT }
 
-INSERT
+           LIST_OBJECT := TABLE | TABLES | CHAIN | CHAINS | SET | SETS |
+                            MAP | MAPS | COUNTER | COUNTERS | QUOTA | QUOTAS |
+                            CT_HELPER | CT_HELPERS | LIMIT | LIMITS | RULESET |
+                            METER | METERS | FLOWTABLE | FLOWTABLES |
+                            CT_TIMEOUT | CT_EXPECTATION
 
-{ "insert":
-RULE }
+       List ruleset elements. The plural forms are used to list all objects of
+       that kind, optionally filtered by family and for some, also table.
 
-This command is
-identical to add for rules, but instead of appending
-the rule to the chain by default, it inserts at first
-position. If a handle or index property is
-given, the rule is inserted before the rule identified by
-those properties.
+   RESET
+           { "reset": RESET_OBJECT }
 
-DELETE
+           RESET_OBJECT := COUNTER | COUNTERS | QUOTA | QUOTAS
 
-{ "delete":
-ADD_OBJECT }
+       Reset state in suitable objects, i.e. zero their internal counter.
 
-Delete an
-object from the ruleset. Only the minimal number of
-properties required to uniquely identify an object is
-generally needed in ADD_OBJECT. For most ruleset
-elements, this is family and table plus either
-handle or name (except rules since they
-don’t have a name).
+   FLUSH
+           { "flush": FLUSH_OBJECT }
 
-LIST
+           FLUSH_OBJECT := TABLE | CHAIN | SET | MAP | METER | RULESET
 
-{ "list":
-LIST_OBJECT }
+       Empty contents in given object, e.g. remove all chains from given table
+       or remove all elements from given set.
 
-LIST_OBJECT
-:= TABLE | TABLES | CHAIN |
-CHAINS | SET | SETS | 
-MAP | MAPS | COUNTER | COUNTERS |
-QUOTA | QUOTAS | 
-CT_HELPER | CT_HELPERS | LIMIT |
-LIMITS | RULESET | 
-METER | METERS | FLOWTABLE |
-FLOWTABLES | 
-CT_TIMEOUT | CT_EXPECTATION
+   RENAME
+           { "rename": CHAIN }
 
-List ruleset
-elements. The plural forms are used to list all objects of
-that kind, optionally filtered by family and for
-some, also table.
-
-RESET
-
-{ "reset":
-RESET_OBJECT }
-
-RESET_OBJECT
-:= COUNTER | COUNTERS | QUOTA |
-QUOTAS | RULE | RULES | SET |
-MAP | ELEMENT
-
-Reset state in
-suitable objects, i.e. zero their internal counter.
-
-FLUSH
-
-{ "flush":
-FLUSH_OBJECT }
-
-FLUSH_OBJECT
-:= TABLE | CHAIN | SET | MAP |
-METER | RULESET
-
-Empty contents
-in given object, e.g. remove all chains from given
-table or remove all elements from given
-set.
-
-RENAME
-
-{ "rename":
-CHAIN }
-
-Rename a chain.
-The new name is expected in a dedicated property named
-newname.
+       Rename a chain. The new name is expected in a dedicated property named
+       newname.
 
 RULESET ELEMENTS
+   TABLE
+           { "table": {
+                   "family": STRING,
+                   "name": STRING,
+                   "handle": NUMBER
+           }}
 
-TABLE
+       This object describes a table.
 
-{ "table": { 
-"family": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"flags": TABLE_FLAGS 
-}}
+       family
+           The table’s family, e.g.  "ip" or "ip6".
 
-TABLE_FLAGS
-:= TABLE_FLAG | [ TABLE_FLAG_LIST
-] 
-TABLE_FLAG_LIST := TABLE_FLAG [,
-TABLE_FLAG_LIST ] 
-TABLE_FLAG := "dormant" |
-"owner" | "persist"
+       name
+           The table’s name.
 
-This object
-describes a table.
+       handle
+           The table’s handle. In input, it is used only in delete command as
+           alternative to name.
 
-family
+   CHAIN
+           { "chain": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "newname": STRING,
+                   "handle": NUMBER,
+                   "type": STRING,
+                   "hook": STRING,
+                   "prio": NUMBER,
+                   "dev": STRING,
+                   "policy": STRING
+           }}
 
-The table’s family, e.g.
-"ip" or "ip6".
+       This object describes a chain.
 
-name
+       family
+           The table’s family.
 
-The table’s name.
+       table
+           The table’s name.
 
-handle
+       name
+           The chain’s name.
 
-The table’s handle. In
-input, it is used only in delete command as
-alternative to name.
+       handle
+           The chain’s handle. In input, it is used only in delete command as
+           alternative to name.
 
-flags
+       newname
+           A new name for the chain, only relevant in the rename command.
 
-The table’s flags.
+       The following properties are required for base chains:
 
-CHAIN
+       type
+           The chain’s type.
 
-{ "chain": { 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"newname": STRING, 
-"handle": NUMBER, 
-"type": STRING, 
-"hook": STRING, 
-"prio": NUMBER, 
-"dev": STRING, 
-"policy": STRING 
-}}
+       hook
+           The chain’s hook.
 
-This object
-describes a chain.
+       prio
+           The chain’s priority.
 
-family
+       dev
+           The chain’s bound interface (if in the netdev family).
 
-The table’s family.
+       policy
+           The chain’s policy.
 
-table
+   RULE
+           { "rule": {
+                   "family": STRING,
+                   "table": STRING,
+                   "chain": STRING,
+                   "expr": [ STATEMENTS ],
+                   "handle": NUMBER,
+                   "index": NUMBER,
+                   "comment": STRING
+           }}
 
-The table’s name.
+           STATEMENTS := STATEMENT [, STATEMENTS ]
 
-name
+       This object describes a rule. Basic building blocks of rules are
+       statements. Each rule consists of at least one.
 
-The chain’s name.
+       family
+           The table’s family.
 
-handle
+       table
+           The table’s name.
 
-The chain’s handle. In
-input, it is used only in delete command as
-alternative to name.
+       chain
+           The chain’s name.
 
-newname
+       expr
+           An array of statements this rule consists of. In input, it is used
+           in add/insert/replace commands only.
 
-A new name for the chain, only
-relevant in the rename command.
+       handle
+           The rule’s handle. In delete/replace commands, it serves as an
+           identifier of the rule to delete/replace. In add/insert commands,
+           it serves as an identifier of an existing rule to append/prepend
+           the rule to.
 
-The following
-properties are required for base chains:
+       index
+           The rule’s position for add/insert commands. It is used as an
+           alternative to handle then.
 
-type
+       comment
+           Optional rule comment.
 
-The chain’s type.
+   SET / MAP
+           { "set": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "type": SET_TYPE,
+                   "policy": SET_POLICY,
+                   "flags": [ SET_FLAG_LIST ],
+                   "elem": SET_ELEMENTS,
+                   "timeout": NUMBER,
+                   "gc-interval": NUMBER,
+                   "size": NUMBER
+           }}
 
-hook
+           { "map": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "type": SET_TYPE,
+                   "map": STRING,
+                   "policy": SET_POLICY,
+                   "flags": [ SET_FLAG_LIST ],
+                   "elem": SET_ELEMENTS,
+                   "timeout": NUMBER,
+                   "gc-interval": NUMBER,
+                   "size": NUMBER
+           }}
 
-The chain’s hook.
+           SET_TYPE := STRING | [ SET_TYPE_LIST ]
+           SET_TYPE_LIST := STRING [, SET_TYPE_LIST ]
+           SET_POLICY := "performance" | "memory"
+           SET_FLAG_LIST := SET_FLAG [, SET_FLAG_LIST ]
+           SET_FLAG := "constant" | "interval" | "timeout"
+           SET_ELEMENTS := EXPRESSION | [ EXPRESSION_LIST ]
+           EXPRESSION_LIST := EXPRESSION [, EXPRESSION_LIST ]
 
-prio
+       These objects describe a named set or map. Maps are a special form of
+       sets in that they translate a unique key to a value.
 
-The chain’s priority.
+       family
+           The table’s family.
 
-dev
+       table
+           The table’s name.
 
-The chain’s bound
-interface (if in the netdev family).
+       name
+           The set’s name.
 
-policy
+       handle
+           The set’s handle. For input, it is used in the delete command only.
 
-The chain’s policy.
+       type
+           The set’s datatype, see below.
 
-RULE
+       map
+           Type of values this set maps to (i.e. this set is a map).
 
-{ "rule": { 
-"family": STRING, 
-"table": STRING, 
-"chain": STRING, 
-"expr": [ STATEMENTS ], 
-"handle": NUMBER, 
-"index": NUMBER, 
-"comment": STRING 
-}}
+       policy
+           The set’s policy.
+
+       flags
+           The set’s flags.
+
+       elem
+           Initial set element(s), see below.
+
+       timeout
+           Element timeout in seconds.
+
+       gc-interval
+           Garbage collector interval in seconds.
+
+       size
+           Maximum number of elements supported.
+
+       TYPE
+           The set type might be a string, such as "ipv4_addr" or an array
+           consisting of strings (for concatenated types).
+
+       ELEM
+           A single set element might be given as string, integer or boolean
+           value for simple cases. If additional properties are required, a
+           formal elem object may be used.
+
+           Multiple elements may be given in an array.
+
+   ELEMENT
+           { "element": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "elem": SET_ELEM
+           }}
+
+           SET_ELEM := EXPRESSION | [ EXPRESSION_LIST ]
+           EXPRESSION_LIST := EXPRESSION [, EXPRESSION ]
+
+       Manipulate element(s) in a named set.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The set’s name.
+
+       elem
+           See elem property of set object.
+
+   FLOWTABLE
+           { "flowtable": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "hook": STRING,
+                   "prio": NUMBER,
+                   "dev": FT_INTERFACE
+           }}
+
+           FT_INTERFACE := STRING | [ FT_INTERFACE_LIST ]
+           FT_INTERFACE_LIST := STRING [, STRING ]
+
+       This object represents a named flowtable.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The flow table’s name.
+
+       handle
+           The flow table’s handle. In input, it is used by the delete command
+           only.
+
+       hook
+           The flow table’s hook.
+
+       prio
+           The flow table’s priority.
+
+       dev
+           The flow table’s interface(s).
+
+   COUNTER
+           { "counter": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "packets": NUMBER,
+                   "bytes": NUMBER
+           }}
+
+       This object represents a named counter.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The counter’s name.
+
+       handle
+           The counter’s handle. In input, it is used by the delete command
+           only.
+
+       packets
+           Packet counter value.
+
+       bytes
+           Byte counter value.
+
+   QUOTA
+           { "quota": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "bytes": NUMBER,
+                   "used": NUMBER,
+                   "inv": BOOLEAN
+           }}
+
+       This object represents a named quota.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The quota’s name.
+
+       handle
+           The quota’s handle. In input, it is used by the delete command
+           only.
+
+       bytes
+           Quota threshold.
+
+       used
+           Quota used so far.
+
+       inv
+           If true, match if the quota has been exceeded.
+
+   CT HELPER
+           { "ct helper": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": ... ',
+                   "type": 'STRING,
+                   "protocol": CTH_PROTO,
+                   "l3proto": STRING
+           }}
+
+           CTH_PROTO := "tcp" | "udp"
+
+       This object represents a named conntrack helper.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The ct helper’s name.
+
+       handle
+           The ct helper’s handle. In input, it is used by the delete command
+           only.
+
+       type
+           The ct helper type name, e.g.  "ftp" or "tftp".
+
+       protocol
+           The ct helper’s layer 4 protocol.
+
+       l3proto
+           The ct helper’s layer 3 protocol, e.g.  "ip" or "ip6".
+
+   LIMIT
+           { "limit": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "rate": NUMBER,
+                   "per": STRING,
+                   "burst": NUMBER,
+                   "unit": LIMIT_UNIT,
+                   "inv": BOOLEAN
+           }}
+
+           LIMIT_UNIT := "packets" | "bytes"
+
+       This object represents a named limit.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The limit’s name.
+
+       handle
+           The limit’s handle. In input, it is used by the delete command
+           only.
+
+       rate
+           The limit’s rate value.
+
+       per
+           Time unit to apply the limit to, e.g.  "week", "day", "hour", etc.
+           If omitted, defaults to "second".
+
+       burst
+           The limit’s burst value. If omitted, defaults to 0.
+
+       unit
+           Unit of rate and burst values. If omitted, defaults to "packets".
+
+       inv
+           If true, match if limit was exceeded. If omitted, defaults to
+           false.
+
+   CT TIMEOUT
+           { "ct timeout": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "protocol": CTH_PROTO,
+                   "state": STRING,
+                   "value: NUMBER,
+                   "l3proto": STRING
+           }}
+
+           CTH_PROTO := "tcp" | "udp" | "dccp" | "sctp" | "gre" | "icmpv6" | "icmp" | "generic"
+
+       This object represents a named conntrack timeout policy.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The ct timeout object’s name.
+
+       handle
+           The ct timeout object’s handle. In input, it is used by delete
+           command only.
+
+       protocol
+           The ct timeout object’s layer 4 protocol.
+
+       state
+           The connection state name, e.g.  "established", "syn_sent", "close"
+           or "close_wait", for which the timeout value has to be updated.
+
+       value
+           The updated timeout value for the specified connection state.
+
+       l3proto
+           The ct timeout object’s layer 3 protocol, e.g.  "ip" or "ip6".
+
+   CT EXPECTATION
+           { "ct expectation": {
+                   "family": STRING,
+                   "table": STRING,
+                   "name": STRING,
+                   "handle": NUMBER,
+                   "l3proto": STRING
+                   "protocol":* CTH_PROTO,
+                   "dport": NUMBER,
+                   "timeout: NUMBER,
+                   "size: NUMBER,
+           *}}
+
+           CTH_PROTO := "tcp" | "udp" | "dccp" | "sctp" | "gre" | "icmpv6" | "icmp" | "generic"
+
+       This object represents a named conntrack expectation.
+
+       family
+           The table’s family.
+
+       table
+           The table’s name.
+
+       name
+           The ct expectation object’s name.
+
+       handle
+           The ct expectation object’s handle. In input, it is used by delete
+           command only.
+
+       l3proto
+           The ct expectation object’s layer 3 protocol, e.g.  "ip" or "ip6".
+
+       protocol
+           The ct expectation object’s layer 4 protocol.
+
+       dport
+           The destination port of the expected connection.
+
+       timeout
+           The time in millisecond that this expectation will live.
+
+       size
+           The maximum count of expectations to be living in the same time.
 
 STATEMENTS
-:= STATEMENT [, STATEMENTS ]
-
-This object
-describes a rule. Basic building blocks of rules are
-statements. Each rule consists of at least one.
-
-family
+       Statements are the building blocks for rules. Each rule consists of at
+       least one.
 
-The table’s family.
+   VERDICT
+           { "accept": null }
+           { "drop": null }
+           { "continue": null }
+           { "return": null }
+           { "jump": { "target": * STRING *}}
+           { "goto": { "target": * STRING *}}
 
-table
+       A verdict either terminates packet traversal through the current chain
+       or delegates to a different one.
 
-The table’s name.
+       jump and goto statements expect a target chain name.
 
-chain
+   MATCH
+           { "match": {
+                   "left": EXPRESSION,
+                   "right": EXPRESSION,
+                   "op": STRING
+           }}
 
-The chain’s name.
+       This matches the expression on left hand side (typically a packet
+       header or packet meta info) with the expression on right hand side
+       (typically a constant value). If the statement evaluates to true, the
+       next statement in this rule is considered. If not, processing continues
+       with the next rule in the same chain.
 
-expr
+       left
+           Left hand side of this match.
 
-An array of statements this
-rule consists of. In input, it is used in
-add/insert/replace commands only.
+       right
+           Right hand side of this match.
 
-handle
+       op
+           Operator indicating the type of comparison.
 
-The rule’s handle. In
-delete/replace commands, it serves as an
-identifier of the rule to delete/replace. In
-add/insert commands, it serves as an
-identifier of an existing rule to append/prepend the rule
-to.
+       OPERATORS
+           &    Binary AND
 
-index
+           |    Binary OR
 
-The rule’s position for
-add/insert commands. It is used as an
-alternative to handle then.
+           ^    Binary XOR
 
-comment
+           <<   Left shift
 
-Optional rule comment.
+           >>   Right shift
 
-SET /
-MAP
+           ==   Equal
 
-{ "set": { 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"type": SET_TYPE, 
-"policy": SET_POLICY, 
-"flags": [ SET_FLAG_LIST ], 
-"elem": SET_ELEMENTS, 
-"timeout": NUMBER, 
-"gc-interval": NUMBER, 
-"size": NUMBER, 
-"auto-merge": BOOLEAN 
-}}
+           !=   Not equal
 
-{
-"map": { 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"type": SET_TYPE, 
-"map": STRING, 
-"policy": SET_POLICY, 
-"flags": [ SET_FLAG_LIST ], 
-"elem": SET_ELEMENTS, 
-"timeout": NUMBER, 
-"gc-interval": NUMBER, 
-"size": NUMBER, 
-"auto-merge": BOOLEAN 
-}}
+           <    Less than
 
-SET_TYPE
-:= STRING | [ SET_TYPE_LIST ]
+           >    Greater than
 
-SET_TYPE_LIST := STRING [,
-SET_TYPE_LIST ] 
-SET_POLICY := "performance" |
-"memory" 
-SET_FLAG_LIST := SET_FLAG [,
-SET_FLAG_LIST ] 
-SET_FLAG := "constant" |
-"interval" | "timeout"
+           ⇐    Less than or equal to
 
-SET_ELEMENTS := EXPRESSION | [
-EXPRESSION_LIST ] 
-EXPRESSION_LIST := EXPRESSION [,
-EXPRESSION_LIST ]
+           >=   Greater than or equal to
 
-These objects
-describe a named set or map. Maps are a special form of sets
-in that they translate a unique key to a value.
+           in   Perform a lookup, i.e.
+                test if bits on RHS are
+                contained in LHS value
 
-family
+           Unlike with the standard API, the operator is mandatory here. In
+           the standard API, a missing operator may be resolved in two ways,
+           depending on the type of expression on the RHS:
 
-The table’s family.
+           •   If the RHS is a bitmask or a list of bitmasks, the expression
+               resolves into a binary operation with the inequality operator,
+               like this: LHS & RHS != 0.
 
-table
+           •   In any other case, the equality operator is simply inserted.
 
-The table’s name.
+           For the non-trivial first case, the JSON API supports the in
+           operator.
 
-name
+   COUNTER
+           { "counter": {
+                   "packets": NUMBER,
+                   "bytes": NUMBER
+           }}
 
-The set’s name.
+           { "counter": STRING }
 
-handle
+       This object represents a byte/packet counter. In input, no properties
+       are required. If given, they act as initial values for the counter.
 
-The set’s handle. For
-input, it is used in the delete command only.
+       The first form creates an anonymous counter which lives in the rule it
+       appears in. The second form specifies a reference to a named counter
+       object.
 
-type
+       packets
+           Packets counted.
 
-The set’s datatype, see
-below.
+       bytes
+           Bytes counted.
 
-map
+   MANGLE
+           { "mangle": {
+                   "key": EXPRESSION,
+                   "value": EXPRESSION
+           }}
 
-Type of values this set maps to
-(i.e. this set is a map).
+       This changes the packet data or meta info.
 
-policy
+       key
+           The packet data to be changed, given as an exthdr, payload, meta,
+           ct or ct helper expression.
 
-The set’s policy.
+       value
+           Value to change data to.
 
-flags
+   QUOTA
+           { "quota": {
+                   "val": NUMBER,
+                   "val_unit": STRING,
+                   "used": NUMBER,
+                   "used_unit": STRING,
+                   "inv": BOOLEAN
+           }}
 
-The set’s flags.
+           { "quota": STRING }
 
-elem
+       The first form creates an anonymous quota which lives in the rule it
+       appears in. The second form specifies a reference to a named quota
+       object.
 
-Initial set element(s), see
-below.
+       val
+           Quota value.
 
-timeout
+       val_unit
+           Unit of val, e.g.  "kbytes" or "mbytes". If omitted, defaults to
+           "bytes".
 
-Element timeout in seconds.
+       used
+           Quota used so far. Optional on input. If given, serves as initial
+           value.
 
-gc-interval
+       used_unit
+           Unit of used. Defaults to "bytes".
 
-Garbage collector interval in
-seconds.
+       inv
+           If true, will match if quota was exceeded. Defaults to false.
 
-size
+   LIMIT
+           { "limit": {
+                   "rate": NUMBER,
+                   "rate_unit": STRING,
+                   "per": STRING,
+                   "burst": NUMBER,
+                   "burst_unit": STRING,
+                   "inv": BOOLEAN
+           }}
 
-Maximum number of elements
-supported.
+           { "limit": STRING }
 
-auto-merge
+       The first form creates an anonymous limit which lives in the rule it
+       appears in. The second form specifies a reference to a named limit
+       object.
 
-Automatic merging of
-adjacent/overlapping set elements in interval sets.
+       rate
+           Rate value to limit to.
 
-TYPE
+       rate_unit
+           Unit of rate, e.g.  "packets" or "mbytes". Defaults to "packets".
 
-The set type might be a string,
-such as "ipv4_addr" or an array consisting
-of strings (for concatenated types).
+       per
+           Denominator of rate, e.g.  "week" or "minutes".
 
-ELEM
+       burst
+           Burst value. Defaults to 0.
 
-A single set element might be
-given as string, integer or boolean value for simple cases.
-If additional properties are required, a formal elem
-object may be used.
+       burst_unit
+           Unit of burst, ignored if rate_unit is "packets". Defaults to
+           "bytes".
 
-Multiple
-elements may be given in an array.
+       inv
+           If true, matches if the limit was exceeded. Defaults to false.
 
-ELEMENT
+   FWD
+           { "fwd": {
+                   "dev": EXPRESSION,
+                   "family": FWD_FAMILY,
+                   "addr": EXPRESSION
+           }}
 
-{ "element": {
+           FWD_FAMILY := "ip" | "ip6"
 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"elem": SET_ELEM 
-}}
+       Forward a packet to a different destination.
 
-SET_ELEM
-:= EXPRESSION | [ EXPRESSION_LIST
-] 
-EXPRESSION_LIST := EXPRESSION [,
-EXPRESSION ]
+       dev
+           Interface to forward the packet on.
 
-Manipulate
-element(s) in a named set.
+       family
+           Family of addr.
 
-family
+       addr
+           IP(v6) address to forward the packet to.
 
-The table’s family.
+       Both family and addr are optional, but if at least one is given, both
+       must be present.
 
-table
+   NOTRACK
+           { "notrack": null }
 
-The table’s name.
+       Disable connection tracking for the packet.
 
-name
+   DUP
+           { "dup": {
+                   "addr": EXPRESSION,
+                   "dev": EXPRESSION
+           }}
 
-The set’s name.
+       Duplicate a packet to a different destination.
 
-elem
+       addr
+           Address to duplicate packet to.
 
-See elem property of set
-object.
+       dev
+           Interface to duplicate packet on. May be omitted to not specify an
+           interface explicitly.
 
-FLOWTABLE
+   NETWORK ADDRESS TRANSLATION
+           { "snat": {
+                   "addr": EXPRESSION,
+                   "family": STRING,
+                   "port": EXPRESSION,
+                   "flags": FLAGS
+           }}
 
-{ "flowtable": {
+           { "dnat": {
+                   "addr": EXPRESSION,
+                   "family": STRING,
+                   "port": EXPRESSION,
+                   "flags": FLAGS
+           }}
 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"hook": STRING, 
-"prio": NUMBER, 
-"dev": FT_INTERFACE 
-}}
+           { "masquerade": {
+                   "port": EXPRESSION,
+                   "flags": FLAGS
+           }}
 
-FT_INTERFACE
-:= STRING | [ FT_INTERFACE_LIST
-] 
-FT_INTERFACE_LIST := STRING [,
-STRING ]
+           { "redirect": {
+                   "port": EXPRESSION,
+                   "flags": FLAGS
+           }}
 
-This object
-represents a named flowtable.
+           FLAGS := FLAG | [ FLAG_LIST ]
+           FLAG_LIST := FLAG [, FLAG_LIST ]
+           FLAG := "random" | "fully-random" | "persistent"
 
-family
+       Perform Network Address Translation.
 
-The table’s family.
+       addr
+           Address to translate to.
 
-table
+       family
+           Family of addr, either ip or ip6. Required in inet table family.
 
-The table’s name.
+       port
+           Port to translate to.
 
-name
+       flags
+           Flag(s).
 
-The flow table’s
-name.
+       All properties are optional and default to none.
 
-handle
+   REJECT
+           { "reject": {
+                   "type": STRING,
+                   "expr": EXPRESSION
+           }}
 
-The flow table’s handle.
-In input, it is used by the delete command only.
+       Reject the packet and send the given error reply.
 
-hook
+       type
+           Type of reject, either "tcp reset", "icmpx", "icmp" or "icmpv6".
 
-The flow table’s
-hook.
+       expr
+           ICMP code to reject with.
 
-prio
+       All properties are optional.
 
-The flow table’s
-priority.
+   SET
+           { "set": {
+                   "op": STRING,
+                   "elem": EXPRESSION,
+                   "set": STRING
+           }}
 
-dev
+       Dynamically add/update elements to a set.
 
-The flow table’s
-interface(s).
+       op
+           Operator on set, either "add" or "update".
 
-COUNTER
+       elem
+           Set element to add or update.
 
-{ "counter": {
+       set
+           Set reference.
 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"packets": NUMBER, 
-"bytes": NUMBER 
-}}
+   LOG
+           { "log": {
+                   "prefix": STRING,
+                   "group": NUMBER,
+                   "snaplen": NUMBER,
+                   "queue-threshold": NUMBER,
+                   "level": LEVEL,
+                   "flags": FLAGS
+           }}
 
-This object
-represents a named counter.
+           LEVEL := "emerg" | "alert" | "crit" | "err" | "warn" | "notice" |
+                      "info" | "debug" | "audit"
 
-family
+           FLAGS := FLAG | [ FLAG_LIST ]
+           FLAG_LIST := FLAG [, FLAG_LIST ]
+           FLAG := "tcp sequence" | "tcp options" | "ip options" | "skuid" |
+                     "ether" | "all"
 
-The table’s family.
+       Log the packet.
 
-table
+       prefix
+           Prefix for log entries.
 
-The table’s name.
+       group
+           Log group.
 
-name
+       snaplen
+           Snaplen for logging.
 
-The counter’s name.
+       queue-threshold
+           Queue threshold.
 
-handle
+       level
+           Log level. Defaults to "warn".
 
-The counter’s handle. In
-input, it is used by the delete command only.
+       flags
+           Log flags.
 
-packets
+       All properties are optional.
 
-Packet counter value.
+   CT HELPER
+           { "ct helper": EXPRESSION }
 
-bytes
+       Enable the specified conntrack helper for this packet.
 
-Byte counter value.
+       ct helper
+           CT helper reference.
 
-QUOTA
+   METER
+           { "meter": {
+                   "name": STRING,
+                   "key": EXPRESSION,
+                   "stmt": STATEMENT
+           }}
 
-{ "quota": { 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"bytes": NUMBER, 
-"used": NUMBER, 
-"inv": BOOLEAN 
-}}
+       Apply a given statement using a meter.
 
-This object
-represents a named quota.
+       name
+           Meter name.
 
-family
+       key
+           Meter key.
 
-The table’s family.
+       stmt
+           Meter statement.
 
-table
+   QUEUE
+           { "queue": {
+                   "num": EXPRESSION,
+                   "flags": FLAGS
+           }}
 
-The table’s name.
+           FLAGS := FLAG | [ FLAG_LIST ]
+           FLAG_LIST := FLAG [, FLAG_LIST ]
+           FLAG := "bypass" | "fanout"
 
-name
+       Queue the packet to userspace.
 
-The quota’s name.
+       num
+           Queue number.
 
-handle
+       flags
+           Queue flags.
 
-The quota’s handle. In
-input, it is used by the delete command only.
+   VERDICT MAP
+           { "vmap": {
+                   "key": EXPRESSION,
+                   "data": EXPRESSION
+           }}
 
-bytes
+       Apply a verdict conditionally.
 
-Quota threshold.
+       key
+           Map key.
 
-used
+       data
+           Mapping expression consisting of value/verdict pairs.
 
-Quota used so far.
+   CT COUNT
+           { "ct count": {
+                   "val": NUMBER,
+                   "inv": BOOLEAN
+           }}
 
-inv
+       Limit the number of connections using conntrack.
 
-If true, match if the quota has
-been exceeded.
+       val
+           Connection count threshold.
 
-CT
-HELPER
+       inv
+           If true, match if val was exceeded. If omitted, defaults to false.
 
-{ "ct helper": {
+   CT TIMEOUT
+           { "ct timeout": EXPRESSION }
 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": ... ', 
-"type": 'STRING, 
-"protocol": CTH_PROTO, 
-"l3proto": STRING 
-}}
+       Assign connection tracking timeout policy.
 
-CTH_PROTO
-:= "tcp" | "udp"
+       ct timeout
+           CT timeout reference.
 
-This object
-represents a named conntrack helper.
+   CT EXPECTATION
+           { "ct expectation": EXPRESSION }
 
-family
+       Assign connection tracking expectation.
 
-The table’s family.
+       ct expectation
+           CT expectation reference.
 
-table
+   XT
+           { "xt": {
+                   "type": TYPENAME,
+                   "name": STRING
+           }}
 
-The table’s name.
+           TYPENAME := match | target | watcher
 
-name
+       This represents an xt statement from xtables compat interface. It is a
+       fallback if translation is not available or not complete.
 
-The ct helper’s name.
+       Seeing this means the ruleset (or parts of it) were created by
+       iptables-nft and one should use that to manage it.
 
-handle
-
-The ct helper’s handle.
-In input, it is used by the delete command only.
-
-type
-
-The ct helper type name, e.g.
-"ftp" or "tftp".
-
-protocol
-
-The ct helper’s layer 4
-protocol.
-
-l3proto
-
-The ct helper’s layer 3
-protocol, e.g. "ip" or
-"ip6".
-
-LIMIT
-
-{ "limit": { 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"rate": NUMBER, 
-"per": STRING, 
-"burst": NUMBER, 
-"unit": LIMIT_UNIT, 
-"inv": BOOLEAN 
-}}
-
-LIMIT_UNIT
-:= "packets" | "bytes"
-
-This object
-represents a named limit.
-
-family
-
-The table’s family.
-
-table
-
-The table’s name.
-
-name
-
-The limit’s name.
-
-handle
-
-The limit’s handle. In
-input, it is used by the delete command only.
-
-rate
-
-The limit’s rate
-value.
-
-per
-
-Time unit to apply the limit
-to, e.g. "week", "day",
-"hour", etc. If omitted, defaults to
-"second".
-
-burst
-
-The limit’s burst value.
-If omitted, defaults to 0.
-
-unit
-
-Unit of rate and burst values.
-If omitted, defaults to "packets".
-
-inv
-
-If true, match if limit was
-exceeded. If omitted, defaults to false.
-
-CT
-TIMEOUT
-
-{ "ct timeout": {
-
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"protocol": CTH_PROTO, 
-"state": STRING, 
-"value: NUMBER, 
-"l3proto": STRING 
-}}
-
-CTH_PROTO
-:= "tcp" | "udp" |
-"dccp" | "sctp" |
-"gre" | "icmpv6" |
-"icmp" | "generic"
-
-This object
-represents a named conntrack timeout policy.
-
-family
-
-The table’s family.
-
-table
-
-The table’s name.
-
-name
-
-The ct timeout object’s
-name.
-
-handle
-
-The ct timeout object’s
-handle. In input, it is used by delete command
-only.
-
-protocol
-
-The ct timeout object’s
-layer 4 protocol.
-
-state
-
-The connection state name, e.g.
-"established", "syn_sent",
-"close" or "close_wait",
-for which the timeout value has to be updated.
-
-value
-
-The updated timeout value for
-the specified connection state.
-
-l3proto
-
-The ct timeout object’s
-layer 3 protocol, e.g. "ip" or
-"ip6".
-
-CT
-EXPECTATION
-
-{ "ct
-expectation": { 
-"family": STRING, 
-"table": STRING, 
-"name": STRING, 
-"handle": NUMBER, 
-"l3proto": STRING 
-"protocol":* CTH_PROTO, 
-"dport": NUMBER, 
-"timeout: NUMBER, 
-"size: NUMBER, 
-*}}
-
-CTH_PROTO
-:= "tcp" | "udp" |
-"dccp" | "sctp" |
-"gre" | "icmpv6" |
-"icmp" | "generic"
-
-This object
-represents a named conntrack expectation.
-
-family
-
-The table’s family.
-
-table
-
-The table’s name.
-
-name
-
-The ct expectation
-object’s name.
-
-handle
-
-The ct expectation
-object’s handle. In input, it is used by delete
-command only.
-
-l3proto
-
-The ct expectation
-object’s layer 3 protocol, e.g. "ip"
-or "ip6".
-
-protocol
-
-The ct expectation
-object’s layer 4 protocol.
-
-dport
-
-The destination port of the
-expected connection.
-
-timeout
-
-The time in millisecond that
-this expectation will live.
-
-size
-
-The maximum count of
-expectations to be living in the same time.
-
-STATEMENTS
-
-Statements are
-the building blocks for rules. Each rule consists of at
-least one.
-
-VERDICT
-
-{ "accept": null }
-
-{ "drop": null } 
-{ "continue": null } 
-{ "return": null } 
-{ "jump": { "target": *
-STRING *}} 
-{ "goto": { "target": *
-STRING *}}
-
-A verdict
-either terminates packet traversal through the current chain
-or delegates to a different one.
-
-jump and
-goto statements expect a target chain name.
-
-MATCH
-
-{ "match": { 
-"left": EXPRESSION, 
-"right": EXPRESSION, 
-"op": STRING 
-}}
-
-This matches
-the expression on left hand side (typically a packet header
-or packet meta info) with the expression on right hand side
-(typically a constant value). If the statement evaluates to
-true, the next statement in this rule is considered. If not,
-processing continues with the next rule in the same
-chain.
-
-left
-
-Left hand side of this
-match.
-
-right
-
-Right hand side of this
-match.
-
-op
-
-Operator indicating the type of
-comparison.
-
-OPERATORS
-
-Unlike with the
-standard API, the operator is mandatory here. In the
-standard API, a missing operator may be resolved in two
-ways, depending on the type of expression on the RHS:
-
-• If the
-RHS is a bitmask or a list of bitmasks, the expression
-resolves into a binary operation with the inequality
-operator, like this: LHS & RHS != 0.
-
-• In any
-other case, the equality operator is simply inserted.
-
-For the
-non-trivial first case, the JSON API supports the in
-operator.
-
-COUNTER
-
-{ "counter": {
-
-"packets": NUMBER, 
-"bytes": NUMBER 
-}}
-
-{
-"counter": STRING }
-
-This object
-represents a byte/packet counter. In input, no properties
-are required. If given, they act as initial values for the
-counter.
-
-The first form
-creates an anonymous counter which lives in the rule it
-appears in. The second form specifies a reference to a named
-counter object.
-
-packets
-
-Packets counted.
-
-bytes
-
-Bytes counted.
-
-MANGLE
-
-{ "mangle": { 
-"key": EXPRESSION, 
-"value": EXPRESSION 
-}}
-
-This changes
-the packet data or meta info.
-
-key
-
-The packet data to be changed,
-given as an exthdr, payload, meta,
-ct or ct helper expression.
-
-value
-
-Value to change data to.
-
-QUOTA
-
-{ "quota": { 
-"val": NUMBER, 
-"val_unit": STRING, 
-"used": NUMBER, 
-"used_unit": STRING, 
-"inv": BOOLEAN 
-}}
-
-{
-"quota": STRING }
-
-The first form
-creates an anonymous quota which lives in the rule it
-appears in. The second form specifies a reference to a named
-quota object.
-
-val
-
-Quota value.
-
-val_unit
-
-Unit of val, e.g.
-"kbytes" or "mbytes". If
-omitted, defaults to "bytes".
-
-used
-
-Quota used so far. Optional on
-input. If given, serves as initial value.
-
-used_unit
-
-Unit of used. Defaults
-to "bytes".
-
-inv
-
-If true, will match if
-quota was exceeded. Defaults to false.
-
-LIMIT
-
-{ "limit": { 
-"rate": NUMBER, 
-"rate_unit": STRING, 
-"per": STRING, 
-"burst": NUMBER, 
-"burst_unit": STRING, 
-"inv": BOOLEAN 
-}}
-
-{
-"limit": STRING }
-
-The first form
-creates an anonymous limit which lives in the rule it
-appears in. The second form specifies a reference to a named
-limit object.
-
-rate
-
-Rate value to limit to.
-
-rate_unit
-
-Unit of rate, e.g.
-"packets" or "mbytes".
-Defaults to "packets".
-
-per
-
-Denominator of rate,
-e.g. "week" or
-"minutes".
-
-burst
-
-Burst value. Defaults to
-0.
-
-burst_unit
-
-Unit of burst, ignored
-if rate_unit is "packets". Defaults
-to "bytes".
-
-inv
-
-If true, matches if the
-limit was exceeded. Defaults to false.
-
-FWD
-
-{ "fwd": { 
-"dev": EXPRESSION, 
-"family": FWD_FAMILY, 
-"addr": EXPRESSION 
-}}
-
-FWD_FAMILY
-:= "ip" | "ip6"
-
-Forward a
-packet to a different destination.
-
-dev
-
-Interface to forward the packet
-on.
-
-family
-
-Family of addr.
-
-addr
-
-IP(v6) address to forward the
-packet to.
-
-Both
-family and addr are optional, but if at least
-one is given, both must be present.
-
-NOTRACK
-
-{ "notrack": null
-}
-
-Disable
-connection tracking for the packet.
-
-DUP
-
-{ "dup": { 
-"addr": EXPRESSION, 
-"dev": EXPRESSION 
-}}
-
-Duplicate a
-packet to a different destination.
-
-addr
-
-Address to duplicate packet
-to.
-
-dev
-
-Interface to duplicate packet
-on. May be omitted to not specify an interface
-explicitly.
-
-NETWORK
-ADDRESS TRANSLATION
-
-{ "snat": { 
-"addr": EXPRESSION, 
-"family": STRING, 
-"port": EXPRESSION, 
-"flags": FLAGS 
-}}
-
-{
-"dnat": { 
-"addr": EXPRESSION, 
-"family": STRING, 
-"port": EXPRESSION, 
-"flags": FLAGS 
-}}
-
-{
-"masquerade": { 
-"port": EXPRESSION, 
-"flags": FLAGS 
-}}
-
-{
-"redirect": { 
-"port": EXPRESSION, 
-"flags": FLAGS 
-}}
-
-FLAGS :=
-FLAG | [ FLAG_LIST ] 
-FLAG_LIST := FLAG [, FLAG_LIST ]
-
-FLAG := "random" |
-"fully-random" |
-"persistent"
-
-Perform Network
-Address Translation.
-
-addr
-
-Address to translate to.
-
-family
-
-Family of addr, either
-ip or ip6. Required in inet table
-family.
-
-port
-
-Port to translate to.
-
-flags
-
-Flag(s).
-
-All properties
-are optional and default to none.
-
-REJECT
-
-{ "reject": { 
-"type": STRING, 
-"expr": EXPRESSION 
-}}
-
-Reject the
-packet and send the given error reply.
-
-type
-
-Type of reject, either
-"tcp reset", "icmpx",
-"icmp" or "icmpv6".
-
-expr
-
-ICMP code to reject with.
-
-All properties
-are optional.
-
-SET
-
-{ "set": { 
-"op": STRING, 
-"elem": EXPRESSION, 
-"set": STRING 
-}}
-
-Dynamically
-add/update elements to a set.
-
-op
-
-Operator on set, either
-"add" or "update".
-
-elem
-
-Set element to add or
-update.
-
-set
-
-Set reference.
-
-LOG
-
-{ "log": { 
-"prefix": STRING, 
-"group": NUMBER, 
-"snaplen": NUMBER, 
-"queue-threshold": NUMBER, 
-"level": LEVEL, 
-"flags": FLAGS 
-}}
-
-LEVEL :=
-"emerg" | "alert" |
-"crit" | "err" |
-"warn" | "notice" |
-
-"info" | "debug" |
-"audit"
-
-FLAGS :=
-FLAG | [ FLAG_LIST ] 
-FLAG_LIST := FLAG [, FLAG_LIST ]
-
-FLAG := "tcp sequence" | "tcp
-options" | "ip options" |
-"skuid" | 
-"ether" | "all"
-
-Log the
-packet.
-
-prefix
-
-Prefix for log entries.
-
-group
-
-Log group.
-
-snaplen
-
-Snaplen for logging.
-
-queue-threshold
-
-Queue threshold.
-
-level
-
-Log level. Defaults to
-"warn".
-
-flags
-
-Log flags.
-
-All properties
-are optional.
-
-CT
-HELPER
-
-{ "ct helper":
-EXPRESSION }
-
-Enable the
-specified conntrack helper for this packet.
-
-ct
-helper
-
-CT helper reference.
-
-METER
-
-{ "meter": { 
-"name": STRING, 
-"key": EXPRESSION, 
-"stmt": STATEMENT 
-}}
-
-Apply a given
-statement using a meter.
-
-name
-
-Meter name.
-
-key
-
-Meter key.
-
-stmt
-
-Meter statement.
-
-QUEUE
-
-{ "queue": { 
-"num": EXPRESSION, 
-"flags": FLAGS 
-}}
-
-FLAGS :=
-FLAG | [ FLAG_LIST ] 
-FLAG_LIST := FLAG [, FLAG_LIST ]
-
-FLAG := "bypass" |
-"fanout"
-
-Queue the
-packet to userspace.
-
-num
-
-Queue number.
-
-flags
-
-Queue flags.
-
-VERDICT
-MAP
-
-{ "vmap": { 
-"key": EXPRESSION, 
-"data": EXPRESSION 
-}}
-
-Apply a verdict
-conditionally.
-
-key
-
-Map key.
-
-data
-
-Mapping expression consisting
-of value/verdict pairs.
-
-CT
-COUNT
-
-{ "ct count": {
-
-"val": NUMBER, 
-"inv": BOOLEAN 
-}}
-
-Limit the
-number of connections using conntrack.
-
-val
-
-Connection count threshold.
-
-inv
-
-If true, match if
-val was exceeded. If omitted, defaults to
-false.
-
-CT
-TIMEOUT
-
-{ "ct
-timeout": EXPRESSION }
-
-Assign
-connection tracking timeout policy.
-
-ct
-timeout
-
-CT timeout reference.
-
-CT
-EXPECTATION
-
-{ "ct
-expectation": EXPRESSION }
-
-Assign
-connection tracking expectation.
-
-ct
-expectation
-
-CT expectation reference.
-
-XT
-
-{ "xt": { 
-"type": TYPENAME, 
-"name": STRING 
-}}
-
-TYPENAME
-:= match | target | watcher
-
-This represents
-an xt statement from xtables compat interface. It is a
-fallback if translation is not available or not
-complete.
-
-Seeing this
-means the ruleset (or parts of it) were created by
-iptables-nft and one should use that to manage
-it.
-
-BEWARE:
-nftables won’t restore these statements.
+       BEWARE: nftables won’t restore these statements.
 
 EXPRESSIONS
+       Expressions are the building blocks of (most) statements. In their most
+       basic form, they are just immediate values represented as a JSON
+       string, integer or boolean type.
 
-Expressions are
-the building blocks of (most) statements. In their most
-basic form, they are just immediate values represented as a
-JSON string, integer or boolean type.
+   IMMEDIATES
+           STRING
+           NUMBER
+           BOOLEAN
 
-IMMEDIATES
+       Immediate expressions are typically used for constant values. For
+       strings, there are two special cases:
 
-STRING 
-NUMBER 
-BOOLEAN
+       @STRING
+           The remaining part is taken as set name to create a set reference.
 
-Immediate
-expressions are typically used for constant values. For
-strings, there are two special cases:
+       \*
+           Construct a wildcard expression.
 
-@STRING
+   LISTS
+           ARRAY
 
-The remaining part is taken as
-set name to create a set reference.
+       List expressions are constructed by plain arrays containing of an
+       arbitrary number of expressions.
 
-\*
+   CONCAT
+           { "concat": CONCAT }
 
-Construct a wildcard
-expression.
+           CONCAT := [ EXPRESSION_LIST ]
+           EXPRESSION_LIST := EXPRESSION [, EXPRESSION_LIST ]
 
-LISTS
+       Concatenate several expressions.
 
-ARRAY
+   SET
+           { "set": SET }
 
-List
-expressions are constructed by plain arrays containing of an
-arbitrary number of expressions.
+           SET := EXPRESSION | [ EXPRESSION_LIST ]
 
-CONCAT
+       This object constructs an anonymous set. For mappings, an array of
+       arrays with exactly two elements is expected.
 
-{ "concat":
-CONCAT }
+   MAP
+           { "map": {
+                   "key": EXPRESSION,
+                   "data": EXPRESSION
+           }}
 
-CONCAT
-:= [ EXPRESSION_LIST ] 
-EXPRESSION_LIST := EXPRESSION [,
-EXPRESSION_LIST ]
+       Map a key to a value.
 
-Concatenate
-several expressions.
+       key
+           Map key.
 
-SET
+       data
+           Mapping expression consisting of value/target pairs.
 
-{ "set":
-SET }
+   PREFIX
+           { "prefix": {
+                   "addr": EXPRESSION,
+                   "len": NUMBER
+           }}
 
-SET :=
-EXPRESSION | [ EXPRESSION_LIST
-]
+       Construct an IPv4 or IPv6 prefix consisting of address part in addr and
+       prefix length in len.
 
-This object
-constructs an anonymous set. For mappings, an array of
-arrays with exactly two elements is expected.
+   RANGE
+           { "range": [ EXPRESSION , EXPRESSION ] }
 
-MAP
+       Construct a range of values. The first array item denotes the lower
+       boundary, the second one the upper boundary.
 
-{ "map": { 
-"key": EXPRESSION, 
-"data": EXPRESSION 
-}}
+   PAYLOAD
+           { "payload": {
+                   "base": BASE,
+                   "offset": NUMBER,
+                   "len": NUMBER
+           }}
 
-Map a key to a
-value.
+           { "payload": {
+                   "protocol": STRING,
+                   "field": STRING
+           }}
 
-key
+           BASE := "ll" | "nh" | "th"
 
-Map key.
+       Construct a payload expression, i.e. a reference to a certain part of
+       packet data. The first form creates a raw payload expression to point
+       at a random number (len) of bytes at a certain offset (offset) from a
+       given reference point (base). The following base values are accepted:
 
-data
+       "ll"
+           The offset is relative to Link Layer header start offset.
 
-Mapping expression consisting
-of value/target pairs.
+       "nh"
+           The offset is relative to Network Layer header start offset.
 
-PREFIX
+       "th"
+           The offset is relative to Transport Layer header start offset.
 
-{ "prefix": { 
-"addr": EXPRESSION, 
-"len": NUMBER 
-}}
+       The second form allows one to reference a field by name (field) in a
+       named packet header (protocol).
 
-Construct an
-IPv4 or IPv6 prefix consisting of address part in
-addr and prefix length in len.
+   EXTHDR
+           { "exthdr": {
+                   "name": STRING,
+                   "field": STRING,
+                   "offset": NUMBER
+           }}
+
+       Create a reference to a field (field) in an IPv6 extension header
+       (name). offset is used only for rt0 protocol.
+
+       If the field property is not given, the expression is to be used as a
+       header existence check in a match statement with a boolean on the right
+       hand side.
+
+   TCP OPTION
+           { "tcp option": {
+                   "name": STRING,
+                   "field": STRING
+           }}
 
-RANGE
+       Create a reference to a field (field) of a TCP option header (name).
+
+       If the field property is not given, the expression is to be used as a
+       TCP option existence check in a match statement with a boolean on the
+       right hand side.
 
-{ "range": [
-EXPRESSION , EXPRESSION ] }
+   SCTP CHUNK
+           { "sctp chunk": {
+                   "name": STRING,
+                   "field": STRING
+           }}
+
+       Create a reference to a field (field) of an SCTP chunk (name).
+
+       If the field property is not given, the expression is to be used as an
+       SCTP chunk existence check in a match statement with a boolean on the
+       right hand side.
+
+   META
+           { "meta": {
+                   "key": META_KEY
+           }}
+
+           META_KEY := "length" | "protocol" | "priority" | "random" | "mark" |
+                         "iif" | "iifname" | "iiftype" | "oif" | "oifname" |
+                         "oiftype" | "skuid" | "skgid" | "nftrace" |
+                         "rtclassid" | "ibriport" | "obriport" | "ibridgename" |
+                         "obridgename" | "pkttype" | "cpu" | "iifgroup" |
+                         "oifgroup" | "cgroup" | "nfproto" | "l4proto" |
+                         "secpath"
+
+       Create a reference to packet meta data.
+
+   RT
+           { "rt": {
+                   "key": RT_KEY,
+                   "family": RT_FAMILY
+           }}
+
+           RT_KEY := "classid" | "nexthop" | "mtu"
+           RT_FAMILY := "ip" | "ip6"
+
+       Create a reference to packet routing data.
+
+       The family property is optional and defaults to unspecified.
+
+   CT
+           { "ct": {
+                   "key": STRING,
+                   "family": CT_FAMILY,
+                   "dir": CT_DIRECTION
+           }}
+
+           CT_FAMILY := "ip" | "ip6"
+           CT_DIRECTION := "original" | "reply"
+
+       Create a reference to packet conntrack data.
+
+       Some CT keys do not support a direction. In this case, dir must not be
+       given.
 
-Construct a
-range of values. The first array item denotes the lower
-boundary, the second one the upper boundary.
-
-PAYLOAD
-
-{ "payload": {
-
-"base": BASE, 
-"offset": NUMBER, 
-"len": NUMBER 
-}}
-
-{
-"payload": { 
-"protocol": STRING, 
-"field": STRING 
-}}
-
-BASE :=
-"ll" | "nh" |
-"th"
-
-Construct a
-payload expression, i.e. a reference to a certain part of
-packet data. The first form creates a raw payload expression
-to point at a random number (len) of bytes at a
-certain offset (offset) from a given reference point
-(base). The following base values are
-accepted:
-
-"ll"
-
-The offset is relative to Link
-Layer header start offset.
-
-"nh"
-
-The offset is relative to
-Network Layer header start offset.
-
-"th"
-
-The offset is relative to
-Transport Layer header start offset.
-
-The second form
-allows one to reference a field by name (field) in a
-named packet header (protocol).
-
-EXTHDR
-
-{ "exthdr": { 
-"name": STRING, 
-"field": STRING, 
-"offset": NUMBER 
-}}
-
-Create a
-reference to a field (field) in an IPv6 extension
-header (name). offset is used only for
-rt0 protocol.
-
-If the
-field property is not given, the expression is to be
-used as a header existence check in a match statement
-with a boolean on the right hand side.
-
-TCP
-OPTION
-
-{ "tcp option": {
-
-"name": STRING, 
-"field": STRING 
-}}
-
-Create a
-reference to a field (field) of a TCP option header
-(name).
-
-If the
-field property is not given, the expression is to be
-used as a TCP option existence check in a match
-statement with a boolean on the right hand side.
-
-SCTP
-CHUNK
-
-{ "sctp chunk": {
-
-"name": STRING, 
-"field": STRING 
-}}
-
-Create a
-reference to a field (field) of an SCTP chunk
-(name).
-
-If the
-field property is not given, the expression is to be
-used as an SCTP chunk existence check in a match
-statement with a boolean on the right hand side.
-
-DCCP
-OPTION
-
-{ "dccp option": {
-
-"type": NUMBER* 
-}}
-
-Create a
-reference to a DCCP option (type).
-
-The expression
-is to be used as a DCCP option existence check in a
-match statement with a boolean on the right hand
-side.
-
-META
-
-{ "meta": { 
-"key": META_KEY 
-}}
-
-META_KEY
-:= "length" | "protocol" |
-"priority" | "random" |
-"mark" | 
-"iif" | "iifname" |
-"iiftype" | "oif" |
-"oifname" | 
-"oiftype" | "skuid" |
-"skgid" | "nftrace" |
-
-"rtclassid" | "ibriport" |
-"obriport" | "ibridgename"
-| 
-"obridgename" | "pkttype" |
-"cpu" | "iifgroup" |
-
-"oifgroup" | "cgroup" |
-"nfproto" | "l4proto" |
-
-"secpath"
-
-Create a
-reference to packet meta data.
-
-RT
-
-{ "rt": { 
-"key": RT_KEY, 
-"family": RT_FAMILY 
-}}
-
-RT_KEY
-:= "classid" | "nexthop" |
-"mtu" 
-RT_FAMILY := "ip" |
-"ip6"
-
-Create a
-reference to packet routing data.
-
-The
-family property is optional and defaults to
-unspecified.
-
-CT
-
-{ "ct": { 
-"key": STRING, 
-"family": CT_FAMILY, 
-"dir": CT_DIRECTION 
-}}
-
-CT_FAMILY
-:= "ip" | "ip6" 
-CT_DIRECTION := "original" |
-"reply"
-
-Create a
-reference to packet conntrack data.
-
-Some CT keys do
-not support a direction. In this case, dir must not
-be given.
-
-NUMGEN
-
-{ "numgen": { 
-"mode": NG_MODE, 
-"mod": NUMBER, 
-"offset": NUMBER 
-}}
-
-NG_MODE
-:= "inc" | "random"
-
-Create a number
-generator.
-
-The
-offset property is optional and defaults to 0.
-
-HASH
-
-{ "jhash": { 
-"mod": NUMBER, 
-"offset": NUMBER, 
-"expr": EXPRESSION, 
-"seed": NUMBER 
-}}
-
-{
-"symhash": { 
-"mod": NUMBER, 
-"offset": NUMBER 
-}}
-
-Hash packet
-data.
-
-The
-offset and seed properties are optional and
-default to 0.
-
-FIB
-
-{ "fib": { 
-"result": FIB_RESULT, 
-"flags": FIB_FLAGS 
-}}
-
-FIB_RESULT
-:= "oif" | "oifname" |
-"type"
-
-FIB_FLAGS
-:= FIB_FLAG | [ FIB_FLAG_LIST ]
-
-FIB_FLAG_LIST := FIB_FLAG [,
-FIB_FLAG_LIST ] 
-FIB_FLAG := "saddr" |
-"daddr" | "mark" |
-"iif" | "oif"
-
-Perform kernel
-Forwarding Information Base lookups.
-
-BINARY
-OPERATION
-
-{ "|": [
-EXPRESSION, EXPRESSIONS ] } 
-{ "^": [ EXPRESSION,
-EXPRESSIONS ] } 
-{ "&": [ EXPRESSION,
-EXPRESSIONS ] } 
-{ " EXPRESSION,
-EXPRESSIONS ] } 
-{ ">>": [ EXPRESSION,
-EXPRESSIONS ] } 
-EXPRESSIONS := EXPRESSION |
-EXPRESSION, EXPRESSIONS
-
-All binary
-operations expect an array of at least two expressions, of
-which the first element denotes the left hand side and the
-second one the right hand side. Extra elements are accepted
-in the given array and appended to the term accordingly.
-
-VERDICT
-
-{ "accept": null }
-
-{ "drop": null } 
-{ "continue": null } 
-{ "return": null } 
-{ "jump": { "target": STRING
-}} 
-{ "goto": { "target": STRING
-}}
-
-Same as the
-verdict statement, but for use in verdict maps.
-
-jump and
-goto verdicts expect a target chain name.
-
-ELEM
-
-{ "elem": { 
-"val": EXPRESSION, 
-"timeout": NUMBER, 
-"expires": NUMBER, 
-"comment": STRING 
-}}
-
-Explicitly set
-element object, in case timeout, expires or
-comment are desired. Otherwise, it may be replaced by
-the value of val.
-
-SOCKET
-
-{ "socket": { 
-"key": SOCKET_KEY 
-}}
-
-SOCKET_KEY
-:= "transparent"
-
-Construct a
-reference to packet’s socket.
-
-OSF
-
-{ "osf": { 
-"key": OSF_KEY, 
-"ttl": OSF_TTL 
-}}
-
-OSF_KEY
-:= "name" 
-OSF_TTL := "loose" |
-"skip"
-
-Perform OS
-fingerprinting. This expression is typically used in the LHS
-of a match statement.
-
-key
-
-Which part of the fingerprint
-info to match against. At this point, only the OS name is
-supported.
-
-ttl
-
-Define how the packet’s
-TTL value is to be matched. This property is optional. If
-omitted, the TTL value has to match exactly. A value of
-loose accepts TTL values less than the fingerprint
-one. A value of skip omits TTL value comparison
-entirely.
+   NUMGEN
+           { "numgen": {
+                   "mode": NG_MODE,
+                   "mod": NUMBER,
+                   "offset": NUMBER
+           }}
+
+           NG_MODE := "inc" | "random"
+
+       Create a number generator.
+
+       The offset property is optional and defaults to 0.
+
+   HASH
+           { "jhash": {
+                   "mod": NUMBER,
+                   "offset": NUMBER,
+                   "expr": EXPRESSION,
+                   "seed": NUMBER
+           }}
+
+           { "symhash": {
+                   "mod": NUMBER,
+                   "offset": NUMBER
+           }}
+
+       Hash packet data.
+
+       The offset and seed properties are optional and default to 0.
+
+   FIB
+           { "fib": {
+                   "result": FIB_RESULT,
+                   "flags": FIB_FLAGS
+           }}
+
+           FIB_RESULT := "oif" | "oifname" | "type"
+
+           FIB_FLAGS := FIB_FLAG | [ FIB_FLAG_LIST ]
+           FIB_FLAG_LIST := FIB_FLAG [, FIB_FLAG_LIST ]
+           FIB_FLAG := "saddr" | "daddr" | "mark" | "iif" | "oif"
+
+       Perform kernel Forwarding Information Base lookups.
+
+   BINARY OPERATION
+           { "|": [ EXPRESSION, EXPRESSION ] }
+           { "^": [ EXPRESSION, EXPRESSION ] }
+           { "&": [ EXPRESSION, EXPRESSION ] }
+           { "<<": [ EXPRESSION, EXPRESSION ] }
+           { ">>": [ EXPRESSION, EXPRESSION ] }
+
+       All binary operations expect an array of exactly two expressions, of
+       which the first element denotes the left hand side and the second one
+       the right hand side.
+
+   VERDICT
+           { "accept": null }
+           { "drop": null }
+           { "continue": null }
+           { "return": null }
+           { "jump": { "target": STRING }}
+           { "goto": { "target": STRING }}
+
+       Same as the verdict statement, but for use in verdict maps.
+
+       jump and goto verdicts expect a target chain name.
+
+   ELEM
+           { "elem": {
+                   "val": EXPRESSION,
+                   "timeout": NUMBER,
+                   "expires": NUMBER,
+                   "comment": STRING
+           }}
+
+       Explicitly set element object, in case timeout, expires or comment are
+       desired. Otherwise, it may be replaced by the value of val.
+
+   SOCKET
+           { "socket": {
+                   "key": SOCKET_KEY
+           }}
+
+           SOCKET_KEY := "transparent"
+
+       Construct a reference to packet’s socket.
+
+   OSF
+           { "osf": {
+                   "key": OSF_KEY,
+                   "ttl": OSF_TTL
+           }}
+
+           OSF_KEY := "name"
+           OSF_TTL := "loose" | "skip"
+
+       Perform OS fingerprinting. This expression is typically used in the LHS
+       of a match statement.
+
+       key
+           Which part of the fingerprint info to match against. At this point,
+           only the OS name is supported.
+
+       ttl
+           Define how the packet’s TTL value is to be matched. This property
+           is optional. If omitted, the TTL value has to match exactly. A
+           value of loose accepts TTL values less than the fingerprint one. A
+           value of skip omits TTL value comparison entirely.
 
 AUTHOR
+       Phil Sutter <phil@nwl.cc>
+           Author.
 
-Phil
-Sutter phil [AT] nwl.cc>
-
-Author.
+                                  09/16/2023               LIBNFTABLES-JSON(5)

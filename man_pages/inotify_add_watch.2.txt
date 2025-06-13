@@ -1,134 +1,82 @@
-NAME
+inotify_add_watch(2)          System Calls Manual         inotify_add_watch(2)
 
-inotify_add_watch
-- add a watch to an initialized inotify instance
+NAME
+       inotify_add_watch - add a watch to an initialized inotify instance
+
+LIBRARY
+       Standard C library (libc, -lc)
 
 SYNOPSIS
+       #include <sys/inotify.h>
 
-#include
-
-int
-inotify_add_watch(int fd, const char
-*pathname, uint32_t
-mask);
+       int inotify_add_watch(int fd, const char *pathname, uint32_t mask);
 
 DESCRIPTION
+       inotify_add_watch()  adds  a  new watch, or modifies an existing watch,
+       for the file whose location is specified in pathname; the  caller  must
+       have read permission for this file.  The fd argument is a file descrip‐
+       tor referring to the inotify instance whose watch list is to  be  modi‐
+       fied.   The  events  to  be monitored for pathname are specified in the
+       mask bit-mask argument.  See inotify(7) for a description of  the  bits
+       that can be set in mask.
 
-inotify_add_watch()
-adds a new watch, or modifies an existing watch, for the
-file whose location is specified in pathname; the
-caller must have read permission for this file. The
-fd argument is a file descriptor referring to the
-inotify instance whose watch list is to be modified. The
-events to be monitored for pathname are specified in
-the mask bit-mask argument. See inotify(7) for
-a description of the bits that can be set in
-mask.
+       A  successful  call  to  inotify_add_watch() returns a unique watch de‐
+       scriptor for this inotify instance, for the filesystem  object  (inode)
+       that  corresponds to pathname.  If the filesystem object was not previ‐
+       ously being watched by this inotify instance, then the watch descriptor
+       is newly allocated.  If the filesystem object was already being watched
+       (perhaps via a different link to the same object), then the  descriptor
+       for the existing watch is returned.
 
-A successful
-call to inotify_add_watch() returns a unique watch
-descriptor for this inotify instance, for the filesystem
-object (inode) that corresponds to pathname. If the
-filesystem object was not previously being watched by this
-inotify instance, then the watch descriptor is newly
-allocated. If the filesystem object was already being
-watched (perhaps via a different link to the same object),
-then the descriptor for the existing watch is returned.
-
-The watch
-descriptor is returned by later read(2)s from the
-inotify file descriptor. These reads fetch
-inotify_event structures (see inotify(7))
-indicating filesystem events; the watch descriptor inside
-this structure identifies the object for which the event
-occurred.
+       The  watch  descriptor  is  returned by later read(2)s from the inotify
+       file descriptor.  These reads fetch inotify_event structures (see  ino‐
+       tify(7)) indicating filesystem events; the watch descriptor inside this
+       structure identifies the object for which the event occurred.
 
 RETURN VALUE
-
-On success,
-inotify_add_watch() returns a watch descriptor (a
-nonnegative integer). On error, -1 is returned and
-errno is set appropriately.
+       On success, inotify_add_watch() returns a watch descriptor (a  nonnega‐
+       tive  integer).   On error, -1 is returned and errno is set to indicate
+       the error.
 
 ERRORS
+       EACCES Read access to the given file is not permitted.
 
-EACCES
+       EBADF  The given file descriptor is not valid.
 
-Read access to the given file is
-not permitted.
+       EEXIST mask contains IN_MASK_CREATE and pathname refers to a  file  al‐
+              ready being watched by the same fd.
 
-EBADF
+       EFAULT pathname  points  outside  of  the  process's accessible address
+              space.
 
-The given file descriptor is not valid.
+       EINVAL The given event mask contains no valid events; or mask  contains
+              both  IN_MASK_ADD  and  IN_MASK_CREATE;  or fd is not an inotify
+              file descriptor.
 
-EEXIST
+       ENAMETOOLONG
+              pathname is too long.
 
-mask contains IN_MASK_CREATE and
-pathname refers to a file already being watched by
-the same fd.
+       ENOENT A directory component in pathname does not exist or  is  a  dan‐
+              gling symbolic link.
 
-EFAULT
+       ENOMEM Insufficient kernel memory was available.
 
-pathname points outside of the process’s
-accessible address space.
+       ENOSPC The  user  limit  on  the  total  number  of inotify watches was
+              reached or the kernel failed to allocate a needed resource.
 
-EINVAL
-
-The given event mask contains no valid events; or
-mask contains both IN_MASK_ADD and
-IN_MASK_CREATE; or fd is not an inotify file
-descriptor. 
-
-ENAMETOOLONG
-
-pathname is too
-long.
-
-ENOENT
-
-A directory component in pathname does not exist
-or is a dangling symbolic link.
-
-ENOMEM
-
-Insufficient kernel memory was available.
-
-ENOSPC
-
-The user limit on the total number of inotify watches
-was reached or the kernel failed to allocate a needed
-resource. 
-
-ENOTDIR
-
-mask contains
-IN_ONLYDIR and pathname is not a
-directory.
+       ENOTDIR
+              mask contains IN_ONLYDIR and pathname is not a directory.
 
 VERSIONS
+       Inotify was merged into the 2.6.13 Linux kernel.
 
-Inotify was
-merged into the 2.6.13 Linux kernel.
-
-CONFORMING TO
-
-This system
-call is Linux-specific.
+STANDARDS
+       This system call is Linux-specific.
 
 EXAMPLES
-
-See
-inotify(7).
+       See inotify(7).
 
 SEE ALSO
+       inotify_init(2), inotify_rm_watch(2), inotify(7)
 
-inotify_init(2),
-inotify_rm_watch(2), inotify(7)
-
-COLOPHON
-
-This page is
-part of release 5.09 of the Linux man-pages project.
-A description of the project, information about reporting
-bugs, and the latest version of this page, can be found at
-https://www.kernel.org/doc/man-pages/.
+Linux man-pages 6.03              2022-10-30              inotify_add_watch(2)

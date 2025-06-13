@@ -1,271 +1,342 @@
-NAME
+NTPMON(1)                           NTPsec                           NTPMON(1)
 
-ntpmon -
-real-time NTP status monitor
+NAME
+       ntpmon - real-time NTP status monitor
 
 SYNOPSIS
-
-ntpmon [-dhnuV]
-[-D lvl] [-l logfile] [host]
+       ntpmon [-dhnuV] [-D lvl] [-l logfile] [host]
 
 DESCRIPTION
+       This program is a real-time status monitor for NTP. It presents the
+       same information as the peers, mrulist, rv, and cv commands of ntpq(1),
+       but using a split-window display that also includes a status summary
+       bar, and updates at intervals guaranteed to show status changes almost
+       as soon as they occur.
 
-This program is
-a real-time status monitor for NTP. It presents the same
-information as the peers, mrulist, rv,
-and cv commands of ntpq(1), but using a split-window
-display that also includes a status summary bar, and updates
-at intervals guaranteed to show status changes almost as
-soon as they occur.
+       (Specifically, the display begins updating once per second and adjusts
+       itself to poll at twice the frequency of the shortest polling interval
+       reported in the last peers response.)
 
-(Specifically,
-the display begins updating once per second and adjusts
-itself to poll at twice the frequency of the shortest
-polling interval reported in the last peers response.)
+       The status bar includes the version string of the server being watched,
+       the (local) time at which it was last updated, and the current query
+       interval in parens following the date.
 
-The status bar
-includes the version string of the server being watched, the
-(local) time at which it was last updated, and the current
-query interval in parens following the date.
+       There is a detail-display mode that dumps full information about a
+       single selected peer in a tabular format that makes it relatively easy
+       to see changing values. However, note that a default-sized terminal
+       emulator window (usually 25 lines) doesn’t have enough room for the
+       clock variables portion. The only fix for this is to resize your
+       terminal.
 
-There is a
-detail-display mode that dumps full information about a
-single selected peer in a tabular format that makes it
-relatively easy to see changing values. However, note that a
-default-sized terminal emulator window (usually 25 lines)
-doesn’t have enough room for the clock variables
-portion. The only fix for this is to resize your
-terminal.
+       ^C cleanly terminates the program. Any keystroke will trigger a poll
+       and update. A few single-keystroke commands are also interpreted as
+       commands.
 
-^C cleanly
-terminates the program. Any keystroke will trigger a poll
-and update. A few single-keystroke commands are also
-interpreted as commands.
+       If no hostname is specified on the command line, localhost is
+       monitored.
 
-If no hostname
-is specified on the command line, localhost is
-monitored.
+       Here’s a breakdown of the peers display in the top window:
 
-Here’s a
-breakdown of the peers display in the top window:
+       ┌─────────┬────────────────────────────┐
+       │         │                            │
+       │Variable │ Description                │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │tally    │ single-character code      │
+       │         │ indicating current value   │
+       │         │ of the select field of the │
+       │         │ peer status word           │
+       │         │ <decode.html#peer>         │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │remote   │ host name (or IP number)   │
+       │         │ of peer                    │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │refid    │ association ID or kiss     │
+       │         │ code <decode.html#kiss>    │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │st       │ stratum                    │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │t        │ u: unicast or manycast     │
+       │         │ client, l: local           │
+       │         │ (reference clock), s:      │
+       │         │ symmetric (peer), server,  │
+       │         │ B: broadcast server, 1-8   │
+       │         │ NTS unicast with this      │
+       │         │ number of cookies stored.  │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │when     │ sec/min/hr since last      │
+       │         │ received packet            │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │poll     │ poll interval (log2 s)     │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │reach    │ reach shift register       │
+       │         │ (octal)                    │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │delay    │ roundtrip delay            │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │offset   │ offset of server relative  │
+       │         │ to this host               │
+       ├─────────┼────────────────────────────┤
+       │         │                            │
+       │jitter   │ jitter                     │
+       └─────────┴────────────────────────────┘
 
-The t column has strange
-encodings due to historical use by old code. If you are
-looking at an old server, you might also see: s: symmetric
-(peer), server, B: broadcast server,
+       The tally code is one of the following:
 
-The tally code
-is one of the following:
+       ┌─────┬───────────────────────────┐
+       │     │                           │
+       │Code │ Description               │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │     │ discarded as not valid    │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │x    │ discarded by intersection │
+       │     │ algorithm                 │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │.    │ discarded by table        │
+       │     │ overflow (not used)       │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │-    │ discarded by the cluster  │
+       │     │ algorithm                 │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │+    │ included by the combine   │
+       │     │ algorithm                 │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │#    │ backup (more than tos     │
+       │     │ maxclock sources)         │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │*    │ system peer               │
+       ├─────┼───────────────────────────┤
+       │     │                           │
+       │o    │ PPS peer (when the prefer │
+       │     │ peer is valid)            │
+       └─────┴───────────────────────────┘
 
-And the MRU list in the bottom
-window:
+       And the MRU list in the bottom window:
 
-The refid field is as described
-under "Event Messages and Status Words" in the NTP
-documentation on the Web.
+       ┌───────────────┬────────────────────────────┐
+       │               │                            │
+       │Column         │ Description                │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │lstint         │ Interval in s between the  │
+       │               │ receipt of the most recent │
+       │               │ packet from this address   │
+       │               │ and the completion of the  │
+       │               │ retrieval of the MRU list  │
+       │               │ by ntpq.                   │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │avgint         │ Average interval in s      │
+       │               │ between packets from this  │
+       │               │ address.                   │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │rstr           │ Restriction flags          │
+       │               │ associated with this       │
+       │               │ address. Most are copied   │
+       │               │ unchanged from the         │
+       │               │ matching restrict command, │
+       │               │ however 0x400 (kod) and    │
+       │               │ 0x20 (limited) flags are   │
+       │               │ cleared unless the last    │
+       │               │ packet from this address   │
+       │               │ triggered a rate control   │
+       │               │ response.                  │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │r              │ Rate control indicator,    │
+       │               │ either a period, L or K    │
+       │               │ for no rate control        │
+       │               │ response, rate limiting by │
+       │               │ discarding, or rate        │
+       │               │ limiting with a KoD        │
+       │               │ response, respectively.    │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │m              │ Packet mode.               │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │v              │ Packet version number.     │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │count          │ Packets received from this │
+       │               │ address.                   │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │score          │ Packets per second         │
+       │               │ (averaged with exponential │
+       │               │ decay).                    │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │drop           │ Packets dropped (or KoDed) │
+       │               │ from this address.         │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │rport          │ Source port of last packet │
+       │               │ from this address.         │
+       ├───────────────┼────────────────────────────┤
+       │               │                            │
+       │remote address │ DNS name, numeric address, │
+       │               │ or address followed by     │
+       │               │ claimed DNS name which     │
+       │               │ could not be verified in   │
+       │               │ parentheses.               │
+       └───────────────┴────────────────────────────┘
+
+       The refid field is as described under "Event Messages and Status Words"
+       in the NTP documentation on the Web.
 
 COMMANDS
+       a
+           Change peer display to apeers mode, showing association IDs.
 
-a
+       d
+           Toggle detail mode (some peer will be reverse-video highlighted
+           when on).
 
-Change peer display to apeers
-mode, showing association IDs.
+       h
+           Display help screen
 
-d
+       j
+           Select next peer (in select mode); arrow down also works.
 
-Toggle detail mode (some peer
-will be reverse-video highlighted when on).
+       k
+           Select previous peer (in select mode); arrow up also works.
 
-h
+       m
+           Toggle MRUlist-only mode; suppresses peer display when on.
 
-Display help screen
+       n
+           Toggle display of hostnames vs. IP addresses vs ntpd supplied names
+           plus IP addresses or ntpd supplied names and hostnames (default is
+           hostnames).
 
-j
+       o
+           Change peer display to opeers mode, showing destination address.
 
-Select next peer (in select
-mode); arrow down also works.
+       p
+           Change peer display to default mode, showing refid.
 
-k
+       q
+           Cleanly terminate the program.
 
-Select previous peer (in select
-mode); arrow up also works.
+       r
+           Change to dextral mode, identical to p save that the refid, tally \
+           and remote clock are on the right.
 
-m
+       s
+           Toggle display of only reachable hosts (default is all hosts).
 
-Toggle MRUlist-only mode;
-suppresses peer display when on.
+       u
+           Toggle display of units for time values. (default is off)
 
-n
+       w
+           Toggle wide mode.
 
-Toggle display of hostnames vs.
-IP addresses vs ntpd supplied names plus IP addresses or
-ntpd supplied names and hostnames (default is
-hostnames).
+       x
+           Cleanly terminate the program.
 
-o
+       <space>
+           Rotate through a/n/o/p display modes.
 
-Change peer display to opeers
-mode, showing destination address.
+       +
+           Increase debugging level. Output goes to ntpmon.log
 
-p
+       -
+           Decrease debugging level.
 
-Change peer display to default
-mode, showing refid.
-
-q
-
-Cleanly terminate the
-program.
-
-r
-
-Change to dextral mode,
-identical to p save that the refid, tally \ and
-remote clock are on the right.
-
-s
-
-Toggle display of only
-reachable hosts (default is all hosts).
-
-u
-
-Toggle display of units for
-time values. (default is off)
-
-w
-
-Toggle wide mode.
-
-x
-
-Cleanly terminate the
-program.
-
-Rotate through a/n/o/p display
-modes.
-
-+
-
-Increase debugging level.
-Output goes to ntpmon.log
-
--
-
-Decrease debugging level.
-
-?
-
-Display help screen
+       ?
+           Display help screen
 
 OPTIONS
+       -d
+           Increase output debug message level
 
--d
+           •   may appear multiple times
 
-Increase output debug message
-level
+       -D
+           Set the output debug message level
 
-• may
-appear multiple times
+           •   may appear multiple times
 
--D
+       -h
+           Print a usage message.
 
-Set the output debug message
-level
+       -l
+           Logs debug messages to the provided filename
 
-• may
-appear multiple times
+       -n
+           Show IP addresses (vs. hostnames)
 
--h
+       -s, --srcname
+           Show srchost first then names and numbers
 
-Print a usage message.
+       -S, --srcnumber
+           Show srchost first then numbers
 
--l
+       -u
+           Show units
 
-Logs debug messages to the
-provided filename
-
--n
-
-Show IP addresses (vs.
-hostnames)
-
--s,
---srcname
-
-Show srchost first then names
-and numbers
-
--S,
---srcnumber
-
-Show srchost first then
-numbers
-
--u
-
-Show units
-
--V
-
-Display version and exit.
+       -V
+           Display version and exit.
 
 KNOWN BUGS
+       When run in a terminal that does not allow UTF-8 ntpmon will downgrade
+       its unit display to a non-unicode version. ntpmon has to interact with
+       the curses and locale libraries, which prevents it from forcing the use
+       of UTF-8.
 
-When run in a
-terminal that does not allow UTF-8 ntpmon will downgrade its
-unit display to a non-unicode version. ntpmon has to
-interact with the curses and locale libraries, which
-prevents it from forcing the use of UTF-8.
+       When querying a version of ntpd older than NTPsec 0.9.6, ntpmon will
+       appear to hang when monitoring hosts with extremely long MRU lists - in
+       particular, public pool hosts. Correct behavior requires a Mode 6
+       protocol extension not yet present in those versions.
 
-When querying a
-version of ntpd older than NTPsec 0.9.6, ntpmon will appear
-to hang when monitoring hosts with extremely long MRU lists
-- in particular, public pool hosts. Correct behavior
-requires a Mode 6 protocol extension not yet present in
-those versions.
+       Even with this extension, monitoring a sufficiently high-traffic server
+       sometimes fails.
 
-Even with this
-extension, monitoring a sufficiently high-traffic server
-sometimes fails.
+       When using the -u option, very old xterms may fail to render &mu;
+       correctly. If this happens, be sure your xterm is started with the -u8
+       option, or the utf8 resource', and that your console font contains the
+       UTF-8 &mu; character. Also confirm your LANG environment variable is
+       set to a UTF-8 language, like this: "export LANG=en_US.utf8".
 
-When using the
--u option, very old xterms may fail to render μ
-correctly. If this happens, be sure your xterm is started
-with the -u8 option, or the utf8 resource', and that
-your console font contains the UTF-8 μ character.
-Also confirm your LANG environment variable is set to a
-UTF-8 language, like this: "export
-LANG=en_US.utf8".
+       Timestamp interpretation in this program is likely to fail in flaky
+       ways if the local system clock has not already been approximately
+       synchronized to UTC. Querying a server based in a different NTP era
+       than the current one is especially likely to fail.
 
-Timestamp
-interpretation in this program is likely to fail in flaky
-ways if the local system clock has not already been
-approximately synchronized to UTC. Querying a server based
-in a different NTP era than the current one is especially
-likely to fail.
+       This program will behave in apparently buggy and only semi-predictable
+       ways when fetching MRU lists from any server with sufficiently high
+       traffic.
 
-This program
-will behave in apparently buggy and only semi-predictable
-ways when fetching MRU lists from any server with
-sufficiently high traffic.
+       The problem is fundamental. The Mode 6 protocol can’t ship (and your
+       client cannot accept) MRU records as fast as the daemon accepts
+       incoming traffic. Under these circumstances, the daemon will repeatedly
+       fail to ship an entire report, leading to long hangs as your client
+       repeatedly re-sends the request. Eventually the Mode 6 client library
+       will throw an error indicating that a maximum number of restarts has
+       been exceeded.
 
-The problem is
-fundamental. The Mode 6 protocol can’t ship (and your
-client cannot accept) MRU records as fast as the daemon
-accepts incoming traffic. Under these circumstances, the
-daemon will repeatedly fail to ship an entire report,
-leading to long hangs as your client repeatedly re-sends the
-request. Eventually the Mode 6 client library will throw an
-error indicating that a maximum number of restarts has been
-exceeded.
-
-To avoid this
-problem, avoid monitoring over links that don’t have
-enough capacity to handle the monitored server’s
-entire NTP load.
+       To avoid this problem, avoid monitoring over links that don’t have
+       enough capacity to handle the monitored server’s entire NTP load.
 
 EXIT STATUS
+       Always returns 0.
 
-Always returns
-0.
+NTPsec                            2023-07-29                         NTPMON(1)

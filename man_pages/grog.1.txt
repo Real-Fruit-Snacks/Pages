@@ -1,244 +1,132 @@
-Name
+GROG(1)                     General Commands Manual                    GROG(1)
 
-grog -
-“groff guess”—infer the groff
-command a document requires
+NAME
+       grog - guess options for a following groff command
 
-Synopsis
+SYNOPSIS
+       grog [-C] [-T device] [--run] [--warnings] [--ligatures] [groff-option
+            ...] [--] [filespec ...]
 
-grog
+       grog -h
+       grog --help
 
-[--run]
-[--ligatures] [groff-option ...]
-[--] [file ...]
+       grog -v
+       grog --version
 
-grog
+DESCRIPTION
+       grog reads the input (file names or standard input) and  guesses  which
+       of  the groff(1) options are needed to perform the input with the groff
+       program.  A suitable device is now always written as -Tdevice including
+       the groff default as -T ps.
 
--h
+       The  corresponding  groff command is usually displayed in standard out‐
+       put.  With the option --run, the generated line is output into standard
+       error  and  the  generated groff command is run on the standard output.
+       groffer(1) relies on a perfectly running groff(1).
 
-grog
+OPTIONS
+       The option -v or --version prints information on  the  version  number.
+       Also  -h or --help prints usage information.  Both of these options au‐
+       tomatically end the grog program.  Other options are  thenignored,  and
+       no  groff  command  line is generated.  The following 3 options are the
+       only grog options,
 
---help
+       -C     this option means enabling the groff compatibility  mode,  which
+              is also transfered to the generated groff command line.
 
-grog
+       --ligatures
+              this  option forces to include the arguments -P-y -PU within the
+              generated groff command line.
 
--v
+       --run  with this option, the command line is output at  standard  error
+              and then run on the computer.
 
-grog
+       --warnings
+              with  this option, some more warnings are output to standard er‐
+              ror.
 
---version
+       All other specified short options (words starting with one minus  char‐
+       acter  -)  are  interpreted as groff options or option clusters with or
+       without argument.  No space is allowed between options and their  argu‐
+       ment.   Except  from  the -marg options, all options will be passed on,
+       i.e. they are included unchanged in the command for the output  without
+       effecting the work of grog.
 
-Description
+       A  filespec  argument  can  either be the name of an existing file or a
+       single minus - to mean standard input.  If  no  filespec  is  specified
+       standard input is read automatically.
 
-grog
-reads its input and guesses which groff(1) options
-are needed to render it. If no operands are given, or if
-file is “-”, grog reads the
-standard input stream. The corresponding groff
-command is normally written to the standard output stream.
-With the option --run, the inferred command is
-written to the standard error stream and then executed.
+DETAILS
+       grog reads all filespec parameters as a whole.  It tries to guess which
+       of the following groff options are required for running the input under
+       groff: -e, -g, -G, -j, -p, -R, -s, -t (preprocessors); and -man, -mdoc,
+       -mdoc-old, -me, -mm, -mom, and -ms (macro packages).
 
-Options
+       The guessed groff command including those options and the  found  file‐
+       spec parameters is put on the standard output.
 
--h and
---help display a usage message, whereas -v and
---version display version information; all exit
-afterward. 
---ligatures
+       It  is possible to specify arbitrary groff options on the command line.
+       These are passed on the output without change, except for the -marg op‐
+       tions.
 
-includes the arguments -P-y
--PU in the inferred groff command. These are
-supported only by the pdf output device.
+       The groff program has trouble when the wrong -marg option or several of
+       these options are specified.  In these cases, grog will print an  error
+       message  and exit with an error code.  It is better to specify no -marg
+       option.  Because such an option is only accepted and passed  when  grog
+       does not find any of these options or the same option is found.
 
---run
+       If  several  different -marg options are found by grog an error message
+       is produced and the program is terminated with an error code.  But  the
+       output is written with the wrong options nevertheless.
 
-writes the inferred command to the standard error stream
-and then executes it.
+       Remember that it is not necessary to determine a macro package.  A roff
+       file can also be written in the groff language without any macro  pack‐
+       age.  grog will produce an output without an -marg option.
 
-All other
-specified short options (that is, arguments beginning with a
-minus sign “-” followed by a letter) are
-interpreted as groff options or option clusters with
-or without an option argument. Such options are included in
-the constructed groff command line.
+       As  groff  also  works  with pure text files without any roff requests,
+       grog cannot be used to identify a file to be a roff file.
 
-Details
+       The groffer(1) program heavily depends on a working grog.
 
-grog
-reads each file operand, pattern-matching strings
-that are statistically likely to be characteristic of
-roff(7) documents. It tries to guess which of the
-following groff options are required to correctly
-render the input: -e, -g, -G,
--j, -p, -R, -t (preprocessors);
-and -man, -mdoc, -mdoc-old, -me,
--mm, -mom, and -ms (macro packages).
-The inferred groff command including these options
-and any file parameters is written to the standard
-output stream.
+EXAMPLES
+       Calling
+              grog meintro.me
+       results in
+              groff -me meintro.me
+       So grog recognized that the file meintro.me is  written  with  the  -me
+       macro package.
+       On the other hand,
+              grog pic.ms
+       outputs
+              groff -p -t -e -ms pic.ms
+       Besides  determining  the  macro  package -ms, grog recognized that the
+       file pic.ms additionally needs -pte, the combination of -p for pic,  -t
+       for tbl, and -e for eqn.
+       If both of the former example files are combined by the command
+              grog meintro.me pic.ms
+       an  error  message  is sent to standard error because groff cannot work
+       with two different macro packages:
+              grog: error: there are several macro packages: -me -ms
+       Additionally the corresponding output with the wrong options is printed
+       to standard output:
+              groff -pte -me -ms meintro.me pic.ms
+       But the program is terminated with an error code.  The call of
+              grog -ksS -Tdvi grnexmpl.g
+       contains several groff options that are just passed on the output with‐
+       out any interface to grog.  These are the option cluster -ksS  consist‐
+       ing of -k, -s, and -S; and the option -T with argument dvi.  The output
+       is
+              groff -k -s -S -Tdvi grnexmpl.g
+       so no additional option was added by grog.   As  no  option  -marg  was
+       found by grog this file does not use a macro package.
 
-It is possible
-to specify arbitrary groff options on the command
-line. These are included in the inferred command without
-change. Choices of groff options include -C to
-enable AT&T troff compatibility mode and
--T to select a non-default output device. If the
-input is not encoded in US-ASCII, ISO 8859-1, or IBM code
-page 1047, specification of a groff option to run the
-preconv(1) preprocessor is advised; see the
--D, -k, and -K options of
-groff(1). For UTF-8 input, -k is a good
-choice.
+AUTHORS
+       grog was originally written by James Clark.  The current Perl implemen‐
+       tation was written by Bernd Warken ⟨groff-bernd.warken-72@web.de⟩  with
+       contributions  from Ralph Corderoy, and is maintained by Werner Lemberg
+       ⟨wl@gnu.org⟩.
 
-groff
-may issue diagnostic messages when an inappropriate
--m option, or multiple conflicting ones, are
-specified. Consequently, it is best to specify no -m
-options to grog unless it cannot correctly infer all
-of the -m arguments a document requires. A
-roff document can also be written without recourse to
-any macro package. In such cases, grog will infer a
-groff command without an -m option.
+SEE ALSO
+       groff(1), groffer(1)
 
-Limitations
-
-grog presumes that the input does not change the escape,
-control, or no-break control characters. grog does
-not parse roff input line continuation or control
-structures (brace escape sequences and the
-“if”, “ie”, and
-“el” requests) nor groff’s
-“while”. Thus the input
-
-.if \ 
-t .NH 1 
-.if n .SH 
-Introduction
-
-will conceal the use of the
-ms macros NH and SH from grog.
-Such constructions are regarded by grog’s
-implementors as insufficiently common to cause many
-inference problems. Preprocessors can be even stricter when
-matching macro calls that bracket the regions of an input
-file they replace. pic, for example, requires
-PS, PE, and PF calls to immediately
-follow the default control character at the beginning of a
-line.
-
-Detection of
-the -s option (the soelim(1) preprocessor) is
-tricky; to correctly infer its necessity would require
-grog to recursively open all files given as arguments
-to the .so request under the same conditions that
-soelim itself does so; see its man page. Recall that
-soelim is necessary only if sourced files need to be
-preprocessed. Therefore, as a workaround, you may want to
-run the input through soelim manually, piping it to
-grog, and compare the output to running grog
-on the input directly. If the “soelim”ed
-input causes grog to infer additional preprocessor
-options, then -s is likely necessary.
-
-$ printf
-".TS\nl.\nI'm a table.\n.TE\n" > 3.roff
-
-$ printf ".so 3.roff\n" > 2.roff 
-$ printf ".XP\n.so 2.roff\n" > 1.roff
-
-$ grog 1.roff 
-groff -ms 1.roff 
-$ soelim 1.roff | grog 
-groff -t -ms -
-
-In the
-foregoing example, we see that this procedure enabled
-grog to detect tbl(1) macros, so we would add
--s as well as the detected -t option to a
-revised grog or groff command.
-
-$ grog -st
-1.roff 
-groff -st -ms 1.roff
-
-Exit status
-
-grog
-exits with error status 1 if a macro package appears
-to be in use by the input document, but grog was
-unable to infer which one, or 2 if there were
-problems handling an option or operand. It otherwise exits
-with status 0. (If the --run option is
-specified, groff’s exit status is discarded.)
-Inferring no preprocessors or macro packages is not an error
-condition; a valid roff document need not use either.
-Even plain text is valid input, if one is mindful of the
-syntax of the control and escape characters.
-
-Examples
-
-Running
-
-grog
-/usr/share/doc/groff-base/meintro.me
-
-at the command line results
-in
-
-groff -me
-/usr/share/doc/groff-base/meintro.me
-
-because grog recognizes
-that the file meintro.me is written using macros from
-the me package. The command
-
-grog
-/usr/share/doc/groff-base/pic.ms
-
-outputs
-
-groff -e -p -t -ms
-/usr/share/doc/groff-base/pic.ms
-
-on the other hand. Besides
-discerning the ms macro package, grog
-recognizes that the file pic.ms additionally needs
-the combination of -t for tbl, -e for
-eqn, and -p for pic.
-
-Consider a file
-doc/grnexampl.me, which uses the grn
-preprocessor to include a gremlin(1) picture file in
-an me document. Let’s say we want to suppress
-color output, produce a DVI file, and get backtraces for any
-errors that troff encounters. The command
-
-grog -bc -Idoc -Tdvi
-doc/grnexmpl.me
-
-is processed by grog
-into
-
-groff -bc -Idoc -Tdvi -e -g -me
-doc/grnexmpl.me
-
-where we can see that
-grog has inferred the me macro package along
-with the eqn and grn preprocessors. (The input
-file is located in /usr/ share/doc/groff-base if
-you’d like to try this example yourself.)
-
-Authors
-
-grog was
-originally written in Bourne shell by James Clark. The
-current implementation in Perl was written by
-groff-bernd.warken-72 [AT] web.de">Bernd
-Warken and heavily revised by
-g.branden.robinson [AT] gmail.com">G. Branden
-Robinson.
-
-See also
-
-groff(1)
+groff 1.22.4                     7 March 2023                          GROG(1)

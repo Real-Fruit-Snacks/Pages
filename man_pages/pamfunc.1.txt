@@ -1,386 +1,287 @@
-NAME
+Pamfunc User Manual(1)      General Commands Manual     Pamfunc User Manual(1)
 
-pamfunc - Apply
-a simple monadic arithmetic function to a Netpbm image
+NAME
+       pamfunc - Apply a simple monadic arithmetic function to a Netpbm image
 
 SYNOPSIS
+       pamfunc  {  -multiplier=realnum  |  -divisor=realnum | -adder=integer |
+       -subtractor=integer | -min=wholenum  |  -max=wholenum  -andmask=hexmask
+       -ormask=hexmask       -xormask=hexmask       -not      -shiftleft=count
+       -shiftright=count [-changemaxval] } [filespec]
 
-pamfunc
-{ -multiplier=realnum |
--divisor=realnum |
--adder=integer |
--subtractor=integer |
--min=wholenum | -max=wholenum
--andmask=hexmask -ormask=hexmask
--xormask=hexmask -not
--shiftleft=count -shiftright=count
-[-changemaxval] } [filespec]
-
-All options can
-be abbreviated to their shortest unique prefix. You may use
-two hyphens instead of one. You may separate an option name
-and its value with white space instead of an equals
-sign.
+       All options can be abbreviated to their shortest  unique  prefix.   You
+       may  use  two  hyphens instead of one.  You may separate an option name
+       and its value with white space instead of an equals sign.
 
 DESCRIPTION
+       This program is part of Netpbm(1).
 
-This program is
-part of Netpbm(1).
+       pamfunc reads a Netpbm image as input and produces a  Netpbm  image  as
+       output, with the same format, and dimensions as the input.  pamfunc ap‐
+       plies a simple transfer function to each sample in the input to  gener‐
+       ate the corresponding sample in the output.  The options determine what
+       function.
 
-pamfunc
-reads a Netpbm image as input and produces a Netpbm image as
-output, with the same format, and dimensions as the input.
-pamfunc applies a simple transfer function to each
-sample in the input to generate the corresponding sample in
-the output. The options determine what function.
+       The samples involved are PAM samples.  If the input  is  PBM,  PGM,  or
+       PPM, the output will be that same format, but pamfunc applies the func‐
+       tions to the PAM equivalent samples, yielding PAM  equivalent  samples.
+       This can be nonintuitive in the PBM ⟨#pbmoddness⟩  case.
 
-The samples
-involved are PAM samples. If the input is PBM, PGM, or PPM,
-the output will be that same format, but pamfunc
-applies the functions to the PAM equivalent samples,
-yielding PAM equivalent samples. This can be nonintuitive in
-the PBM case.
+       pamarith  is the same thing for binary functions -- it takes two images
+       as input and applies a specified simple arithmetic function (e.g. addi‐
+       tion) on pairs of samples from the two to produce the single output im‐
+       age.
 
-pamarith
-is the same thing for binary functions -- it takes two
-images as input and applies a specified simple arithmetic
-function (e.g. addition) on pairs of samples from the two to
-produce the single output image.
+   Values
+       The functions fall into two categories: arithmetic (such as multiply by
+       5)  and  bit  string  (such  as and with 01001000).  For the arithmetic
+       functions, the function arguments and results are the fraction  that  a
+       sample is of the maxval, i.e. normal interpretation of PAM tuples.  But
+       for the bit string functions, the value is the  the  bit  string  whose
+       value  as a binary cipher is the sample value, and the maxval indicates
+       the width of the bit string.
 
-Values
+       Arithmetic functions
 
-The functions fall into two categories: arithmetic (such as
-multiply by 5) and bit string (such as and with 01001000).
-For the arithmetic functions, the function arguments and
-results are the fraction that a sample is of the maxval,
-i.e. normal interpretation of PAM tuples. But for the bit
-string functions, the value is the the bit string whose
-value as a binary cipher is the sample value, and the maxval
-indicates the width of the bit string.
+       The arithmetic functions are those selected by the options -multiplier,
+       -divisor, -adder, -subtractor, -min, and -max.
 
-Arithmetic
-functions
+       As  an example, consider an image with maxval 100 and a sample value of
+       10 and a function of "multiply by 5." The argument to the  function  is
+       10/100  (0.1)  and  the result is 5 * 0.1 = 0.5.  In the simplest case,
+       the maxval of the output is also 100, so the output sample value is 0.5
+       * 100 = 50.  As you can see, we could just talk about the sample values
+       themselves instead of these fractions and get the same result (10 * 5 =
+       50), but we don't.
 
-The arithmetic
-functions are those selected by the options
--multiplier, -divisor, -adder,
--subtractor, -min, and -max.
+       Where it makes a practical difference whether we consider the values to
+       be the fraction of the maxval or the sample value alone is  where  pam‐
+       func  uses  a different maxval in the output image than it finds in the
+       input image.  See -changemaxval.
 
-As an example,
-consider an image with maxval 100 and a sample value of 10
-and a function of "multiply by 5." The argument to
-the function is 10/100 (0.1) and the result is 5 * 0.1 =
-0.5. In the simplest case, the maxval of the output is also
-100, so the output sample value is 0.5 * 100 = 50. As you
-can see, we could just talk about the sample values
-themselves instead of these fractions and get the same
-result (10 * 5 = 50), but we don’t.
+       So remember in reading the descriptions below that the values  are  0.1
+       and  0.5 in this example, not 10 and 50.  All arguments and results are
+       in the range [0,1].
 
-Where it makes
-a practical difference whether we consider the values to be
-the fraction of the maxval or the sample value alone is
-where pamfunc uses a different maxval in the output
-image than it finds in the input image. See
--changemaxval.
+       Bit string functions
 
-So remember in
-reading the descriptions below that the values are 0.1 and
-0.5 in this example, not 10 and 50. All arguments and
-results are in the range [0,1].
+       The bit string functions are those selected by  the  options  -andmask,
+       -ormask, -xormask, -not, -shiftleft, and -shiftright.
 
-Bit string
-functions
+       With  these  functions, the maxval has a very different meaning than in
+       normal Netpbm images: it tells how wide (how many bits) the bit  string
+       is.   The maxval must be a full binary count (a power of two minus one,
+       such as 0xff) and the number of ones in it is  the  width  of  the  bit
+       string.
 
-The bit string
-functions are those selected by the options -andmask,
--ormask, -xormask, -not,
--shiftleft, and -shiftright.
+       As an example, consider an image with maxval 15 and a sample value of 5
+       and a function of "and with 0100".  The argument  to  the  function  is
+       0101 and the result is 0100.
 
-With these
-functions, the maxval has a very different meaning than in
-normal Netpbm images: it tells how wide (how many bits) the
-bit string is. The maxval must be a full binary count (a
-power of two minus one, such as 0xff) and the number of ones
-in it is the width of the bit string.
+       In  this example, it doesn't make any practical difference what we con‐
+       sider the width of the string to be, as long as it is at least  3.   If
+       the  maxval  were  255,  the  result would be the same.  But with a bit
+       shift operation, it matters.  Consider shifting left by 2 bits.  In the
+       example, where the input value is 0101, the result is 0100.  But if the
+       maxval were 255, the result would be 00010100.
 
-As an example,
-consider an image with maxval 15 and a sample value of 5 and
-a function of "and with 0100". The argument to the
-function is 0101 and the result is 0100.
+       For a masking function, the mask value you specify must not  have  more
+       significant bits than the width indicated by the maxval.
 
-In this
-example, it doesn’t make any practical difference what
-we consider the width of the string to be, as long as it is
-at least 3. If the maxval were 255, the result would be the
-same. But with a bit shift operation, it matters. Consider
-shifting left by 2 bits. In the example, where the input
-value is 0101, the result is 0100. But if the maxval were
-255, the result would be 00010100.
+       For  a  shifting  operation,  the  shift  count you specify must not be
+       greater than the width indicated by the maxval.
 
-For a masking
-function, the mask value you specify must not have more
-significant bits than the width indicated by the maxval.
+       PBM Oddness
 
-For a shifting
-operation, the shift count you specify must not be greater
-than the width indicated by the maxval.
+       If you're familiar with the PBM format, you may find  pamfunc's  opera‐
+       tion  on PBM images to be nonintuitive.  Because in PBM black is repre‐
+       sented as 1 and white as 0 (1.0 and 0.0 normlized), you  might  be  ex‐
+       pecting adding 1 to white to yield black.
 
-PBM
-Oddness
-
-If you’re
-familiar with the PBM format, you may find
-pamfunc’s operation on PBM images to be
-nonintuitive. Because in PBM black is represented as 1 and
-white as 0 (1.0 and 0.0 normlized), you might be expecting
-adding 1 to white to yield black.
-
-But the PBM
-format is irrelevant, because pamfunc operates on the
-numbers found in the PAM equivalent (see above). In a PAM
-black and white image, black is 0 and white is 1 (0.0 and
-1.0 normalized). So white plus 1 (clipped to the maximum of
-1.0) is white.
+       But  the PBM format is irrelevant, because pamfunc operates on the num‐
+       bers found in the PAM equivalent (see above).  In a PAM black and white
+       image,  black  is  0 and white is 1 (0.0 and 1.0 normalized).  So white
+       plus 1 (clipped to the maximum of 1.0) is white.
 
 OPTIONS
+       In addition to the options common to all programs  based  on  libnetpbm
+       (most notably -quiet, see
+        Common  Options  ⟨index.html#commonoptions⟩  ), pamfunc recognizes the
+       following command line options:
 
-In addition to
-the options common to all programs based on libnetpbm (most
-notably -quiet, see
- Common Options ),
-pamfunc recognizes the following command line
-options: 
--multiplier=realnum
+       -multiplier=realnum
 
-This option
-makes the transfer function that of multiplying by 
-realnum. realnum must be nonnegative. If the
-result 
-is greater than one, it is clipped to one.
+              This option makes the transfer function that of multiplying by
+                   realnum.  realnum must be nonnegative.  If the result
+                   is greater than one, it is clipped to one.
 
-Where the input
-is a PGM or PPM image, this has the effect of 
-dimming or brightening it. For a different kind of
-brightening, 
-see pambrighten(1) and ppmflash(1)
+              Where the input is a PGM or PPM image, this has the effect of
+                   dimming or brightening it.  For a different kind of bright‐
+              ening,
+                   see pambrighten(1) and ppmflash(1)
 
-Also, see
-ppmdim(1), which does the same 
-thing as pamfunc -multiplier on a PPM image with a
-multiplier 
-between zero and one, except it uses integer arithmetic, so
-it may be 
-faster.
+              Also, see ppmdim(1), which does the same
+                   thing  as  pamfunc -multiplier on a PPM image with a multi‐
+              plier
+                   between zero and one, except it uses integer arithmetic, so
+              it may be
+                   faster.
 
-And
-ppmfade(1) can generate a whole 
-sequence of images of brightness declining to black or
-increasing to 
-white, if that’s what you want.
+              And ppmfade(1) can generate a whole
+                   sequence  of images of brightness declining to black or in‐
+              creasing to
+                   white, if that's what you want.
 
--divisor=realnum
+       -divisor=realnum
 
-This option
-makes the transfer function that of dividing by 
-realnum. realnum must be nonnegative. If the
-result 
-is greater than one, it is clipped to one.
+              This option makes the transfer function that of dividing by
+                   realnum.  realnum must be nonnegative.  If the result
+                   is greater than one, it is clipped to one.
 
-This is the
-same function as you would get with -multiplier, 
-specifying the multiplicative inverse of realnum.
+              This is the same function as you would get with -multiplier,
+                   specifying the multiplicative inverse of realnum.
 
--adder=integer
+       -adder=integer
 
-This option
-makes the transfer function that of adding 
-integer/maxval. If the result is greater than
-one, it is 
-clipped to one. If it is less than zero, it is clipped to
-zero.
+              This option makes the transfer function that of adding
+                   integer/maxval.  If the result is greater than one, it is
+                   clipped to one.  If it is less than zero, it is clipped  to
+              zero.
 
-Note that in
-mathematics, this entity is called an "addend,"
+              Note that in mathematics, this entity is called an "addend,"
+                   and an "adder" is a snake.  We use "adder" because
+                   it makes more sense.
 
-and an "adder" is a snake. We use
-"adder" because 
-it makes more sense.
+       -subtractor=integer
 
--subtractor=integer
+              This option makes the transfer function that of subtracting
+                   integer/maxval.  If the result is greater than one, it is
+                   clipped  to one.  If it is less than zero, it is clipped to
+              zero.
 
-This option
-makes the transfer function that of subtracting 
-integer/maxval. If the result is greater than
-one, it is 
-clipped to one. If it is less than zero, it is clipped to
-zero.
+              Note that in mathematics, this entity is called a
+                   "subtrahend" rather than a "subtractor." We use
+                   "subtractor" because it makes more sense.
 
-Note that in
-mathematics, this entity is called a 
-"subtrahend" rather than a "subtractor."
-We use 
-"subtractor" because it makes more sense.
+              This is the same function as you would get with -adder,
+                   specifying the negative of integer.
 
-This is the
-same function as you would get with -adder, 
-specifying the negative of integer.
+       -min=wholenum
 
--min=wholenum
+              This option makes the transfer function that of taking the maxi‐
+              mum of
+                   the argument and wholenum/maxval.  I.e the minimum value in
+                   the output will be wholenum/maxval.
 
-This option
-makes the transfer function that of taking the maximum of
+                   If wholenum/maxval is greater than one, though, every value
+                   in the output will be one.
 
-the argument and wholenum/maxval. I.e the
-minimum value in 
-the output will be wholenum/maxval.
+       -max=wholenum
 
-If
-wholenum/maxval is greater than one, though,
-every value 
-in the output will be one.
+              This option makes the transfer function that of taking the mini‐
+              mum of
+                   the argument and wholenum/maxval.  I.e the maximum value in
+                   the output will be wholenum/maxval.
 
--max=wholenum
+                   If wholenum/maxval is greater than one, the function is
+                   idempotent -- the output is identical to the input.
 
-This option
-makes the transfer function that of taking the minimum of
+       -andmask=hexmask
 
-the argument and wholenum/maxval. I.e the
-maximum value in 
-the output will be wholenum/maxval.
+              This option makes the transfer function that of bitwise anding
+                   with hexmask.
 
-If
-wholenum/maxval is greater than one, the
-function is 
-idempotent -- the output is identical to the input.
+              hexmask is in hexadecimal.  Example: 0f
 
--andmask=hexmask
+              This option was new in Netpbm 10.40 (September 2007).
 
-This option
-makes the transfer function that of bitwise anding 
-with hexmask.
+       -ormask=hexmask
 
-hexmask
-is in hexadecimal. Example: 0f
+              This option makes the transfer function that of bitwise
+                   inclusive oring with hexmask.
 
-This option was
-new in Netpbm 10.40 (September 2007).
+              This is analogous to -andmask.
 
--ormask=hexmask
+              This option was new in Netpbm 10.40 (September 2007).
 
-This option
-makes the transfer function that of bitwise 
-inclusive oring with hexmask.
+       -xormask=hexmask
 
-This is
-analogous to -andmask.
+              This option makes the transfer function that of bitwise
+                   exclusive oring with hexmask.
 
-This option was
-new in Netpbm 10.40 (September 2007).
+              This is analogous to -andmask.
 
--xormask=hexmask
+              This option was new in Netpbm 10.40 (September 2007).
 
-This option
-makes the transfer function that of bitwise 
-exclusive oring with hexmask.
+       -not
 
-This is
-analogous to -andmask.
+              This option makes the transfer function that of bitwise logical
+                   inversion (e.g. sample value 0xAA becomes 0x55).
 
-This option was
-new in Netpbm 10.40 (September 2007).
+              pnminvert does the same thing for a bilevel visual image
+                   which has maxval 1 or is of PBM type.
 
--not
+              This option was new in Netpbm 10.40 (September 2007).
 
-This option makes the transfer function that of bitwise
-logical 
+       -shiftleft=count
 
-inversion (e.g. sample value
-0xAA becomes 0x55).
+              This option makes the transfer function that of bitwise shifting
+                   left by count bits.
 
-pnminvert
-does the same thing for a bilevel visual image 
-which has maxval 1 or is of PBM type.
+              This option was new in Netpbm 10.40 (September 2007).
 
-This option was
-new in Netpbm 10.40 (September 2007).
+       -shiftright=count
 
--shiftleft=count
+              This option makes the transfer function that of bitwise shifting
+                   right by count bits.
 
-This option
-makes the transfer function that of bitwise shifting 
-left by count bits.
+              This is analogous to -shiftleft.
 
-This option was
-new in Netpbm 10.40 (September 2007).
+              This option was new in Netpbm 10.40 (September 2007).
 
--shiftright=count
+       -changemaxval
 
-This option
-makes the transfer function that of bitwise shifting 
-right by count bits.
+              This option tells pamfunc to use a different maxval in the  out‐
+              put  image  than the maxval of the input image, if it helps.  By
+              default, the maxval of the output is unchanged  from  the  input
+              and  pamfunc  modifies the sample values as necessary to perform
+              the operation.
 
-This is
-analogous to -shiftleft.
+              But there is one case where pamfunc can achieve the same  result
+              just  by  changing  the maxval and leaving the sample values un‐
+              changed: dividing by a number 1 or greater, or multiplying by  a
+              number 1 or less.  For example, to halve all of the values, pam‐
+              func can just double the maxval.
 
-This option was
-new in Netpbm 10.40 (September 2007).
+              With -changemaxval, pamfunc will do just that.
 
--changemaxval
+              As the Netpbm formats have a maximum maxval of 65535, for  large
+              divisors, pamfunc may not be able to use this method.
 
-This option
-tells pamfunc to use a different maxval in the output
-image than the maxval of the input image, if it helps. By
-default, the maxval of the output is unchanged from the
-input and pamfunc modifies the sample values as
-necessary to perform the operation.
+              An  advantage  of  dividing  by  changing the maxval is that you
+              don't lose precision.  The higher maxval means higher precision.
+              For  example,  consider an image with a maxval of 100 and sample
+              value of 10.  You divide by 21 and then multiply  by  21  again.
+              If pamfunc does this by changing the sample values while retain‐
+              ing maxval 100, the division will result in a sample value of  0
+              and the multiplication will also result in zero.  But if pamfunc
+              instead keeps the sample value 10 and changes  the  maxval,  the
+              division  will result in a maxval of 2100 and the multiplication
+              will change it back to 100, and the round trip is idempotent.
 
-But there is
-one case where pamfunc can achieve the same result
-just by changing the maxval and leaving the sample values
-unchanged: dividing by a number 1 or greater, or multiplying
-by a number 1 or less. For example, to halve all of the
-values, pamfunc can just double the maxval.
-
-With
--changemaxval, pamfunc will do just that.
-
-As the Netpbm
-formats have a maximum maxval of 65535, for large divisors,
-pamfunc may not be able to use this method.
-
-An advantage of
-dividing by changing the maxval is that you don’t lose
-precision. The higher maxval means higher precision. For
-example, consider an image with a maxval of 100 and sample
-value of 10. You divide by 21 and then multiply by 21 again.
-If pamfunc does this by changing the sample values
-while retaining maxval 100, the division will result in a
-sample value of 0 and the multiplication will also result in
-zero. But if pamfunc instead keeps the sample value
-10 and changes the maxval, the division will result in a
-maxval of 2100 and the multiplication will change it back to
-100, and the round trip is idempotent.
-
-This option was
-new in Netpbm 10.65 (December 2013).
+              This option was new in Netpbm 10.65 (December 2013).
 
 SEE ALSO
-
-ppmdim(1),
-pambrighten(1), pamdepth(1),
-pamarith(1), pamsummcol(1), pamsumm(1),
-ppmfade(1), pnminvert(1), pam(1),
-pnm(1),
+       ppmdim(1),  pambrighten(1),  pamdepth(1),  pamarith(1),  pamsummcol(1),
+       pamsumm(1), ppmfade(1), pnminvert(1), pam(1), pnm(1),
 
 HISTORY
-
-This program
-was added to Netpbm in Release 10.3 (June 2002).
+       This program was added to Netpbm in Release 10.3 (June 2002).
 
 DOCUMENT SOURCE
+       This  manual  page was generated by the Netpbm tool 'makeman' from HTML
+       source.  The master documentation is at
 
-This manual
-page was generated by the Netpbm tool ’makeman’
-from HTML source. The master documentation is at
+              http://netpbm.sourceforge.net/doc/pamfunc.html
 
-http://netpbm.sourceforge.net/doc/pamfunc.html
+netpbm documentation           09 September 2020        Pamfunc User Manual(1)

@@ -63,14 +63,14 @@ DESCRIPTION
 
        character sequence
               is a sequence of zero or more non-null  characters.   A  program
-              should  never  use  a  character  sequence where a string is re-
+              should  never  use  a  character  sequence where a string is re‐
               quired.  However, with appropriate care, a string can be used in
               the place of a character sequence.
 
               null-padded character sequence (zustr)
-                     Character  sequences can be contained in fixed-width buf-
-                     fers, which contain padding null bytes after the  charac-
-                     ter  sequence, to fill the rest of the buffer without af-
+                     Character  sequences can be contained in fixed-width buf‐
+                     fers, which contain padding null bytes after the  charac‐
+                     ter  sequence, to fill the rest of the buffer without af‐
                      fecting the character sequence;  however,  those  padding
                      null bytes are not part of the character sequence.
 
@@ -85,12 +85,12 @@ DESCRIPTION
               strnlen(ustr, sz).
 
        size (sz)
-              refers  to  the  entire buffer where the string or character se-
+              refers  to  the  entire buffer where the string or character se‐
               quence is contained.
 
-       end    is the name of a pointer to one past the last element of a  buf-
+       end    is the name of a pointer to one past the last element of a  buf‐
               fer.   It  is  equivalent to &str[sz].  It is used as a sentinel
-              value, to be able to truncate strings or character sequences in-
+              value, to be able to truncate strings or character sequences in‐
               stead of overrunning the containing buffer.
 
        copy   This  term  is used when the writing starts at the first element
@@ -102,7 +102,7 @@ DESCRIPTION
 
        chain  This  term  is  used  when  it's  the  programmer who provides a
               pointer to the terminating null byte in the string dst  (or  one
-              after the last character in a character sequence), and the func-
+              after the last character in a character sequence), and the func‐
               tion starts writing at that location.  The  function  returns  a
               pointer to the new location of the terminating null byte (or one
               after the last character in  a  character  sequence)  after  the
@@ -111,14 +111,14 @@ DESCRIPTION
    Copy, catenate, and chain-copy
        Originally,  there  was  a  distinction between functions that copy and
        those that catenate.  However, newer functions that copy while allowing
-       chaining  cover  both use cases with a single API.  They are also algo-
+       chaining  cover  both use cases with a single API.  They are also algo‐
        rithmically faster, since they don't need to search for the terminating
        null  byte  of  the  existing string.  However, functions that catenate
        have a much simpler use, so if performance is  not  important,  it  can
        make sense to use them for improving readability.
 
        The pointer returned by functions that allow chaining is a byproduct of
-       the copy operation, so it has no performance costs.  Functions that re-
+       the copy operation, so it has no performance costs.  Functions that re‐
        turn  such  a  pointer, and thus can be chained, have names of the form
        *stp*(), since it's common to name the pointer just p.
 
@@ -128,8 +128,8 @@ DESCRIPTION
        call.
 
    Truncate or not?
-       The first thing to note is that programmers should be careful with buf-
-       fers, so they always have the correct size, and truncation is not  nec-
+       The first thing to note is that programmers should be careful with buf‐
+       fers, so they always have the correct size, and truncation is not  nec‐
        essary.
 
        In  most cases, truncation is not desired, and it is simpler to just do
@@ -139,22 +139,22 @@ DESCRIPTION
 
        Nowadays, compilers can detect most  programmer  errors  with  features
        like  compiler  warnings,  static  analyzers,  and _FORTIFY_SOURCE (see
-       ftm(7)).  Keeping the code simple helps these  overflow-detection  fea-
+       ftm(7)).  Keeping the code simple helps these  overflow-detection  fea‐
        tures be more precise.
 
-       When  validating  user input, however, it makes sense to truncate.  Re-
+       When  validating  user input, however, it makes sense to truncate.  Re‐
        member to check the return value of such function calls.
 
        Functions that truncate:
 
-       o  stpecpy(3) is the most efficient string copy function that  performs
+       •  stpecpy(3) is the most efficient string copy function that  performs
           truncation.  It only requires to check for truncation once after all
           chained calls.
 
-       o  strlcpy(3bsd) and strlcat(3bsd) are designed to crash if  the  input
+       •  strlcpy(3bsd) and strlcat(3bsd) are designed to crash if  the  input
           string is invalid (doesn't contain a terminating null byte).
 
-       o  stpncpy(3)  and  strncpy(3)  also  truncate,  but  they  don't write
+       •  stpncpy(3)  and  strncpy(3)  also  truncate,  but  they  don't write
           strings, but rather null-padded character sequences.
 
    Null-padded character sequences
@@ -165,7 +165,7 @@ DESCRIPTION
        To copy strings into them, use stpncpy(3).
 
        To copy from an unterminated string within a fixed-width buffer into  a
-       string, ignoring any trailing null bytes in the source fixed-width buf-
+       string, ignoring any trailing null bytes in the source fixed-width buf‐
        fer, you should use zustr2stp(3) or strncat(3).
 
        To copy from an unterminated string within a fixed-width buffer into  a
@@ -173,26 +173,26 @@ DESCRIPTION
        fixed-width buffer, you should use zustr2ustp(3).
 
    Measured character sequences
-       The simplest character sequence copying function is mempcpy(3).  It re-
+       The simplest character sequence copying function is mempcpy(3).  It re‐
        quires always knowing the length of your character sequences, for which
-       structures can be used.  It makes the code much faster, since  you  al-
-       ways  know the length of your character sequences, and can do the mini-
-       mal copies and length measurements.  mempcpy(3)  copies  character  se-
+       structures can be used.  It makes the code much faster, since  you  al‐
+       ways  know the length of your character sequences, and can do the mini‐
+       mal copies and length measurements.  mempcpy(3)  copies  character  se‐
        quences, so you need to explicitly set the terminating null byte if you
        need a string.
 
        However, for keeping type safety, it's good to add a wrapper that  uses
        char * instead of void *: ustpcpy(3).
 
-       In  programs  that  make  considerable  use of strings or character se-
-       quences, and need the best performance, using overlapping character se-
+       In  programs  that  make  considerable  use of strings or character se‐
+       quences, and need the best performance, using overlapping character se‐
        quences can make a big difference.  It allows holding subsequences of a
        larger character sequence.  while not duplicating memory nor using time
        to do a copy.
 
        However, this is delicate, since it requires using character sequences.
        C library APIs use strings, so programs that  use  character  sequences
-       will  have  to  take care of differentiating strings from character se-
+       will  have  to  take care of differentiating strings from character se‐
        quences.
 
        To copy a measured character sequence, use ustpcpy(3).
@@ -209,32 +209,32 @@ DESCRIPTION
        occurs).  Functions that catenate also require that dst holds a  string
        before the call.  List of functions:
 
-       o  stpcpy(3)
-       o  strcpy(3), strcat(3)
-       o  stpecpy(3)
-       o  strlcpy(3bsd), strlcat(3bsd)
+       •  stpcpy(3)
+       •  strcpy(3), strcat(3)
+       •  stpecpy(3)
+       •  strlcpy(3bsd), strlcat(3bsd)
 
-       Other  functions  require  an  input string, but create a character se-
+       Other  functions  require  an  input string, but create a character se‐
        quence as output.  These functions have confusing  names,  and  have  a
        long history of misuse.  List of functions:
 
-       o  stpncpy(3)
-       o  strncpy(3)
+       •  stpncpy(3)
+       •  strncpy(3)
 
        Other  functions  operate on an input character sequence, and create an
        output string.  Functions that catenate also require that dst  holds  a
        string  before  the  call.  strncat(3) has an even more misleading name
        than the functions above.  List of functions:
 
-       o  zustr2stp(3)
-       o  strncat(3)
-       o  ustr2stp(3)
+       •  zustr2stp(3)
+       •  strncat(3)
+       •  ustr2stp(3)
 
        Other functions operate on an input character  sequence  to  create  an
        output character sequence.  List of functions:
 
-       o  ustpcpy(3)
-       o  zustr2stp(3)
+       •  ustpcpy(3)
+       •  zustr2stp(3)
 
    Functions
        stpcpy(3)
@@ -244,7 +244,7 @@ DESCRIPTION
 
        strcpy(3)
        strcat(3)
-              These functions copy and catenate the input string into a desti-
+              These functions copy and catenate the input string into a desti‐
               nation string.  The programmer is responsible for  allocating  a
               buffer large enough.  The return value is useless.
 
@@ -254,7 +254,7 @@ DESCRIPTION
               This function copies the input string into a destination string.
               If the destination buffer, limited by  a  pointer  to  its  end,
               isn't  large  enough  to  hold the copy, the resulting string is
-              truncated (but it is guaranteed to be null-terminated).  It  re-
+              truncated (but it is guaranteed to be null-terminated).  It  re‐
               turns  a  pointer suitable for chaining.  Truncation needs to be
               detected only once after the last chained call.
 
@@ -263,7 +263,7 @@ DESCRIPTION
 
        strlcpy(3bsd)
        strlcat(3bsd)
-              These functions copy and catenate the input string into a desti-
+              These functions copy and catenate the input string into a desti‐
               nation string.  If the destination buffer, limited by its  size,
               isn't  large  enough  to  hold the copy, the resulting string is
               truncated (but it is guaranteed to  be  null-terminated).   They
@@ -275,10 +275,10 @@ DESCRIPTION
 
        stpncpy(3)
               This  function  copies the input string into a destination null-
-              padded character sequence in a fixed-width buffer.  If the  des-
+              padded character sequence in a fixed-width buffer.  If the  des‐
               tination buffer, limited by its size, isn't large enough to hold
               the copy, the resulting character sequence is truncated.   Since
-              it creates a character sequence, it doesn't need to write a ter-
+              it creates a character sequence, it doesn't need to write a ter‐
               minating null byte.  It's impossible to  distinguish  truncation
               by  the  result of the call, from a character sequence that just
               fits the destination buffer; truncation should  be  detected  by
@@ -293,7 +293,7 @@ DESCRIPTION
 
        zustr2ustp(3)
               This function copies the input character sequence contained in a
-              null-padded wixed-width buffer, into a destination character se-
+              null-padded wixed-width buffer, into a destination character se‐
               quence.   The  programmer is responsible for allocating a buffer
               large enough.  It returns a pointer suitable for chaining.
 
@@ -318,7 +318,7 @@ DESCRIPTION
               reference implementation.
 
        strncat(3)
-              Do  not  confuse this function with strncpy(3); they are not re-
+              Do  not  confuse this function with strncpy(3); they are not re‐
               lated at all.
 
               This function catenates the input character  sequence  contained
@@ -330,13 +330,13 @@ DESCRIPTION
 
        ustpcpy(3)
               This  function  copies  the input character sequence, limited by
-              its length, into a destination character sequence.  The program-
-              mer is responsible for allocating a buffer large enough.  It re-
+              its length, into a destination character sequence.  The program‐
+              mer is responsible for allocating a buffer large enough.  It re‐
               turns a pointer suitable for chaining.
 
        ustr2stp(3)
               This function copies the input character  sequence,  limited  by
-              its  length,  into  a destination string.  The programmer is re-
+              its  length,  into  a destination string.  The programmer is re‐
               sponsible for allocating a buffer large enough.   It  returns  a
               pointer suitable for chaining.
 
@@ -344,39 +344,39 @@ RETURN VALUE
        The  following  functions return a pointer to the terminating null byte
        in the destination string.
 
-       o  stpcpy(3)
-       o  ustr2stp(3)
-       o  zustr2stp(3)
+       •  stpcpy(3)
+       •  ustr2stp(3)
+       •  zustr2stp(3)
 
        The following function returns a pointer to the terminating  null  byte
        in the destination string, except when truncation occurs; if truncation
        occurs, it returns a pointer to the end of the destination buffer.
 
-       o  stpecpy(3)
+       •  stpecpy(3)
 
-       The following function returns a pointer to one after the last  charac-
+       The following function returns a pointer to one after the last  charac‐
        ter  in  the destination character sequence; if truncation occurs, that
-       pointer is equivalent to a pointer to the end of the  destination  buf-
+       pointer is equivalent to a pointer to the end of the  destination  buf‐
        fer.
 
-       o  stpncpy(3)
+       •  stpncpy(3)
 
-       The  following functions return a pointer to one after the last charac-
+       The  following functions return a pointer to one after the last charac‐
        ter in the destination character sequence.
 
-       o  zustr2ustp(3)
-       o  ustpcpy(3)
+       •  zustr2ustp(3)
+       •  ustpcpy(3)
 
        The following functions return the length of the total string that they
        tried to create (as if truncation didn't occur).
 
-       o  strlcpy(3bsd), strlcat(3bsd)
+       •  strlcpy(3bsd), strlcat(3bsd)
 
        The following functions return the dst pointer, which is useless.
 
-       o  strcpy(3), strcat(3)
-       o  strncpy(3)
-       o  strncat(3)
+       •  strcpy(3), strcat(3)
+       •  strncpy(3)
+       •  strncat(3)
 
 NOTES
        The Linux kernel has an internal function for copying strings, which is
@@ -395,13 +395,14 @@ CAVEATS
        Don't mix chain calls to truncating and non-truncating  functions.   It
        is  conceptually  wrong  unless  you know that the first part of a copy
        will always fit.  Anyway, the performance difference will  probably  be
-       negligible, so it will probably be more clear if you use consistent se-
+       negligible, so it will probably be more clear if you use consistent se‐
        mantics: either truncating or non-truncating.  Calling a non-truncating
        function after a truncating one is necessarily wrong.
 
 BUGS
        All  catenation  functions share the same performance problem: Shlemiel
-       thepainter <https://www.joelonsoftware.com/2001/12/11/back-to-basics/>.
+       the painter                 ⟨https://www.joelonsoftware.com/2001/12/11/
+       back-to-basics/⟩.
 
 EXAMPLES
        The following are examples of correct use of each of these functions.
@@ -568,7 +569,7 @@ EXAMPLES
            }
 
 SEE ALSO
-       bzero(3), memcpy(3), memccpy(3), mempcpy(3), stpcpy(3),  strlcpy(3bsd),
+       bzero(3),  memcpy(3), memccpy(3), mempcpy(3), stpcpy(3), strlcpy(3bsd),
        strncat(3), stpncpy(3), string(3)
 
 Linux man-pages 6.03              2023-02-05                 string_copying(7)

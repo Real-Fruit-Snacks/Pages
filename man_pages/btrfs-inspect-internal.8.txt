@@ -1,381 +1,411 @@
-NAME
+BTRFS-INSPECT-INTERNAL(8)            BTRFS           BTRFS-INSPECT-INTERNAL(8)
 
-btrfs-inspect-internal
-- query various internal information
+NAME
+       btrfs-inspect-internal - query various internal information
 
 SYNOPSIS
-
-btrfs
-inspect-internal  
+       btrfs inspect-internal <subcommand> <args>
 
 DESCRIPTION
-
-This command
-group provides an interface to query internal information.
-The functionality ranges from a simple UI to an ioctl or a
-more complex query that assembles the result from several
-internal structures. The latter usually requires calls to
-privileged ioctls.
+       This command group provides an interface to query internal information.
+       The functionality ranges from a simple UI to an ioctl or a more complex
+       query  that  assembles the result from several internal structures. The
+       latter usually requires calls to privileged ioctls.
 
 SUBCOMMAND
+       dump-super [options] <device> [device...]
+              Show btrfs superblock information stored  on  given  devices  in
+              textual  form.  By default the first superblock is printed, more
+              details about all  copies  or  additional  backup  data  can  be
+              printed.
 
-dump-super
-[options]  [device...]
+              Besides  verification  of the filesystem signature, there are no
+              other sanity checks. The superblock checksum status is reported,
+              the device item and filesystem UUIDs are checked and reported.
+
+              NOTE:
+                 The  meaning  of  option  -s has changed in version 4.8 to be
+                 consistent with other tools to specify superblock copy rather
+                 the  offset.  The  old way still works, but prints a warning.
+                 Please update your scripts to use --bytenr instead.  The  op‐
+                 tion -i has been deprecated.
 
-Show btrfs superblock
-information stored on given devices in textual form. By
-default the first superblock is printed, more details about
-all copies or additional backup data can be printed.
+              Options
 
-Besides
-verification of the filesystem signature, there are no other
-sanity checks. The superblock checksum status is reported,
-the device item and filesystem UUIDs are checked and
-reported.
+              -f|--full
+                     print  full  superblock information, including the system
+                     chunk array and backup roots
 
-NOTE:
+              -a|--all
+                     print information about  all  present  superblock  copies
+                     (cannot be used together with -s option)
 
-The meaning of option -s
-has changed in version 4.8 to be consistent with other tools
-to specify superblock copy rather the offset. The old way
-still works, but prints a warning. Please update your
-scripts to use --bytenr instead. The option -i
-has been deprecated.
+              -i <super>
+                     (deprecated since 4.8, same behaviour as --super)
 
-Options 
--f|--full
+              --bytenr <bytenr>
+                     specify offset to a superblock in a non-standard location
+                     at bytenr, useful for debugging (disables the -f option)
 
-print full superblock
-information, including the system chunk array and backup
-roots
+                     If there are multiple options specified,  only  the  last
+                     one applies.
 
--a|--all
+              -F|--force
+                     attempt  to  print  the  superblock even if a valid BTRFS
+                     signature is not found;  the  result  may  be  completely
+                     wrong if the data does not resemble a superblock
 
-print information about all
-present superblock copies (cannot be used together with
--s option)
+              -s|--super <bytenr>
+                     (see compatibility note above)
 
--i 
+                     specify  which mirror to print, valid values are 0, 1 and
+                     2 and the superblock must be present on the device with a
+                     valid signature, can be used together with --force
 
-(deprecated since 4.8, same
-behaviour as --super)
+       dump-tree [options] <device> [device...]
+              Dump tree structures from a given device in textual form, expand
+              keys to human readable equivalents where possible.  This is use‐
+              ful  for analyzing filesystem state or inconsistencies and has a
+              positive  educational  effect  on  understanding  the   internal
+              filesystem structure.
 
---bytenr 
+              NOTE:
+                 By default contains file names, consider that if you're asked
+                 to send the dump for analysis and  use  --hide-names  eventu‐
+                 ally.  Does not contain file data.
 
-specify offset to a superblock
-in a non-standard location at bytenr, useful for
-debugging (disables the -f option)
+              Special characters in file names, xattr names and values are es‐
+              caped, in the C style like \n and octal encoding \NNN.
 
-If there are
-multiple options specified, only the last one applies.
+              Options
 
--F|--force
+              -e|--extents
+                     print only extent-related information: extent and  device
+                     trees
 
-attempt to print the superblock
-even if a valid BTRFS signature is not found; the result may
-be completely wrong if the data does not resemble a
-superblock
+              -d|--device
+                     print  only  device-related information: tree root, chunk
+                     and device trees
 
--s|--super
+              -r|--roots
+                     print only short root node  information,  i.e.  the  root
+                     tree keys
 
-(see compatibility note
-above)
+              -R|--backups
+                     same  as  --roots  plus  print backup root info, i.e. the
+                     backup root keys and the respective tree root block  off‐
+                     set
 
-specify which
-mirror to print, valid values are 0, 1 and 2 and the
-superblock must be present on the device with a valid
-signature, can be used together with --force
+              -u|--uuid
+                     print only the uuid tree information, empty output if the
+                     tree does not exist
 
-dump-tree [options]
- [device...]
+              -b <block_num>
+                     print info of the specified block only, can be  specified
+                     multiple times
 
-Dump tree structures from a
-given device in textual form, expand keys to human readable
-equivalents where possible. This is useful for analyzing
-filesystem state or inconsistencies and has a positive
-educational effect on understanding the internal filesystem
-structure.
+              --follow
+                     use   with   -b,   print  all  children  tree  blocks  of
+                     <block_num>
 
-NOTE:
+              --dfs  (default up to 5.2)
 
-Contains file names, consider
-that if you're asked to send the dump for analysis. Does not
-contain file data.
+                     use depth-first search to  print  trees,  the  nodes  and
+                     leaves are intermixed in the output
 
-Options 
--e|--extents
+              --bfs  (default since 5.3)
 
-print only extent-related
-information: extent and device trees
+                     use  breadth-first  search  to print trees, the nodes are
+                     printed before all leaves
 
--d|--device
+              --hide-names
+                     print a placeholder HIDDEN instead of various names, use‐
+                     ful  for developers to inspect the dump while keeping po‐
+                     tentially sensitive information hidden
 
-print only device-related
-information: tree root, chunk and device trees
+                     This is:
 
--r|--roots
+                     • directory entries (files, directories, subvolumes)
 
-print only short root node
-information, i.e. the root tree keys
+                     • default subvolume
 
--R|--backups
+                     • extended attributes (name, value)
 
-same as --roots plus
-print backup root info, i.e. the backup root keys and the
-respective tree root block offset
+                     • hardlink names (if stored inside another item or as ex‐
+                       tended references in standalone items)
 
--u|--uuid
+                     NOTE:
+                        Lengths  are not hidden because they can be calculated
+                        from the item size anyway.
 
-print only the uuid tree
-information, empty output if the tree does not exist
+              --csum-headers
+                     print b-tree node checksums stored in headers (metadata)
 
--b 
+              --csum-items
+                     print checksums stored in checksum items (data)
 
-print info of the specified
-block only, can be specified multiple times
+              --noscan
+                     do not automatically scan the system  for  other  devices
+                     from  the  same filesystem, only use the devices provided
+                     as the arguments
 
---follow
+              -t <tree_id>
+                     print only the tree with the specified ID, where  the  ID
+                     can be numerical or common name in a flexible human read‐
+                     able form
 
-use with -b, print all
-children tree blocks of 
+                     The tree id name recognition rules:
 
---dfs
+                     • case does not matter
 
-(default up to 5.2)
+                     • the C source definition, e.g. BTRFS_ROOT_TREE_OBJECTID
 
-use depth-first
-search to print trees, the nodes and leaves are intermixed
-in the output
+                     • short forms without BTRFS_ prefix,  without  _TREE  and
+                       _OBJECTID suffix, e.g. ROOT_TREE, ROOT
 
---bfs
+                     • convenience  aliases,  e.g.  DEVICE  for  the DEV tree,
+                       CHECKSUM for CSUM
 
-(default since 5.3)
+                     • unrecognized ID is an error
 
-use
-breadth-first search to print trees, the nodes are printed
-before all leaves
+       inode-resolve [-v] <ino> <path>
+              (needs root privileges)
 
---hide-names
+              resolve paths to all files with given  inode  number  ino  in  a
+              given subvolume at path, i.e. all hardlinks
 
-print a placeholder
-HIDDEN instead of various names, useful for
-developers to inspect the dump while keeping potentially
-sensitive information hidden
+              Options
 
-This is:
+              -v     (deprecated) alias for global -v option
 
-•
+       logical-resolve [-Pvo] [-s <bufsize>] <logical> <path>
+              (needs root privileges)
 
-directory entries (files, directories, subvolumes)
+              resolve  paths to all files at given logical address in the lin‐
+              ear filesystem space
 
-•
+              Options
 
-default subvolume
+              -P     skip the path resolving and print the inodes instead
 
-•
+              -o     ignore offsets, find all references to an extent  instead
+                     of  a  single  block.  Requires kernel support for the V2
+                     ioctl (added in 4.15). The  results  might  need  further
+                     processing  to  filter out unwanted extents by the offset
+                     that is supposed to be obtained by other means.
 
-extended attributes (name, value)
+              -s <bufsize>
+                     set internal buffer for storing the file  names  to  buf‐
+                     size, default is 64KiB, maximum 16MiB.  Buffer sizes over
+                     64KiB require kernel support for the V2 ioctl  (added  in
+                     4.15).
 
-•
+              -v     (deprecated) alias for global -v option
 
-hardlink names (if stored inside another item or as
-extended references in standalone items)
+       list-chunks [options] <path>
+              (needs root privileges)
 
-NOTE:
+              Enumerate chunks on all devices. The chunks represent the physi‐
+              cal range on devices (not to be confused with block groups  that
+              represent  the  logical ranges, but the terms are often used in‐
+              terchangeably).
 
-Lengths are not hidden because
-they can be calculated from the item size anyway.
+              Example output:
 
---csum-headers
+                 Devid PNumber      Type/profile    PStart    Length      PEnd LNumber    LStart Usage%
+                 ----- ------- ----------------- --------- --------- --------- ------- --------- ------
+                     1       1       Data/single   1.00MiB  84.00MiB  85.00MiB      68 191.60GiB  62.77
+                     1       2     System/DUP     85.00MiB  32.00MiB 117.00MiB      39 140.17GiB   0.05
+                     1       3     System/DUP    117.00MiB  32.00MiB 149.00MiB      40 140.17GiB   0.05
+                     1       4   Metadata/DUP    149.00MiB 192.00MiB 341.00MiB      59 188.41GiB  45.00
+                     1       5   Metadata/DUP    341.00MiB 192.00MiB 533.00MiB      60 188.41GiB  45.00
+                     1       6       Data/single 533.00MiB   1.00GiB   1.52GiB      49 169.91GiB  72.23
+                     1       7       Data/single   1.52GiB  16.00MiB   1.54GiB      69 191.68GiB  79.83
+                     1       8       Data/single   1.54GiB   1.00GiB   2.54GiB      17 100.90GiB  46.39
+                     1       9       Data/single   2.54GiB   1.00GiB   3.54GiB      16  99.90GiB  40.68
+                     1      10       Data/single   3.54GiB   1.00GiB   4.54GiB       1  71.40GiB  62.97
+                     1      11       Data/single   4.54GiB   1.00GiB   5.54GiB      33 125.04GiB  26.00
+                     1      12       Data/single   5.54GiB   1.00GiB   6.54GiB      50 170.91GiB  60.44
+                     1      13       Data/single   6.54GiB 512.00MiB   7.04GiB      63 189.16GiB  67.34
+                     1      14       Data/single   7.04GiB   1.00GiB   8.04GiB      51 171.91GiB  70.94
 
-print b-tree node checksums
-stored in headers (metadata)
+              • Devid -- the device id
 
---csum-items
+              • PNumber -- the number of the chunk on the device (in order)
 
-print checksums stored in
-checksum items (data)
+              • Type/profile -- the chunk type and profile
 
---noscan
+              • PStart -- the chunk start on the device
 
-do not automatically scan the
-system for other devices from the same filesystem, only use
-the devices provided as the arguments
+              • Length -- the chunk length (same for physical and logical  ad‐
+                dress space)
 
--t 
+              • PEnd -- the chunk end, effectively PStart + Length
 
-print only the tree with the
-specified ID, where the ID can be numerical or common name
-in a flexible human readable form
+              • LNumber  --  the  number  of the chunk, in the logical address
+                space of the whole filesystem
 
-The tree id
-name recognition rules:
+              • LStart -- the chunk start in the logical address space of  the
+                whole filesystem, as it's a single space it's also called off‐
+                set
 
-•
+              • Usage -- chunk usage, percentage of used data/metadata of  the
+                chunk length
 
-case does not matter
+              The  chunks  in  the output can be sorted by one or more sorting
+              criteria, evaluated as specified, in the  ascending  order.   By
+              default  the chunks are sorted by devid and pstart, this is most
+              convenient for single device filesystems.
 
-•
+              On multi-device filesystems it's up to the  user  what  is  pre‐
+              ferred  as  the layout of chunks on e.g. striped profiles (RAID0
+              etc) cannot be easily represented.  A logical view  with  corre‐
+              sponding  underlying  structure  would be better, but sorting by
+              lstart,devid at least groups devices of the given logical range.
+              Can be also combined with usage.
 
-the C source definition, e.g.
-BTRFS_ROOT_TREE_OBJECTID 
+              This output can provide information for balance filters.
 
-•
+              Options
 
-short forms without BTRFS_ prefix, without _TREE and
-_OBJECTID suffix, e.g. ROOT_TREE, ROOT
+              --sort MODE
+                     sort by a column (ascending):
 
-•
+                     MODE is a comma separated list of:
+                        devid - by device id (default, with pstart)
 
-convenience aliases, e.g. DEVICE for the DEV tree,
-CHECKSUM for CSUM
+                        pstart  - physical start (relative to the beginning of
+                        the device)
 
-•
+                        lstart - logical offset (in the logical address space)
 
-unrecognized ID is an error
+                        usage - by chunk usage (percentage)
 
-inode-resolve [-v]
+                        length - by chunk length
 
-(needs root privileges)
+              --raw  raw numbers in bytes, without the B suffix
 
-resolve paths
-to all files with given inode number ino in a given
-subvolume at path, i.e. all hardlinks
+              --human-readable
+                     print human friendly numbers, base 1024, this is the  de‐
+                     fault
 
-Options
+              --iec  select the 1024 base for the following options, according
+                     to the IEC standard
 
--v
+              --si   select the 1000 base for the following options, according
+                     to the SI standard
 
-(deprecated) alias for global -v option
+              --kbytes
+                     show sizes in KiB, or kB with --si
 
-logical-resolve [-Pvo] [-s
-]  
+              --mbytes
+                     show sizes in MiB, or MB with --si
 
-(needs root privileges)
+              --gbytes
+                     show sizes in GiB, or GB with --si
 
-resolve paths
-to all files at given logical address in the linear
-filesystem space
+              --tbytes
+                     show sizes in TiB, or TB with --si
 
-Options
+       map-swapfile [options] <file>
+              (needs root privileges)
 
--P
+              Find  device-specific  physical  offset of file that can be used
+              for hibernation. Also verify that the  file  is  suitable  as  a
+              swapfile.   See also command btrfs filesystem mkswapfile and the
+              Swapfile feature description.
 
-skip the path resolving and print the inodes instead
+              NOTE:
+                 Do not use filefrag or FIEMAP ioctl values reported as physi‐
+                 cal,  this  is different due to internal filesystem mappings.
+                 The hibernation expects offset relative to the physical block
+                 device.
 
--o
+              Options
 
-ignore offsets, find all references to an extent instead
-of a single block. Requires kernel support for the V2 ioctl
-(added in 4.15). The results might need further processing
-to filter out unwanted extents by the offset that is
-supposed to be obtained by other means.
+              -r|--resume-offset
+                     print  only  the value suitable as resume offset for file
+                     /sys/power/resume_offset
 
--s 
+       min-dev-size [options] <path>
+              (needs root privileges)
 
-set internal buffer for storing
-the file names to bufsize, default is 64KiB, maximum
-16MiB. Buffer sizes over 64Kib require kernel support for
-the V2 ioctl (added in 4.15).
+              return the minimum size the device can  be  shrunk  to,  without
+              performing  any resize operation, this may be useful before exe‐
+              cuting the actual resize operation
 
--v
+              Options
 
-(deprecated) alias for global -v option
+              --id <id>
+                     specify the device id to query, default is 1 if this  op‐
+                     tion is not used
 
-map-swapfile [options]
+       rootid <path>
+              for  a  given file or directory, return the containing tree root
+              id, but for a subvolume itself return its own tree id (i.e. sub‐
+              vol id)
 
-(needs root privileges)
+              NOTE:
+                 The  result  is  undefined for the so-called empty subvolumes
+                 (identified by inode number 2), but such a subvolume does not
+                 contain any files anyway
 
-Find
-device-specific physical offset of file that can be
-used for hibernation. Also verify that the file is
-suitable as a swapfile. See also command btrfs filesystem
-mkswapfile and the Swapfile feature
-description.
+       subvolid-resolve <subvolid> <path>
+              (needs root privileges)
 
-NOTE:
+              resolve the absolute path of the subvolume id subvolid
 
-Do not use filefrag or
-FIEMAP ioctl values reported as physical, this is
-different due to internal filesystem mappings. The
-hibernation expects offset relative to the physical block
-device.
+       tree-stats [options] <device>
+              (needs root privileges)
 
-Options 
--r|--resume-offset
+              Print  sizes  and statistics of trees. This takes a device as an
+              argument and not a mount point unlike other commands.
 
-print only the value suitable
-as resume offset for file
-/sys/power/resume_offset
+              NOTE:
+                 In case the the filesystem is still mounted it's possible  to
+                 run  the command but the results may be inaccurate or various
+                 errors may be printed in case there are ongoing writes to the
+                 filesystem. A warning is printed in such case.
 
-min-dev-size [options]
+              Options
 
-(needs root privileges)
+              -b|--raw
+                     raw numbers in bytes, without the B suffix
 
-return the
-minimum size the device can be shrunk to, without performing
-any resize operation, this may be useful before executing
-the actual resize operation
+              -t <treeid>
+                     Print stats only for the given treeid.
 
-Options 
---id 
+              --human-readable
+                     print  human friendly numbers, base 1024, this is the de‐
+                     fault
 
-specify the device id to
-query, default is 1 if this option is not used
+              --iec  select the 1024 base for the following options, according
+                     to the IEC standard
 
-rootid 
+              --si   select the 1000 base for the following options, according
+                     to the SI standard
 
-for a given file or directory,
-return the containing tree root id, but for a subvolume
-itself return its own tree id (i.e. subvol id)
+              --kbytes
+                     show sizes in KiB, or kB with --si
 
-NOTE:
+              --mbytes
+                     show sizes in MiB, or MB with --si
 
-The result is undefined for the
-so-called empty subvolumes (identified by inode number 2),
-but such a subvolume does not contain any files anyway
+              --gbytes
+                     show sizes in GiB, or GB with --si
 
-subvolid-resolve
-
-(needs root privileges)
-
-resolve the
-absolute path of the subvolume id subvolid
-
-tree-stats [options]
-
-(needs root privileges)
-
-Print sizes and
-statistics of trees. This takes a device as an argument and
-not a mount point unlike other commands.
-
-NOTE:
-
-In case the the filesystem is
-still mounted it's possible to run the command but the
-results may be inaccurate or various errors may be printed
-in case there are ongoing writes to the filesystem. A
-warning is printed in such case.
-
-Options
-
--b
-
-Print raw numbers in bytes.
+              --tbytes
+                     show sizes in TiB, or TB with --si
 
 EXIT STATUS
-
-btrfs
-inspect-internal returns a zero exit status if it
-succeeds. Non zero is returned in case of failure.
+       btrfs inspect-internal returns a zero exit status if it  succeeds.  Non
+       zero is returned in case of failure.
 
 AVAILABILITY
-
-btrfs is
-part of btrfs-progs. Please refer to the documentation at
-https://btrfs.readthedocs.io.
+       btrfs  is  part  of  btrfs-progs.  Please refer to the documentation at
+       https://btrfs.readthedocs.io.
 
 SEE ALSO
+       mkfs.btrfs(8)
 
-mkfs.btrfs(8)
+6.14                             May 12, 2025        BTRFS-INSPECT-INTERNAL(8)

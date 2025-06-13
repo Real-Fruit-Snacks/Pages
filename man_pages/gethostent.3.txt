@@ -1,202 +1,291 @@
-NAME
+gethostbyname(3)           Library Functions Manual           gethostbyname(3)
 
-FBB::GetHostent
-- Obtain hostent struct from hostname or -address
+NAME
+       gethostbyname, gethostbyaddr, sethostent, gethostent, endhostent, h_er‐
+       rno, herror,  hstrerror,  gethostbyaddr_r,  gethostbyname2,  gethostby‐
+       name2_r, gethostbyname_r, gethostent_r - get network host entry
+
+LIBRARY
+       Standard C library (libc, -lc)
 
 SYNOPSIS
+       #include <netdb.h>
 
-#include
+       void sethostent(int stayopen);
+       void endhostent(void);
 
-Linking option: -lbobcat
+       [[deprecated]] extern int h_errno;
+
+       [[deprecated]] struct hostent *gethostbyname(const char *name);
+       [[deprecated]] struct hostent *gethostbyaddr(const void addr[.len],
+                                                    socklen_t len, int type);
+
+       [[deprecated]] void herror(const char *s);
+       [[deprecated]] const char *hstrerror(int err);
+
+       /* System V/POSIX extension */
+       struct hostent *gethostent(void);
+
+       /* GNU extensions */
+       [[deprecated]]
+       struct hostent *gethostbyname2(const char *name, int af);
+
+       int gethostent_r(struct hostent *restrict ret,
+                        char buf[restrict .buflen], size_t buflen,
+                        struct hostent **restrict result,
+                        int *restrict h_errnop);
+
+       [[deprecated]]
+       int gethostbyaddr_r(const void addr[restrict .len], socklen_t len,
+                        int type,
+                        struct hostent *restrict ret,
+                        char buf[restrict .buflen], size_t buflen,
+                        struct hostent **restrict result,
+                        int *restrict h_errnop);
+       [[deprecated]]
+       int gethostbyname_r(const char *restrict name,
+                        struct hostent *restrict ret,
+                        char buf[restrict .buflen], size_t buflen,
+                        struct hostent **restrict result,
+                        int *restrict h_errnop);
+       [[deprecated]]
+       int gethostbyname2_r(const char *restrict name, int af,
+                        struct hostent *restrict ret,
+                        char buf[restrict .buflen], size_t buflen,
+                        struct hostent **restrict result,
+                        int *restrict h_errnop);
+
+   Feature Test Macro Requirements for glibc (see feature_test_macros(7)):
+
+       gethostbyname2(), gethostent_r(), gethostbyaddr_r(), gethostbyname_r(),
+       gethostbyname2_r():
+           Since glibc 2.19:
+               _DEFAULT_SOURCE
+           glibc up to and including 2.19:
+               _BSD_SOURCE || _SVID_SOURCE
+
+       herror(), hstrerror():
+           Since glibc 2.19:
+               _DEFAULT_SOURCE
+           glibc 2.8 to glibc 2.19:
+               _BSD_SOURCE || _SVID_SOURCE
+           Before glibc 2.8:
+               none
+
+       h_errno:
+           Since glibc 2.19
+               _DEFAULT_SOURCE || _POSIX_C_SOURCE < 200809L
+           glibc 2.12 to glibc 2.19:
+               _BSD_SOURCE || _SVID_SOURCE || _POSIX_C_SOURCE < 200809L
+           Before glibc 2.12:
+               none
 
 DESCRIPTION
+       The gethostbyname*(), gethostbyaddr*(), herror(), and hstrerror() func‐
+       tions  are  obsolete.  Applications should use getaddrinfo(3), getname‐
+       info(3), and gai_strerror(3) instead.
 
-FBB::GetHostent
-objects produce hostent structs which may be used by
-other types of objects. The FBB::GetHostent class is
-therefore primarily used as a base-class for other classes
-and is seldomly used ’stand-alone’. The
-hostent structs are static structs, but a non-static
-copy may be obtained using an FBB::Hostent
-object.
+       The sethostent() function specifies, if stayopen is true  (1),  that  a
+       connected  TCP  socket  should  be used for the name server queries and
+       that the connection should remain open during successive queries.  Oth‐
+       erwise, name server queries will use UDP datagrams.
 
-A
-hostent struct is defined as follows:
+       The  endhostent()  function  ends  the use of a TCP connection for name
+       server queries.
 
-struct hostent
+       The gethostbyname() function returns a structure of  type  hostent  for
+       the given host name.  Here name is either a hostname or an IPv4 address
+       in standard dot notation (as for inet_addr(3)).  If name is an IPv4 ad‐
+       dress,  no  lookup  is performed and gethostbyname() simply copies name
+       into the h_name field  and  its  struct  in_addr  equivalent  into  the
+       h_addr_list[0]  field  of  the  returned  hostent  structure.   If name
+       doesn't end in a dot and the environment variable HOSTALIASES  is  set,
+       the  alias  file  pointed  to by HOSTALIASES will first be searched for
+       name (see hostname(7) for the file format).  The current domain and its
+       parents are searched unless name ends in a dot.
 
-{ 
-char *h_name; // official name of host 
-char **h_aliases; // alias list 
-int h_addrtype; // host address type (always AF_INET) 
-int h_length; // length of address 
-char **h_addr_list; // list of addresses 
-}
+       The  gethostbyaddr()  function  returns a structure of type hostent for
+       the given host address addr of length len and address type type.  Valid
+       address  types  are  AF_INET  and AF_INET6 (defined in <sys/socket.h>).
+       The host address argument is a pointer to a struct of a type  depending
+       on  the address type, for example a struct in_addr * (probably obtained
+       via a call to inet_addr(3)) for address type AF_INET.
 
-The
-address fields are binary values of the addresses,
-each address requiring h_length bytes, the last
-address being equal to 0. These binary values may be
-converted to character-representations by the
-addressToString() member, which uses
-inet_ntop(), internally.
+       The (obsolete) herror() function prints the  error  message  associated
+       with the current value of h_errno on stderr.
 
-NAMESPACE
+       The  (obsolete)  hstrerror()  function takes an error number (typically
+       h_errno) and returns the corresponding message string.
 
-FBB 
-All constructors, members, operators and manipulators,
-mentioned in this man-page, are defined in the namespace
-FBB.
+       The domain name queries carried out  by  gethostbyname()  and  gethost‐
+       byaddr()  rely on the Name Service Switch (nsswitch.conf(5)) configured
+       sources or a local name server (named(8)).  The default  action  is  to
+       query  the  Name  Service Switch (nsswitch.conf(5)) configured sources,
+       failing that, a local name server (named(8)).
 
-INHERITS FROM
+   Historical
+       The nsswitch.conf(5) file is the modern way of controlling the order of
+       host lookups.
 
--
+       In glibc 2.4 and earlier, the order keyword was used to control the or‐
+       der of host lookups as defined in /etc/host.conf (host.conf(5)).
 
-CONSTRUCTORS
+       The hostent structure is defined in <netdb.h> as follows:
 
-All members of
-the class FBB::GetHostent are static. Consequently,
-there is no need to construct a FBB::GetHostent
-object.
+           struct hostent {
+               char  *h_name;            /* official name of host */
+               char **h_aliases;         /* alias list */
+               int    h_addrtype;        /* host address type */
+               int    h_length;          /* length of address */
+               char **h_addr_list;       /* list of addresses */
+           }
+           #define h_addr h_addr_list[0] /* for backward compatibility */
 
-STATIC MEMBERS
+       The members of the hostent structure are:
 
-o
+       h_name The official name of the host.
 
-hostent const
-*gethostent(char const *errorprefix, std::string const
-&nameOrAddress): 
+       h_aliases
+              An array of alternative names for the host, terminated by a null
+              pointer.
 
-The gethostent() member
-returns a pointer to a static struct hostent. It
-contains the information about the host whose name or dotted
-decimal address was provided as its second argument. Its
-first argument is an error string prefix, prefixing the
-error message in an FBB::Exception object. Such an
-object is thrown as an exception when the host’s
-information could not be retrieved.
+       h_addrtype
+              The type of address; always AF_INET or AF_INET6 at present.
 
-o
+       h_length
+              The length of the address in bytes.
 
-std::string
-addressToString(char const *errorprefix, void const
-*ads): 
+       h_addr_list
+              An  array of pointers to network addresses for the host (in net‐
+              work byte order), terminated by a null pointer.
 
-This member returns the dotted
-decimal address of the host whose binary address is provided
-at ads. Its first argument is an error string prefix,
-prefixing the error message in an FBB::Exception
-object. Such an object is thrown as an exception when the
-dotted decimal address could not be determined.
+       h_addr The first address in h_addr_list for backward compatibility.
 
-The
-class’ members can only be used when the host whose
-name or address is searched can be resolved by a name
-resolution process, e.g., bind(1).
+RETURN VALUE
+       The gethostbyname() and gethostbyaddr() functions  return  the  hostent
+       structure  or a null pointer if an error occurs.  On error, the h_errno
+       variable holds an error number.  When non-NULL, the  return  value  may
+       point at static data, see the notes below.
 
-EXAMPLE
+ERRORS
+       The variable h_errno can have the following values:
 
-#include
+       HOST_NOT_FOUND
+              The specified host is unknown.
 
-#include  
-#include 
+       NO_DATA
+              The  requested  name  is  valid but does not have an IP address.
+              Another type of request to the name server for this  domain  may
+              return  an  answer.   The  constant  NO_ADDRESS is a synonym for
+              NO_DATA.
 
-#include
+       NO_RECOVERY
+              A nonrecoverable name server error occurred.
 
-#include 
-
-using namespace
-std; 
-using namespace FBB;
-
-int main(int
-argc, char **argv) 
-try 
-{ 
-if (argc == 1) 
-{ 
-cerr 
-return 1; 
-}
-
-Hostent
-he(GetHostent::gethostent(argv[1], argv[1])); 
-cout 
-
-cout 
-copy(he.beginAlias(), he.endAlias(), 
-ostream_iterator(cout,
-"\n"));
-
-cout 
-for (size_t idx = 0; idx 
-cout 
-} 
-catch (Exception const &err) 
-{ 
-cout 
-return 1; 
-}
+       TRY_AGAIN
+              A temporary error occurred on an authoritative name server.  Try
+              again later.
 
 FILES
+       /etc/host.conf
+              resolver configuration file
 
-bobcat/gethostent
-- defines the class interface
+       /etc/hosts
+              host database file
 
-SEE ALSO
+       /etc/nsswitch.conf
+              name service switch configuration
 
-bind(1),
-bobcat(7), gethostbyaddr(3)
-gethostbyname(3), hostent(3bobcat),
-inetaddress(3bobcat), inet_ntop(3)
+ATTRIBUTES
+       For  an  explanation  of  the  terms  used  in  this  section,  see at‐
+       tributes(7).
+
+       ┌───────────────────┬───────────────┬──────────────────────────────────┐
+       │Interface          │ Attribute     │ Value                            │
+       ├───────────────────┼───────────────┼──────────────────────────────────┤
+       │gethostbyname()    │ Thread safety │ MT-Unsafe race:hostbyname env    │
+       │                   │               │ locale                           │
+       ├───────────────────┼───────────────┼──────────────────────────────────┤
+       │gethostbyaddr()    │ Thread safety │ MT-Unsafe race:hostbyaddr env    │
+       │                   │               │ locale                           │
+       ├───────────────────┼───────────────┼──────────────────────────────────┤
+       │sethostent(),      │ Thread safety │ MT-Unsafe race:hostent env       │
+       │endhostent(),      │               │ locale                           │
+       │gethostent_r()     │               │                                  │
+       ├───────────────────┼───────────────┼──────────────────────────────────┤
+       │herror(),          │ Thread safety │ MT-Safe                          │
+       │hstrerror()        │               │                                  │
+       ├───────────────────┼───────────────┼──────────────────────────────────┤
+       │gethostent()       │ Thread safety │ MT-Unsafe race:hostent           │
+       │                   │               │ race:hostentbuf env locale       │
+       ├───────────────────┼───────────────┼──────────────────────────────────┤
+       │gethostbyname2()   │ Thread safety │ MT-Unsafe race:hostbyname2 env   │
+       │                   │               │ locale                           │
+       ├───────────────────┼───────────────┼──────────────────────────────────┤
+       │gethostbyaddr_r(), │ Thread safety │ MT-Safe env locale               │
+       │gethostbyname_r(), │               │                                  │
+       │gethostbyname2_r() │               │                                  │
+       └───────────────────┴───────────────┴──────────────────────────────────┘
+       In the above table, hostent in race:hostent signifies that  if  any  of
+       the  functions  sethostent(),  gethostent(), gethostent_r(), or endhos‐
+       tent() are used in parallel in different threads of a program, then da‐
+       ta races could occur.
+
+STANDARDS
+       POSIX.1-2001  specifies gethostbyname(), gethostbyaddr(), sethostent(),
+       endhostent(), gethostent(), and h_errno; gethostbyname(),  gethostbyad‐
+       dr(),   and   h_errno   are   marked   obsolescent  in  that  standard.
+       POSIX.1-2008 removes the specifications  of  gethostbyname(),  gethost‐
+       byaddr(),  and h_errno, recommending the use of getaddrinfo(3) and get‐
+       nameinfo(3) instead.
+
+NOTES
+       The functions gethostbyname() and gethostbyaddr() may  return  pointers
+       to  static  data, which may be overwritten by later calls.  Copying the
+       struct hostent does not suffice, since it  contains  pointers;  a  deep
+       copy is required.
+
+       In  the original BSD implementation the len argument of gethostbyname()
+       was an int.  The SUSv2 standard is buggy and declares the len  argument
+       of  gethostbyaddr()  to  be of type size_t.  (That is wrong, because it
+       has to be int, and size_t is not.   POSIX.1-2001  makes  it  socklen_t,
+       which is OK.)  See also accept(2).
+
+       The  BSD  prototype for gethostbyaddr() uses const char * for the first
+       argument.
+
+   System V/POSIX extension
+       POSIX requires the gethostent() call, which should return the next  en‐
+       try in the host data base.  When using DNS/BIND this does not make much
+       sense, but it may be reasonable if the host data base is  a  file  that
+       can  be  read  line  by  line.  On many systems, a routine of this name
+       reads from the file /etc/hosts.  It may be available only when the  li‐
+       brary  was  built  without  DNS support.  The glibc version will ignore
+       ipv6 entries.  This function is not reentrant, and glibc adds  a  reen‐
+       trant version gethostent_r().
+
+   GNU extensions
+       glibc2 also has a gethostbyname2() that works like gethostbyname(), but
+       permits to specify the address family to which the address must belong.
+
+       glibc2 also has reentrant versions  gethostent_r(),  gethostbyaddr_r(),
+       gethostbyname_r(),  and gethostbyname2_r().  The caller supplies a hos‐
+       tent structure ret which will be filled in on success, and a  temporary
+       work  buffer  buf of size buflen.  After the call, result will point to
+       the result on success.  In case of an error or if no entry is found re‐
+       sult will be NULL.  The functions return 0 on success and a nonzero er‐
+       ror number on failure.  In addition to the errors returned by the  non‐
+       reentrant  versions  of these functions, if buf is too small, the func‐
+       tions will return ERANGE, and the call should be retried with a  larger
+       buffer.   The  global variable h_errno is not modified, but the address
+       of a variable in which to store error numbers is passed in h_errnop.
 
 BUGS
+       gethostbyname() does not recognize components of a dotted IPv4  address
+       string that are expressed in hexadecimal.
 
-None
-Reported.
+SEE ALSO
+       getaddrinfo(3),  getnameinfo(3),  inet(3),  inet_ntop(3), inet_pton(3),
+       resolver(3), hosts(5), nsswitch.conf(5), hostname(7), named(8)
 
-BOBCAT PROJECT FILES
-
-o
-
-https://fbb-git.gitlab.io/bobcat/:
-gitlab project page;
-
-o
-
-bobcat_6.06.01-x.dsc: detached signature;
-
-o
-
-bobcat_6.06.01-x.tar.gz: source archive;
-
-o
-
-bobcat_6.06.01-x_i386.changes: change log;
-
-o
-
-libbobcat1_6.06.01-x_*.deb: debian package
-containing the libraries;
-
-o
-
-libbobcat1-dev_6.06.01-x_*.deb: debian package
-containing the libraries, headers and manual pages;
-
-BOBCAT
-
-Bobcat is an
-acronym of ’Brokken’s Own Base Classes And
-Templates’.
-
-COPYRIGHT
-
-This is free
-software, distributed under the terms of the GNU General
-Public License (GPL).
-
-AUTHOR
-
-Frank B.
-Brokken (f.b.brokken [AT] rug.nl).
+Linux man-pages 6.03              2023-02-05                  gethostbyname(3)

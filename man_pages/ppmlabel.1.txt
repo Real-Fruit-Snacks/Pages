@@ -1,214 +1,153 @@
-NAME
+Ppmlabel User Manual(1)     General Commands Manual    Ppmlabel User Manual(1)
 
-ppmlabel - add
-text to a PPM image
+NAME
+       ppmlabel - add text to a PPM image
 
 SYNOPSIS
+       ppmlabel
 
-ppmlabel
+       [-angle angle]
 
-[-angle
-angle]
+       [-background { transparent | color } ]
 
-[-background
-{ transparent | color } ]
+       [-color color]
 
-[-color
-color]
+       [-file filename]
 
-[-file
-filename]
+       [-size
 
-[-size
+       textsize]
 
-textsize]
+       [-text text_string]
 
-[-text
-text_string]
+       [-x column]
 
-[-x
-column]
+       [-y row]
 
-[-y
-row]
+       ...
 
-...
-
-[ppmfile]
+       [ppmfile]
 
 EXAMPLE
-
-ppmlabel -x 50
--y 50 -text hello \ 
--angle -30 -text there \ 
-testimg.ppm
+           ppmlabel -x 50 -y 50 -text hello \
+                    -angle -30 -text there \
+                    testimg.ppm
 
 DESCRIPTION
+       This program is part of Netpbm(1).
 
-This program is
-part of Netpbm(1).
+       ppmlabel  uses the text drawing facilities of libnetpbm's "ppmd" compo‐
+       nent to add text to a PBM image.  You control the location, size, base‐
+       line  angle, color of the text, and background color (if any) with com‐
+       mand line arguments.  You can specify the text on the command  line  or
+       supply it in files.
 
-ppmlabel
-uses the text drawing facilities of libnetpbm’s
-"ppmd" component to add text to a PBM image. You
-control the location, size, baseline angle, color of the
-text, and background color (if any) with command line
-arguments. You can specify the text on the command line or
-supply it in files.
+       You  can  add  any  number of separate labels in a single invocation of
+       ppmlabel, limited only by any restrictions your environment has on  the
+       number  and  size  of  program  arguments  (e.g. a shell's command size
+       limit).
 
-You can add any
-number of separate labels in a single invocation of
-ppmlabel, limited only by any restrictions your
-environment has on the number and size of program arguments
-(e.g. a shell’s command size limit).
+       If you don't specify ppmfile, ppmlabel reads its input PPM  image  from
+       Standard Input.
 
-If you
-don’t specify ppmfile, ppmlabel reads
-its input PPM image from Standard Input.
+       The output image goes to Standard Output.
 
-The output
-image goes to Standard Output.
+       A  more  sophisticated way to add a label to an image is to use pbmtext
+       or pbmtextps to create an image of the text, then pamcomp to overlay it
+       onto the base image.
 
-A more
-sophisticated way to add a label to an image is to use
-pbmtext or pbmtextps to create an image of the
-text, then pamcomp to overlay it onto the base
-image.
-
-Another more
-general program is ppmdraw. It is slightly harder to
-use for simple labelling.
+       Another  more general program is ppmdraw.  It is slightly harder to use
+       for simple labelling.
 
 OPTIONS
+       In addition to the options common to all programs  based  on  libnetpbm
+       (most notably -quiet, see
+        Common  Options  ⟨index.html#commonoptions⟩ ), ppmlabel recognizes the
+       following command line options:
 
-In addition to
-the options common to all programs based on libnetpbm (most
-notably -quiet, see
- Common Options ),
-ppmlabel recognizes the following command line
-options:
+       The arguments on the ppmlabel command  line  are  not  options  in  the
+       strict sense; they are commands which control the placement and appear‐
+       ance of the text being added to the input  image.   They  are  executed
+       left to right, and any number of arguments may appear.
 
-The arguments
-on the ppmlabel command line are not options in the
-strict sense; they are commands which control the placement
-and appearance of the text being added to the input image.
-They are executed left to right, and any number of arguments
-may appear.
+       You can abbreviate any option to its shortest unique prefix.
 
-You can
-abbreviate any option to its shortest unique prefix. 
--angle angle
+       -angle angle
+              This  option  sets the angle of the baseline of subsequent text.
+              angle is an integral number of degrees,  measured  counterclock‐
+              wise from the row axis of the image.
 
-This option sets the angle of
-the baseline of subsequent text. angle is an integral
-number of degrees, measured counterclockwise from the row
-axis of the image.
+       -background { transparent | color }
+              If the argument is transparent, ppmlabel draws the text over the
+              existing pixels in the image.  If you specify a color  (see  the
+              -color  option  below for information on how to specify colors),
+              ppmlabel generates background  rectangles  enclosing  subsequent
+              text, and those rectangles are filled with that color.
 
--background {
-transparent | color }
+       -color color
+              This option sets the color for subsequent text.
 
-If the argument is
-transparent, ppmlabel draws the text over the
-existing pixels in the image. If you specify a color
-(see the -color option below for information on how
-to specify colors), ppmlabel generates background
-rectangles enclosing subsequent text, and those rectangles
-are filled with that color.
+              Specify  the  color (color) as described for the argument of the
+              pnm_parsecolor()                 library                 routine
+              ⟨libnetpbm_image.html#colorname⟩ .
 
--color color
+              -colour is an acceptable alternate spelling.
 
-This option sets the color for
-subsequent text.
+       -file filename
+              This  option causes ppmlabel to read lines of text from the file
+              named filename and draw it on successive lines.
 
-Specify the
-color (color) as described for the
-argument of the
-pnm_parsecolor() library routine .
+       -size textsize
+              This option sets the height of the tallest characters above  the
+              baseline to textsize pixels.
 
--colour
-is an acceptable alternate spelling.
+       -text text_string
+              This  option  causes ppmlabel to draw the specified text string.
+              It advances the location for subsequent text down 1.75 times the
+              current  textsize.  That lets you draw multiple lines of text in
+              a reasonable manner without  specifying  the  position  of  each
+              line.
 
--file
-filename
+              Note  that  if  you invoke ppmlabel via a shell command and your
+              text string contains spaces, you'll have  to  quote  it  so  the
+              shell treats the whole string as a single token.  E.g.
+                $ ppmlabel -text "this is my text" baseimage.ppm >annotatedimage.ppm
 
-This option causes
-ppmlabel to read lines of text from the file named
-filename and draw it on successive lines.
+       -x column
+              This  option sets the pixel column at which subsequent text will
+              be left justified.  Depending on the shape of the first  charac‐
+              ter, the actual text may begin a few pixels to the right of this
+              point.
 
--size
-textsize
-
-This option sets the height of
-the tallest characters above the baseline to textsize
-pixels.
-
--text
-text_string
-
-This option causes
-ppmlabel to draw the specified text string. It
-advances the location for subsequent text down 1.75 times
-the current textsize. That lets you draw multiple
-lines of text in a reasonable manner without specifying the
-position of each line.
-
-Note that if
-you invoke ppmlabel via a shell command and your text
-string contains spaces, you’ll have to quote it so the
-shell treats the whole string as a single token. E.g. 
-$ ppmlabel -text "this is my text" baseimage.ppm
->annotatedimage.ppm
-
--x column
-
-This option sets the pixel
-column at which subsequent text will be left justified.
-Depending on the shape of the first character, the actual
-text may begin a few pixels to the right of this point.
-
--y row
-
-This option sets the pixel row which will form the
-baseline of subsequent text. Characters with descenders,
-such as "y," will extend below this line.
+       -y row This option sets the pixel row which will form the  baseline  of
+              subsequent  text.  Characters with descenders, such as "y," will
+              extend below this line.
 
 LIMITATIONS
+       Text strings are restricted to 7 bit ASCII.  The text font used by ppm‐
+       label doesn't include definitions for 8 bit ISO 8859/1 characters.
 
-Text strings
-are restricted to 7 bit ASCII. The text font used by
-ppmlabel doesn’t include definitions for 8 bit
-ISO 8859/1 characters.
-
-When drawing
-multiple lines of text with a non-transparent background, it
-should probably fill the space between the lines with the
-background color. This is tricky to get right when the text
-is rotated to a non-orthogonal angle.
+       When  drawing multiple lines of text with a non-transparent background,
+       it should probably fill the space between the lines with the background
+       color.   This is tricky to get right when the text is rotated to a non-
+       orthogonal angle.
 
 SEE ALSO
-
-ppmmake(1),
-ppmdraw(1), pbmtext(1), pbmtextps(1),
-pamcomp(1), ppm(1)
+       ppmmake(1), ppmdraw(1), pbmtext(1), pbmtextps(1), pamcomp(1), ppm(1)
 
 AUTHOR
+       Copyright (C) 1995 by John Walker (kelvin@fourmilab.ch) WWW home  page:
+       http://www.fourmilab.ch/ ⟨http://www.fourmilab.ch/⟩
 
-Copyright (C)
-1995 by John Walker (kelvin [AT] fourmilab.ch) WWW home
-page:
-http://www.fourmilab.ch/">http://www.fourmilab.ch/
-
-Permission to
-use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby
-granted, without any conditions or restrictions. This
-software is provided ’’as is’’
-without express or implied warranty.
+       Permission  to  use, copy, modify, and distribute this software and its
+       documentation for any purpose and without fee is hereby granted,  with‐
+       out  any  conditions  or  restrictions.  This software is provided ``as
+       is'' without express or implied warranty.
 
 DOCUMENT SOURCE
+       This manual page was generated by the Netpbm tool 'makeman'  from  HTML
+       source.  The master documentation is at
 
-This manual
-page was generated by the Netpbm tool ’makeman’
-from HTML source. The master documentation is at
+              http://netpbm.sourceforge.net/doc/ppmlabel.html
 
-http://netpbm.sourceforge.net/doc/ppmlabel.html
+netpbm documentation             15 April 2006         Ppmlabel User Manual(1)

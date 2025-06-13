@@ -1,126 +1,83 @@
-NAME
+selabel_open(3)            SELinux API documentation           selabel_open(3)
 
-selabel_open,
-selabel_close - userspace SELinux labeling interface
+NAME
+       selabel_open, selabel_close - userspace SELinux labeling interface
 
 SYNOPSIS
+       #include <selinux/selinux.h>
+       #include <selinux/label.h>
 
-#include
+       struct selabel_handle *selabel_open(unsigned int backend,
+                                           const struct selinux_opt *options,
+                                           unsigned nopt);
 
-#include 
-
-struct
-selabel_handle *selabel_open(unsigned int
-backend,
-
-const struct selinux_opt
-*options, 
-unsigned nopt);
-
-void
-selabel_close(struct selabel_handle
-*hnd);
+       void selabel_close(struct selabel_handle *hnd);
 
 DESCRIPTION
+       selabel_open()  is  used to initialize a labeling handle to be used for
+       lookup operations.  The backend argument specifies which backend is  to
+       be opened; the list of current backends appears in BACKENDS below.
 
-selabel_open()
-is used to initialize a labeling handle to be used for
-lookup operations. The backend argument specifies
-which backend is to be opened; the list of current backends
-appears in BACKENDS below.
+       The  options  argument  should  be  NULL  or  a  pointer to an array of
+       selinux_opt structures of length nopt:
 
-The
-options argument should be NULL or a pointer to an
-array of selinux_opt structures of length
-nopt:
+              struct selinux_opt {
+                  int         type;
+                  const char  *value;
+              };
 
-struct
-selinux_opt {
+       The available option types are described in  GLOBAL  OPTIONS  below  as
+       well  as  in the documentation for each individual backend.  The return
+       value on success is a non-NULL value for use in subsequent label opera‐
+       tions.
 
-int
-
-type;
-
-const char
-
-*value;
-
-};
-
-The available
-option types are described in GLOBAL OPTIONS below as
-well as in the documentation for each individual backend.
-The return value on success is a non-NULL value for use in
-subsequent label operations.
-
-selabel_close()
-terminates use of a handle, freeing any internal resources
-associated with it. After this call has been made, the
-handle must not be used again.
+       selabel_close()  terminates  use  of a handle, freeing any internal re‐
+       sources associated with it.  After this call has been made, the  handle
+       must not be used again.
 
 GLOBAL OPTIONS
+       Global  options  which may be passed to selabel_open() include the fol‐
+       lowing:
 
-Global options
-which may be passed to selabel_open() include the
-following: 
-SELABEL_OPT_UNUSED
+       SELABEL_OPT_UNUSED
+              The option with a type code of zero is a no-op.  Thus  an  array
+              of  options  may  be initizalized to zero and any untouched ele‐
+              ments will not cause an error.
 
-The option with a type code of
-zero is a no-op. Thus an array of options may be
-initizalized to zero and any untouched elements will not
-cause an error.
+       SELABEL_OPT_VALIDATE
+              A non-null value for this option enables context validation.  By
+              default,  security_check_context(3) is used; a custom validation
+              function can be provided via selinux_set_callback(3).  Note that
+              an  invalid  context may not be treated as an error unless it is
+              actually encountered during a lookup operation.
 
-SELABEL_OPT_VALIDATE
-
-A non-null value for this
-option enables context validation. By default,
-security_check_context(3) is used; a custom
-validation function can be provided via
-selinux_set_callback(3). Note that an invalid context
-may not be treated as an error unless it is actually
-encountered during a lookup operation.
-
-SELABEL_OPT_DIGEST
-
-A non-null value for this
-option enables the generation of an SHA1 digest of the spec
-files loaded as described in selabel_digest(3)
+       SELABEL_OPT_DIGEST
+              A non-null value for this option enables the  generation  of  an
+              SHA1 digest of the spec files loaded as described in selabel_di‐
+              gest(3)
 
 BACKENDS
+       SELABEL_CTX_FILE
+              File contexts backend, described in selabel_file(5).
 
-SELABEL_CTX_FILE
+       SELABEL_CTX_MEDIA
+              Media contexts backend, described in selabel_media(5).
 
-File contexts backend,
-described in selabel_file(5).
+       SELABEL_CTX_X
+              X Windows contexts backend, described in selabel_x(5).
 
-SELABEL_CTX_MEDIA
-
-Media contexts backend,
-described in selabel_media(5).
-
-SELABEL_CTX_X
-
-X Windows contexts backend,
-described in selabel_x(5).
-
-SELABEL_CTX_DB
-
-Database objects contexts
-backend, described in selabel_db(5).
+       SELABEL_CTX_DB
+              Database objects contexts backend, described in selabel_db(5).
 
 RETURN VALUE
-
-A non-NULL
-handle value is returned on success. On error, NULL is
-returned and errno is set appropriately.
+       A non-NULL handle value is returned on success.  On error, NULL is  re‐
+       turned and errno is set appropriately.
 
 AUTHOR
-
-Eamon Walsh
-ewalsh [AT] tycho.gov>
+       Eamon Walsh <ewalsh@tycho.nsa.gov>
 
 SEE ALSO
+       selabel_lookup(3), selabel_stats(3), selinux_set_callback(3),
+       selinux(8)
 
-selabel_lookup(3),
-selabel_stats(3), selinux_set_callback(3),
-selinux(8)
+                                  18 Jun 2007                  selabel_open(3)

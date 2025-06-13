@@ -1,7 +1,5 @@
 string_copying(7)      Miscellaneous Information Manual      string_copying(7)
 
-
-
 NAME
        stpcpy,  strcpy,  strcat,  stpecpy, strlcpy, strlcat, stpncpy, strncpy,
        zustr2ustp, zustr2stp, strncat, ustpcpy, ustr2stp - copying strings and
@@ -33,7 +31,7 @@ SYNOPSIS
 
        // Zero a fixed-width buffer, and
        // copy a string into a character sequence with truncation.
-       char *strncpy(char dst[restrict .sz], const char *restrict src,
+       char *strncpy(char dest[restrict .sz], const char *restrict src,
                       size_t sz);
 
        // Chain-copy a null-padded character sequence into a character sequence.
@@ -153,8 +151,8 @@ DESCRIPTION
           truncation.  It only requires to check for truncation once after all
           chained calls.
 
-       •  strlcpy(3bsd) and strlcat(3bsd) are similar, but less efficient when
-          chained.
+       •  strlcpy(3bsd) and strlcat(3bsd) are designed to crash if  the  input
+          string is invalid (doesn't contain a terminating null byte).
 
        •  stpncpy(3)  and  strncpy(3)  also  truncate,  but  they  don't write
           strings, but rather null-padded character sequences.
@@ -189,7 +187,7 @@ DESCRIPTION
        In  programs  that  make  considerable  use of strings or character se‐
        quences, and need the best performance, using overlapping character se‐
        quences can make a big difference.  It allows holding subsequences of a
-       larger character sequence, while not duplicating memory nor using  time
+       larger character sequence.  while not duplicating memory nor using time
        to do a copy.
 
        However, this is delicate, since it requires using character sequences.
@@ -260,7 +258,7 @@ DESCRIPTION
               turns  a  pointer suitable for chaining.  Truncation needs to be
               detected only once after the last chained call.
 
-              This function is not provided by any library; see EXAMPLES for a
+              This function is not provided by any library; See EXAMPLES for a
               reference implementation.
 
        strlcpy(3bsd)
@@ -269,7 +267,9 @@ DESCRIPTION
               nation string.  If the destination buffer, limited by its  size,
               isn't  large  enough  to  hold the copy, the resulting string is
               truncated (but it is guaranteed to  be  null-terminated).   They
-              return the length of the total string they tried to create.
+              return  the  length  of  the  total string they tried to create.
+              These functions force a SIGSEGV if the  src  pointer  is  not  a
+              string.
 
               stpecpy(3) is a simpler alternative to these functions.
 
@@ -292,37 +292,37 @@ DESCRIPTION
               stpncpy(3) is a more useful alternative to this function.
 
        zustr2ustp(3)
-              This  function copies the input character sequence, contained in
-              a null-padded fixed-width buffer, into a  destination  character
-              sequence.  The programmer is responsible for allocating a buffer
+              This function copies the input character sequence contained in a
+              null-padded wixed-width buffer, into a destination character se‐
+              quence.   The  programmer is responsible for allocating a buffer
               large enough.  It returns a pointer suitable for chaining.
 
               A truncating version of this function doesn't exist,  since  the
               size  of  the original character sequence is always known, so it
               wouldn't be very useful.
 
-              This function is not provided by any library; see EXAMPLES for a
+              This function is not provided by any library; See EXAMPLES for a
               reference implementation.
 
        zustr2stp(3)
-              This  function copies the input character sequence, contained in
-              a null-padded fixed-width buffer,  into  a  destination  string.
-              The  programmer  is  responsible  for  allocating a buffer large
-              enough.  It returns a pointer suitable for chaining.
+              This function copies the input character sequence contained in a
+              null-padded wixed-width buffer, into a destination string.   The
+              programmer  is responsible for allocating a buffer large enough.
+              It returns a pointer suitable for chaining.
 
               A truncating version of this function doesn't exist,  since  the
               size  of  the original character sequence is always known, so it
               wouldn't be very useful.
 
-              This function is not provided by any library; see EXAMPLES for a
+              This function is not provided by any library; See EXAMPLES for a
               reference implementation.
 
        strncat(3)
               Do  not  confuse this function with strncpy(3); they are not re‐
               lated at all.
 
-              This function catenates the input character sequence,  contained
-              in  a null-padded fixed-width buffer, into a destination string.
+              This function catenates the input character  sequence  contained
+              in  a null-padded wixed-width buffer, into a destination string.
               The programmer is responsible  for  allocating  a  buffer  large
               enough.  The return value is useless.
 
@@ -519,8 +519,9 @@ EXAMPLES
            {
                char *p;
 
-               if (dst == NULL)
-                   return NULL;
+               if (src[strlen(src)] != '\0')
+                   raise(SIGSEGV);
+
                if (dst == end)
                    return end;
 
@@ -571,6 +572,4 @@ SEE ALSO
        bzero(3),  memcpy(3), memccpy(3), mempcpy(3), stpcpy(3), strlcpy(3bsd),
        strncat(3), stpncpy(3), string(3)
 
-
-
-Linux man-pages 6.05.01           2023-07-29                 string_copying(7)
+Linux man-pages 6.03              2023-02-05                 string_copying(7)

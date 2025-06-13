@@ -1,127 +1,189 @@
-NAME
+C++FILT(1)                   GNU Development Tools                  C++FILT(1)
 
-c −
-genericised soft drink generator (ie coffee, coke etc)
+NAME
+       c++filt - demangle C++ and Java symbols
 
 SYNOPSIS
-
-c
-[-s[number]] [-m[type]] [-e] [-i] [-T] [-S amount]
-[--other=drink]
+       c++filt [-_|--strip-underscore]
+               [-n|--no-strip-underscore]
+               [-p|--no-params]
+               [-t|--types]
+               [-i|--no-verbose]
+               [-r|--no-recurse-limit]
+               [-R|--recurse-limit]
+               [-s format|--format=format]
+               [--help]  [--version]  [symbol...]
 
 DESCRIPTION
+       The C++ and Java languages provide function overloading, which means
+       that you can write many functions with the same name, providing that
+       each function takes parameters of different types.  In order to be able
+       to distinguish these similarly named functions C++ and Java encode them
+       into a low-level assembler name which uniquely identifies each
+       different version.  This process is known as mangling. The c++filt [1]
+       program does the inverse mapping: it decodes (demangles) low-level
+       names into user-level names so that they can be read.
 
-This manual
-page documents the GNU version of c. c is a
-genericised soft drinks engine designed to provide a stream
-of the desired beverage on the standard output. By default,
-c makes coffee, white, no sugar. This is a historical choice
-based on the authors preferences. This behaviour is
-controlled by the options, and a wide range of other drinks
-are possible. Please note that not all combinations make
-sense, in taste terms, but that parsing by c extends only to
-syntax. Experiment at your own risk.
+       Every alphanumeric word (consisting of letters, digits, underscores,
+       dollars, or periods) seen in the input is a potential mangled name.  If
+       the name decodes into a C++ name, the C++ name replaces the low-level
+       name in the output, otherwise the original word is output.  In this way
+       you can pass an entire assembler source file, containing mangled names,
+       through c++filt and see the same source file containing demangled
+       names.
+
+       You can also use c++filt to decipher individual symbols by passing them
+       on the command line:
+
+               c++filt <symbol>
+
+       If no symbol arguments are given, c++filt reads symbol names from the
+       standard input instead.  All the results are printed on the standard
+       output.  The difference between reading names from the command line
+       versus reading names from the standard input is that command-line
+       arguments are expected to be just mangled names and no checking is
+       performed to separate them from surrounding text.  Thus for example:
+
+               c++filt -n _Z1fv
+
+       will work and demangle the name to "f()" whereas:
+
+               c++filt -n _Z1fv,
+
+       will not work.  (Note the extra comma at the end of the mangled name
+       which makes it invalid).  This command however will work:
+
+               echo _Z1fv, | c++filt -n
+
+       and will display "f(),", i.e., the demangled name followed by a
+       trailing comma.  This behaviour is because when the names are read from
+       the standard input it is expected that they might be part of an
+       assembler source file where there might be extra, extraneous characters
+       trailing after a mangled name.  For example:
+
+                   .type   _Z1fv, @function
 
 OPTIONS
+       -_
+       --strip-underscore
+           On some systems, both the C and C++ compilers put an underscore in
+           front of every name.  For example, the C name "foo" gets the low-
+           level name "_foo".  This option removes the initial underscore.
+           Whether c++filt removes the underscore by default is target
+           dependent.
 
-−s[number]
+       -n
+       --no-strip-underscore
+           Do not remove the initial underscore.
 
-Specifies the number of sugars
-desired. If this option is omitted, none will be
-included.
+       -p
+       --no-params
+           When demangling the name of a function, do not display the types of
+           the function's parameters.
 
-Excessively
-large values will result in unpleasant side effects,
-including rotting teeth and excess weight.
+       -t
+       --types
+           Attempt to demangle types as well as function names.  This is
+           disabled by default since mangled types are normally only used
+           internally in the compiler, and they can be confused with non-
+           mangled names.  For example, a function called "a" treated as a
+           mangled type name would be demangled to "signed char".
 
-If this option
-is specified with no parameter, the default is one.
+       -i
+       --no-verbose
+           Do not include implementation details (if any) in the demangled
+           output.
 
-−m[type]
+       -r
+       -R
+       --recurse-limit
+       --no-recurse-limit
+       --recursion-limit
+       --no-recursion-limit
+           Enables or disables a limit on the amount of recursion performed
+           whilst demangling strings.  Since the name mangling formats allow
+           for an infinite level of recursion it is possible to create strings
+           whose decoding will exhaust the amount of stack space available on
+           the host machine, triggering a memory fault.  The limit tries to
+           prevent this from happening by restricting recursion to 2048 levels
+           of nesting.
 
-Determines whether milk will be
-used or not. The default corresponds to the specification
-’cold’. cold - Normal, cold milk
+           The default is for this limit to be enabled, but disabling it may
+           be necessary in order to demangle truly complicated names.  Note
+           however that if the recursion limit is disabled then stack
+           exhaustion is possible and any bug reports about such an event will
+           be rejected.
 
-hot
-Normal, hot milk
+           The -r option is a synonym for the --no-recurse-limit option.  The
+           -R option is a synonym for the --recurse-limit option.
 
-frth
-Frothed milk (see -e option for cappucino)
+       -s format
+       --format=format
+           c++filt can decode various methods of mangling, used by different
+           compilers.  The argument to this option selects which method it
+           uses:
 
-none No
-milk. Recommended for those who have a deadline.
+           "auto"
+               Automatic selection based on executable (the default method)
 
-goat Use
-your imagination.
+           "gnu"
+               the one used by the GNU C++ compiler (g++)
 
-−e
+           "lucid"
+               the one used by the Lucid compiler (lcc)
 
-Espresso option. High pressure steam is forced through
-fine ground dark beans for a stronger brew; careful use of
-the -S option is advised to avoid shaky hands and heart
-palpitations (see BUGS).
+           "arm"
+               the one specified by the C++ Annotated Reference Manual
 
-−i
+           "hp"
+               the one used by the HP compiler (aCC)
 
-Iced coffee. Self explanatory really...
+           "edg"
+               the one used by the EDG compiler
 
-−T
+           "gnu-v3"
+               the one used by the GNU C++ compiler (g++) with the V3 ABI.
 
-Turkish coffee. The only type of coffee that is boiled
-deliberately. -s2 or more recommended to avoid grimaces.
+           "java"
+               the one used by the GNU Java compiler (gcj)
 
-−S[amount]
+           "gnat"
+               the one used by the GNU Ada compiler (GNAT).
 
-Size of the virtual
-’mug’ to be filled. The scale used is fairly
-arbitrary, but should cover most cases... 1
-thimbleful
+       --help
+           Print a summary of the options to c++filt and exit.
 
-2
-espresso cup
+       --version
+           Print the version number of c++filt and exit.
 
-3
-cafe-style coffee cup
+       @file
+           Read command-line options from file.  The options read are inserted
+           in place of the original @file option.  If file does not exist, or
+           cannot be read, then the option will be treated literally, and not
+           removed.
 
-4 office
-mug
+           Options in file are separated by whitespace.  A whitespace
+           character may be included in an option by surrounding the entire
+           option in either single or double quotes.  Any character (including
+           a backslash) may be included by prefixing the character to be
+           included with a backslash.  The file may itself contain additional
+           @file options; any such options will be processed recursively.
 
-5
-sysadmin mug
-
-6
-bucket
-
-Use of -S 6 is
-contraindicated for use with n(1), due to possible damage to
-t he nasal membranes, and risk of drowning. The default is
-4; unless a beta version of the OS is installed, when the
-default is 5. If the beta is of Digital UNIX, 6 is the
-default; you’ll need it.
-
-−-other=drink
-
-Specify a drink other than
-coffee. Use of other options is not recommended; the
-behaviour is unspecified!
-
-BUGS
-
-Caffeine
-overdose can result by inadvised combinations of options (ie
--e and large values for -S). If you suffer from increased
-heart rate, visual disturbance, shaking hands, shortness of
-breath, it is suggested that you discontinue use. A -d
-(decaf) option was included in previous versions, but was
-removed after a threatened litigation arising from an
-unfortunate practical joke involving misuse.
+FOOTNOTES
+       1.  MS-DOS does not allow "+" characters in file names, so on MS-DOS
+           this program is named CXXFILT.
 
 SEE ALSO
+       the Info entries for binutils.
 
-n(1)
+COPYRIGHT
+       Copyright (c) 1991-2023 Free Software Foundation, Inc.
 
-AUTHOR
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3 or
+       any later version published by the Free Software Foundation; with no
+       Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+       Texts.  A copy of the license is included in the section entitled "GNU
+       Free Documentation License".
 
-Nick Williams,
-New College, Oxford University. nickw [AT] iname.com.
+binutils-2.40.00                  2023-01-14                        C++FILT(1)

@@ -1,112 +1,78 @@
-NAME
+selinux_file_context_verifyLibrary Functions Manselinux_file_context_verify(3)
 
-selinux_file_context_verify
-- Compare the SELinux security context on disk to the
-default security context required by the policy file
-contexts file
+NAME
+       selinux_file_context_verify  -  Compare the SELinux security context on
+       disk to the default security context required by the policy  file  con‐
+       texts file
 
 SYNOPSIS
+       #include <selinux/selinux.h>
 
-#include
-
-int
-selinux_file_context_verify(const char *path,
-mode_t mode);
+       int selinux_file_context_verify(const char *path, mode_t mode);
 
 DESCRIPTION
+       selinux_file_context_verify()  compares  the  context  of the specified
+       path that is held on disk (in the extended attribute),  to  the  system
+       default entry held in the file contexts series of files.
 
-selinux_file_context_verify()
-compares the context of the specified path that is
-held on disk (in the extended attribute), to the system
-default entry held in the file contexts series of files.
+       The mode may be zero.
 
-The mode
-may be zero.
-
-Note that the
-two contexts are compared for "significant"
-differences (i.e. the user component of the contexts are
-ignored) as shown in the EXAMPLE section.
+       Note  that  the two contexts are compared for "significant" differences
+       (i.e. the user component of the contexts are ignored) as shown  in  the
+       EXAMPLE section.
 
 RETURN VALUE
+       If the contexts significantly match, 1 (one) is returned.
 
-If the contexts
-significantly match, 1 (one) is returned.
+       If  the  contexts do not match 0 (zero) is returned and errno is set to
+       either ENOENT or EINVAL for the reasons listed in the  ERRORS  section,
+       or if errno = 0 then the contexts did not match.
 
-If the contexts
-do not match 0 (zero) is returned and errno is set to
-either ENOENT or EINVAL for the reasons listed
-in the ERRORS section, or if errno = 0 then
-the contexts did not match.
-
-On failure -1
-is returned and errno set appropriately.
+       On failure -1 is returned and errno set appropriately.
 
 ERRORS
+       ENOTSUP
+              if extended attributes are not supported by the file system.
 
-ENOTSUP
+       ENOENT if  there  is  no  entry in the file contexts series of files or
+              path does not exist.
 
-if extended attributes are not
-supported by the file system.
+       EINVAL if the entry in the file contexts series of files  or  path  are
+              invalid, or the returned context fails validation.
 
-ENOENT
-
-if there is no entry in the file contexts series of
-files or path does not exist.
-
-EINVAL
-
-if the entry in the file contexts series of files or
-path are invalid, or the returned context fails
-validation. 
-
-ENOMEM
-
-if attempt to allocate memory failed.
+       ENOMEM if attempt to allocate memory failed.
 
 FILES
+       The  following  configuration files (the file contexts series of files)
+       supporting the active policy will be used (should they exist) to deter‐
+       mine the path default context:
 
-The following
-configuration files (the file contexts series of files)
-supporting the active policy will be used (should they
-exist) to determine the path default context:
+              contexts/files/file_contexts - This file must exist.
 
-contexts/files/file_contexts
-- This file must exist.
+              contexts/files/file_contexts.local  -  If  exists has local cus‐
+              tomizations.
 
-contexts/files/file_contexts.local
-- If exists has local customizations.
+              contexts/files/file_contexts.homedirs - If exists has users home
+              directory customizations.
 
-contexts/files/file_contexts.homedirs
-- If exists has users home directory customizations.
-
-contexts/files/file_contexts.subs
-- If exists has substitutions that are then applied to the
-’in memory’ version of the file contexts
-files.
+              contexts/files/file_contexts.subs  - If exists has substitutions
+              that are then applied to the 'in memory'  version  of  the  file
+              contexts files.
 
 EXAMPLE
+       If the files context is:
+              unconfined_u:object_r:admin_home_t:s0
 
-If the files
-context is:
+       and the default context defined in the file contexts file is:
+              system_u:object_r:admin_home_t:s0
 
-unconfined_u:object_r:admin_home_t:s0
+       then the actual strings compared are:
+              :object_r:admin_home_t:s0 and :object_r:admin_home_t:s0
 
-and the default
-context defined in the file contexts file is:
-
-system_u:object_r:admin_home_t:s0
-
-then the actual
-strings compared are:
-
-:object_r:admin_home_t:s0 and
-:object_r:admin_home_t:s0
-
-Therefore they
-will match and selinux_file_context_verify() will
-return 1.
+       Therefore they will match and selinux_file_context_verify() will return
+       1.
 
 SEE ALSO
+       selinux(8)
 
-selinux(8)
+SELinux API documentation        08 March 2011  selinux_file_context_verify(3)

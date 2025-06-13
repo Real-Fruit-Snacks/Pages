@@ -1,255 +1,174 @@
-NAME
+Infotopam User Manual(1)    General Commands Manual   Infotopam User Manual(1)
 
-infotopam -
-convert Amiga .info icons to PAM
+NAME
+       infotopam - convert Amiga .info icons to PAM
 
 SYNOPSIS
+       infotopam [-forcecolor] [-numcolors numcolors] [-selected] [index color
+       ...]  [filename]
 
-infotopam
-[-forcecolor] [-numcolors numcolors]
-[-selected] [-verbose] [index color
-...] [filename]
-
-Minimum unique
-abbreviation of option is acceptable. You may use double
-hyphens instead of single hyphen to denote options. You may
-use white space in place of the equals sign to separate an
-option name from its value.
+       Minimum unique abbreviation of option is acceptable.  You may use  dou‐
+       ble  hyphens  instead  of single hyphen to denote options.  You may use
+       white space in place of the equals sign to separate an option name from
+       its value.
 
 EXAMPLES
+       By default, infotopam converts the first icon in a .info file:
 
-$ infotopam
-amiga.info > amiga.first.pam
+           infotopam amiga.info > amiga.first.pam
 
-Use the
--selected option to convert the
-’selected’ version of the icon rather than the
-regular version. Here infotopam reads from Standard
-Input:
+       Use  the  -selected  option to convert the second icon in a .info file.
+       Here infotopam reads from Standard Input:
 
-infotopam
--selected  amiga.second.pam
+           infotopam -selected < amiga.info > amiga.second.pam
 
-Use
--numcolors to change the colors.
+       Use the -forcecolor option to force color conversion for a 1  bit-plane
+       .info file:
 
-infotopam
--numcolors 2 0 green 3 rgb:FF/00/00 icon.info >
-icon.pam
+           infotopam -forcecolor bw.info > bw.pam
 
-Since Amiga
-monitors do not use square pixels, some icons may appear
-squished. Filtering the output through pamscale can
-fix this:
+       Use  -numcolors to override colors for indexes 0 and 3.  Notice the two
+       ways to specify the color:
 
-$ infotopam
-squish.info | pamtopnm | pamscale -yscale 1.7 >
-normal.pnm
+           infotopam -numcolors 2 0 green 3 #FF0000 icon.info > icon.pam
+
+       Since Amiga monitors do not use square pixels, some  icons  may  appear
+       squished.  Filtering the output through pamscale can fix this:
+
+            infotopam squish.info | pamtopnm | pamscale -yscale 1.7 > normal.pnm
 
 DESCRIPTION
+       This program is part of Netpbm(1).
 
-This program is
-part of Netpbm(1).
+       infotopam  converts  an  Amiga .info (icon) file to a PAM image.  info‐
+       topam reads a .info file from filename, or from Standard Input  if  you
+       do not specify a file name, and writes the converted PAM image to Stan‐
+       dard Output.
 
-infotopam
-converts an Amiga .info (icon) image to a PAM image.
-infotopam reads a .info file from filename, or
-from Standard Input if you do not specify a file name, and
-writes the converted PAM image to Standard Output.
-
-infotopam
-handles 1- and 2 bit-plane icons. If the .info icon has only
-1 bit-plane, infotopam generates a black and white
-PAM image; otherwise it generates a color PAM image. In the
-latter case, you can choose the colors or keep the original
-Amiga standard colors. You can force infotopam to
-produce a color PAM with 1 bit-plane input with a
--forcecolor option.
+       infotopam currently handles 1 and 2 bit-plane icons.  If the .info icon
+       only  has  1  bit-plane, infotopam generates a bitmap (black&white) PAM
+       image; otherwise it generates a color PAM image.  You can  force  info‐
+       topam  to  convert  1 bit-plane images to color PAM images by using the
+       -forcecolor option.
 
 OPTIONS
+       In addition to the options common to all programs  based  on  libnetpbm
+       (most notably -quiet, see
+        Common  Options ⟨index.html#commonoptions⟩ ), infotopam recognizes the
+       following command line options:
 
-In addition to
-the options common to all programs based on libnetpbm (most
-notably -quiet, see
- Common Options ),
-infotopam recognizes the following command line
-options: 
--numcolors numcolors
+       -forcecolor
 
-This causes the program to
-change the colors in the conversion. A 
-2-bit-plane Amiga .icon image has four colors, numbered 0
-through 3. 
-Those colors are as follows.
+              Forces infotopam to convert 1 bit-plane icons to color PAM
+                images instead of bitmap PAM images.  infotopam uses the index
+              2
+                color for black and the index 1 color for white (more on this
+                below).
 
-0
+       -numcolors numcolors
 
-Blue (00, 55, AA)
+              Tells infotopam how many colors to override.  Pixels in the
+                Amiga  .info  files  are assigned an index value rather than a
+              specific color.
+                The standard colors for a 2 bit-plane icon are:
 
-1
+                  Index 0:  Blue   (00, 55, AA)
+                  Index 1:  White  (FF, FF, FF)
+                  Index 2:  Black  (00, 00, 20)
+                  Index 3:  Orange (FF, 8A, 00)
 
-White (FF, FF, FF)
+              To override the colors, first specify how many colors  to  over‐
+              ride using
+                -numcolors, then specify an (index color) pair for each color
+                you want to override, where index is a value from 0 to 3 and
+                color the new color for that index.  Specify color as
+                described      for     the     pnm_parsecolor()       argument
+              ⟨libnetpbm_image.html#colorname⟩ .
 
-2
+       -selected
 
-Black (00, 00, 20)
+              Tells infotopam to convert the selected (second) icon instead of
+                the normal (first) icon.  Each Amiga .info icon file  contains
+              two icon
+                images.   The  first image is the normal, unselected icon, and
+              the second
+                image is the selected icon.  By default infotopam converts the
+              first
+                icon.   You  can  tell infotopam to convert the second icon by
+              using the
+                -selected option.
 
-3
-
-Orange (FF, 8A, 00)
-
-To specify the
-changes, specify the number of colors you are changing 
-as the argument of -numcolors and for each color,
-specify a pair 
-of command line arguments, the first being the color index 0
-through 3 
-and the second being the color to substitute. Specify the
-color 
-(color) as described for the 
-argument of the
-pnm_parsecolor() library routine .
-
-These
-arguments go before the input file name argument, 
-if any. This is an unusual syntax for a Netpbm
-program.
-
--selected
-
-An Amiga .info
-image contains two versions of the icon: one for 
-regular display and one to display when the thing
-represented by 
-the icon is selected. By default, infotopam converts
-the 
-regular icon, but this option causes it to convert the
-selected icon 
-instead.
-
--forcecolor
-
-This causes
-infotopam to convert 1 bit-plane icons to color 
-PAM images instead of black and white. The colors are the
-index 2 
-color for black and the index 1 color for white.
-
--verbose
-
-This causes
-infotopam to issue informational messages about 
-the conversion process.
-
-This option was
-new in Netpbm 11.06 (March 2024).
-
-All options can
-be abbreviated to their shortest unique prefix.
+       All options can be abbreviated to their shortest unique prefix.
 
 SEE ALSO
-
-pam(1)
-pamtopnm(1) pamscale(1)
+       pam(1) pamtopnm(1) pamscale(1)
 
 NOTES
+       Thanks to the following people on  comp.sys.amiga.programmer  for  tips
+       and pointers on decoding the info file format:
 
-Thanks to the
-following people on comp.sys.amiga.programmer for tips and
-pointers on decoding the info file format:
+       •      Ben Hutchings
 
-•
+       •      Thomas Richter
 
-Ben Hutchings
+       •      Kjetil Svalastog Matheussen
 
-•
+       •      Anders Melchiorsen
 
-Thomas Richter
+       •      Dirk Stoecker
 
-•
+       •      Ronald V.D.
 
-Kjetil Svalastog Matheussen
+       The format of the Amiga .info file is as follows:
 
-•
+           DiskObject header            78 bytes
+           Optional DrawerData header   56 bytes
+           First icon header            20 bytes
+           First icon data              Varies
+           Second icon header           20 bytes
+           Second icon data             Varies
 
-Anders Melchiorsen
+       The  DiskObject  header  contains, among other things, the magic number
+       (0xE310), the object width  and  height  (inside  the  embedded  Gadget
+       header), and the version.
 
-•
+       Each  icon  header  contains  the  icon  width and height, which can be
+       smaller than the object width and height, and the number of bit-planes.
 
-Dirk Stoecker
+       The icon data has the following format:
 
-•
+              BIT-PLANE planes, each with HEIGHT rows of (WIDTH
+                  +15) / 16 * 2 bytes length.
 
-Ronald V.D.
+       So if you have a 9x3x2 icon, the icon data will look like this:
 
-The format of
-the Amiga .info file is as follows:
+           aaaa aaaa a000 0000
+           aaaa aaaa a000 0000
+           aaaa aaaa a000 0000
+           bbbb bbbb b000 0000
+           bbbb bbbb b000 0000
+           bbbb bbbb b000 0000
 
-DiskObject
-header 78 bytes 
-Optional DrawerData header 56 bytes 
-First icon header 20 bytes 
-First icon data Varies 
-Second icon header 20 bytes 
-Second icon data Varies
-
-The DiskObject
-header contains, among other things, the magic number
-(0xE310), the object width and height (inside the embedded
-Gadget header), and the version.
-
-Each icon
-header contains the icon width and height, which can be
-smaller than the object width and height, and the number of
-bit-planes.
-
-The icon data
-has the following format:
-
-BIT-PLANE
-planes, each with HEIGHT rows of (WIDTH 
-+15) / 16 * 2 bytes length.
-
-So if you have
-a 9x3x2 icon, the icon data will look like this:
-
-aaaa aaaa a000
-0000 
-aaaa aaaa a000 0000 
-aaaa aaaa a000 0000 
-bbbb bbbb b000 0000 
-bbbb bbbb b000 0000 
-bbbb bbbb b000 0000
-
-where a
-is a bit for the first bit-plane, b is a bit for the
-second bit-plane, and 0 is padding. Thanks again to
-Ben Hutchings for his very helpful post!
+       where a is a bit for the first bit-plane, b is a  bit  for  the  second
+       bit-plane,  and  0  is  padding.  Thanks again to Ben Hutchings for his
+       very helpful post!
 
 HISTORY
-
-infotopam
-was new in Netpbm 10.22 (April 2004).
+       infotopam was new in Netpbm 10.22 (April 2004).
 
 LIMITATIONS
+       infotopam currently only handles 1 and 2 bit-plane icons.
 
-infotopam
-currently only handles 1 and 2 bit-plane icons.
-
-There is no
-pamtoinfo command, since the .info files contain a
-lot more than just icon data, and mapping the colors would
-be difficult.
+       There is no pamtoinfo command, since the .info files contain a lot more
+       than just icon data, and mapping the colors would be difficult.
 
 AUTHOR
-
-Copyright (C)
-2000, 2004 by Richard Griswold.
+       Copyright (C) 2000, 2004 by Richard Griswold.
 
 DOCUMENT SOURCE
+       This  manual  page was generated by the Netpbm tool 'makeman' from HTML
+       source.  The master documentation is at
 
-This manual
-page was generated by the Netpbm tool ’makeman’
-from HTML source. The master documentation is at
+              http://netpbm.sourceforge.net/doc/infotopam.html
 
-http://netpbm.sourceforge.net/doc/infotopam.html
+netpbm documentation             07 April 2004        Infotopam User Manual(1)

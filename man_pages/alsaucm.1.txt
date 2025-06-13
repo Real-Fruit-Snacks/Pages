@@ -1,346 +1,225 @@
-NAME
+ALSAUCM(1)                  General Commands Manual                 ALSAUCM(1)
 
-alsaucm - ALSA
-Use Case Manager
+NAME
+       alsaucm - ALSA Use Case Manager
 
 SYNOPSIS
-
-alsaucm
- [command]
+       alsaucm <options> [command]
 
 DESCRIPTION
+       alsaucm  (ALSA  Use Case Manager) is a program to use the ALSA Use Case
+       Interface from the command line.
 
-alsaucm (ALSA
-Use Case Manager) is a program to use the ALSA Use Case
-Interface from the command line.
+       On complex sound cards, setting up audio  routes  is  not  trivial  and
+       mixer  settings  can  conflict one another preventing the audio card to
+       work at all.
 
-On complex
-sound cards, setting up audio routes is not trivial and
-mixer settings can conflict one another preventing the audio
-card to work at all.
+       The ALSA Use Case Manager is a mechanism for controlling complex  audio
+       hardware  establishing  a  relationship between hardware configurations
+       and meaningful use cases that the end-user can relate with.
 
-The ALSA Use
-Case Manager is a mechanism for controlling complex audio
-hardware establishing a relationship between hardware
-configurations and meaningful use cases that the end-user
-can relate with.
+       The use case manager can also be used to switch between use cases  when
+       necessary, in a consistent way.
 
-The use case
-manager can also be used to switch between use cases when
-necessary, in a consistent way.
+       At  a  lower level, the use case manager works by configuring the sound
+       card ALSA kcontrols to change the hardware  digital  and  analog  audio
+       routing to match the requested device use case.
 
-At a lower
-level, the use case manager works by configuring the sound
-card ALSA kcontrols to change the hardware digital and
-analog audio routing to match the requested device use
-case.
+       The use case manager kcontrol configurations are stored in easy to mod‐
+       ify text files. An audio use case can be defined by a verb  and  device
+       parameter.
 
-The use case
-manager kcontrol configurations are stored in easy to modify
-text files. An audio use case can be defined by a
-verb and device parameter.
-
-The verb
-describes the use case action i.e. a phone call, listening
-to music, recording a conversation etc. The device describes
-the physical audio capture and playback hardware i.e.
-headphones, phone handset, bluetooth headset, etc.
+       The  verb describes the use case action i.e. a phone call, listening to
+       music, recording a conversation etc. The device describes the  physical
+       audio  capture  and  playback  hardware i.e. headphones, phone handset,
+       bluetooth headset, etc.
 
 OPTIONS
+       Available options:
 
-Available
-options:
+          -h, --help
+                 this help
 
--h, --help
+          -c, --card NAME
+                 open card NAME
 
-this help
+          -i, --interactive
+                 interactive mode
 
--c, --card
-NAME
+          -b, --batch FILE
+                 batch mode (use '-' for the stdin input)
 
-open card NAME
+          -n, --no-open
+                 do not open first card found
 
--i, --interactive
+       Available commands:
 
-interactive mode
+          open NAME
+                 open card NAME.
 
--b, --batch
-FILE
+                 valid   names   are   sound   card   names   as   listed   in
+                 /usr/share/alsa/ucm.
 
-batch mode (use '-' for
-the stdin input)
+          reset  reset sound card to default state.
 
--n, --no-open
+          reload reload configuration.
 
-do not open first card
-found
+          listcards
+                 list available cards.
 
-Available
-commands:
+          list IDENTIFIER
+                 list  command,  for  items  returning two entries (value+com‐
+                 ment).
 
-open NAME
+                 the value of the IDENTIFIER argument can can be:
 
-open card NAME.
+                 • _verbs - get verb list (in pair verb+comment)
 
-valid names are
-sound card names as listed in
-/usr/share/alsa/ucm.
+                 • _devices[/{verb}] - get list of supported devices (in  pair
+                   device+comment)
 
-reset
+                 • _modifiers[/{verb}]  -  get list of supported modifiers (in
+                   pair modifier+comment)
 
-reset sound card to default state.
+                 The forms without the trailing /{verb} are valid only after a
+                 specific verb has been set.
 
-reload
+          list1 IDENTIFIER
+                 list command, for lists returning one item per entry.
 
-reload configuration.
+                 the  value  of  the IDENTIFIER argument can vary depending on
+                 the context, it can be:
 
-listcards
+                 • TQ[/{verb}] - get list of Tone Quality identifiers
 
-list available cards.
+                 • _enadevs - get list of enabled devices
 
-list
-IDENTIFIER
+                 • _enamods - get list of enabled modifiers
 
-list command, for items
-returning two entries (value+comment).
+                 • _supporteddevs/{modifier}|{device}[/{verb}] - list of  sup‐
+                   ported devices
 
-the value of
-the IDENTIFIER argument can be:
+                 • _conflictingdevs/{modifier}|{device}[/{verb}]   -  list  of
+                   conflicting devices
 
-•
+          get IDENTIFIER
+                 get string value.
 
-_verbs - get verb list (in pair verb+comment)
+                 the value of the IDENTIFIER argument can can be:
 
-•
+                 • _verb - return current verb
 
-_devices[/{verb}] - get list of supported devices
-(in pair device+comment)
+                 • [=]{NAME}[/[{modifier}|{/device}][/{verb}]]   (For    valid
+                   NAMEs look at the ALSA Use Case Interface)
 
-•
+          geti IDENTIFIER
+                 get integer value.
 
-_modifiers[/{verb}] - get list of supported
-modifiers (in pair modifier+comment)
+                 the value of the IDENTIFIER argument can can be:
 
-The forms
-without the trailing /{verb} are valid only after a
-specific verb has been set.
+                 • _devstatus/{device}
 
-list1
-IDENTIFIER
+                 • _modstatus/{device}
 
-list command, for lists
-returning one item per entry.
+          set IDENTIFIER VALUE
+                 set string value
 
-the value of
-the IDENTIFIER argument can vary depending on the
-context, it can be:
+                 The value of the IDENTIFIER argument can can be:
 
-•
+                 • _verb - set the verb to VALUE
 
-TQ[/{verb}] - get list of Tone Quality
-identifiers 
+                 • _enadev - enable the device specified by VALUE
 
-•
+                 • _disdev - disable the device specified by VALUE
 
-_enadevs - get list of enabled devices
+                 • _swdev/{old_device} - switche device:
 
-•
+                   • disable  old_device  and then enable the device specified
+                     by VALUE
 
-_enamods - get list of enabled modifiers
+                   • if no device was enabled just return
 
-•
+                 • _enamod - enable the modifier specified by VALUE
 
-_supporteddevs/{modifier}|{device}[/{verb}] -
-list of supported devices
+                 • _dismod - disable the modifier specified by VALUE
 
-•
+                 • _swmod/{old_modifier} - switch modifier:
 
-_conflictingdevs/{modifier}|{device}[/{verb}] -
-list of conflicting devices
+                   • disable old_modifier and then enable the modifier  speci‐
+                     fied by VALUE
 
-get
-IDENTIFIER
+                   • if no modifier was enabled just return
 
-get string value.
+                 Note  that the identifiers referring to devices and modifiers
+                 are valid only after setting a verb.
 
-the value of
-the IDENTIFIER argument can be:
+          h, help
+                 help
 
-•
-
-_verb - return current verb
-
-•
-
-[=]{NAME}[/[{modifier}|{/device}][/{verb}]] (For
-valid NAMEs look at the ALSA Use Case Interface)
-
-geti
-IDENTIFIER
-
-get integer value.
-
-the value of
-the IDENTIFIER argument can be:
-
-•
-
-_devstatus/{device}
-
-•
-
-_modstatus/{device}
-
-set IDENTIFIER
-VALUE
-
-set string value
-
-The value of
-the IDENTIFIER argument can be:
-
-•
-
-_verb - set the verb to VALUE
-
-•
-
-_enadev - enable the device specified by
-VALUE 
-
-•
-
-_disdev - disable the device specified by
-VALUE 
-
-•
-
-_swdev/{old_device} - switche device:
-
-•
-
-disable old_device and
-then enable the device specified by VALUE
-
-•
-
-if no device was enabled just return
-
-•
-
-_enamod
-- enable the modifier specified by VALUE
-
-•
-
-_dismod - disable the
-modifier specified by VALUE
-
-•
-
-_swmod/{old_modifier} - switch modifier:
-
-•
-
-disable old_modifier and
-then enable the modifier specified by VALUE
-
-•
-
-if no modifier was enabled just return
-
-Note that the
-identifiers referring to devices and modifiers are valid
-only after setting a verb.
-
-h, help
-
-help
-
-q, quit
-
-quit
+          q, quit
+                 quit
 
 FILES
+       The master use  case  files  for  each  supported  sound  card  are  in
+       /usr/share/alsa/ucm.
 
-The master use
-case files for each supported sound card are in
-/usr/share/alsa/ucm.
+       For  example,  the  master  use case file for the Pandaboard card is in
+       /usr/share/alsa/ucm/PandaBoard/PandaBoard.conf, this file lists all the
+       supported use cases, e.g.
 
-For example,
-the master use case file for the Pandaboard card is
-in /usr/share/alsa/ucm/PandaBoard/PandaBoard.conf,
-this file lists all the supported use cases, e.g.
+          SectionUseCase."HiFi" {
+                          File "hifi"
+                          Comment "Play HiFi quality Music."
+          }
+          ...
 
-SectionUseCase."HiFi"
-{ 
-File "hifi" 
-Comment "Play HiFi quality Music." 
-} 
-...
+       Each use case defines a _verb, which is described in the file specified
+       in the File directive, like above.
 
-Each use case
-defines a _verb, which is described in the file specified in
-the File directive, like above.
+       The  HiFi  verb  above  is   described   in   /usr/share/alsa/ucm/Pand‐
+       aBoard/hifi.
 
-The HiFi
-verb above is described in
-/usr/share/alsa/ucm/PandaBoard/hifi.
-
-For more
-details on the syntax of UCM files, see the alsa-lib source
-code:
-http://git.alsa-project.org/?p=alsa-lib.git;a=blob;f=src/ucm/parser.c
+       For  more  details  on the syntax of UCM files, see the alsa-lib source
+       code:
+       http://git.alsa-project.org/?p=alsa-lib.git;a=blob;f=src/ucm/parser.c
 
 EXAMPLES OF USE
+       Some  commands,  like  for  instance list _devices, can only work after
+       setting a _verb in the  same  execution,  for  instance  this  sequence
+       doesn't work:
 
-Some commands,
-like for instance list _devices, can only work after
-setting a _verb in the same execution, for
-instance this sequence doesn't work:
+          # alsaucm -c bytcr-rt5640 set _verb HiFi
+          # alsaucm -c bytcr-rt5640 list _devices
 
-# alsaucm -c
-bytcr-rt5640 set _verb HiFi 
-# alsaucm -c bytcr-rt5640 list _devices
+       However this command does:
 
-However this
-command does:
+          # alsaucm -n -b - <<EOM
+          open bytcr-rt5640
+          set _verb HiFi
+          list _devices
+          EOM
 
-# alsaucm -n -b
-- 
-open bytcr-rt5640 
-set _verb HiFi 
-list _devices 
-EOM
+       An  example  of  setting  the  Speaker  device for the HiFi verb of the
+       bytcr-rt5640 card:
 
-An example of
-setting the Speaker device for the HiFi verb
-of the bytcr-rt5640 card:
-
-# alsaucm -n -b
-- 
-open bytcr-rt5640 
-reset 
-set _verb HiFi 
-set _enadev Speaker 
-EOM
+          # alsaucm -n -b - <<EOM
+          open bytcr-rt5640
+          reset
+          set _verb HiFi
+          set _enadev Speaker
+          EOM
 
 SEE ALSO
-
-•
-
-Use Case Interface:
-http://www.alsa-project.org/alsa-doc/alsa-lib/group__ucm.html 
+       • Use                          Case                          Interface:
+         http://www.alsa-project.org/alsa-doc/alsa-lib/group__ucm.html
 
 BUGS
-
-None known.
+       None known.
 
 AUTHOR
-
-Antonio Ospite
-ao2 [AT] ao2.it>
+       Antonio Ospite <ao2@ao2.it>
 
 COPYRIGHT
+       GPLv2+
 
-GPLv2+
+                                  2016-09-22                        ALSAUCM(1)

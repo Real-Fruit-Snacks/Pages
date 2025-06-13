@@ -1,765 +1,532 @@
-NAME
+SS(8)                       System Manager's Manual                      SS(8)
 
-ss - another
-utility to investigate sockets
+NAME
+       ss - another utility to investigate sockets
 
 SYNOPSIS
-
-ss
-[options] [ FILTER ]
+       ss [options] [ FILTER ]
 
 DESCRIPTION
-
-ss
-is used to dump socket statistics. It allows showing
-information similar to netstat. It can display more
-TCP and state information than other tools.
+       ss  is  used  to  dump socket statistics. It allows showing information
+       similar to netstat.  It can display more TCP and state information than
+       other tools.
 
 OPTIONS
+       When no option is used ss displays a list of open non-listening sockets
+       (e.g. TCP/UNIX/UDP) that have established connection.
 
-When no option
-is used ss displays a list of open non-listening sockets
-(e.g. TCP/UNIX/UDP) that have established connection.
+       -h, --help
+              Show summary of options.
 
--h, --help
+       -V, --version
+              Output version information.
 
-Show summary of options.
+       -H, --no-header
+              Suppress header line.
 
--V, --version
+       -Q, --no-queues
+              Suppress sending and receiving queue columns.
 
-Output version information.
+       -O, --oneline
+              Print each socket's data on a single line.
 
--H, --no-header
+       -n, --numeric
+              Do not try to resolve service names. Show exact  bandwidth  val‐
+              ues, instead of human-readable.
 
-Suppress header line.
+       -r, --resolve
+              Try to resolve numeric address/ports.
 
--Q, --no-queues
+       -a, --all
+              Display both listening and non-listening (for TCP this means es‐
+              tablished connections) sockets.
 
-Suppress sending and receiving
-queue columns.
+       -l, --listening
+              Display only listening sockets (these are omitted by default).
 
--O, --oneline
+       -B, --bound-inactive
+              Display only TCP bound but inactive (not listening,  connecting,
+              etc.) sockets (these are omitted by default).
 
-Print each socket’s data
-on a single line.
+       -o, --options
+              Show timer information. For TCP protocol, the output format is:
 
--n, --numeric
+              timer:(<timer_name>,<expire_time>,<retrans>)
 
-Do not try to resolve service
-names. Show exact bandwidth values, instead of
-human-readable.
+              <timer_name>
+                     the  name  of  the  timer,  there  are five kind of timer
+                     names:
 
--r, --resolve
+                     on : means one of these timers: TCP  retrans  timer,  TCP
+                     early retrans timer and tail loss probe timer
 
-Try to resolve numeric
-address/ports.
+                     keepalive: tcp keep alive timer
 
--a, --all
+                     timewait: timewait stage timer
 
-Display both listening and
-non-listening (for TCP this means established connections)
-sockets.
+                     persist: zero window probe timer
 
--l, --listening
+                     unknown: none of the above timers
 
-Display only listening sockets
-(these are omitted by default).
+              <expire_time>
+                     how long time the timer will expire
 
--B, --bound-inactive
+              <retrans>
+                     how many times the retransmission occurred
 
-Display only TCP bound but
-inactive (not listening, connecting, etc.) sockets (these
-are omitted by default).
+       -e, --extended
+              Show detailed socket information. The output format is:
 
--o, --options
+              uid:<uid_number> ino:<inode_number> sk:<cookie>
 
-Show timer information. For TCP
-protocol, the output format is:
+              <uid_number>
+                     the user id the socket belongs to
 
-timer:(,,)
+              <inode_number>
+                     the socket's inode number in VFS
 
-the name of the timer, there
-are five kind of timer names:
+              <cookie>
+                     an uuid of the socket
 
-on :
-means one of these timers: TCP retrans timer, TCP early
-retrans timer and tail loss probe timer
+       -m, --memory
+              Show socket memory usage. The output format is:
 
-keepalive:
-tcp keep alive timer
+              skmem:(r<rmem_alloc>,rb<rcv_buf>,t<wmem_alloc>,tb<snd_buf>,
+                            f<fwd_alloc>,w<wmem_queued>,o<opt_mem>,
+                            bl<back_log>,d<sock_drop>)
 
-timewait:
-timewait stage timer
+              <rmem_alloc>
+                     the memory allocated for receiving packet
 
-persist:
-zero window probe timer
+              <rcv_buf>
+                     the total memory can be allocated for receiving packet
 
-unknown:
-none of the above timers
+              <wmem_alloc>
+                     the  memory  used for sending packet (which has been sent
+                     to layer 3)
 
-how long time the timer will
-expire
+              <snd_buf>
+                     the total memory can be allocated for sending packet
 
-how many times the
-retransmission occurred
+              <fwd_alloc>
+                     the memory allocated by the socket as cache, but not used
+                     for  receiving/sending  packet  yet.  If  need  memory to
+                     send/receive packet, the memory in  this  cache  will  be
+                     used before allocate additional memory.
 
--e, --extended
+              <wmem_queued>
+                     The  memory  allocated  for sending packet (which has not
+                     been sent to layer 3)
 
-Show detailed socket
-information. The output format is:
+              <opt_mem>
+                     The memory used for storing socket option, e.g., the  key
+                     for TCP MD5 signature
 
-uid:
-ino: sk: 
+              <back_log>
+                     The  memory  used  for the sk backlog queue. On a process
+                     context, if the process is receiving packet,  and  a  new
+                     packet  is  received,  it will be put into the sk backlog
+                     queue, so it can be received by the process immediately
 
-the user id the socket belongs
-to
+              <sock_drop>
+                     the number of packets dropped before they  are  de-multi‐
+                     plexed into the socket
 
-the socket’s inode number
-in VFS
+       -p, --processes
+              Show process using socket.
 
-an uuid of the socket
+       -T, --threads
+              Show thread using socket. Implies -p.
 
--m, --memory
+       -i, --info
+              Show internal TCP information. Below fields may appear:
 
-Show socket memory usage. The
-output format is:
+              ts     show string "ts" if the timestamp option is set
 
-skmem:(r,rb,t,tb,
+              sack   show string "sack" if the sack option is set
 
-f,w,o,
+              ecn    show string "ecn" if the explicit congestion notification
+                     option is set
 
-bl,d)
+              ecnseen
+                     show string "ecnseen" if the saw ecn flag is found in re‐
+                     ceived packets
 
-the memory allocated for
-receiving packet
+              fastopen
+                     show string "fastopen" if the fastopen option is set
 
-the total memory can be
-allocated for receiving packet
+              cong_alg
+                     the congestion algorithm name, the default congestion al‐
+                     gorithm is "cubic"
 
-the memory used for sending
-packet (which has been sent to layer 3)
+              wscale:<snd_wscale>:<rcv_wscale>
+                     if window scale option is used, this field shows the send
+                     scale factor and receive scale factor
 
-the total memory can be
-allocated for sending packet
+              rto:<icsk_rto>
+                     tcp  re-transmission timeout value, the unit is millisec‐
+                     ond
 
-the memory allocated by the
-socket as cache, but not used for receiving/sending packet
-yet. If need memory to send/receive packet, the memory in
-this cache will be used before allocate additional
-memory.
+              backoff:<icsk_backoff>
+                     used for exponential backoff re-transmission, the  actual
+                     re-transmission timeout value is icsk_rto << icsk_backoff
 
-The memory allocated for
-sending packet (which has not been sent to layer 3)
+              rtt:<rtt>/<rttvar>
+                     rtt  is  the  average round trip time, rttvar is the mean
+                     deviation of rtt, their units are millisecond
 
-The memory used for storing
-socket option, e.g., the key for TCP MD5 signature
+              ato:<ato>
+                     ack timeout, unit is millisecond, used for delay ack mode
 
-The memory used for the sk
-backlog queue. On a process context, if the process is
-receiving packet, and a new packet is received, it will be
-put into the sk backlog queue, so it can be received by the
-process immediately
+              mss:<mss>
+                     max segment size
 
-the number of packets dropped
-before they are de-multiplexed into the socket
+              cwnd:<cwnd>
+                     congestion window size
 
--p, --processes
+              pmtu:<pmtu>
+                     path MTU value
 
-Show process using socket.
+              ssthresh:<ssthresh>
+                     tcp congestion window slow start threshold
 
--T, --threads
+              bytes_acked:<bytes_acked>
+                     bytes acked
 
-Show thread using socket.
-Implies -p.
+              bytes_received:<bytes_received>
+                     bytes received
 
--i, --info
+              segs_out:<segs_out>
+                     segments sent out
 
-Show internal TCP information.
-Below fields may appear:
+              segs_in:<segs_in>
+                     segments received
 
-ts
+              send <send_bps>bps
+                     egress bps
 
-show string "ts" if the timestamp option is
-set 
+              lastsnd:<lastsnd>
+                     how long time since the last packet  sent,  the  unit  is
+                     millisecond
 
-sack
+              lastrcv:<lastrcv>
+                     how long time since the last packet received, the unit is
+                     millisecond
 
-show string "sack" if the sack option is
-set 
+              lastack:<lastack>
+                     how long time since the last ack received,  the  unit  is
+                     millisecond
 
-ecn
+              pacing_rate <pacing_rate>bps/<max_pacing_rate>bps
+                     the pacing rate and max pacing rate
 
-show string "ecn" if the explicit congestion
-notification option is set
+              rcv_space:<rcv_space>
+                     a helper variable for TCP internal auto tuning socket re‐
+                     ceive buffer
 
-ecnseen
+              tcp-ulp-mptcp flags:[MmBbJjecv] token:<rem_token(rem_id)/loc_to‐
+              ken(loc_id)> seq:<sn> sfseq:<ssn> ssnoff:<off> maplen:<maplen>
+                     MPTCP subflow information
 
-show string "ecnseen"
-if the saw ecn flag is found in received packets
+       --tos  Show ToS and priority information. Below fields may appear:
 
-fastopen
+              tos    IPv4 Type-of-Service byte
 
-show string
-"fastopen" if the fastopen option is set
+              tclass IPv6 Traffic Class byte
 
-cong_alg
+              class_id
+                     Class  id  set  by  net_cls cgroup. If class is zero this
+                     shows priority set by SO_PRIORITY.
 
-the congestion algorithm name,
-the default congestion algorithm is "cubic"
+       --cgroup
+              Show cgroup information. Below fields may appear:
 
-wscale::
+              cgroup Cgroup v2 pathname. This  pathname  is  relative  to  the
+                     mount point of the hierarchy.
 
-if window scale option is used,
-this field shows the send scale factor and receive scale
-factor
+       --tipcinfo
+              Show internal tipc socket information.
 
-rto:
+       -K, --kill
+              Attempts to forcibly close sockets. This option displays sockets
+              that are successfully closed and silently skips sockets that the
+              kernel does not support closing. It supports IPv4 and IPv6 sock‐
+              ets only.
 
-tcp re-transmission timeout
-value, the unit is millisecond
+       -s, --summary
+              Print summary statistics. This  option  does  not  parse  socket
+              lists  obtaining summary from various sources. It is useful when
+              amount of sockets is  so  huge  that  parsing  /proc/net/tcp  is
+              painful.
 
-backoff:
+       -E, --events
+              Continually display sockets as they are destroyed
 
-used for exponential backoff
-re-transmission, the actual re-transmission timeout value is
-icsk_rto 
+       -Z, --context
+              As the -p option but also shows process security context. If the
+              -T option is used, also shows thread security context.
 
-rtt:/
+              For netlink(7) sockets the initiating process  context  is  dis‐
+              played as follows:
 
-rtt is the average round trip
-time, rttvar is the mean deviation of rtt, their units are
-millisecond
+                     1.  If valid pid show the process context.
 
-ato:
+                     2.  If  destination  is kernel (pid = 0) show kernel ini‐
+                         tial context.
 
-ack timeout, unit is
-millisecond, used for delay ack mode
+                     3.  If a unique identifier has been allocated by the ker‐
+                         nel  or  netlink user, show context as "unavailable".
+                         This will generally indicate that a process has  more
+                         than one netlink socket active.
 
-mss:
+       -z, --contexts
+              As  the  -Z option but also shows the socket context. The socket
+              context is taken from the associated inode and is not the actual
+              socket context held by the kernel. Sockets are typically labeled
+              with the context of the creating process,  however  the  context
+              shown will reflect any policy role, type and/or range transition
+              rules applied, and is therefore a useful reference.
 
-max segment size
+       -N NSNAME, --net=NSNAME
+              Switch to the specified network namespace name.
 
-cwnd:
+       -b, --bpf
+              Show socket classic BPF filters (only administrators are allowed
+              to get these information).
 
-congestion window size
+       -4, --ipv4
+              Display only IP version 4 sockets (alias for -f inet).
 
-pmtu:
+       -6, --ipv6
+              Display only IP version 6 sockets (alias for -f inet6).
 
-path MTU value
+       -0, --packet
+              Display PACKET sockets (alias for -f link).
 
-ssthresh:
+       -t, --tcp
+              Display TCP sockets.
 
-tcp congestion window slow
-start threshold
+       -u, --udp
+              Display UDP sockets.
 
-bytes_acked:
+       -d, --dccp
+              Display DCCP sockets.
 
-bytes acked
+       -w, --raw
+              Display RAW sockets.
 
-bytes_received:
+       -x, --unix
+              Display Unix domain sockets (alias for -f unix).
 
-bytes received
+       -S, --sctp
+              Display SCTP sockets.
 
-segs_out:
+       --tipc Display tipc sockets (alias for -f tipc).
 
-segments sent out
+       --vsock
+              Display vsock sockets (alias for -f vsock).
 
-segs_in:
+       --xdp  Display XDP sockets (alias for -f xdp).
 
-segments received
+       -M, --mptcp
+              Display MPTCP sockets.
 
-send
-bps
+       --inet-sockopt
+              Display inet socket options.
 
-egress bps
+       -f FAMILY, --family=FAMILY
+              Display  sockets  of type FAMILY.  Currently the following fami‐
+              lies are supported: unix, inet,  inet6,  link,  netlink,  vsock,
+              tipc, xdp.
 
-lastsnd:
+       -A QUERY, --query=QUERY, --socket=QUERY
+              List  of socket tables to dump, separated by commas. The follow‐
+              ing identifiers are understood: all, inet, tcp, udp, raw,  unix,
+              packet,   netlink,   unix_dgram,   unix_stream,  unix_seqpacket,
+              packet_raw,  packet_dgram,  dccp,  sctp,   tipc,   vsock_stream,
+              vsock_dgram,  xdp, mptcp. Any item in the list may optionally be
+              prefixed by an exclamation mark (!)  to exclude that socket  ta‐
+              ble from being dumped.
 
-how long time since the last
-packet sent, the unit is millisecond
+       -D FILE, --diag=FILE
+              Do  not  display  anything,  just dump raw information about TCP
+              sockets to FILE after applying filters. If FILE is -  stdout  is
+              used.
 
-lastrcv:
+       -F FILE, --filter=FILE
+              Read  filter information from FILE.  Each line of FILE is inter‐
+              preted like single command line option. If FILE is  -  stdin  is
+              used.
 
-how long time since the last
-packet received, the unit is millisecond
+       --bpf-maps
+              Pretty-print  all  the  BPF  socket-local  data entries for each
+              socket.
 
-lastack:
+       --bpf-map-id=MAP_ID
+              Pretty-print the BPF socket-local data entries for the requested
+              map ID. Can be used more than once.
 
-how long time since the last
-ack received, the unit is millisecond
-
-pacing_rate
-bps/bps
-
-the pacing rate and max pacing
-rate
-
-rcv_space:
-
-a helper variable for TCP
-internal auto tuning socket receive buffer
-
-tcp-ulp-mptcp
-flags:[MmBbJjecv] 
-token:
-seq: sfseq: 
-ssnoff: maplen:
-
-MPTCP subflow information
-
---tos
-
-Show ToS and priority information. Below fields may
-appear: 
-
-tos
-
-IPv4 Type-of-Service byte
-
-tclass
-
-IPv6 Traffic Class byte
-
-class_id
-
-Class id set by net_cls cgroup.
-If class is zero this shows priority set by SO_PRIORITY.
-
---cgroup
-
-Show cgroup information. Below
-fields may appear:
-
-cgroup
-
-Cgroup v2 pathname. This pathname is relative to the
-mount point of the hierarchy.
-
---tipcinfo
-
-Show internal tipc socket
-information.
-
--K, --kill
-
-Attempts to forcibly close
-sockets. This option displays sockets that are successfully
-closed and silently skips sockets that the kernel does not
-support closing. It supports IPv4 and IPv6 sockets only.
-
--s, --summary
-
-Print summary statistics. This
-option does not parse socket lists obtaining summary from
-various sources. It is useful when amount of sockets is so
-huge that parsing /proc/net/tcp is painful.
-
--E, --events
-
-Continually display sockets as
-they are destroyed
-
--Z, --context
-
-As the -p option but
-also shows process security context. If the -T option
-is used, also shows thread security context.
-
-For
-netlink(7) sockets the initiating process context is
-displayed as follows:
-
-1.
-
-If valid pid show the process context.
-
-2.
-
-If destination is kernel (pid = 0) show kernel initial
-context. 
-
-3.
-
-If a unique identifier has been allocated by the kernel
-or netlink user, show context as "unavailable".
-This will generally indicate that a process has more than
-one netlink socket active.
-
--z, --contexts
-
-As the -Z option but
-also shows the socket context. The socket context is taken
-from the associated inode and is not the actual socket
-context held by the kernel. Sockets are typically labeled
-with the context of the creating process, however the
-context shown will reflect any policy role, type and/or
-range transition rules applied, and is therefore a useful
-reference.
-
--N NSNAME,
---net=NSNAME
-
-Switch to the specified network
-namespace name.
-
--b, --bpf
-
-Show socket classic BPF filters
-(only administrators are allowed to get these
-information).
-
--4, --ipv4
-
-Display only IP version 4
-sockets (alias for -f inet).
-
--6, --ipv6
-
-Display only IP version 6
-sockets (alias for -f inet6).
-
--0, --packet
-
-Display PACKET sockets (alias
-for -f link).
-
--t, --tcp
-
-Display TCP sockets.
-
--u, --udp
-
-Display UDP sockets.
-
--d, --dccp
-
-Display DCCP sockets.
-
--w, --raw
-
-Display RAW sockets.
-
--x, --unix
-
-Display Unix domain sockets
-(alias for -f unix).
-
--S, --sctp
-
-Display SCTP sockets.
-
---tipc
-
-Display tipc sockets (alias for -f tipc).
-
---vsock
-
-Display vsock sockets (alias
-for -f vsock).
-
---xdp
-
-Display XDP sockets (alias for -f xdp).
-
--M, --mptcp
-
-Display MPTCP sockets.
-
---inet-sockopt
-
-Display inet socket
-options.
-
--f FAMILY,
---family=FAMILY
-
-Display sockets of type FAMILY.
-Currently the following families are supported: unix, inet,
-inet6, link, netlink, vsock, tipc, xdp.
-
--A QUERY, --query=QUERY,
---socket=QUERY
-
-List of socket tables to dump,
-separated by commas. The following identifiers are
-understood: all, inet, tcp, udp, raw, unix, packet, netlink,
-unix_dgram, unix_stream, unix_seqpacket, packet_raw,
-packet_dgram, dccp, sctp, tipc, vsock_stream, vsock_dgram,
-xdp, mptcp. Any item in the list may optionally be prefixed
-by an exclamation mark (!) to exclude that socket
-table from being dumped.
-
--D FILE, --diag=FILE
-
-Do not display anything, just
-dump raw information about TCP sockets to FILE after
-applying filters. If FILE is - stdout is used.
-
--F FILE,
---filter=FILE
-
-Read filter information from
-FILE. Each line of FILE is interpreted like single command
-line option. If FILE is - stdin is used.
-
---bpf-maps
-
-Pretty-print all the BPF
-socket-local data entries for each socket.
-
---bpf-map-id=MAP_ID
-
-Pretty-print the BPF
-socket-local data entries for the requested map ID. Can be
-used more than once.
-
-FILTER := [ state
-STATE-FILTER ] [ EXPRESSION ]
-
-Please take a look at the
-official documentation for details regarding filters.
+       FILTER := [ state STATE-FILTER ] [ EXPRESSION ]
+              Please take a look at the official documentation for details re‐
+              garding filters.
 
 STATE-FILTER
+       STATE-FILTER allows one to construct arbitrary set of states to  match.
+       Its  syntax is sequence of keywords state and exclude followed by iden‐
+       tifier of state.
 
-STATE-FILTER
-allows one to construct arbitrary set of states to match.
-Its syntax is sequence of keywords state and exclude
-followed by identifier of state. 
-Available identifiers are:
+       Available identifiers are:
 
-All standard
-TCP states: established, syn-sent,
-syn-recv, fin-wait-1, fin-wait-2,
-time-wait, closed, close-wait,
-last-ack, listening and closing.
+              All standard TCP states: established, syn-sent,  syn-recv,  fin-
+              wait-1,  fin-wait-2,  time-wait,  closed,  close-wait, last-ack,
+              listening and closing.
 
-all -
-for all the states
+              all - for all the states
 
-connected
-- all the states except for listening and
-closed
+              connected - all the states except for listening and closed
 
-synchronized
-- all the connected states except for
-syn-sent
+              synchronized - all the connected states except for syn-sent
 
-bucket -
-states, which are maintained as minisockets, i.e.
-time-wait and syn-recv
+              bucket - states,  which  are  maintained  as  minisockets,  i.e.
+              time-wait and syn-recv
 
-big -
-opposite to bucket
+              big - opposite to bucket
 
-bound-inactive
-- bound but otherwise inactive sockets (not listening,
-connecting, etc.)
+              bound-inactive  - bound but otherwise inactive sockets (not lis‐
+              tening, connecting, etc.)
 
 EXPRESSION
+       EXPRESSION allows filtering based  on  specific  criteria.   EXPRESSION
+       consists  of  a series of predicates combined by boolean operators. The
+       possible operators in increasing order of precedence are or  (or  |  or
+       ||),  and  (or & or &&), and not (or !). If no operator is between con‐
+       secutive predicates, an implicit and operator  is  assumed.  Subexpres‐
+       sions can be grouped with "(" and ")".
 
-EXPRESSION
-allows filtering based on specific criteria.
-EXPRESSION consists of a series of predicates
-combined by boolean operators. The possible operators in
-increasing order of precedence are or (or | or ||),
-and (or & or &&), and not (or !).
-If no operator is between consecutive predicates, an
-implicit and operator is assumed. Subexpressions can
-be grouped with "(" and ")".
+       The following predicates are supported:
 
-The following
-predicates are supported: 
-{dst|src} [=] HOST
+       {dst|src} [=] HOST
+              Test  if the destination or source matches HOST. See HOST SYNTAX
+              for details.
 
-Test if the destination or
-source matches HOST. See HOST SYNTAX for details.
+       {dport|sport} [OP] [FAMILY:]:PORT
+              Compare the destination or source port to PORT. OP can be any of
+              "<",  "<=", "=", "!=", ">=" and ">". Following normal arithmetic
+              rules. FAMILY and PORT are as described in HOST SYNTAX below.
 
-{dport|sport} [OP]
-[FAMILY:]:PORT
+       dev [=|!=] DEVICE
+              Match based on the device the connection uses. DEVICE can either
+              be a device name or the index of the interface.
 
-Compare the destination or
-source port to PORT. OP can be any of "=" and ">". Following normal
-arithmetic rules. FAMILY and PORT are as described in HOST
-SYNTAX below.
+       fwmark [=|!=] MASK
+              Matches  based  on the fwmark value for the connection. This can
+              either be a specific mark value or a mark value  followed  by  a
+              "/"  and  a  bitmask of which bits to use in the comparison. For
+              example "fwmark = 0x01/0x03" would match if the two  least  sig‐
+              nificant bits of the fwmark were 0x01.
 
-dev [=|!=] DEVICE
+       cgroup [=|!=] PATH
+              Match if the connection is part of a cgroup at the given path.
 
-Match based on the device the
-connection uses. DEVICE can either be a device name or the
-index of the interface.
+       autobound
+              Match  if  the  port or path of the source address was automati‐
+              cally allocated (rather than explicitly specified).
 
-fwmark [=|!=] MASK
+       Most operators have aliases. If no operator is supplied "=" is assumed.
+       Each of the following groups of operators are all equivalent:
 
-Matches based on the fwmark
-value for the connection. This can either be a specific mark
-value or a mark value followed by a "/" and a
-bitmask of which bits to use in the comparison. For example
-"fwmark = 0x01/0x03" would match if the two least
-significant bits of the fwmark were 0x01.
+              • = == eq
 
-cgroup [=|!=] PATH
+              • != ne neq
 
-Match if the connection is part
-of a cgroup at the given path.
+              • > gt
 
-autobound
+              • < lt
 
-Match if the port or path of
-the source address was automatically allocated (rather than
-explicitly specified).
+              • >= ge geq
 
-Most operators
-have aliases. If no operator is supplied "=" is
-assumed. Each of the following groups of operators are all
-equivalent:
+              • <= le leq
 
-•
+              • ! not
 
-= == eq
+              • | || or
 
-•
-
-!= ne neq
-
-•
-
-> gt
-
-•
-
-•
-
->= ge geq
-
-•
-
-•
-
-! not
-
-•
-
-| || or
-
-•
-
-& && and
+              • & && and
 
 HOST SYNTAX
+       The general host syntax is [FAMILY:]ADDRESS[:PORT].
 
-The general
-host syntax is [FAMILY:]ADDRESS[:PORT].
+       FAMILY  must  be one of the families supported by the -f option. If not
+       given it defaults to the family given with the -f option, and  if  that
+       is  also  missing, will assume either inet or inet6. Note that all host
+       conditions in the expression should either all be the same family or be
+       only  inet  and  inet6. If there is some other mixture of families, the
+       results will probably be unexpected.
 
-FAMILY must be
-one of the families supported by the -f option. If not given
-it defaults to the family given with the -f option, and if
-that is also missing, will assume either inet or inet6. Note
-that all host conditions in the expression should either all
-be the same family or be only inet and inet6. If there is
-some other mixture of families, the results will probably be
-unexpected.
+       The form of ADDRESS and PORT depends on the family  used.  "*"  can  be
+       used as a wildcard for either the address or port. The details for each
+       family are as follows:
 
-The form of
-ADDRESS and PORT depends on the family used. "*"
-can be used as a wildcard for either the address or port.
-The details for each family are as follows:
+       unix   ADDRESS is a glob pattern (see fnmatch(3)) that will be  matched
+              case-insensitively  against the unix socket's address. Both path
+              and abstract names are supported. Unix addresses do not  support
+              a port, and "*" cannot be used as a wildcard.
 
-unix
+       link   ADDRESS  is the case-insensitive name of an Ethernet protocol to
+              match. PORT is either a device name or a device  index  for  the
+              desired link device, as seen in the output of ip link.
 
-ADDRESS is a glob pattern (see
-fnmatch(3)) that will be matched case-insensitively
-against the unix socket’s address. Both path and
-abstract names are supported. Unix addresses do not support
-a port, and "*" cannot be used as a wildcard.
+       netlink
+              ADDRESS  is  a descriptor of the netlink family. Possible values
+              come from /etc/iproute2/nl_protos. PORT is the port  id  of  the
+              socket,  which is usually the same as the owning process id. The
+              value "kernel" can be used to represent the kernel (port  id  of
+              0).
 
-link
+       vsock  ADDRESS  is an integer representing the CID address, and PORT is
+              the port.
 
-ADDRESS is the case-insensitive name of an Ethernet
-protocol to match. PORT is either a device name or a device
-index for the desired link device, as seen in the output of
-ip link.
-
-netlink
-
-ADDRESS is a descriptor of the
-netlink family. Possible values come from
-/etc/iproute2/nl_protos. PORT is the port id of the socket,
-which is usually the same as the owning process id. The
-value "kernel" can be used to represent the kernel
-(port id of 0).
-
-vsock
-
-ADDRESS is an integer representing the CID address, and
-PORT is the port.
-
-inet and inet6
-
-ADDRESS is an ip address
-(either v4 or v6 depending on the family) or a DNS hostname
-that resolves to an ip address of the required version. An
-ipv6 address must be enclosed in "[" and
-"]" to disambiguate the port separator. The
-address may additionally have a prefix length given in CIDR
-notation (a slash followed by the prefix length in bits).
-PORT is either the numerical socket port, or the service
-name for the port to match.
+       inet and inet6
+              ADDRESS is an ip address (either v4 or v6 depending on the  fam‐
+              ily) or a DNS hostname that resolves to an ip address of the re‐
+              quired version. An ipv6 address must be enclosed in "[" and  "]"
+              to disambiguate the port separator. The address may additionally
+              have a prefix length given in CIDR notation (a slash followed by
+              the  prefix length in bits). PORT is either the numerical socket
+              port, or the service name for the port to match.
 
 USAGE EXAMPLES
+       ss -t -a
+              Display all TCP sockets.
 
-ss -t
--a
+       ss -t -a -Z
+              Display all TCP sockets with process SELinux security contexts.
 
-Display all TCP sockets.
+       ss -u -a
+              Display all UDP sockets.
 
-ss -t -a -Z
+       ss -o state established '( dport = :ssh or sport = :ssh )'
+              Display all established ssh connections.
 
-Display all TCP sockets with
-process SELinux security contexts.
+       ss -x src /tmp/.X11-unix/*
+              Find all local processes connected to X server.
 
-ss -u -a
+       ss -o state fin-wait-1 '( sport =  :http  or  sport  =  :https  )'  dst
+       193.233.7/24
+              List  all  the tcp sockets in state FIN-WAIT-1 for our apache to
+              network 193.233.7/24 and look at their timers.
 
-Display all UDP sockets.
-
-ss -o state established
-’( dport = :ssh or sport = :ssh )’
-
-Display all established ssh
-connections.
-
-ss -x src
-/tmp/.X11-unix/*
-
-Find all local processes
-connected to X server.
-
-ss -o state fin-wait-1
-’( sport = :http or sport = :https )’ dst 
-193.233.7/24
-
-List all the tcp sockets in
-state FIN-WAIT-1 for our apache to network 193.233.7/24 and
-look at their timers.
-
-ss -a -A
-’all,!tcp’
-
-List sockets in all states from
-all socket tables but TCP.
+       ss -a -A 'all,!tcp'
+              List sockets in all states from all socket tables but TCP.
 
 SEE ALSO
-
-ip(8),
-
-RFC 793 - https://tools.ietf.org/rfc/rfc793.txt (TCP
-states)
+       ip(8),
+       RFC 793 - https://tools.ietf.org/rfc/rfc793.txt (TCP states)
 
 AUTHOR
+       ss was written by Alexey Kuznetsov, <kuznet@ms2.inr.ac.ru>.
 
-ss was
-written by Alexey Kuznetsov,
-kuznet [AT] ms2.ru>.
+       This manual page was written by Michael Prokop <mika@grml.org> for  the
+       Debian project (but may be used by others).
 
-This manual
-page was written by Michael Prokop mika [AT] grml.org> for
-the Debian project (but may be used by others).
+                                                                         SS(8)

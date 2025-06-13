@@ -1,390 +1,245 @@
-NAME
+REPORTBUG.CONF(5)             File Formats Manual            REPORTBUG.CONF(5)
 
-reportbug.conf
-- The configuration file for reportbug
+NAME
+       reportbug.conf - The configuration file for reportbug
 
 SYNOPSIS
-
-/etc/reportbug.conf
-- The configuration file for reportbug, a program designed
-to report bugs in the Debian distribution
+       /etc/reportbug.conf  -  The configuration file for reportbug, a program
+       designed to report bugs in the Debian distribution
 
 DESCRIPTION
+       This manual page describes the layout of  the  reportbug  and  querybts
+       configuration  file  and  the available configuration options.  The de‐
+       fault location of the file is /etc/reportbug.conf and the  options  may
+       be  overriding  in $HOME/.reportbugrc (which follows the same format as
+       reportbug.conf).
 
-This manual
-page describes the layout of the reportbug and
-querybts configuration file and the available
-configuration options. The default location of the file is
-/etc/reportbug.conf and the options may be overriding
-in $HOME/.reportbugrc (which follows the same format
-as reportbug.conf).
-
-Please note
-that any configuration file has to be a valid UTF-8
-document, and not in a different locale; this is
-particularly important in situations where localized
-characters have to be used (like for realname).
+       Please note that any configuration file has to be a valid  UTF-8  docu‐
+       ment,  and not in a different locale; this is particularly important in
+       situations where localized characters have to be used (like  for  real‐
+       name).
 
 FILE FORMAT
+       Configuration options can be specified in the form
 
-Configuration
-options can be specified in the form
+       option-name option-value
 
-option-name
-option-value
+       True/False (boolean) options can be specified as
 
-True/False
-(boolean) options can be specified as
+       boolean-option
 
-boolean-option
+       (if it's present, it's a True).
 
-(if it’s
-present, it’s a True).
+       Usually, no-option will disable option if option is boolean.
 
-Usually,
-no-option will disable option if option
-is boolean.
-
-Options can be
-specified in any order.
+       Options can be specified in any order.
 
 OPTIONS
+       The summary of possible options (in alphabetical order) is as follows:
 
-The summary of
-possible options (in alphabetical order) is as follows:
+       bts    The  bug  tracking system to use, see reportbug --bts=help for a
+              list of currently supported BTSes.
 
-bts
+       cc (boolean)
+              Whether the reporter should be Cc:ed on the bug report.
 
-The bug tracking system to use, see reportbug
---bts=help for a list of currently supported BTSes.
+       check-available (boolean)
+              Whether packages.debian.org should be queried for newer releases
+              of  the  package.   In advanced and expert mode, http://ftp-mas‐
+              ter.debian.org/new.html is also checked.
 
-cc
-(boolean)
+       compress (boolean)
+              Whether modified configuration files included in the bug  report
+              should be stripped down.
 
-Whether the reporter should be
-Cc:ed on the bug report.
+       config-files (boolean)
+              Whether modified configuration files should be included with the
+              bug report.
 
-check-available
-(boolean)
+       draftpath
+              The directory where unsubmitted reports should be saved. The de‐
+              fault is /tmp.
 
-Whether
-packages.debian.org should be queried for newer
-releases of the package. In advanced and
-expert mode, incoming.debian.org and
-http://ftp-master.debian.org/new.html are also
-checked.
+       editor The editor to use to edit the bug report.  Example:
 
-compress
-(boolean)
+              editor "emacs -nw"
 
-Whether modified configuration
-files included in the bug report should be stripped
-down.
+       email  Default From address of the bug email (override with environment
+              variables, see reportbug(1)). Example:
 
-config-files
-(boolean)
+              email "humberto@example.com"
 
-Whether modified configuration
-files should be included with the bug report.
+       envelopefrom
+              Specify the Envelope From mail header  (also  known  as  Return-
+              path); by default it's the From address but it can be selected a
+              different one in case the MTA doesn't canonicalize  local  users
+              to  public addresses. This can be set to the empty string if the
+              MTA does not allow setting the Envelope From.
 
-editor
+       list-cc-me (boolean)
+              Send a carbon copy of the report to your automatically  detected
+              email  address  after  a  report  number  is  assigned, like the
+              --list-cc-me option.
 
-The editor to use to edit the bug report. Example:
+       mbox_reader_cmd
+              Specify a command to open the bug reports mbox file. You can use
+              %s  to  substitute  the mbox file to be used, and %% to insert a
+              literal percent sign. If no %s is specified, the mbox file  name
+              is supplied at the end of the argument list. Example:
 
-editor
-"emacs -nw"
+              mbox_reader_cmd "mutt -f %s"
 
-email
+       header Additional headers to add to the bug email.  Like:
 
-Default From address of
-the bug email (override with environment variables, see
-reportbug(1)). Example:
+              header "X-Silly-Header: I haven't edited my /etc/reportbug.conf"
+              header "X-Debbugs-No-Ack: please" # to suppress acknowledgments
 
-email
-"humberto [AT] example.com"
+              Note  that  setting  additional headers may not work reliably if
+              the bug email is passed to an external MUA for submission.
 
-envelopefrom
+       http_proxy
+              Default HTTP proxy used to query the BTS (override with environ‐
+              ment variables, see reportbug(1)). Example:
 
-Specify the Envelope From mail
-header (also known as Return-path); by default it’s
-the From address but it can be selected a different one in
-case the MTA doesn’t canonicalize local users to
-public addresses.
+              http_proxy http://proxy.example.com:3128/
 
-list-cc-me
-(boolean)
+       justification
+              The  justification  in  case of a Release Critical bug (severity
+              either 'critical', 'serious' or 'grave'). Example:
 
-Send a carbon copy of the
-report to your automatically detected email address after a
-report number is assigned, like the --list-cc-me
-option.
+              justification "text here"
 
-mbox_reader_cmd
+       keyid  The GPG key to use, if different from the  default  one  on  the
+              system.  Example:
 
-Specify a command to open the
-bug reports mbox file. You can use %s to substitute
-the mbox file to be used, and %% to insert a literal
-percent sign. If no %s is specified, the mbox file
-name is supplied at the end of the argument list.
-Example:
+              keyid 12345678
 
-mbox_reader_cmd
-"mutt -f %s"
+       maintonly
+              See the --maintonly entry in reportbug(1).
 
-header
+       max_attachment_size
+              The max size any attachment can have. Example:
 
-Additional headers to add to the bug email. Like:
+              max_attachment_size 5000000
 
-header
-"X-Debbugs-CC: debian-qa [AT] lists.org"
+       mh     Use the mh mailer.
 
-header "X-Silly-Header: I haven’t edited
-my /etc/reportbug.conf" 
-header "X-Debbugs-No-Ack: please" # to
-suppress acknowledgments
+       mirror The address of a BTS mirror. Example:
 
-Note that
-setting additional headers may not work reliably if the bug
-email is passed to an external MUA for submission.
+              mirror http://mirror.address/
 
-http_proxy
+       mode [novice|standard|advanced|expert]
+              The default operating mode for reportbug(1).
 
-Default HTTP proxy used to
-query the BTS (override with environment variables, see
-reportbug(1)). Example:
+       mta    The  path  to the MTA used.  Any SMTP server on Debian should be
+              OK with the default:
 
-http_proxy
-http://proxy.example.com:3128/
+              mta /usr/sbin/sendmail
 
-justification
+       mua    The mail user agent to use (the default is empty, to use an  in‐
+              ternal mailer). Example:
 
-The justification in case of a
-Release Critical bug (severity either
-’critical’, ’serious’ or
-’grave’). Example:
+              mua 'mutt -H'
 
-justification
-"text here"
+       mutt   Use the mutt mailer.
 
-keyid
+       nmh    Use the nmh mailer.
 
-The GPG key to use, if different from the default one on
-the system. Example:
+       no-check-uid (boolean)
+              Disables checking whether the UIDs are outside admin range (root
+              is still checked).
 
-keyid
-12345678
+       no-debconf (boolean)
+              Disables adding the debconf-show output to the bug report.
 
-maintonly
+       no-query-source (boolean)
+              Disables querying the source packages for bugs.
 
-See the --maintonly
-entry in reportbug(1).
+       offline
+              Disables all external queries.
 
-max_attachment_size
+       paranoid
+              Paranoid mode: print the whole email envelope before sending it.
 
-The max size any attachment can
-have. Example:
+       printonly
+              Print the report on screen, don't sent it.
 
-max_attachment_size
-5000000
+       query-bts (boolean)
+              Whether the BTS should be queried for existing bug reports.
 
-mh
+       quiet  See the --report-quiet entry in reportbug(1).
 
-Use the mh mailer.
+       realname
+              The default real-name in the  From  address  of  the  bug  email
+              (override  with  environment variables, see reportbug(1)). Exam‐
+              ple:
 
-mirror
+              realname "Humberto Flores III"
 
-The address of a BTS mirror. Example:
+       replyto
+              The default Reply-To in the bug email (override with environment
+              variables, see reportbug(1). Example:
 
-mirror
-http://mirror.address/
+              replyto "Humberto Flores <humflores@example.org>"
 
-mode
-[novice|standard|advanced|expert]
+       severity [critical|grave|serious|important|normal|minor|wishlist]
+              The default severity level of the bug reported.  Setting this in
+              the configuration file will disable prompting while running  re‐
+              portbug.
 
-The default operating mode for
-reportbug(1).
+       sign [gpg|pgp|gnupg|none]
+              Program used to digitally sign bug reports automatically ('none'
+              to disable it).
 
-mta
+       smtphost
+              Use an MTA different from  /usr/sbin/sendmail.   A  port  number
+              other than 25 can also be specified. Example:
 
-The path to the MTA used. Any SMTP server on Debian
-should be OK with the default:
+              smtphost mail.example.com:2525
 
-mta
-/usr/sbin/sendmail
+              Use "smtphost localhost" to enable the internal MTA.
 
-mua
+       smtppasswd
+              The password to use for SMTP. Example:
 
-The mail user agent to use (the
-default is empty, to use an internal mailer). Example:
+              smtppasswd f10r35
 
-mua
-’mutt -H’
+       smtpuser
+              The username to use for SMTP. Example:
 
-mutt
+              smtpuser hflores
 
-Use the mutt mailer.
+       smtptls
+              Enables  TLS encryption for the SMTP connection, using STARTTLS.
+              This setting is ignored if you connect to  port  465,  in  which
+              case SSL/TLS will always be used.
 
-nmh
+       submit Use submit as the bug submission address.
 
-Use the nmh mailer.
+       template
+              Use  the  template  mode, bypasses all prompts and the output it
+              sent to stdout.
 
-no-check-uid
-(boolean)
+       timeout
+              The number of seconds to wait for a network resource to respond.
+              The default is 60 seconds. Example:
 
-Disables checking whether the
-UIDs are outside admin range (root is still
-checked).
+              timeout 30
 
-no-debconf
-(boolean)
+       ui [text|urwid|gtk]
+              The user interface that querybts(1) and reportbug(1) should use.
 
-Disables adding the
-debconf-show output to the bug report.
-
-no-query-source
-(boolean)
-
-Disables querying the source
-packages for bugs.
-
-offline
-
-Disables all external
-queries.
-
-outfile
-
-Output the full email contents
-(including headers) to the specified file instead of
-sending it. Example:
-
-outfile
-"~/reportbug_report"
-
-paranoid
-
-Paranoid mode: print the whole
-email envelope before sending it.
-
-printonly
-
-Print the report on screen,
-don’t sent it.
-
-query-bts
-(boolean)
-
-Whether the BTS should be
-queried for existing bug reports.
-
-quiet
-
-See the --report-quiet entry in
-reportbug(1). 
-
-realname
-
-The default real-name in the
-From address of the bug email (override with
-environment variables, see reportbug(1)).
-Example:
-
-realname
-"Humberto Flores III"
-
-replyto
-
-The default Reply-To in
-the bug email (override with environment variables, see
-reportbug(1). Example:
-
-replyto
-"Humberto Flores
-humflores [AT] example.org>"
-
-severity
-[critical|grave|serious|important|normal|minor|wishlist]
-
-The default severity level of
-the bug reported. Setting this in the configuration file
-will disable prompting while running reportbug.
-
-sign
-[gpg|pgp|gnupg|none]
-
-Program used to digitally sign
-bug reports automatically (’none’ to disable
-it).
-
-smtphost
-
-Use an MTA different from
-/usr/sbin/sendmail. A port number other than 25 can
-also be specified. Example:
-
-smtphost
-mail.example.com:2525
-
-Use
-"smtphost localhost" to enable the
-internal MTA.
-
-smtppasswd
-
-The password to use for SMTP.
-Example:
-
-smtppasswd
-f10r35
-
-smtpuser
-
-The username to use for SMTP.
-Example:
-
-smtpuser
-hflores
-
-smtptls
-
-Enables TLS encryption for the
-SMTP connection, using STARTTLS. This setting is ignored if
-you connect to port 465, in which case SSL/TLS will always
-be used.
-
-submit
-
-Use submit as the bug submission address.
-
-template
-
-Use the template mode, bypasses
-all prompts and the output it sent to stdout.
-
-ui
-[text|urwid|gtk]
-
-The user interface that
-querybts(1) and reportbug(1) should use.
-
-verify
-
-Enables automatic verification of package installation
-before reporting using debsums, if available.
+       verify Enables  automatic  verification  of package installation before
+              reporting using debsums, if available.
 
 SEE ALSO
-
-reportbug(1),
-querybts(1)
+       reportbug(1), querybts(1)
 
 AUTHOR
+       reportbug was written by Chris Lawrence <lawrencc@debian.org> and  it's
+       now maintained by Sandro Tosi <morph@debian.org>.
 
-reportbug was
-written by Chris Lawrence lawrencc [AT] debian.org> and
-it’s now maintained by Sandro Tosi
-morph [AT] debian.org>.
+       This  manual  page  was  written by Y Giridhar Appaji Nag <giridhar@ap‐
+       paji.net> for the Debian project, but may be used by others.
 
-This manual
-page was written by Y Giridhar Appaji Nag
-giridhar [AT] appaji.net> for the Debian project, but may
-be used by others.
+                                                             REPORTBUG.CONF(5)

@@ -4046,6 +4046,11 @@
         class CommandParser {
             constructor() {
                 this.tokens = [];
+                this.commandOptions = {};
+            }
+            
+            // Update options when they're loaded
+            updateOptions() {
                 this.commandOptions = window.commandOptions || {};
             }
 
@@ -5094,6 +5099,8 @@
             parseTimeout = setTimeout(() => {
                 const input = e.target.value.trim();
                 if (input) {
+                    // Update options in case they were loaded after parser was created
+                    commandParser.updateOptions();
                     const tokens = commandParser.parse(input);
                     displayParsedCommand(tokens);
                     displayExplanations(tokens);
@@ -5105,7 +5112,10 @@
         });
 
         // Open command explainer
-        function openCommandExplainer() {
+        async function openCommandExplainer() {
+            // Ensure options are loaded before opening
+            await ensureOptions();
+            
             commandExplainerModal.style.display = 'block';
             overlay.style.display = 'block';
             commandInput.focus();

@@ -1,2520 +1,1796 @@
-NAME
+SAMBA-TOOL(8)             System Administration tools            SAMBA-TOOL(8)
 
-samba-tool -
-Main Samba administration tool.
+NAME
+       samba-tool - Main Samba administration tool.
 
 SYNOPSIS
-
-samba-tool [-h]
-[-W myworkgroup] [-U user] [-d debuglevel]
-[--v] 
+       samba-tool [-h] [-W myworkgroup] [-U user] [-d debuglevel] [--v]
 
 DESCRIPTION
-
-This tool is
-part of the samba(7) suite.
+       This tool is part of the samba(7) suite.
 
 OPTIONS
+       -h|--help
+           Show this help message and exit
 
--h|--help
+       -r|--realm=REALM
+           Set the realm for the domain.
 
-Show this help message and
-exit
+           Note that specifying this parameter here will override the realm
+           parameter in the /etc/samba/smb.conf file.
 
--r|--realm=REALM
+       --simple-bind-dn=DN
+           DN to use for a simple bind.
 
-Set the realm for the
-domain.
+       --password
+           Specify the password on the commandline.
 
-Note that
-specifying this parameter here will override the
-realm
-parameter in the /etc/samba/smb.conf
-file.
+           Be cautious about including passwords in scripts or passing
+           user-supplied values onto the command line. For security it is
+           better to let the Samba client tool ask for the password if needed,
+           or obtain the password once with kinit.
 
---simple-bind-dn=DN
+           If --password is not specified, the tool will check the PASSWD
+           environment variable, followed by PASSWD_FD which is expected to
+           contain an open file descriptor (FD) number.
 
-DN to use
-for a simple bind.
+           Finally it will check PASSWD_FILE (containing a file path to be
+           opened). The file should only contain the password. Make certain
+           that the permissions on the file restrict access from unwanted
+           users!
 
---password
+           While Samba will attempt to scrub the password from the process
+           title (as seen in ps), this is after startup and so is subject to a
+           race.
 
-Specify
-the password on the commandline.
+       -U|--user=[DOMAIN\]USERNAME[%PASSWORD]
+           Sets the SMB username or username and password.
 
-Be
-cautious about including passwords in scripts or passing
-user-supplied values onto the command line. For security it
-is better to let the Samba client tool ask for the password
-if needed, or obtain the password once with
-kinit.
+           If %PASSWORD is not specified, the user will be prompted. The
+           client will first check the USER environment variable (which is
+           also permitted to also contain the password separated by a %), then
+           the LOGNAME variable (which is not permitted to contain a password)
+           and if either exists, the value is used. If these environmental
+           variables are not found, the username found in a Kerberos
+           Credentials cache may be used.
 
-If
---password is not specified, the tool will check the
-PASSWD environment variable, followed by
-PASSWD_FD which is expected to contain an open file
-descriptor (FD) number.
+           A third option is to use a credentials file which contains the
+           plaintext of the username and password. This option is mainly
+           provided for scripts where the admin does not wish to pass the
+           credentials on the command line or via environment variables. If
+           this method is used, make certain that the permissions on the file
+           restrict access from unwanted users. See the -A for more details.
 
-Finally
-it will check PASSWD_FILE (containing a file path to
-be opened). The file should only contain the password. Make
-certain that the permissions on the file restrict access
-from unwanted users!
+           Be cautious about including passwords in scripts or passing
+           user-supplied values onto the command line. For security it is
+           better to let the Samba client tool ask for the password if needed,
+           or obtain the password once with kinit.
 
-While
-Samba will attempt to scrub the password from the process
-title (as seen in ps), this is after startup and so is
-subject to a race.
+           While Samba will attempt to scrub the password from the process
+           title (as seen in ps), this is after startup and so is subject to a
+           race.
 
--U|--user=[DOMAIN\]USERNAME[%PASSWORD]
+       -W|--workgroup=WORKGROUP
+           Set the SMB domain of the username. This overrides the default
+           domain which is the domain defined in smb.conf. If the domain
+           specified is the same as the servers NetBIOS name, it causes the
+           client to log on using the servers local SAM (as opposed to the
+           Domain SAM).
 
-Sets the
-SMB username or username and password.
+           Note that specifying this parameter here will override the
+           workgroup parameter in the /etc/samba/smb.conf file.
 
-If
-%PASSWORD is not specified, the user will be prompted. The
-client will first check the USER environment variable
-(which is also permitted to also contain the password
-separated by a %), then the LOGNAME variable (which
-is not permitted to contain a password) and if either
-exists, the value is used. If these environmental variables
-are not found, the username found in a Kerberos Credentials
-cache may be used.
+       -N|--no-pass
+           If specified, this parameter suppresses the normal password prompt
+           from the client to the user. This is useful when accessing a
+           service that does not require a password.
 
-A
-third option is to use a credentials file which contains the
-plaintext of the username and password. This option is
-mainly provided for scripts where the admin does not wish to
-pass the credentials on the command line or via environment
-variables. If this method is used, make certain that the
-permissions on the file restrict access from unwanted users.
-See the -A for more details.
+           Unless a password is specified on the command line or this
+           parameter is specified, the client will request a password.
 
-Be
-cautious about including passwords in scripts or passing
-user-supplied values onto the command line. For security it
-is better to let the Samba client tool ask for the password
-if needed, or obtain the password once with
-kinit.
+           If a password is specified on the command line and this option is
+           also defined the password on the command line will be silently
+           ignored and no password will be used.
 
-While
-Samba will attempt to scrub the password from the process
-title (as seen in ps), this is after startup and so is
-subject to a race.
+       --use-kerberos=desired|required|off
+           This parameter determines whether Samba client tools will try to
+           authenticate using Kerberos. For Kerberos authentication you need
+           to use dns names instead of IP addresses when connecting to a
+           service.
 
--W|--workgroup=WORKGROUP
+           Note that specifying this parameter here will override the client
+           use kerberos parameter in the /etc/samba/smb.conf file.
 
-Set the
-SMB domain of the username. This overrides the default
-domain which is the domain defined in smb.conf. If the
-domain specified is the same as the servers NetBIOS name, it
-causes the client to log on using the servers local SAM (as
-opposed to the Domain SAM).
+       --use-krb5-ccache=CCACHE
+           Specifies the credential cache location for Kerberos
+           authentication.
 
-Note
-that specifying this parameter here will override the
-workgroup
-parameter in the /etc/samba/smb.conf
-file.
+           This will set --use-kerberos=required too.
 
--N|--no-pass
+       -A|--authentication-file=filename
+           This option allows you to specify a file from which to read the
+           username and password used in the connection. The format of the
+           file is:
 
-If
-specified, this parameter suppresses the normal password
-prompt from the client to the user. This is useful when
-accessing a service that does not require a
-password.
+                                   username = <value>
+                                   password = <value>
+                                   domain   = <value>
 
-Unless
-a password is specified on the command line or this
-parameter is specified, the client will request a
-password.
+           Make certain that the permissions on the file restrict access from
+           unwanted users!
 
-If
-a password is specified on the command line and this option
-is also defined the password on the command line will be
-silently ignored and no password will be used.
+       --ipaddress=IPADDRESS
+           IP address of the server
 
---use-kerberos=desired|required|off
+       --color=always|never|auto
+           Indicate whether samba-tool should use ANSI colour codes in its
+           output. If 'auto' (the default), samba-tool will use colour when
+           its output is directed toward a terminal, unless the NO_COLOR
+           environment variable is set and non-empty.
 
-This
-parameter determines whether Samba client tools will try to
-authenticate using Kerberos. For Kerberos authentication you
-need to use dns names instead of IP addresses when
-connecting to a service.
+           The values 'yes' and 'force' are accepted as synonyms for 'always';
+           'no' and 'none' for 'never'; and 'tty' and 'if-tty' for 'auto'.
 
-Note
-that specifying this parameter here will override the
-client use kerberos
-parameter in the /etc/samba/smb.conf
-file.
+           Note that asking for colour doesn't mean samba-tool will
+           necessarily be very colourful. Many commands are very monochrome,
+           particularly when successful.
 
---use-krb5-ccache=CCACHE
+       -d|--debuglevel=level
+           level is an integer from 0 to 10. The default value if this
+           parameter is not specified is 1 for client applications.
 
-Specifies
-the credential cache location for Kerberos
-authentication.
+           The higher this value, the more detail will be logged to the log
+           files about the activities of the server. At level 0, only critical
+           errors and serious warnings will be logged. Level 1 is a reasonable
+           level for day-to-day running - it generates a small amount of
+           information about operations carried out.
 
-This
-will set --use-kerberos=required too.
+           Levels above 1 will generate considerable amounts of log data, and
+           should only be used when investigating a problem. Levels above 3
+           are designed for use only by developers and generate HUGE amounts
+           of log data, most of which is extremely cryptic.
 
--A|--authentication-file=filename
+           Note that specifying this parameter here will override the log
+           level parameter in the /etc/samba/smb.conf file.
 
-This
-option allows you to specify a file from which to read the
-username and password used in the connection. The format of
-the file is:
-
-username =
-
-password =
-
-domain = 
-
-Make
-certain that the permissions on the file restrict access
-from unwanted users!
-
---ipaddress=IPADDRESS
-
-IP
-address of the server
-
---color=always|never|auto
-
-Indicate
-whether samba-tool should use ANSI colour codes in its
-output. If 'auto' (the default), samba-tool will use colour
-when its output is directed toward a terminal, unless the
-NO_COLOR environment variable is set and
-non-empty.
-
-The
-values 'yes' and 'force' are accepted as synonyms for
-'always'; 'no' and 'none' for 'never'; and 'tty' and
-'if-tty' for 'auto'.
-
-Note
-that asking for colour doesn't mean samba-tool will
-necessarily be very colourful. Many commands are very
-monochrome, particularly when successful.
-
--d|--debuglevel=DEBUGLEVEL
-
-level
-is an integer from 0 to 10. The default value if this
-parameter is not specified is 1 for client
-applications.
-
-The
-higher this value, the more detail will be logged to the log
-files about the activities of the server. At level 0, only
-critical errors and serious warnings will be logged. Level 1
-is a reasonable level for day-to-day running - it generates
-a small amount of information about operations carried
-out.
-
-Levels
-above 1 will generate considerable amounts of log data, and
-should only be used when investigating a problem. Levels
-above 3 are designed for use only by developers and generate
-HUGE amounts of log data, most of which is extremely
-cryptic.
-
-Note
-that specifying this parameter here will override the
-log level
-parameter in the /etc/samba/smb.conf
-file.
-
---debug-stdout
-
-This will
-redirect debug output to STDOUT. By default all clients are
-logging to STDERR.
+       --debug-stdout
+           This will redirect debug output to STDOUT. By default all clients
+           are logging to STDERR.
 
 COMMANDS
+   computer
+       Manage computer accounts.
 
-computer
+   computer add computername [options]
+       Add a new computer to the Active Directory Domain.
 
-Manage computer accounts.
+       The new computer name specified on the command is the sAMAccountName,
+       with or without the trailing dollar sign.
 
-computer
-add computername [options] 
-Add a new computer to the Active Directory
-Domain.
+       --computerou=COMPUTEROU
+           DN of alternative location (with or without domainDN counterpart)
+           to default CN=Computers in which new computer object will be
+           created. E.g. 'OU=OUname'.
 
-The
-new computer name specified on the command is the
-sAMAccountName, with or without the trailing dollar
-sign.
+       --description=DESCRIPTION
+           The new computer's description.
 
---computerou=COMPUTEROU
+       --ip-address=IP_ADDRESS_LIST
+           IPv4 address for the computer's A record, or IPv6 address for AAAA
+           record, can be provided multiple times.
 
-DN of
-alternative location (with or without domainDN counterpart)
-to default CN=Computers in which new computer object will be
-created. E.g. 'OU=OUname'.
+       --service-principal-name=SERVICE_PRINCIPAL_NAME_LIST
+           Computer's Service Principal Name, can be provided multiple times.
 
---description=DESCRIPTION
+       --prepare-oldjoin
+           Prepare enabled machine account for oldjoin mechanism.
 
-The new
-computer's description.
+   computer create computername [options]
+       Add a new computer. This is a synonym for the samba-tool computer add
+       command and is available for compatibility reasons only. Please use
+       samba-tool computer add instead.
 
---ip-address=IP_ADDRESS_LIST
+   computer delete computername [options]
+       Delete an existing computer account.
 
-IPv4
-address for the computer's A record, or IPv6 address for
-AAAA record, can be provided multiple times.
+       The computer name specified on the command is the sAMAccountName, with
+       or without the trailing dollar sign.
 
---service-principal-name=SERVICE_PRINCIPAL_NAME_LIST
+   computer edit computername
+       Edit a computer AD object.
 
-Computer's
-Service Principal Name, can be provided multiple
-times.
+       The computer name specified on the command is the sAMAccountName, with
+       or without the trailing dollar sign.
 
---prepare-oldjoin
+       --editor=EDITOR
+           Specifies the editor to use instead of the system default, or 'vi'
+           if no system default is set.
 
-Prepare
-enabled machine account for oldjoin mechanism.
+   computer list
+       List all computers.
 
-computer
-create computername [options] 
-Add a new computer. This is a synonym for the samba-tool
-computer add command and is available for compatibility
-reasons only. Please use samba-tool computer add
-instead.
+   computer move computername new_parent_dn [options]
+       This command moves a computer account into the specified organizational
+       unit or container.
 
-computer
-delete computername [options] 
-Delete an existing computer account.
+       The computername specified on the command is the sAMAccountName, with
+       or without the trailing dollar sign.
 
-The
-computer name specified on the command is the
-sAMAccountName, with or without the trailing dollar
-sign.
+       The name of the organizational unit or container can be specified as a
+       full DN or without the domainDN component.
 
-computer
-edit computername 
-Edit a computer AD object.
+   computer show computername [options]
+       Display a computer AD object.
 
-The
-computer name specified on the command is the
-sAMAccountName, with or without the trailing dollar
-sign.
+       The computer name specified on the command is the sAMAccountName, with
+       or without the trailing dollar sign.
 
---editor=EDITOR
+       --attributes=USER_ATTRS
+           Comma separated list of attributes, which will be printed.
 
-Specifies
-the editor to use instead of the system default, or 'vi' if
-no system default is set.
+   contact
+       Manage contacts.
 
-computer
-list 
-List all computers.
+   contact add [contactname] [options]
+       Add a new contact to the Active Directory Domain.
 
-computer
-move computername new_parent_dn [options] 
-This command moves a computer account into the specified
-organizational unit or container.
+       The name of the new contact can be specified by the first argument
+       'contactname' or the --given-name, --initial and --surname arguments.
+       If no 'contactname' is given, contact's name will be made up of the
+       given arguments by combining the given-name, initials and surname. Each
+       argument is optional. A dot ('.') will be appended to the initials
+       automatically.
 
-The
-computername specified on the command is the sAMAccountName,
-with or without the trailing dollar sign.
+       --ou=OU
+           DN of alternative location (with or without domainDN counterpart)
+           in which the new contact will be created. E.g. 'OU=OUname'. Default
+           is the domain base.
 
-The
-name of the organizational unit or container can be
-specified as a full DN or without the domainDN
-component.
+       --description=DESCRIPTION
+           The new contact's description.
 
-computer
-show computername [options] 
-Display a computer AD object.
+       --surname=SURNAME
+           Contact's surname.
 
-The
-computer name specified on the command is the
-sAMAccountName, with or without the trailing dollar
-sign.
+       --given-name=GIVEN_NAME
+           Contact's given name.
 
---attributes=USER_ATTRS
+       --initials=INITIALS
+           Contact's initials.
 
-Comma
-separated list of attributes, which will be
-printed.
+       --display-name=DISPLAY_NAME
+           Contact's display name.
 
-contact
+       --job-title=JOB_TITLE
+           Contact's job title.
 
-Manage contacts.
+       --department=DEPARTMENT
+           Contact's department.
 
-contact
-add [contactname] [options] 
-Add a new contact to the Active Directory Domain.
+       --company=COMPANY
+           Contact's company.
 
-The
-name of the new contact can be specified by the first
-argument 'contactname' or the --given-name, --initial and
---surname arguments. If no 'contactname' is given, contact's
-name will be made up of the given arguments by combining the
-given-name, initials and surname. Each argument is optional.
-A dot ('.') will be appended to the initials
-automatically.
+       --mail-address=MAIL_ADDRESS
+           Contact's email address.
 
---ou=OU
+       --internet-address=INTERNET_ADDRESS
+           Contact's home page.
 
-DN of
-alternative location (with or without domainDN counterpart)
-in which the new contact will be created. E.g. 'OU=OUname'.
-Default is the domain base.
+       --telephone-number=TELEPHONE_NUMBER
+           Contact's phone number.
 
---description=DESCRIPTION
+       --mobile-number=MOBILE_NUMBER
+           Contact's mobile phone number.
 
-The new
-contact's description.
+       --physical-delivery-office=PHYSICAL_DELIVERY_OFFICE
+           Contact's office location.
 
---surname=SURNAME
+   contact create [contactname] [options]
+       Add a new contact. This is a synonym for the samba-tool contact add
+       command and is available for compatibility reasons only. Please use
+       samba-tool contact add instead.
 
-Contact's
-surname.
+   contact delete contactname [options]
+       Delete an existing contact.
 
---given-name=GIVEN_NAME
+       The contactname specified on the command is the common name or the
+       distinguished name of the contact object. The distinguished name of the
+       contact can be specified with or without the domainDN component.
 
-Contact's
-given name.
+   contact edit contactname
+       Modify a contact AD object.
 
---initials=INITIALS
+       The contactname specified on the command is the common name or the
+       distinguished name of the contact object. The distinguished name of the
+       contact can be specified with or without the domainDN component.
 
-Contact's
-initials.
+       --editor=EDITOR
+           Specifies the editor to use instead of the system default, or 'vi'
+           if no system default is set.
 
---display-name=DISPLAY_NAME
+   contact list [options]
+       List all contacts.
 
-Contact's
-display name.
+       --full-dn
+           Display contact's full DN instead of the name.
 
---job-title=JOB_TITLE
+   contact move contactname new_parent_dn [options]
+       This command moves a contact into the specified organizational unit or
+       container.
 
-Contact's
-job title.
+       The contactname specified on the command is the common name or the
+       distinguished name of the contact object. The distinguished name of the
+       contact can be specified with or without the domainDN component.
 
---department=DEPARTMENT
+   contact show contactname [options]
+       Display a contact AD object.
 
-Contact's
-department.
+       The contactname specified on the command is the common name or the
+       distinguished name of the contact object. The distinguished name of the
+       contact can be specified with or without the domainDN component.
 
---company=COMPANY
+       --attributes=CONTACT_ATTRS
+           Comma separated list of attributes, which will be printed.
 
-Contact's
-company.
+   contact rename contactname [options]
+       Rename a contact and related attributes.
 
---mail-address=MAIL_ADDRESS
+       This command allows to set the contact's name related attributes. The
+       contact's CN will be renamed automatically. The contact's new CN will
+       be made up by combining the given-name, initials and surname. A dot
+       ('.') will be appended to the initials automatically, if required. Use
+       the --force-new-cn option to specify the new CN manually and --reset-cn
+       to reset this change.
 
-Contact's
-email address.
+       Use an empty attribute value to remove the specified attribute.
 
---internet-address=INTERNET_ADDRESS
+       The contact name specified on the command is the CN.
 
-Contact's
-home page.
+       --surname=SURNAME
+           New surname.
 
---telephone-number=TELEPHONE_NUMBER
+       --given-name=GIVEN_NAME
+           New given name.
 
-Contact's
-phone number.
+       --initials=INITIALS
+           New initials.
 
---mobile-number=MOBILE_NUMBER
+       --force-new-cn=NEW_CN
+           Specify a new CN (RDN) instead of using a combination of the given
+           name, initials and surname.
 
-Contact's
-mobile phone number.
+       --reset-cn
+           Set the CN to the default combination of given name, initials and
+           surname.
 
---physical-delivery-office=PHYSICAL_DELIVERY_OFFICE
+       --display-name=DISPLAY_NAME
+           New display name.
 
-Contact's
-office location.
+       --mail-address=MAIL_ADDRESS
+           New email address.
 
-contact
-create [contactname] [options] 
-Add a new contact. This is a synonym for the samba-tool
-contact add command and is available for compatibility
-reasons only. Please use samba-tool contact add
-instead.
+   dbcheck
+       Check the local AD database for errors.
 
-contact
-delete contactname [options] 
-Delete an existing contact.
+   delegation
+       Manage Delegations.
 
-The
-contactname specified on the command is the common name or
-the distinguished name of the contact object. The
-distinguished name of the contact can be specified with or
-without the domainDN component.
+   delegation add-service accountname principal [options]
+       Add a service principal as msDS-AllowedToDelegateTo.
 
-contact
-edit contactname 
-Modify a contact AD object.
+   delegation del-service accountname principal [options]
+       Delete a service principal as msDS-AllowedToDelegateTo.
 
-The
-contactname specified on the command is the common name or
-the distinguished name of the contact object. The
-distinguished name of the contact can be specified with or
-without the domainDN component.
+   delegation for-any-protocol accountname [(on|off)] [options]
+       Set/unset UF_TRUSTED_TO_AUTHENTICATE_FOR_DELEGATION (S4U2Proxy) for an
+       account.
 
---editor=EDITOR
+   delegation for-any-service accountname [(on|off)] [options]
+       Set/unset UF_TRUSTED_FOR_DELEGATION for an account.
 
-Specifies
-the editor to use instead of the system default, or 'vi' if
-no system default is set.
+   delegation show accountname [options]
+       Show the delegation setting of an account.
 
-contact
-list [options] 
-List all contacts.
+   dns
+       Manage Domain Name Service (DNS).
 
---full-dn
+   dns add server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT data
+       Add a DNS record.
 
-Display
-contact's full DN instead of the name.
+   dns delete server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT data
+       Delete a DNS record.
 
-contact
-move contactname new_parent_dn [options] 
-This command moves a contact into the specified
-organizational unit or container.
+   dns query server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT|ALL [options]
+       data
+       Query a name.
 
-The
-contactname specified on the command is the common name or
-the distinguished name of the contact object. The
-distinguished name of the contact can be specified with or
-without the domainDN component.
+   dns roothints server [name] [options]
+       Query root hints.
 
-contact
-show contactname [options] 
-Display a contact AD object.
+   dns serverinfo server [options]
+       Query server information.
 
-The
-contactname specified on the command is the common name or
-the distinguished name of the contact object. The
-distinguished name of the contact can be specified with or
-without the domainDN component.
+   dns update server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT olddata newdata
+       Update a DNS record.
 
---attributes=CONTACT_ATTRS
+   dns zonecreate server zone [options]
+       Create a zone.
 
-Comma
-separated list of attributes, which will be
-printed.
+   dns zonedelete server zone [options]
+       Delete a zone.
 
-contact
-rename contactname [options] 
-Rename a contact and related attributes.
+   dns zoneinfo server zone [options]
+       Query zone information.
 
-This
-command allows to set the contact's name related attributes.
-The contact's CN will be renamed automatically. The
-contact's new CN will be made up by combining the
-given-name, initials and surname. A dot ('.') will be
-appended to the initials automatically, if required. Use the
---force-new-cn option to specify the new CN manually and
---reset-cn to reset this change.
+   dns zonelist server [options]
+       List zones.
 
-Use
-an empty attribute value to remove the specified
-attribute.
+   domain
+       Manage Domain.
 
-The
-contact name specified on the command is the CN.
+   domain backup
+       Create or restore a backup of the domain.
 
---surname=SURNAME
+   domain backup offline
+       Backup (with proper locking) local domain directories into a tar file.
 
-New
-surname.
+   domain backup online
+       Copy a running DC's current DB into a backup tar file.
 
---given-name=GIVEN_NAME
+   domain backup rename
+       Copy a running DC's DB to backup file, renaming the domain in the
+       process.
 
-New given
-name.
+   domain backup restore
+       Restore the domain's DB from a backup-file.
 
---initials=INITIALS
+   domain auth policy
+       Manage authentication policies.
 
-New
-initials.
+   domain auth policy list
+       List authentication policies on the domain.
 
---force-new-cn=NEW_CN
+       -H, --URL
+           LDB URL for database or target server.
 
-Specify a
-new CN (RDN) instead of using a combination of the given
-name, initials and surname.
+       --json
+           View authentication policies as JSON instead of a list.
 
---reset-cn
+   domain auth policy view
+       View an authentication policy on the domain.
 
-Set the
-CN to the default combination of given name, initials and
-surname.
+       -H, --URL
+           LDB URL for database or target server.
 
---display-name=DISPLAY_NAME
+       --name
+           Name of the authentication policy to view (required).
 
-New
-display name.
+   domain auth policy create
+       Create authentication policies on the domain.
 
---mail-address=MAIL_ADDRESS
+       -H, --URL
+           LDB URL for database or target server.
 
-New email
-address.
+       --name
+           Name of the authentication policy (required).
 
-dbcheck
+       --description
+           Optional description for the authentication policy.
 
-Check the local AD database for errors.
+       --protect
+           Protect authentication policy from accidental deletion.
 
-delegation
+           Cannot be used together with --unprotect.
 
-Manage Delegations.
+       --unprotect
+           Unprotect authentication policy from accidental deletion.
 
-delegation
-add-service accountname principal [options] 
-Add a service principal as
-msDS-AllowedToDelegateTo.
+           Cannot be used together with --protect.
 
-delegation
-del-service accountname principal [options] 
-Delete a service principal as
-msDS-AllowedToDelegateTo.
+       --audit
+           Only audit authentication policy.
 
-delegation
-for-any-protocol accountname [(on|off)] [options] 
-Set/unset UF_TRUSTED_TO_AUTHENTICATE_FOR_DELEGATION
-(S4U2Proxy) for an account.
+           Cannot be used together with --enforce.
 
-delegation
-for-any-service accountname [(on|off)] [options] 
-Set/unset UF_TRUSTED_FOR_DELEGATION for an
-account.
+       --enforce
+           Enforce authentication policy.
 
-delegation
-show accountname [options] 
-Show the delegation setting of an account.
+           Cannot be used together with --audit.
 
-dns
+       --strong-ntlm-policy
+           Strong NTLM Policy (Disabled, Optional, Required).
 
-Manage Domain Name Service (DNS).
+       --user-tgt-lifetime-mins
+           Ticket-Granting-Ticket lifetime for user accounts.
 
-dns
-add server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT data
+       --user-allow-ntlm-auth
+           Allow NTLM and
+            Interactive NETLOGON SamLogon authentication despite the fact that
+           allowed-to-authenticate-from is in use, which would otherwise
+           restrict the user to selected devices.
 
-Add a DNS record.
+       --user-allowed-to-authenticate-from
+           Conditions a device must meet for users covered by this policy to
+           be allowed to authenticate. While this is a restriction on the
+           device, any conditional ACE rules are expressed as if the device
+           was a user.
 
-dns
-delete server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT
-data 
-Delete a DNS record.
+           Must be a valid SDDL string without reference to Device keywords.
 
-dns
-query server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT|ALL
-[options] data 
-Query a name.
+           Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of {SID(AU)}))
 
-dns
-roothints server [name] [options] 
-Query root hints.
+       --user-allowed-to-authenticate-to=SDDL
+           This policy, applying to a user account that is offering a service,
+           eg a web server with a user account, restricts which accounts may
+           access it.
 
-dns
-serverinfo server [options] 
-Query server information.
+           Must be a valid SDDL string. The SDDL can reference both bare
+           (user) and Device conditions.
 
-dns
-update server zone name A|AAAA|PTR|CNAME|NS|MX|SRV|TXT
-olddata newdata 
-Update a DNS record.
+           SDDL Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of {SID(AO)}))
 
-dns
-zonecreate server zone [options] 
-Create a zone.
+       --service-tgt-lifetime-mins
+           Ticket-Granting-Ticket lifetime for service accounts.
 
-dns
-zonedelete server zone [options] 
-Delete a zone.
+       --service-allow-ntlm-auth
+           Allow NTLM network authentication when service is restricted to
+           selected devices.
 
-dns
-zoneinfo server zone [options] 
-Query zone information.
+       --service-allowed-to-authenticate-from
+           Conditions a device must meet for service accounts covered by this
+           policy to be allowed to authenticate. While this is a restriction
+           on the device, any conditional ACE rules are expressed as if the
+           device was a user.
 
-dns
-zonelist server [options] 
-List zones.
+           Must be a valid SDDL string without reference to Device keywords.
 
-domain
+           SDDL Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of {SID(AU)}))
 
-Manage Domain.
+       --service-allowed-to-authenticate-to=SDDL
+           This policy, applying to a service account (eg a Managed Service
+           Account, Group Managed Service Account), restricts which accounts
+           may access it.
 
-domain
-backup 
-Create or restore a backup of the domain.
+           Must be a valid SDDL string. The SDDL can reference both bare
+           (user) and Device conditions.
 
-domain
-backup offline 
-Backup (with proper locking) local domain directories into a
-tar file.
+           SDDL Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of {SID(AO)}))
 
-domain
-backup online 
-Copy a running DC's current DB into a backup tar
-file.
+       --computer-tgt-lifetime-mins
+           Ticket-Granting-Ticket lifetime for computer accounts.
 
-domain
-backup rename 
-Copy a running DC's DB to backup file, renaming the domain
-in the process.
+       --computer-allowed-to-authenticate-to=SDDL
+           This policy, applying to a computer account (eg a server or
+           workstation), restricts which accounts may access it.
 
-domain
-backup restore 
-Restore the domain's DB from a backup-file.
+           Must be a valid SDDL string. The SDDL can reference both bare
+           (user) and Device conditions.
 
-domain
-auth policy list 
-List authentication policies on the domain.
+           SDDL Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of {SID(AO)}))
 
--H,
---URL
+   domain auth policy modify
+       Modify authentication policies on the domain. The same options apply as
+       for domain auth policy create.
 
-LDB URL
-for database or target server.
+   domain auth policy delete
+       Delete authentication policies on the domain.
 
---json
+       -H, --URL
+           LDB URL for database or target server.
 
-View
-authentication policies as JSON instead of a
-list.
+       --name
+           Name of authentication policy to delete (required).
 
-domain
-auth policy view 
-View an authentication policy on the domain.
+       --force
+           Force authentication policy delete even if it is protected.
 
--H,
---URL
+   domain auth policy user-allowed-to-authenticate-from set
+       Set the user-allowed-to-authenticate-from property by scenario.
 
-LDB URL
-for database or target server.
+       -H, --URL
+           LDB URL for database or target server.
 
---name
+       --name
+           Name of authentication policy.
 
-Name of
-the authentication policy to view (required).
+       --by-group=GROUP
+           User is allowed to authenticate, if the device they authenticate
+           from is assigned and granted membership of a given GROUP.
 
-domain
-auth policy create 
-Create authentication policies on the domain.
+       --silo=SILO
+           User is allowed to authenticate, if the device they authenticate
+           from is assigned and granted membership of a given SILO.
 
--H,
---URL
+   domain auth policy user-allowed-to-authenticate-to set
+       Set the user-allowed-to-authenticate-to property by scenario.
 
-LDB URL
-for database or target server.
+       -H, --URL
+           LDB URL for database or target server.
 
---name
+       --name
+           Name of authentication policy.
 
-Name of
-the authentication policy (required).
+       --group=GROUP
+           The user account, offering a network service, covered by this
+           policy, will only be allowed access from other accounts that are
+           members of the given GROUP.
 
---description
+       --silo=SILO
+           The user account, offering a network service, covered by this
+           policy, will only be allowed access from other accounts that are
+           assigned to, granted membership of (and meet any authentication
+           conditions of) the given SILO.
 
-Optional
-description for the authentication policy.
+   domain auth policy service-allowed-to-authenticate-from set
+       Set the service-allowed-to-authenticate-from property by scenario.
 
---protect
+       -H, --URL
+           LDB URL for database or target server.
 
-Protect
-authentication policy from accidental deletion.
+       --name
+           Name of authentication policy.
 
-Cannot
-be used together with --unprotect.
+       --group=GROUP
+           The service account (eg a Managed Service Account, Group Managed
+           Service Account) is allowed to authenticate, if the device it
+           authenticates from is a member of the given GROUP.
 
---unprotect
+       --silo=SILO
+           The service account (eg a Managed Service Account, Group Managed
+           Service Account) is allowed to authenticate, if the device it
+           authenticates from is assigned and granted membership of a given
+           SILO.
 
-Unprotect
-authentication policy from accidental deletion.
+   domain auth policy service-allowed-to-authenticate-to set
+       Set the service-allowed-to-authenticate-to property by scenario.
 
-Cannot
-be used together with --protect.
+       -H, --URL
+           LDB URL for database or target server.
 
---audit
+       --name
+           Name of authentication policy.
 
-Only
-audit authentication policy.
+       --group=GROUP
+           The service account (eg a Managed Service Account, Group Managed
+           Service Account), will only be allowed access by other accounts
+           that are members of the given GROUP.
 
-Cannot
-be used together with --enforce.
+       --silo=SILO
+           The service account (eg a Managed Service Account, Group Managed
+           Service Account), will only be allowed access by other accounts
+           that are assigned to, granted membership of (and meet any
+           authentication conditions of) the given SILO.
 
---enforce
+   domain auth policy computer-allowed-to-authenticate-to set
+       Set the computer-allowed-to-authenticate-to property by scenario.
 
-Enforce
-authentication policy.
+       -H, --URL
+           LDB URL for database or target server.
 
-Cannot
-be used together with --audit.
+       --name
+           Name of authentication policy.
 
---strong-ntlm-policy
+       --group=GROUP
+           The computer account (eg a server or workstation), will only be
+           allowed access by other accounts that are members of the given
+           GROUP.
 
-Strong
-NTLM Policy (Disabled, Optional, Required).
+       --silo=SILO
+           The computer account (eg a server or workstation), will only be
+           allowed access by other accounts that are assigned to, granted
+           membership of (and meet any authentication conditions of) the given
+           SILO.
 
---user-tgt-lifetime-mins
+   domain auth silo
+       Manage authentication silos.
 
-Ticket-Granting-Ticket
-lifetime for user accounts.
+   domain auth silo list
+       List authentication silos on the domain.
 
---user-allow-ntlm-auth
+       -H, --URL
+           LDB URL for database or target server.
 
-Allow
-NTLM and 
-Interactive NETLOGON SamLogon authentication despite the
-fact that allowed-to-authenticate-from is in use,
-which would otherwise restrict the user to selected
-devices.
+       --json
+           View authentication silos as JSON instead of a list.
 
---user-allowed-to-authenticate-from
+   domain auth silo view
+       View an authentication silo on the domain.
 
-Conditions
-a device must meet for users covered by this policy to be
-allowed to authenticate. While this is a restriction on the
-device, any conditional ACE rules are expressed as if the
-device was a user.
+       -H, --URL
+           LDB URL for database or target server.
 
-Must
-be a valid SDDL string without reference to Device
-keywords.
+       --name
+           Name of the authentication silo to view (required).
 
-Example:
-O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of {SID(AU)}))
+   domain auth silo create
+       Create authentication silos on the domain.
 
---user-allowed-to-authenticate-from-silo
+       -H, --URL
+           LDB URL for database or target server.
 
-User is
-allowed to authenticate, if the device they authenticate
-from is assigned and granted membership of a given
-silo.
+       --name
+           Name of the authentication silo (required).
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with --user-allowed-to-authenticate-from
+       --description
+           Optional description for the authentication silo.
 
---user-allowed-to-authenticate-to=SDDL
+       --user-authentication-policy
+           User account authentication policy.
 
-This
-policy, applying to a user account that is offering a
-service, eg a web server with a user account, restricts
-which accounts may access it.
+       --service-authentication-policy
+           Managed service account authentication policy.
 
-Must
-be a valid SDDL string. The SDDL can reference both bare
-(user) and Device conditions.
+       --computer-authentication-policy
+           Computer authentication policy.
 
-SDDL
-Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of
-{SID(AO)}))
+       --protect
+           Protect authentication silo from accidental deletion.
 
---user-allowed-to-authenticate-to-by-group=GROUP
+           Cannot be used together with --unprotect.
 
-The user
-account, offering a network service, covered by this policy,
-will only be allowed access from other accounts that are
-members of the given GROUP.
+       --unprotect
+           Unprotect authentication silo from accidental deletion.
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with --user-allowed-to-authenticate-to
+           Cannot be used together with --protect.
 
---user-allowed-to-authenticate-to-by-silo=SILO
+       --audit
+           Only audit silo policies.
 
-The user
-account, offering a network service, covered by this policy,
-will only be allowed access from other accounts that are
-assigned to, granted membership of (and meet any
-authentication conditions of) the given SILO.
+           Cannot be used together with --enforce.
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with --user-allowed-to-authenticate-to
+       --enforce
+           Enforce silo policies.
 
---service-tgt-lifetime-mins
+           Cannot be used together with --audit.
 
-Ticket-Granting-Ticket
-lifetime for service accounts.
+   domain auth silo modify
+       Modify authentication silos on the domain.
 
---service-allow-ntlm-auth
+       -H, --URL
+           LDB URL for database or target server.
 
-Allow
-NTLM network authentication when service is restricted to
-selected devices.
+       --name
+           Name of the authentication silo (required).
 
---service-allowed-to-authenticate-from
+       --description
+           Optional description for the authentication silo.
 
-Conditions
-a device must meet for service accounts covered by this
-policy to be allowed to authenticate. While this is a
-restriction on the device, any conditional ACE rules are
-expressed as if the device was a user.
+       --user-authentication-policy
+           User account authentication policy.
 
-Must
-be a valid SDDL string without reference to Device
-keywords.
+       --service-authentication-policy
+           Managed service account authentication policy.
 
-SDDL
-Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of
-{SID(AU)}))
+       --computer-authentication-policy
+           Computer authentication policy.
 
---service-allowed-to-authenticate-from-device-silo=SILO
+       --protect
+           Protect authentication silo from accidental deletion.
 
-The
-service account (eg a Managed Service Account, Group Managed
-Service Account) is allowed to authenticate, if the device
-it authenticates from is assigned and granted membership of
-a given SILO.
+           Cannot be used together with --unprotect.
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with
---service-allowed-to-authenticate-from
+       --unprotect
+           Unprotect authentication silo from accidental deletion.
 
---service-allowed-to-authenticate-from-device-group=GROUP
+           Cannot be used together with --protect.
 
-The
-service account (eg a Managed Service Account, Group Managed
-Service Account) is allowed to authenticate, if the device
-it authenticates from is a member of the given
-group.
+       --audit
+           Only audit silo policies.
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with
---service-allowed-to-authenticate-from
+           Cannot be used together with --enforce.
 
---service-allowed-to-authenticate-to=SDDL
+       --enforce
+           Enforce silo policies.
 
-This
-policy, applying to a service account (eg a Managed Service
-Account, Group Managed Service Account), restricts which
-accounts may access it.
+           Cannot be used together with --audit.
 
-Must
-be a valid SDDL string. The SDDL can reference both bare
-(user) and Device conditions.
+   domain auth silo delete
+       Delete authentication silos on the domain.
 
-SDDL
-Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of
-{SID(AO)}))
+       -H, --URL
+           LDB URL for database or target server.
 
---service-allowed-to-authenticate-to-by-group=GROUP
+       --name
+           Name of authentication silo to delete (required).
 
-The
-service account (eg a Managed Service Account, Group Managed
-Service Account), will only be allowed access by other
-accounts that are members of the given
-GROUP.
+       --force
+           Force authentication silo delete even if it is protected.
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with --service-allowed-to-authenticate-to
+   domain auth silo member grant
+       Grant a member access to an authentication silo.
 
---service-allowed-to-authenticate-to-by-silo=SILO
+       -H, --URL
+           LDB URL for database or target server.
 
-The
-service account (eg a Managed Service Account, Group Managed
-Service Account), will only be allowed access by other
-accounts that are assigned to, granted membership of (and
-meet any authentication conditions of) the given
-SILO.
+       --name
+           Name of authentication silo (required).
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with --service-allowed-to-authenticate-to
+       --member
+           Member to grant access to the silo (DN or account name).
 
---computer-tgt-lifetime-mins
+   domain auth silo member list
+       List members in an authentication silo.
 
-Ticket-Granting-Ticket
-lifetime for computer accounts.
+       -H, --URL
+           LDB URL for database or target server.
 
---computer-allowed-to-authenticate-to=SDDL
+       --name
+           Name of authentication silo (required).
 
-This
-policy, applying to a computer account (eg a server or
-workstation), restricts which accounts may access
-it.
+       --json
+           View members as JSON instead of a list.
 
-Must
-be a valid SDDL string. The SDDL can reference both bare
-(user) and Device conditions.
+   domain auth silo member revoke
+       Revoke a member from an authentication silo.
 
-SDDL
-Example: O:SYG:SYD:(XA;OICI;CR;;;WD;(Member_of
-{SID(AO)}))
+       -H, --URL
+           LDB URL for database or target server.
 
---computer-allowed-to-authenticate-to-by-group=GROUP
+       --name
+           Name of authentication silo (required).
 
-The
-computer account (eg a server or workstation), will only be
-allowed access by other accounts that are members of the
-given GROUP.
+       --member
+           Member to revoke from the silo (DN or account name).
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with
---computer-allowed-to-authenticate-to
+   domain claim claim-type list
+       List claim types on the domain.
 
---computer-allowed-to-authenticate-to-by-silo=SILO
+       -H, --URL
+           LDB URL for database or target server.
 
-The
-computer account (eg a server or workstation), will only be
-allowed access by other accounts that are assigned to,
-granted membership of (and meet any authentication
-conditions of) the given SILO.
+       --json
+           View claim types as JSON instead of a list.
 
-This
-attribute avoids the need to write SDDL by hand and cannot
-be used with
---computer-allowed-to-authenticate-to
+   domain claim claim-type view
+       View a single claim type on the domain.
 
-domain
-auth policy modify 
-Modify authentication policies on the domain. The same
-options apply as for domain auth policy
-create.
+       -H, --URL
+           LDB URL for database or target server.
 
-domain
-auth policy delete 
-Delete authentication policies on the domain.
+       --name
+           Display name of claim type to view (required).
 
--H,
---URL
+   domain claim claim-type create
+       Create claim types on the domain.
 
-LDB URL
-for database or target server.
+       -H, --URL
+           LDB URL for database or target server.
 
---name
+       --attribute
+           Attribute of claim type to create (required).
 
-Name of
-authentication policy to delete (required).
+       --class
+           Object classes to set claim type to.
 
---force
+           Example: --class=user --class=computer
 
-Force
-authentication policy delete even if it is
-protected.
+       --name
+           Optional display name or use attribute name.
 
-domain
-auth silo list 
-List authentication silos on the domain.
+       --description
+           Optional description or use from attribute.
 
--H,
---URL
+       --enable
+           Enable claim type.
 
-LDB URL
-for database or target server.
+           Cannot be used together with --disable.
 
---json
+       --disable
+           Disable claim type.
 
-View
-authentication silos as JSON instead of a list.
+           Cannot be used together with --enable.
 
-domain
-auth silo view 
-View an authentication silo on the domain.
+       --protect
+           Protect claim type from accidental deletion.
 
--H,
---URL
+           Cannot be used together with --unprotect.
 
-LDB URL
-for database or target server.
+       --unprotect
+           Unprotect claim type from accidental deletion.
 
---name
+           Cannot be used together with --protect.
 
-Name of
-the authentication silo to view (required).
+   domain claim claim-type modify
+       Modify claim types on the domain.
 
-domain
-auth silo create 
-Create authentication silos on the domain.
+       -H, --URL
+           LDB URL for database or target server.
 
--H,
---URL
+       --name
+           Display name of claim type to modify (required).
 
-LDB URL
-for database or target server.
+       --class
+           Object classes to set claim type to.
 
---name
+           Example: --class=user --class=computer
 
-Name of
-the authentication silo (required).
+       --description
+           Set the claim type description.
 
---description
+       --enable
+           Enable claim type.
 
-Optional
-description for the authentication silo.
+           Cannot be used together with --disable.
 
---user-authentication-policy
+       --disable
+           Disable claim type.
 
-User
-account authentication policy.
+           Cannot be used together with --enable.
 
---service-authentication-policy
+       --protect
+           Protect claim type from accidental deletion.
 
-Managed
-service account authentication policy.
+           Cannot be used together with --unprotect.
 
---computer-authentication-policy
+       --unprotect
+           Unprotect claim type from accidental deletion.
 
-Computer
-authentication policy.
+           Cannot be used together with --protect.
 
---protect
+   domain claim claim-type delete
+       Delete claim types on the domain.
 
-Protect
-authentication silo from accidental deletion.
+       -H, --URL
+           LDB URL for database or target server.
 
-Cannot
-be used together with --unprotect.
+       --name
+           Display name of claim type to delete (required).
 
---unprotect
+       --force
+           Force claim type delete even if it is protected.
 
-Unprotect
-authentication silo from accidental deletion.
+   domain claim value-type list
+       List claim value types on the domain.
 
-Cannot
-be used together with --protect.
+       -H, --URL
+           LDB URL for database or target server.
 
---audit
+       --json
+           View claim value types as JSON instead of a list.
 
-Only
-audit silo policies.
+   domain claim value-type view
+       View a single claim value type on the domain.
 
-Cannot
-be used together with --enforce.
+       -H, --URL
+           LDB URL for database or target server.
 
---enforce
+       --name
+           Display name of claim value type to view (required).
 
-Enforce
-silo policies.
+   service-account
+       Service account management.
 
-Cannot
-be used together with --audit.
+   service-account list
+       List service accounts on the domain.
 
-domain
-auth silo modify 
-Modify authentication silos on the domain.
+       -H, --URL
+           LDB URL for database or target server.
 
--H,
---URL
+       --json
+           View service accounts as JSON instead of a list.
 
-LDB URL
-for database or target server.
+   service-account view
+       View a single service account on the domain.
 
---name
+       -H, --URL
+           LDB URL for database or target server.
 
-Name of
-the authentication silo (required).
+       --name
+           Account name of service account to view (required).
 
---description
+   service-account create
+       Create a new service account on the domain.
 
-Optional
-description for the authentication silo.
+       -H, --URL
+           LDB URL for database or target server.
 
---user-authentication-policy
+       --name
+           Account name of service account (required).
 
-User
-account authentication policy.
+       --dns-host-name
+           DNS hostname of this service account (required).
 
---service-authentication-policy
+       --group-msa-membership
+           Optional Group MSA Membership SDDL.
 
-Managed
-service account authentication policy.
+       --managed-password-interval
+           Managed password refresh interval in days.
 
---computer-authentication-policy
+   service-account modify
+       Modify an existing service account on the domain.
 
-Computer
-authentication policy.
+       -H, --URL
+           LDB URL for database or target server.
 
---protect
+       --name
+           Account name of service account (required).
 
-Protect
-authentication silo from accidental deletion.
+       --dns-host-name
+           Update DNS hostname of this service account.
 
-Cannot
-be used together with --unprotect.
+       --group-msa-membership
+           Update Group MSA Membership SDDL.
 
---unprotect
+   service-account delete
+       Delete a service accounts on the domain.
 
-Unprotect
-authentication silo from accidental deletion.
+       -H, --URL
+           LDB URL for database or target server.
 
-Cannot
-be used together with --protect.
+       --name
+           Account name of service account to delete.
 
---audit
+   service-account group-msa-membership
+       Service account Group MSA Membership management.
 
-Only
-audit silo policies.
+   service-account group-msa-membership show
+       Display Group MSA Membership for a service account.
 
-Cannot
-be used together with --enforce.
+       -H, --URL
+           LDB URL for database or target server.
 
---enforce
+       --name
+           Account name of service account (required).
 
-Enforce
-silo policies.
+       --json
+           Return as JSON instead of a list.
 
-Cannot
-be used together with --audit.
+   service-account group-msa-membership add
+       Add a principal to Group MSA Membership for a service account.
 
-domain
-auth silo delete 
-Delete authentication silos on the domain.
+       -H, --URL
+           LDB URL for database or target server.
 
--H,
---URL
+       --name
+           Account name of service account (required).
 
-LDB URL
-for database or target server.
+       --principal
+           Name, DN or SID of principal to add.
 
---name
+   service-account group-msa-membership remove
+       Remove a principal from Group MSA Membership for a service account.
 
-Name of
-authentication silo to delete (required).
+       -H, --URL
+           LDB URL for database or target server.
 
---force
+       --name
+           Account name of service account (required).
 
-Force
-authentication silo delete even if it is
-protected.
+       --principal
+           Name, DN or SID of principal to remove.
 
-domain
-auth silo member grant 
-Grant a member access to an authentication silo.
+   domain classicupgrade [options] classic_smb_conf
+       Upgrade from Samba classic (NT4-like) database to Samba AD DC database.
 
--H,
---URL
+   domain dcpromo dnsdomain [DC|RODC] [options]
+       Promote an existing domain member or NT4 PDC to an AD DC.
 
-LDB URL
-for database or target server.
+   domain demote
+       Demote ourselves from the role of domain controller.
 
---name
+   domain exportkeytab keytab [options]
+       Dumps Kerberos keys of the domain into a keytab.
 
-Name of
-authentication silo (required).
+   domain info ip_address [options]
+       Print basic info about a domain and the specified DC.
 
---member
+   domain join dnsdomain [DC|RODC|MEMBER|SUBDOMAIN] [options]
+       Join a domain as either member or backup domain controller.
 
-Member to
-grant access to the silo (DN or account name).
+   domain level show|raise options [options]
+       Show/raise domain and forest function levels.
 
-domain
-auth silo member list 
-List members in an authentication silo.
+   domain passwordsettings show|set options [options]
+       Show/set password settings.
 
--H,
---URL
+   domain passwordsettings pso
+       Manage fine-grained Password Settings Objects (PSOs).
 
-LDB URL
-for database or target server.
+   domain passwordsettings pso apply pso-name user-or-group-name [options]
+       Applies a PSO's password policy to a user or group.
 
---name
+   domain passwordsettings pso create pso-name precedence [options]
+       Creates a new Password Settings Object (PSO).
 
-Name of
-authentication silo (required).
+   domain passwordsettings pso delete pso-name [options]
+       Deletes a Password Settings Object (PSO).
 
---json
+   domain passwordsettings pso list [options]
+       Lists all Password Settings Objects (PSOs).
 
-View
-members as JSON instead of a list.
+   domain passwordsettings pso set pso-name [options]
+       Modifies a Password Settings Object (PSO).
 
-domain
-auth silo member revoke 
-Revoke a member from an authentication silo.
+   domain passwordsettings pso show user-name [options]
+       Displays a Password Settings Object (PSO).
 
--H,
---URL
+   domain passwordsettings pso show-user pso-name [options]
+       Displays the Password Settings that apply to a user.
 
-LDB URL
-for database or target server.
+   domain passwordsettings pso unapply pso-name user-or-group-name [options]
+       Updates a PSO to no longer apply to a user or group.
 
---name
+   domain provision
+       Promote an existing domain member or NT4 PDC to an AD DC.
 
-Name of
-authentication silo (required).
+   domain trust
+       Domain and forest trust management.
 
---member
+   domain trust create DOMAIN options [options]
+       Create a domain or forest trust.
 
-Member to
-revoke from the silo (DN or account name).
+   domain trust modify DOMAIN options [options]
+       Modify a domain or forest trust.
 
-domain
-claim claim-type list 
-List claim types on the domain.
+   domain trust delete DOMAIN options [options]
+       Delete a domain trust.
 
--H,
---URL
+   domain trust list options [options]
+       List domain trusts.
 
-LDB URL
-for database or target server.
+   domain trust namespaces [DOMAIN] options [options]
+       Manage forest trust namespaces.
 
---json
+   domain trust show DOMAIN options [options]
+       Show trusted domain details.
 
-View
-claim types as JSON instead of a list.
+   domain trust validate DOMAIN options [options]
+       Validate a domain trust.
 
-domain
-claim claim-type view 
-View a single claim type on the domain.
+   drs
+       Manage Directory Replication Services (DRS).
 
--H,
---URL
+   drs bind
+       Show DRS capabilities of a server.
 
-LDB URL
-for database or target server.
+   drs kcc
+       Trigger knowledge consistency center run.
 
---name
+   drs options
+       Query or change options for NTDS Settings object of a domain
+       controller.
 
-Display
-name of claim type to view (required).
+   drs replicate destination_DC source_DC NC [options]
+       Replicate a naming context between two DCs.
 
-domain
-claim claim-type create 
-Create claim types on the domain.
+   drs showrepl
+       Show replication status. The [--json] option results in JSON output,
+       and with the [--summary] option produces very little output when the
+       replication status seems healthy.
 
--H,
---URL
+   dsacl
+       Administer DS ACLs
 
-LDB URL
-for database or target server.
+   dsacl delete
+       Delete an access list entry on a directory object.
 
---attribute
+   dsacl get
+       Print access list on a directory object.
 
-Attribute
-of claim type to create (required).
+   dsacl set
+       Modify access list on a directory object.
 
---class
+   forest
+       Manage Forest configuration.
 
-Object
-classes to set claim type to.
+   forest directory_service
+       Manage directory_service behaviour for the forest.
 
-Example:
---class=user --class=computer
+   forest directory_service dsheuristics VALUE
+       Modify dsheuristics directory_service configuration for the forest.
 
---name
+   forest directory_service show
+       Show current directory_service configuration for the forest.
 
-Optional
-display name or use attribute name.
+   fsmo
+       Manage Flexible Single Master Operations (FSMO).
 
---description
+   fsmo seize [options]
+       Seize the role.
 
-Optional
-description or use from attribute.
+   fsmo show
+       Show the roles.
 
---enable
+   fsmo transfer [options]
+       Transfer the role.
 
-Enable
-claim type.
+   gpo
+       Manage Group Policy Objects (GPO).
 
-Cannot
-be used together with --disable.
+   gpo create displayname [options]
+       Create an empty GPO.
 
---disable
+   gpo del gpo [options]
+       Delete GPO.
 
-Disable
-claim type.
+   gpo dellink container_dn gpo [options]
+       Delete GPO link from a container.
 
-Cannot
-be used together with --enable.
+   gpo fetch gpo [options]
+       Download a GPO.
 
---protect
+   gpo getinheritance container_dn [options]
+       Get inheritance flag for a container.
 
-Protect
-claim type from accidental deletion.
+   gpo getlink container_dn [options]
+       List GPO Links for a container.
 
-Cannot
-be used together with --unprotect.
+   gpo list username [options]
+       List GPOs for an account.
 
---unprotect
+   gpo listall
+       List all GPOs.
 
-Unprotect
-claim type from accidental deletion.
+   gpo listcontainers gpo [options]
+       List all linked containers for a GPO.
 
-Cannot
-be used together with --protect.
+   gpo setinheritance container_dn block|inherit [options]
+       Set inheritance flag on a container.
 
-domain
-claim claim-type modify 
-Modify claim types on the domain.
+   gpo setlink container_dn gpo [options]
+       Add or Update a GPO link to a container.
 
--H,
---URL
+   gpo show gpo [options]
+       Show information for a GPO.
 
-LDB URL
-for database or target server.
+   gpo manage symlink list
+       List VGP Symbolic Link Group Policy from the sysvol
 
---name
+   gpo manage symlink add
+       Adds a VGP Symbolic Link Group Policy to the sysvol
 
-Display
-name of claim type to modify (required).
+   gpo manage symlink remove
+       Removes a VGP Symbolic Link Group Policy from the sysvol
 
---class
+   gpo manage files list
+       List VGP Files Group Policy from the sysvol
 
-Object
-classes to set claim type to.
+   gpo manage files add
+       Add VGP Files Group Policy to the sysvol
 
-Example:
---class=user --class=computer
+   gpo manage files remove
+       Remove VGP Files Group Policy from the sysvol
 
---description
+   gpo manage openssh list
+       List VGP OpenSSH Group Policy from the sysvol
 
-Set the
-claim type description.
+   gpo manage openssh set
+       Sets a VGP OpenSSH Group Policy to the sysvol
 
---enable
+   gpo manage sudoers add
+       Adds a Samba Sudoers Group Policy to the sysvol.
 
-Enable
-claim type.
+   gpo manage sudoers list
+       List Samba Sudoers Group Policy from the sysvol.
 
-Cannot
-be used together with --disable.
+   gpo manage sudoers remove
+       Removes a Samba Sudoers Group Policy from the sysvol.
 
---disable
+   gpo manage scripts startup list
+       List VGP Startup Script Group Policy from the sysvol
 
-Disable
-claim type.
+   gpo manage scripts startup add
+       Adds VGP Startup Script Group Policy to the sysvol
 
-Cannot
-be used together with --enable.
+   gpo manage scripts startup remove
+       Removes VGP Startup Script Group Policy from the sysvol
 
---protect
+   gpo manage motd list
+       List VGP MOTD Group Policy from the sysvol.
 
-Protect
-claim type from accidental deletion.
+   gpo manage motd set
+       Sets a VGP MOTD Group Policy to the sysvol
 
-Cannot
-be used together with --unprotect.
+   gpo manage issue list
+       List VGP Issue Group Policy from the sysvol.
 
---unprotect
+   gpo manage issue set
+       Sets a VGP Issue Group Policy to the sysvol
 
-Unprotect
-claim type from accidental deletion.
+   gpo manage access add
+       Adds a VGP Host Access Group Policy to the sysvol
 
-Cannot
-be used together with --protect.
+   gpo manage access list
+       List VGP Host Access Group Policy from the sysvol
 
-domain
-claim claim-type delete 
-Delete claim types on the domain.
+   gpo manage access remove
+       Remove a VGP Host Access Group Policy from the sysvol
 
--H,
---URL
+   group
+       Manage groups.
 
-LDB URL
-for database or target server.
+   group add groupname [options]
+       Create a new AD group.
 
---name
+   group create groupname [options]
+       Add a new AD group. This is a synonym for the samba-tool group add
+       command and is available for compatibility reasons only. Please use
+       samba-tool group add instead.
 
-Display
-name of claim type to delete (required).
+   group addmembers groupname members [options]
+       Add members to an AD group.
 
---force
+   group delete groupname [options]
+       Delete an AD group.
 
-Force
-claim type delete even if it is protected.
+   group edit groupname
+       Edit a group AD object.
 
-domain
-claim value-type list 
-List claim value types on the domain.
+       --editor=EDITOR
+           Specifies the editor to use instead of the system default, or 'vi'
+           if no system default is set.
 
--H,
---URL
+   group list
+       List all groups.
 
-LDB URL
-for database or target server.
+   group listmembers groupname [options]
+       List all members of the specified AD group.
 
---json
+       By default the sAMAccountNames are listed. If no sAMAccountName is
+       available, the CN will be used instead.
 
-View
-claim value types as JSON instead of a list.
+       --full-dn
+           List the distinguished names instead of the sAMAccountNames.
 
-domain
-claim value-type view 
-View a single claim value type on the domain.
+       --hide-expired
+           Do not list expired group members.
 
--H,
---URL
+       --hide-disabled
+           Do not list disabled group members.
 
-LDB URL
-for database or target server.
+   group move groupname new_parent_dn [options]
+       This command moves a group into the specified organizational unit or
+       container.
 
---name
+       The groupname specified on the command is the sAMAccountName.
 
-Display
-name of claim value type to view (required).
+       The name of the organizational unit or container can be specified as a
+       full DN or without the domainDN component.
 
-domain
-classicupgrade [options] classic_smb_conf 
-Upgrade from Samba classic (NT4-like) database to Samba AD
-DC database.
+   group removemembers groupname members [options]
+       Remove members from the specified AD group.
 
-domain
-dcpromo dnsdomain [DC|RODC] [options] 
-Promote an existing domain member or NT4 PDC to an AD
-DC.
+   group show groupname [options]
+       Show group object and it's attributes.
 
-domain
-demote 
-Demote ourselves from the role of domain
-controller.
+   group stats [options]
+       Show statistics for overall groups and group memberships.
 
-domain
-exportkeytab keytab [options] 
-Dumps Kerberos keys of the domain into a keytab.
+   group rename groupname [options]
+       Rename a group and related attributes.
 
-domain
-info ip_address [options] 
-Print basic info about a domain and the specified
-DC.
+       This command allows to set the group's name related attributes. The
+       group's CN will be renamed automatically. The group's CN will be the
+       sAMAccountName. Use the --force-new-cn option to specify the new CN
+       manually and the --reset-cn to reset this change.
 
-domain
-join dnsdomain [DC|RODC|MEMBER|SUBDOMAIN] [options] 
-Join a domain as either member or backup domain
-controller.
+       Use an empty attribute value to remove the specified attribute.
 
-domain
-level show|raise options [options] 
-Show/raise domain and forest function levels.
+       The groupname specified on the command is the sAMAccountName.
 
-domain
-passwordsettings show|set options [options] 
-Show/set password settings.
+       --force-new-cn=NEW_CN
+           Specify a new CN (RDN) instead of using the sAMAccountName.
 
-domain
-passwordsettings pso 
-Manage fine-grained Password Settings Objects
-(PSOs).
+       --reset-cn
+           Set the CN to the sAMAccountName.
 
-domain
-passwordsettings pso apply pso-name user-or-group-name
-[options] 
-Applies a PSO's password policy to a user or
-group.
+       --mail-address=MAIL_ADDRESS
+           New mail address
 
-domain
-passwordsettings pso create pso-name precedence
-[options] 
-Creates a new Password Settings Object (PSO).
+       --samaccountname=SAMACCOUNTNAME
+           New account name (sAMAccountName/logon name)
 
-domain
-passwordsettings pso delete pso-name [options] 
-Deletes a Password Settings Object (PSO).
+   ldapcmp URL1 URL2 domain|configuration|schema|dnsdomain|dnsforest [options]
+       Compare two LDAP databases.
 
-domain
-passwordsettings pso list [options] 
-Lists all Password Settings Objects (PSOs).
+   ntacl
+       Manage NT ACLs.
 
-domain
-passwordsettings pso set pso-name [options] 
-Modifies a Password Settings Object (PSO).
+   ntacl changedomsid original-domain-SID new-domain-SID file [options]
+       Change the domain SID for ACLs. Can be used to change all entries in
+       acl_xattr when the machine's SID has accidentally changed or the data
+       set has been copied to another machine either via backup/restore or
+       rsync.
 
-domain
-passwordsettings pso show user-name [options] 
-Displays a Password Settings Object (PSO).
+       --use-ntvfs
+           Set the ACLs directly to the TDB or xattr. The POSIX permissions
+           will NOT be changed, only the NT ACL will be stored.
 
-domain
-passwordsettings pso show-user pso-name [options] 
-Displays the Password Settings that apply to a
-user.
+       --service=SERVICE
+           Specify the name of the smb.conf service to use. This option is
+           required in combination with the --use-s3fs option.
 
-domain
-passwordsettings pso unapply pso-name user-or-group-name
-[options] 
-Updates a PSO to no longer apply to a user or
-group.
+       --use-s3fs
+           Set the ACLs for use with the default s3fs file server via the VFS
+           layer. This option requires a smb.conf service, specified by the
+           --service=SERVICE option.
 
-domain
-provision 
-Promote an existing domain member or NT4 PDC to an AD
-DC.
+       --xattr-backend=[native|tdb]
+           Specify the xattr backend type (native fs or tdb).
 
-domain
-trust 
-Domain and forest trust management.
+       --eadb-file=EADB_FILE
+           Name of the tdb file where attributes are stored.
 
-domain
-trust create DOMAIN options [options] 
-Create a domain or forest trust.
+       --recursive
+           Set the ACLs for directories and their contents recursively.
 
-domain
-trust modify DOMAIN options [options] 
-Modify a domain or forest trust.
+       --follow-symlinks
+           Follow symlinks when --recursive is specified.
 
-domain
-trust delete DOMAIN options [options] 
-Delete a domain trust.
+       --verbose
+           Verbosely list files and ACLs which are being processed.
 
-domain
-trust list options [options] 
-List domain trusts.
+   ntacl get file [options]
+       Get ACLs on a file.
 
-domain
-trust namespaces [DOMAIN] options [options] 
-Manage forest trust namespaces.
+   ntacl set acl file [options]
+       Set ACLs on a file.
 
-domain
-trust show DOMAIN options [options] 
-Show trusted domain details.
+   ntacl sysvolcheck
+       Check sysvol ACLs match defaults (including correct ACLs on GPOs).
 
-domain
-trust validate DOMAIN options [options] 
-Validate a domain trust.
+   ntacl sysvolreset
+       Reset sysvol ACLs to defaults (including correct ACLs on GPOs).
 
-drs
+   ou
+       Manage organizational units (OUs).
 
-Manage Directory Replication Services (DRS).
+   ou add ou_dn [options]
+       Add a new organizational unit.
 
-drs
-bind 
-Show DRS capabilities of a server.
+       The name of the organizational unit can be specified as a full DN or
+       without the domainDN component.
 
-drs
-kcc 
-Trigger knowledge consistency center run.
+       --description=DESCRIPTION
+           Specify OU's description.
 
-drs
-options 
-Query or change options for NTDS Settings object of a
-domain controller.
+   ou create ou_dn [options]
+       Add a new organizational unit. This is a synonym for the samba-tool ou
+       add command and is available for compatibility reasons only. Please use
+       samba-tool ou add instead.
 
-drs
-replicate destination_DC source_DC NC [options] 
-Replicate a naming context between two DCs.
+   ou delete ou_dn [options]
+       Delete an organizational unit.
 
-drs
-showrepl 
-Show replication status. The [--json] option results in JSON
-output, and with the [--summary] option produces very little
-output when the replication status seems healthy.
+       The name of the organizational unit can be specified as a full DN or
+       without the domainDN component.
 
-dsacl
+       --force-subtree-delete
+           Delete organizational unit and all children recursively.
 
-Administer DS ACLs
+   ou list [options]
+       List all organizational units.
 
-dsacl
-delete 
-Delete an access list entry on a directory
-object.
+       --full-dn
+           Display DNs including the base DN.
 
-dsacl
-get 
-Print access list on a directory object.
+   ou listobjects ou_dn [options]
+       List all objects in an organizational unit.
 
-dsacl
-set 
-Modify access list on a directory object.
+       The name of the organizational unit can be specified as a full DN or
+       without the domainDN component.
 
-forest
+       --full-dn
+           Display DNs including the base DN.
 
-Manage Forest configuration.
+       -r|--recursive
+           List objects recursively.
 
-forest
-directory_service 
-Manage directory_service behaviour for the
-forest.
+   ou move old_ou_dn new_parent_dn [options]
+       Move an organizational unit.
 
-forest
-directory_service dsheuristics VALUE 
-Modify dsheuristics directory_service configuration for the
-forest.
+       The name of the organizational units can be specified as a full DN or
+       without the domainDN component.
 
-forest
-directory_service show 
-Show current directory_service configuration for the
-forest.
+   ou rename old_ou_dn new_ou_dn [options]
+       Rename an organizational unit.
 
-fsmo
+       The name of the organizational units can be specified as a full DN or
+       without the domainDN component.
 
-Manage Flexible Single Master Operations (FSMO).
+   rodc
+       Manage Read-Only Domain Controller (RODC).
 
-fsmo
-seize [options] 
-Seize the role.
+   rodc preload SID|DN|accountname [options]
+       Preload one account for an RODC.
 
-fsmo
-show 
-Show the roles.
+   schema
+       Manage and query schema.
 
-fsmo
-transfer [options] 
-Transfer the role.
+   schema attribute modify attribute [options]
+       Modify the behaviour of an attribute in schema.
 
-gpo
+   schema attribute show attribute [options]
+       Display an attribute schema definition.
 
-Manage Group Policy Objects (GPO).
+   schema attribute show_oc attribute [options]
+       Show objectclasses that MAY or MUST contain this attribute.
 
-gpo
-create displayname [options] 
-Create an empty GPO.
+   schema objectclass show objectclass [options]
+       Display an objectclass schema definition.
 
-gpo
-del gpo [options] 
-Delete GPO.
+   shell
+       Opens an interactive Samba Python shell.
 
-gpo
-dellink container_dn gpo [options] 
-Delete GPO link from a container.
+   shell [options]
+       Opens an interactive Python shell for Samba ldb connection.
 
-gpo
-fetch gpo [options] 
-Download a GPO.
+       -H, --URL
+           LDB URL for database or target server.
 
-gpo
-getinheritance container_dn [options] 
-Get inheritance flag for a container.
+   sites
+       Manage sites.
 
-gpo
-getlink container_dn [options] 
-List GPO Links for a container.
+   sites list [options]
+       List sites.
 
-gpo
-list username [options] 
-List GPOs for an account.
+       --json
+           Output as JSON instead of a list
 
-gpo
-listall 
-List all GPOs.
+   sites view site [options]
+       View site details.
 
-gpo
-listcontainers gpo [options] 
-List all linked containers for a GPO.
+   sites create site [options]
+       Create a new site.
 
-gpo
-setinheritance container_dn block|inherit [options] 
-Set inheritance flag on a container.
+   sites remove site [options]
+       Delete an existing site.
 
-gpo
-setlink container_dn gpo [options] 
-Add or Update a GPO link to a container.
+   sites subnet list site [options]
+       List subnets for a site.
 
-gpo
-show gpo [options] 
-Show information for a GPO.
+       --json
+           Output as JSON instead of a list
 
-gpo
-manage symlink list 
-List VGP Symbolic Link Group Policy from the
-sysvol
+   sites subnet view subnet [options]
+       View subnet details.
 
-gpo
-manage symlink add 
-Adds a VGP Symbolic Link Group Policy to the
-sysvol
+   sites subnet create subnet site-of-subnet [options]
+       Create a new subnet.
 
-gpo
-manage symlink remove 
-Removes a VGP Symbolic Link Group Policy from the
-sysvol
+   sites subnet remove subnet [options]
+       Delete an existing subnet.
 
-gpo
-manage files list 
-List VGP Files Group Policy from the sysvol
+   sites subnet set-site subnet site-of-subnet [options]
+       Assign a subnet to a site.
 
-gpo
-manage files add 
-Add VGP Files Group Policy to the sysvol
+   spn
+       Manage Service Principal Names (SPN).
 
-gpo
-manage files remove 
-Remove VGP Files Group Policy from the sysvol
+   spn add name user [options]
+       Create a new SPN.
 
-gpo
-manage openssh list 
-List VGP OpenSSH Group Policy from the sysvol
+   spn delete name [user] [options]
+       Delete an existing SPN.
 
-gpo
-manage openssh set 
-Sets a VGP OpenSSH Group Policy to the sysvol
+   spn list user [options]
+       List SPNs of a given user.
 
-gpo
-manage sudoers add 
-Adds a Samba Sudoers Group Policy to the sysvol.
+   testparm
+       Check the syntax of the configuration file.
 
-gpo
-manage sudoers list 
-List Samba Sudoers Group Policy from the sysvol.
+   time
+       Retrieve the time on a server.
 
-gpo
-manage sudoers remove 
-Removes a Samba Sudoers Group Policy from the
-sysvol.
+   user
+       Manage users.
 
-gpo
-manage scripts startup list 
-List VGP Startup Script Group Policy from the
-sysvol
+   user add username [password]
+       Add a new user to the Active Directory Domain.
 
-gpo
-manage scripts startup add 
-Adds VGP Startup Script Group Policy to the
-sysvol
+   user create username [password]
+       Add a new user. This is a synonym for the samba-tool user add command
+       and is available for compatibility reasons only. Please use samba-tool
+       user add instead.
 
-gpo
-manage scripts startup remove 
-Removes VGP Startup Script Group Policy from the
-sysvol
+   user delete username [options]
+       Delete an existing user account.
 
-gpo
-manage motd list 
-List VGP MOTD Group Policy from the sysvol.
+   user disable username
+       Disable a user account.
 
-gpo
-manage motd set 
-Sets a VGP MOTD Group Policy to the sysvol
+       --remove-supplemental-groups
+           Remove user from all groups, but keep the primary group.
 
-gpo
-manage issue list 
-List VGP Issue Group Policy from the sysvol.
+   user edit username
+       Edit a user account AD object.
 
-gpo
-manage issue set 
-Sets a VGP Issue Group Policy to the sysvol
+       --editor=EDITOR
+           Specifies the editor to use instead of the system default, or 'vi'
+           if no system default is set.
 
-gpo
-manage access add 
-Adds a VGP Host Access Group Policy to the sysvol
+   user enable username
+       Enable a user account.
 
-gpo
-manage access list 
-List VGP Host Access Group Policy from the sysvol
+   user list
+       List all users.
 
-gpo
-manage access remove 
-Remove a VGP Host Access Group Policy from the
-sysvol
+       By default the user's sAMAccountNames are listed.
 
-group
+       --full-dn
+           List user's distinguished names instead of the sAMAccountNames.
 
-Manage groups.
+       -b BASE_DN|--base-dn=BASE_DN
+           Specify base DN to use. Only users under the specified base DN will
+           be listed.
 
-group
-add groupname [options] 
-Create a new AD group.
+       --hide-expired
+           Do not list expired user accounts.
 
-group
-create groupname [options] 
-Add a new AD group. This is a synonym for the samba-tool
-group add command and is available for compatibility reasons
-only. Please use samba-tool group add instead.
+       --hide-disabled
+           Do not list disabled user accounts.
 
-group
-addmembers groupname members [options] 
-Add members to an AD group.
+       --locked-only
+           Only list locked user accounts.
 
-group
-delete groupname [options] 
-Delete an AD group.
+   user setprimarygroup username primarygroupname
+       Set the primary group a user account.
 
-group
-edit groupname 
-Edit a group AD object.
+   user getgroups username
+       Get the direct group memberships of a user account.
 
---editor=EDITOR
+   user show username [options]
+       Display a user AD object.
 
-Specifies
-the editor to use instead of the system default, or 'vi' if
-no system default is set.
+       --attributes=USER_ATTRS
+           Comma separated list of attributes, which will be printed.
 
-group
-list 
-List all groups.
+   user move username new_parent_dn [options]
+       This command moves a user account into the specified organizational
+       unit or container.
 
-group
-listmembers groupname [options] 
-List all members of the specified AD group.
+       The username specified on the command is the sAMAccountName.
 
-By
-default the sAMAccountNames are listed. If no sAMAccountName
-is available, the CN will be used instead.
+       The name of the organizational unit or container can be specified as a
+       full DN or without the domainDN component.
 
---full-dn
+   user password [options]
+       Change password for a user account (the one provided in
+       authentication).
 
-List the
-distinguished names instead of the
-sAMAccountNames.
+   user rename username [options]
+       Rename a user and related attributes.
 
---hide-expired
+       This command allows to set the user's name related attributes. The
+       user's CN will be renamed automatically. The user's new CN will be made
+       up by combining the given-name, initials and surname. A dot ('.') will
+       be appended to the initials automatically, if required. Use the
+       --force-new-cn option to specify the new CN manually and --reset-cn to
+       reset this change.
 
-Do not
-list expired group members.
+       Use an empty attribute value to remove the specified attribute.
 
---hide-disabled
+       The username specified on the command is the sAMAccountName.
 
-Do not
-list disabled group members.
+       --surname=SURNAME
+           New surname
 
-group
-move groupname new_parent_dn [options] 
-This command moves a group into the specified organizational
-unit or container.
+       --given-name=GIVEN_NAME
+           New given name
 
-The
-groupname specified on the command is the
-sAMAccountName.
+       --initials=INITIALS
+           New initials
 
-The
-name of the organizational unit or container can be
-specified as a full DN or without the domainDN
-component.
+       --force-new-cn=NEW_CN
+           Specify a new CN (RDN) instead of using a combination of the given
+           name, initials and surname.
 
-group
-removemembers groupname members [options] 
-Remove members from the specified AD group.
+       --reset-cn
+           Set the CN to the default combination of given name, initials and
+           surname.
 
-group
-show groupname [options] 
-Show group object and it's attributes.
+       --display-name=DISPLAY_NAME
+           New display name
 
-group
-stats [options] 
-Show statistics for overall groups and group
-memberships.
+       --mail-address=MAIL_ADDRESS
+           New email address
 
-group
-rename groupname [options] 
-Rename a group and related attributes.
+       --samaccountname=SAMACCOUNTNAME
+           New account name (sAMAccountName/logon name)
 
-This
-command allows to set the group's name related attributes.
-The group's CN will be renamed automatically. The group's CN
-will be the sAMAccountName. Use the --force-new-cn option to
-specify the new CN manually and the --reset-cn to reset this
-change.
+       --upn=UPN
+           New user principal name
 
-Use
-an empty attribute value to remove the specified
-attribute.
+   user setexpiry username [options]
+       Set the expiration of a user account.
 
-The
-groupname specified on the command is the
-sAMAccountName.
+   user setpassword username [options]
+       Sets or resets the password of a user account.
 
---force-new-cn=NEW_CN
+   user unlock username [options]
+       This command unlocks a user account in the Active Directory domain.
 
-Specify a
-new CN (RDN) instead of using the sAMAccountName.
+   user getpassword username [options]
+       Gets the password of a user account.
 
---reset-cn
+   user get-kerberos-ticket username [options]
+       Gets a Kerberos Ticket Granting Ticket as the account.
 
-Set the
-CN to the sAMAccountName.
+   user syncpasswords --cache-ldb-initialize [options]
+       Syncs the passwords of all user accounts, using an optional script.
 
---mail-address=MAIL_ADDRESS
+       Note that this command should run on a single domain controller only
+       (typically the PDC-emulator).
 
-New mail
-address
+   user auth policy assign username [options]
+       Set assigned authentication policy for user.
 
---samaccountname=SAMACCOUNTNAME
+       --policy
+           Name of authentication policy to assign or leave empty to remove.
 
-New
-account name (sAMAccountName/logon name)
+   user auth policy remove username
+       Remove assigned authentication policy from user.
 
-ldapcmp
-URL1 URL2
-domain|configuration|schema|dnsdomain|dnsforest
-[options] 
-Compare two LDAP databases.
+   user auth policy view username
+       View the assigned authentication policy for user.
 
-ntacl
+   user auth silo assign username [options]
+       Set assigned authentication silo for user.
 
-Manage NT ACLs.
+       --silo
+           Name of authentication silo to assign or leave empty to remove.
 
-ntacl
-changedomsid original-domain-SID new-domain-SID file
-[options] 
-Change the domain SID for ACLs. Can be used to change all
-entries in acl_xattr when the machine's SID has accidentally
-changed or the data set has been copied to another machine
-either via backup/restore or rsync.
+   user auth silo remove username
+       Remove assigned authentication silo from user.
 
---use-ntvfs
+   user auth silo view username
+       View the assigned authentication silo for user.
 
-Set the
-ACLs directly to the TDB or xattr. The POSIX permissions
-will NOT be changed, only the NT ACL will be
-stored.
+   vampire [options] domain
+       Join and synchronise a remote AD domain to the local server. Please
+       note that samba-tool vampire is deprecated, please use samba-tool
+       domain join instead.
 
---service=SERVICE
+   visualize [options] subcommand
+       Produce graphical representations of Samba network state. To work out
+       what is happening in a replication graph, it is sometimes helpful to
+       use visualisations.
 
-Specify
-the name of the smb.conf service to use. This option is
-required in combination with the --use-s3fs
-option.
+       There are two subcommands, two graphical modes, and (roughly) two modes
+       of operation with respect to the location of authority.
 
---use-s3fs
+   MODES OF OPERATION
+       samba-tool visualize ntdsconn
+           Looks at NTDS connections.
 
-Set the
-ACLs for use with the default s3fs file server via the VFS
-layer. This option requires a smb.conf service, specified by
-the --service=SERVICE option.
+       samba-tool visualize reps
+           Looks at repsTo and repsFrom objects.
 
---xattr-backend=[native|tdb]
+       samba-tool visualize uptodateness
+           Looks at replication lag as shown by the uptodateness vectors.
 
-Specify
-the xattr backend type (native fs or tdb).
+   GRAPHICAL MODES
+       --distance
+           Distances between DCs are shown in a matrix in the terminal.
 
---eadb-file=EADB_FILE
+       --dot
+           Generate Graphviz dot output (for ntdsconn and reps modes). When
+           viewed using dot or xdot, this shows the network as a graph with
+           DCs as vertices and connections edges. Certain types of degenerate
+           edges are shown in different colours or line-styles.
 
-Name of
-the tdb file where attributes are stored.
+       --xdot
+           Generate Graphviz dot output as with [--dot] and attempt to view it
+           immediately using /usr/bin/xdot.
 
---recursive
+       -r
+           Normally, samba-tool talks to one database; with the [-r] option
+           attempts are made to contact all the DCs known to the first
+           database. This is necessary for samba-tool visualize uptodateness
+           and for samba-tool visualize reps because the repsFrom/To objects
+           are not replicated, and it can reveal replication issues in other
+           modes.
 
-Set the
-ACLs for directories and their contents
-recursively.
-
---follow-symlinks
-
-Follow
-symlinks when --recursive is specified.
-
---verbose
-
-Verbosely
-list files and ACLs which are being processed.
-
-ntacl
-get file [options] 
-Get ACLs on a file.
-
-ntacl
-set acl file [options] 
-Set ACLs on a file.
-
-ntacl
-sysvolcheck 
-Check sysvol ACLs match defaults (including correct ACLs on
-GPOs).
-
-ntacl
-sysvolreset 
-Reset sysvol ACLs to defaults (including correct ACLs on
-GPOs).
-
-ou
-
-Manage organizational units (OUs).
-
-ou
-add ou_dn [options] 
-Add a new organizational unit.
-
-The
-name of the organizational unit can be specified as a full
-DN or without the domainDN component.
-
---description=DESCRIPTION
-
-Specify
-OU's description.
-
-ou
-create ou_dn [options] 
-Add a new organizational unit. This is a synonym for the
-samba-tool ou add command and is available for compatibility
-reasons only. Please use samba-tool ou add
-instead.
-
-ou
-delete ou_dn [options] 
-Delete an organizational unit.
-
-The
-name of the organizational unit can be specified as a full
-DN or without the domainDN component.
-
---force-subtree-delete
-
-Delete
-organizational unit and all children recursively.
-
-ou
-list [options] 
-List all organizational units.
-
---full-dn
-
-Display
-DNs including the base DN.
-
-ou
-listobjects ou_dn [options] 
-List all objects in an organizational unit.
-
-The
-name of the organizational unit can be specified as a full
-DN or without the domainDN component.
-
---full-dn
-
-Display
-DNs including the base DN.
-
--r|--recursive
-
-List
-objects recursively.
-
-ou
-move old_ou_dn new_parent_dn [options] 
-Move an organizational unit.
-
-The
-name of the organizational units can be specified as a full
-DN or without the domainDN component.
-
-ou
-rename old_ou_dn new_ou_dn [options] 
-Rename an organizational unit.
-
-The
-name of the organizational units can be specified as a full
-DN or without the domainDN component.
-
-rodc
-
-Manage Read-Only Domain Controller (RODC).
-
-rodc
-preload SID|DN|accountname [options] 
-Preload one account for an RODC.
-
-schema
-
-Manage and query schema.
-
-schema
-attribute modify attribute [options] 
-Modify the behaviour of an attribute in schema.
-
-schema
-attribute show attribute [options] 
-Display an attribute schema definition.
-
-schema
-attribute show_oc attribute [options] 
-Show objectclasses that MAY or MUST contain this
-attribute.
-
-schema
-objectclass show objectclass [options] 
-Display an objectclass schema definition.
-
-shell
-
-Opens an interactive Samba Python shell.
-
-shell
-[options] 
-Opens an interactive Python shell for Samba ldb
-connection.
-
--H,
---URL
-
-LDB URL
-for database or target server.
-
-sites
-
-Manage sites.
-
-sites
-list [options] 
-List sites.
-
---json
-
-Output as
-JSON instead of a list
-
-sites
-view site [options] 
-View site details.
-
-sites
-create site [options] 
-Create a new site.
-
-sites
-remove site [options] 
-Delete an existing site.
-
-sites
-subnet list site [options] 
-List subnets for a site.
-
---json
-
-Output as
-JSON instead of a list
-
-sites
-subnet view subnet [options] 
-View subnet details.
-
-sites
-subnet create subnet site-of-subnet [options] 
-Create a new subnet.
-
-sites
-subnet remove subnet [options] 
-Delete an existing subnet.
-
-sites
-subnet set-site subnet site-of-subnet [options] 
-Assign a subnet to a site.
-
-spn
-
-Manage Service Principal Names (SPN).
-
-spn
-add name user [options] 
-Create a new SPN.
-
-spn
-delete name [user] [options] 
-Delete an existing SPN.
-
-spn
-list user [options] 
-List SPNs of a given user.
-
-testparm
-
-Check the syntax of the configuration file.
-
-time
-
-Retrieve the time on a server.
-
-user
-
-Manage users.
-
-user
-add username [password] 
-Add a new user to the Active Directory Domain.
-
-user
-create username [password] 
-Add a new user. This is a synonym for the samba-tool user
-add command and is available for compatibility reasons only.
-Please use samba-tool user add instead.
-
-user
-delete username [options] 
-Delete an existing user account.
-
-user
-disable username 
-Disable a user account.
-
-user
-edit username 
-Edit a user account AD object.
-
---editor=EDITOR
-
-Specifies
-the editor to use instead of the system default, or 'vi' if
-no system default is set.
-
-user
-enable username 
-Enable a user account.
-
-user
-list 
-List all users.
-
-By
-default the user's sAMAccountNames are listed.
-
---full-dn
-
-List
-user's distinguished names instead of the
-sAMAccountNames.
-
--b
-BASE_DN|--base-dn=BASE_DN
-
-Specify
-base DN to use. Only users under the specified base DN will
-be listed.
-
---hide-expired
-
-Do not
-list expired user accounts.
-
---hide-disabled
-
-Do not
-list disabled user accounts.
-
-user
-setprimarygroup username primarygroupname 
-Set the primary group a user account.
-
-user
-getgroups username 
-Get the direct group memberships of a user
-account.
-
-user
-show username [options] 
-Display a user AD object.
-
---attributes=USER_ATTRS
-
-Comma
-separated list of attributes, which will be
-printed.
-
-user
-move username new_parent_dn [options] 
-This command moves a user account into the specified
-organizational unit or container.
-
-The
-username specified on the command is the
-sAMAccountName.
-
-The
-name of the organizational unit or container can be
-specified as a full DN or without the domainDN
-component.
-
-user
-password [options] 
-Change password for a user account (the one provided in
-authentication).
-
-user
-rename username [options] 
-Rename a user and related attributes.
-
-This
-command allows to set the user's name related attributes.
-The user's CN will be renamed automatically. The user's new
-CN will be made up by combining the given-name, initials and
-surname. A dot ('.') will be appended to the initials
-automatically, if required. Use the --force-new-cn option to
-specify the new CN manually and --reset-cn to reset this
-change.
-
-Use
-an empty attribute value to remove the specified
-attribute.
-
-The
-username specified on the command is the
-sAMAccountName.
-
---surname=SURNAME
-
-New
-surname
-
---given-name=GIVEN_NAME
-
-New given
-name
-
---initials=INITIALS
-
-New
-initials
-
---force-new-cn=NEW_CN
-
-Specify a
-new CN (RDN) instead of using a combination of the given
-name, initials and surname.
-
---reset-cn
-
-Set the
-CN to the default combination of given name, initials and
-surname.
-
---display-name=DISPLAY_NAME
-
-New
-display name
-
---mail-address=MAIL_ADDRESS
-
-New email
-address
-
---samaccountname=SAMACCOUNTNAME
-
-New
-account name (sAMAccountName/logon name)
-
---upn=UPN
-
-New user
-principal name
-
-user
-setexpiry username [options] 
-Set the expiration of a user account.
-
-user
-setpassword username [options] 
-Sets or resets the password of a user account.
-
-user
-unlock username [options] 
-This command unlocks a user account in the Active Directory
-domain.
-
-user
-getpassword username [options] 
-Gets the password of a user account.
-
-user
-get-kerberos-ticket username [options] 
-Gets a Kerberos Ticket Granting Ticket as the
-account.
-
-user
-syncpasswords --cache-ldb-initialize [options] 
-Syncs the passwords of all user accounts, using an optional
-script.
-
-Note
-that this command should run on a single domain controller
-only (typically the PDC-emulator).
-
-user
-auth policy assign username [options] 
-Set assigned authentication policy for user.
-
---policy
-
-Name of
-authentication policy to assign or leave empty to
-remove.
-
-user
-auth policy remove username 
-Remove assigned authentication policy from user.
-
-user
-auth policy view username 
-View the assigned authentication policy for user.
-
-user
-auth silo assign username [options] 
-Set assigned authentication silo for user.
-
---silo
-
-Name of
-authentication silo to assign or leave empty to
-remove.
-
-user
-auth silo remove username 
-Remove assigned authentication silo from user.
-
-user
-auth silo view username 
-View the assigned authentication silo for user.
-
-vampire
-[options] domain 
-Join and synchronise a remote AD domain to the local server.
-Please note that samba-tool vampire is deprecated, please
-use samba-tool domain join instead.
-
-visualize
-[options] subcommand 
-Produce graphical representations of Samba network state. To
-work out what is happening in a replication graph, it is
-sometimes helpful to use visualisations.
-
-There
-are two subcommands, two graphical modes, and (roughly) two
-modes of operation with respect to the location of
-authority.
-
-MODES
-OF OPERATION 
-samba-tool visualize ntdsconn
-
-Looks at
-NTDS connections.
-
-samba-tool
-visualize reps
-
-Looks at
-repsTo and repsFrom objects.
-
-samba-tool
-visualize uptodateness
-
-Looks at
-replication lag as shown by the uptodateness
-vectors.
-
-GRAPHICAL
-MODES 
---distance
-
-Distances
-between DCs are shown in a matrix in the
-terminal.
-
---dot
-
-Generate
-Graphviz dot output (for ntdsconn and reps modes). When
-viewed using dot or xdot, this shows the network as a graph
-with DCs as vertices and connections edges. Certain types of
-degenerate edges are shown in different colours or
-line-styles.
-
---xdot
-
-Generate
-Graphviz dot output as with [--dot] and attempt to view it
-immediately using /usr/bin/xdot.
-
--r
-
-Normally,
-samba-tool talks to one database; with the [-r] option
-attempts are made to contact all the DCs known to the first
-database. This is necessary for samba-tool visualize
-uptodateness and for samba-tool visualize reps because the
-repsFrom/To objects are not replicated, and it can reveal
-replication issues in other modes.
-
-help
-
-Gives usage information.
+   help
+       Gives usage information.
 
 VERSION
-
-This
-man page is complete for version
-4.20.2-Debian-4.20.2+dfsg-10 of the Samba suite.
+       This man page is complete for version
+       4.22.2-Debian-4.22.2+dfsg-1~bpo12+1 of the Samba suite.
 
 AUTHOR
+       The original Samba software and related utilities were created by
+       Andrew Tridgell. Samba is now developed by the Samba Team as an Open
+       Source project similar to the way the Linux kernel is developed.
 
-The
-original Samba software and related utilities were created
-by Andrew Tridgell. Samba is now developed by the Samba Team
-as an Open Source project similar to the way the Linux
-kernel is developed.
+Samba 4.22.2-Debian-4.22.2+dfs    06/10/2025                     SAMBA-TOOL(8)
