@@ -4856,6 +4856,7 @@
                 this.transitionDuration = 300; // milliseconds
                 this.isTransitioning = false;
                 this.pendingTheme = null;
+                this.transitionCleanupTimer = null; // Store timer reference
                 
                 // Performance tracking
                 this.switchTimes = [];
@@ -5036,13 +5037,30 @@
                 } catch (error) {
                     console.error('Theme switch failed:', error);
                     this.isTransitioning = false;
-                    if (useTransition) {
+                    
+                    // Clean up transition state
+                    if (this.transitionCleanupTimer) {
+                        clearTimeout(this.transitionCleanupTimer);
+                        this.transitionCleanupTimer = null;
+                    }
+                    document.body.classList.remove('theme-transitioning');
+                    
+                    if (useTransition && this.transitionElement) {
                         this.transitionElement.style.opacity = '0';
                     }
                 }
             }
             
             startTransition() {
+                // Cancel any existing cleanup timer
+                if (this.transitionCleanupTimer) {
+                    clearTimeout(this.transitionCleanupTimer);
+                    this.transitionCleanupTimer = null;
+                }
+                
+                // Remove any lingering transition class
+                document.body.classList.remove('theme-transitioning');
+                
                 // Show transition overlay
                 this.transitionElement.style.opacity = '0.5';
                 
@@ -5114,10 +5132,16 @@
                 // Hide transition overlay
                 this.transitionElement.style.opacity = '0';
                 
+                // Cancel any existing cleanup timer
+                if (this.transitionCleanupTimer) {
+                    clearTimeout(this.transitionCleanupTimer);
+                }
+                
                 // Remove transition class after animation
-                setTimeout(() => {
+                this.transitionCleanupTimer = setTimeout(() => {
                     document.body.classList.remove('theme-transitioning');
                     this.isTransitioning = false;
+                    this.transitionCleanupTimer = null;
                 }, this.transitionDuration);
             }
             
@@ -5211,6 +5235,15 @@
             
             // Cleanup
             destroy() {
+                // Cancel any pending transitions
+                if (this.transitionCleanupTimer) {
+                    clearTimeout(this.transitionCleanupTimer);
+                    this.transitionCleanupTimer = null;
+                }
+                
+                // Remove transition class
+                document.body.classList.remove('theme-transitioning');
+                
                 if (this.themeObserver) {
                     this.themeObserver.disconnect();
                 }
