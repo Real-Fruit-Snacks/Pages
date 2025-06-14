@@ -126,7 +126,8 @@ The repository includes `.gitlab-ci.yml` for automatic deployment.
 
 ```
 linux-man-pages/
-├── index.html          # Complete application
+├── index.html         # Complete application (all-in-one)
+├── .gitlab-ci.yml     # GitLab CI/CD configuration
 ├── data/              # Search indexes and databases
 │   ├── index.js       # Main search index
 │   ├── tldr_index.js  # TLDR pages index
@@ -137,7 +138,9 @@ linux-man-pages/
 ├── tldr_pages/        # TLDR summaries
 │   ├── common/        # Cross-platform commands
 │   └── linux/         # Linux-specific commands
-└── scripts/           # Maintenance scripts
+├── scripts/           # Maintenance scripts
+├── docs/              # Additional documentation
+└── favicon*.png       # Various favicon sizes
 ```
 
 ## 🔧 Development
@@ -160,11 +163,14 @@ linux-man-pages/
 
 ### Testing
 ```bash
-# Install test dependencies
+# Install test dependencies (optional)
 npm install puppeteer
 
-# Run visual tests
-node test_visual.js
+# Run comprehensive tests
+node test_comprehensive.js
+
+# Test specific themes
+node test_focused.js
 ```
 
 ## 🤝 Contributing
