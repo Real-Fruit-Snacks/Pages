@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-7.6.0-blue.svg)
+![Version](https://img.shields.io/badge/version-7.7.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Man Pages](https://img.shields.io/badge/man%20pages-10%2C296-orange.svg)
 ![TLDR Pages](https://img.shields.io/badge/tldr%20pages-100%2B-yellow.svg)

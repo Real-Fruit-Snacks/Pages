@@ -1,5 +1,53 @@
 # Release Notes
 
+## 🚀 v7.7.0 - Enhanced Command Explainer & Perfect Tooltips
+
+This release delivers a completely polished Command Explainer with bulletproof tooltip positioning and comprehensive grep support.
+
+### ✨ New Features
+
+- **Perfect Tooltip System**
+  - Multi-directional smart positioning (above, below, left, right, center)
+  - Guaranteed viewport visibility with edge detection
+  - Beautiful glassmorphism design with smooth animations
+  - Dynamic arrows that adapt to tooltip position
+  - Fixed positioning to prevent any clipping issues
+
+- **Enhanced Grep Support**
+  - Added hardcoded fallback for 25 common grep options
+  - Fixes missing options like `-C`, `-A`, `-B` that extraction script missed
+  - Complete descriptions for context, matching, and output options
+  - Proper argument type detection for options requiring values
+
+### 🔧 Technical Improvements
+
+- **Tooltip Positioning Algorithm**
+  - Calculates available space in all directions
+  - Falls back to side positioning when vertical space is limited
+  - Centers in viewport as last resort
+  - Maintains 10px minimum distance from all edges
+  - Proper cleanup to prevent memory leaks
+
+- **Command Parser Enhancements**
+  - Fallback system for commands with incomplete option databases
+  - Better handling of complex option formats
+  - Improved option description accuracy
+
+### 🐛 Bug Fixes
+- Fixed tooltip clipping at viewport edges
+- Fixed missing grep options in Command Explainer
+- Fixed tooltip memory leaks on modal close
+- Improved tooltip visibility on all themes
+
+### 📦 Complete Offline Package
+- All 10,296 man pages included
+- 1,225 TLDR quick references
+- 25 beautiful themes
+- GitLab CI/CD ready (.gitlab-ci.yml)
+- Zero external dependencies
+
+---
+
 ## 🎉 v7.6.0 - Complete Offline Package (GitLab Ready)
 
 This release provides a fully self-contained offline package optimized for GitLab Pages deployment.
