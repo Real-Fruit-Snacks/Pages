@@ -1,18 +1,55 @@
-# GitLab Pages deployment configuration
-# This file enables automatic deployment to GitLab Pages
+# GitLab CI/CD configuration for GitLab Pages deployment
+# This file enables automatic deployment of the Linux Man Pages application
 
 pages:
   stage: deploy
   script:
-    # GitLab Pages expects content in 'public' directory
+    # No build process needed - pure HTML/CSS/JS
+    - echo "Deploying Linux Man Pages to GitLab Pages..."
+    
+    # Create public directory for GitLab Pages
     - mkdir -p public
-    - cp -r index.html data/ themes/ man_pages/ tldr_pages/ public/
-    - cp -r .nojekyll LICENSE README.md public/
-    - cp -r docs/ public/ || true
+    
+    # Copy all files to public directory
+    - cp -r index.html public/
+    - cp -r data public/
+    - cp -r themes public/
+    - cp -r man_pages public/
+    - cp -r tldr_pages public/
+    - cp -r *.png *.ico public/ || true
+    - cp -r docs public/ || true
+    - cp README.md LICENSE public/ || true
+    
+    # Create a simple 404 page that redirects to index
+    - echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/"></head><body>Redirecting...</body></html>' > public/404.html
+    
+    # Log deployment info
+    - echo "Deployment complete!"
+    - echo "Total files:" && find public -type f | wc -l
+    - echo "Total size:" && du -sh public
+    
   artifacts:
     paths:
       - public
+    expire_in: 1 week
+    
   only:
     # Deploy only from main/master branch
     - main
     - master
+    
+  # Use minimal Docker image for efficiency
+  image: alpine:latest
+  
+  # Cache nothing as we don't have dependencies
+  cache: {}
+  
+  # Variables for GitLab Pages
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 1
+
+# Optional: Add deployment environments
+environment:
+  name: production
+  url: https://$CI_PROJECT_NAMESPACE.gitlab.io/$CI_PROJECT_NAME
