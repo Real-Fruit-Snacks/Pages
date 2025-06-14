@@ -2,7 +2,7 @@
 
 A modern, fully self-contained web application for searching and viewing Linux manual pages. Features instant search, TLDR summaries, and beautiful themes - all working completely offline.
 
-![Version](https://img.shields.io/badge/version-7.5.1-blue.svg)
+![Version](https://img.shields.io/badge/version-7.5.2-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Man Pages](https://img.shields.io/badge/man%20pages-9%2C371-orange.svg)
 ![Themes](https://img.shields.io/badge/themes-26-purple.svg)
@@ -194,9 +194,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Theme inspirations from various popular editor themes
 - Icons and emojis from standard Unicode sets
 
-## 🆕 What's New in v7.5.1
+## 🆕 What's New in v7.5.2
 
-### Latest Updates (v7.5.1) - Stability Update
+### Latest Updates (v7.5.2) - Complete Offline Package
+- **📦 Restored GitHub Pages Support**: Re-added deployment workflow for dual hosting
+- **🧹 Repository Cleanup**: Removed unnecessary files while keeping essential scripts
+- **📚 Documentation Updates**: Improved project structure documentation
+- **🚀 Dual Deployment Ready**: Works on both GitHub Pages and GitLab Pages
+
+### Previous Updates (v7.5.1) - Stability Update
 - **🔧 Search Controller Fix**: Resolved race condition causing TypeError during rapid searches
 - **🛡️ Enhanced Null Safety**: Added proper null checks for asynchronous operations
 - **⚡ Improved Search Reliability**: Better handling of concurrent search requests
