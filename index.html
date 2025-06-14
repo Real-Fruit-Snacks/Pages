@@ -1816,16 +1816,17 @@
             background: #f8f9fa;
             border-radius: 8px;
             padding: 20px;
-            padding-top: 30px; /* Extra space for tooltips */
+            padding-top: 50px; /* Extra space for tooltips above */
+            padding-bottom: 30px; /* Extra space for tooltips below */
             margin-bottom: 20px;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             min-height: 60px;
-            max-height: 200px;
+            max-height: none; /* Remove height restriction */
             overflow: visible; /* Allow tooltips to show */
             display: flex;
             align-items: flex-start;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
             position: relative;
         }
         
@@ -1833,15 +1834,17 @@
         .command-token {
             display: inline-flex;
             align-items: center;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 14px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 500;
             position: relative;
             cursor: help;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             max-width: 400px;
             overflow: visible; /* Changed from hidden to allow tooltips */
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .command-token > span {
@@ -1951,24 +1954,41 @@
 
         .token-tooltip {
             position: absolute;
-            bottom: 100%;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
+            transform: translateX(-50%) translateY(-10px);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 400;
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            transition: opacity 0.2s, visibility 0.2s;
-            margin-bottom: 8px;
-            max-width: 400px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 300px;
             white-space: normal;
             word-wrap: break-word;
-            line-height: 1.4;
+            line-height: 1.5;
             z-index: 10000;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        /* Default position above */
+        .token-tooltip {
+            bottom: 100%;
+            margin-bottom: 10px;
+        }
+        
+        /* Position below when marked */
+        .token-tooltip.tooltip-below {
+            bottom: auto;
+            top: 100%;
+            margin-bottom: 0;
+            margin-top: 10px;
+            transform: translateX(-50%) translateY(10px);
         }
         
         /* Adjust tooltip position if it would go off-screen */
@@ -1986,16 +2006,35 @@
         .command-token:hover .token-tooltip {
             opacity: 1 !important;
             visibility: visible !important;
+            transform: translateX(-50%) translateY(0) !important;
+        }
+        
+        .command-token:hover .token-tooltip.tooltip-below {
+            transform: translateX(-50%) translateY(0) !important;
         }
 
-        .token-tooltip::after {
+        .token-tooltip::before {
             content: '';
             position: absolute;
-            top: 100%;
             left: 50%;
             transform: translateX(-50%);
-            border: 4px solid transparent;
-            border-top-color: rgba(0, 0, 0, 0.85);
+            width: 0;
+            height: 0;
+            border: 6px solid transparent;
+        }
+        
+        /* Arrow pointing down (tooltip above) */
+        .token-tooltip:not(.tooltip-below)::before {
+            top: 100%;
+            border-top-color: #16213e;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+        
+        /* Arrow pointing up (tooltip below) */
+        .token-tooltip.tooltip-below::before {
+            bottom: 100%;
+            border-bottom-color: #1a1a2e;
+            filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.2));
         }
 
         .command-explanations {
@@ -2106,14 +2145,52 @@
 
         /* Override theme styles for command explainer tooltips */
         .command-explainer-modal .token-tooltip {
-            background: rgba(0, 0, 0, 0.9) !important;
-            color: white !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
         }
         
-        /* Ensure tooltip arrow inherits proper color */
-        .command-explainer-modal .token-tooltip::after {
-            border-top-color: rgba(0, 0, 0, 0.9) !important;
+        /* Enhanced token colors for better visibility */
+        .command-explainer-modal .command-token.command {
+            background: linear-gradient(135deg, #e3f2fd 0%, #d1e9fc 100%);
+            border: 1px solid #90caf9;
+        }
+        
+        .command-explainer-modal .command-token.option {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e8d4eb 100%);
+            border: 1px solid #ce93d8;
+        }
+        
+        .command-explainer-modal .command-token.argument {
+            background: linear-gradient(135deg, #e8f5e9 0%, #d4edd5 100%);
+            border: 1px solid #81c784;
+        }
+        
+        .command-explainer-modal .command-token.pipe,
+        .command-explainer-modal .command-token.redirect {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe8cc 100%);
+            border: 1px solid #ffb74d;
+        }
+        
+        /* Subtle animation to indicate hoverable tokens */
+        @keyframes tokenPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .command-token {
+            animation: tokenPulse 2s ease-in-out infinite;
+        }
+        
+        .command-token:hover {
+            animation: none;
+        }
+        
+        /* Better tooltip typography */
+        .token-tooltip {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            letter-spacing: 0.3px;
         }
 
     </style>
@@ -10173,7 +10250,7 @@
                 return;
             }
             
-            tokens.forEach(token => {
+            tokens.forEach((token, index) => {
                 const tokenEl = document.createElement('div');
                 tokenEl.className = `command-token ${token.type}`;
                 
@@ -10188,6 +10265,26 @@
                     tooltip.className = 'token-tooltip';
                     tooltip.textContent = token.description;
                     tokenEl.appendChild(tooltip);
+                    
+                    // Add smart positioning on hover
+                    tokenEl.addEventListener('mouseenter', function() {
+                        // Get positions
+                        const modalContent = document.querySelector('.command-explainer-content');
+                        const modalRect = modalContent.getBoundingClientRect();
+                        const tokenRect = tokenEl.getBoundingClientRect();
+                        const tooltipHeight = 80; // Estimated tooltip height
+                        
+                        // Check if tooltip would go above the modal
+                        const spaceAbove = tokenRect.top - modalRect.top;
+                        const spaceBelow = modalRect.bottom - tokenRect.bottom;
+                        
+                        // If not enough space above, position below
+                        if (spaceAbove < tooltipHeight + 20) {
+                            tooltip.classList.add('tooltip-below');
+                        } else {
+                            tooltip.classList.remove('tooltip-below');
+                        }
+                    });
                 }
                 
                 commandBreakdown.appendChild(tokenEl);
