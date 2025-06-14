@@ -2,7 +2,7 @@
 
 A modern, fully self-contained web application for searching and viewing Linux manual pages. Features instant search, TLDR summaries, and beautiful themes - all working completely offline.
 
-![Version](https://img.shields.io/badge/version-7.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-7.3.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Man Pages](https://img.shields.io/badge/man%20pages-9%2C371-orange.svg)
 ![Themes](https://img.shields.io/badge/themes-26-purple.svg)
@@ -188,9 +188,16 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Theme inspirations from various popular editor themes
 - Icons and emojis from standard Unicode sets
 
-## 🆕 What's New in v7.2.0
+## 🆕 What's New in v7.3.0
 
-### Latest Updates (v7.2.0) - Ultra-Performance Edition
+### Latest Updates (v7.3.0) - Enhanced Theme Experience
+- **🎨 Ayu Mirage Default**: Changed default theme to Ayu Mirage for better dark mode experience
+- **🔧 Improved Dropdown Styling**: Theme-adaptive dropdown with CSS variables
+- **✨ Better Focus Indicators**: Orange focus outlines that match dark themes
+- **🎯 Consistent UI Elements**: Search box and dropdowns now properly adapt to theme colors
+- **💅 Theme-Specific Overrides**: Light themes maintain proper contrast ratios
+
+### Previous Updates (v7.2.0) - Ultra-Performance Edition
 - **🚀 Search Performance**: 10x reduction in API calls with intelligent debouncing
 - **⚡ DOM Optimization**: 3-5x faster UI updates with batch processing and element recycling
 - **💾 Memory Efficiency**: 50-80% memory reduction through smart element reuse
