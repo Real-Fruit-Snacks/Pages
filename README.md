@@ -2,23 +2,25 @@
 
 A modern, fully self-contained web application for searching and viewing Linux manual pages. Features instant search, TLDR summaries, and beautiful themes - all working completely offline.
 
-![Version](https://img.shields.io/badge/version-7.5.2-blue.svg)
+![Version](https://img.shields.io/badge/version-7.5.3-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Man Pages](https://img.shields.io/badge/man%20pages-9%2C371-orange.svg)
+![Man Pages](https://img.shields.io/badge/man%20pages-10%2C296-orange.svg)
+![TLDR Pages](https://img.shields.io/badge/tldr%20pages-100%2B-yellow.svg)
 ![Themes](https://img.shields.io/badge/themes-26-purple.svg)
 ![Performance](https://img.shields.io/badge/performance-optimized-brightgreen.svg)
 
 ## 🚀 Features
 
 ### Core Functionality
-- **9,371 Linux man pages** - Comprehensive coverage of Linux commands
+- **10,296 Linux man pages** - Comprehensive coverage of Linux commands
 - **Ultra-fast search** - AI-optimized debouncing with 10x fewer API calls
 - **Smart loading states** - Skeleton screens for 2-3x perceived performance
-- **TLDR integration** - Quick summaries for common use cases
+- **TLDR integration** - Quick summaries for 100+ common commands
+- **Command options database** - 2,844 commands with parsed flag information
 - **Completely offline** - No internet required after deployment
 - **Section filtering** - Browse by category (1-8)
 - **Related commands** - Discover similar tools
-- **Command explainer** - Break down complex command syntax
+- **Command explainer** - Break down complex command syntax with auto-expanding sections
 
 ### Performance Features
 - **Search Debouncing** - Intelligent request cancellation reduces server load by 90%
@@ -129,15 +131,16 @@ linux-man-pages/
 ├── index.html         # Complete application (all-in-one)
 ├── .gitlab-ci.yml     # GitLab CI/CD configuration
 ├── data/              # Search indexes and databases
-│   ├── index.js       # Main search index
-│   ├── tldr_index.js  # TLDR pages index
-│   └── options.js     # Command options database
+│   ├── index.js       # Main search index (10,296 commands)
+│   ├── tldr_index.js  # TLDR pages index (100+ summaries)
+│   └── options.js     # Command options database (2,844 commands)
 ├── themes/            # 26 theme CSS files
-├── man_pages/         # 9,371 man page files
+├── man_pages/         # 10,296 man page files
 │   └── [command].[section].txt
 ├── tldr_pages/        # TLDR summaries
 │   ├── common/        # Cross-platform commands
 │   └── linux/         # Linux-specific commands
+├── extract-options.js # Script to extract command options from man pages
 ├── scripts/           # Maintenance scripts
 ├── docs/              # Additional documentation
 └── favicon*.png       # Various favicon sizes
@@ -155,6 +158,13 @@ linux-man-pages/
    ```bash
    python3 scripts/update_index.py
    ```
+
+### Updating Command Options Database
+1. Run the extraction script to parse man pages:
+   ```bash
+   node extract-options.js
+   ```
+2. This will update `data/options.js` with parsed command flags
 
 ### Creating New Themes
 1. Create a new CSS file in `themes/`
@@ -194,9 +204,16 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Theme inspirations from various popular editor themes
 - Icons and emojis from standard Unicode sets
 
-## 🆕 What's New in v7.5.2
+## 🆕 What's New in v7.5.3
 
-### Latest Updates (v7.5.2) - Complete Offline Package
+### Latest Updates (v7.5.3) - Enhanced Content & UI
+- **📚 100+ New TLDR Pages**: Added comprehensive TLDR summaries for popular commands
+- **🔧 Command Options Database**: Updated to 2,844 commands with improved parsing
+- **✨ Auto-Expanding Sections**: Command Explainer sections now expand to show all content
+- **🛠️ Restored Options Extractor**: Script to update command flags database from man pages
+- **📈 Content Growth**: From 9,371 to 10,296 man pages total
+
+### Previous Updates (v7.5.2) - Complete Offline Package
 - **📦 Restored GitHub Pages Support**: Re-added deployment workflow for dual hosting
 - **🧹 Repository Cleanup**: Removed unnecessary files while keeping essential scripts
 - **📚 Documentation Updates**: Improved project structure documentation
@@ -259,8 +276,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📊 Statistics
 
-- **Total Size**: ~50MB (uncompressed)
-- **Man Pages**: 9,371 commands
+- **Total Size**: ~55MB (uncompressed)
+- **Man Pages**: 10,296 commands
+- **TLDR Pages**: 100+ quick reference guides
+- **Command Options**: 2,844 commands with parsed flags
 - **Themes**: 26 unique styles
 - **Load Time**: < 1 second (optimized)
 - **Performance**: 77% test pass rate across all themes
