@@ -1953,9 +1953,7 @@
         }
 
         .token-tooltip {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%) translateY(-10px);
+            position: fixed; /* Changed to fixed for viewport positioning */
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #ffffff;
             padding: 12px 16px;
@@ -1965,52 +1963,31 @@
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: opacity 0.2s ease, visibility 0.2s ease;
             max-width: 300px;
+            min-width: 150px;
             white-space: normal;
             word-wrap: break-word;
             line-height: 1.5;
-            z-index: 10000;
+            z-index: 2147483647; /* Maximum z-index to ensure tooltip is always on top */
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            animation: tooltipFadeIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
         
-        /* Default position above */
-        .token-tooltip {
-            bottom: 100%;
-            margin-bottom: 10px;
+        @keyframes tooltipFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
         
-        /* Position below when marked */
-        .token-tooltip.tooltip-below {
-            bottom: auto;
-            top: 100%;
-            margin-bottom: 0;
-            margin-top: 10px;
-            transform: translateX(-50%) translateY(10px);
-        }
-        
-        /* Adjust tooltip position if it would go off-screen */
-        .command-token:first-child .token-tooltip {
-            left: 0;
-            transform: none;
-        }
-        
-        .command-token:last-child .token-tooltip {
-            left: auto;
-            right: 0;
-            transform: none;
-        }
-
         .command-token:hover .token-tooltip {
             opacity: 1 !important;
             visibility: visible !important;
-            transform: translateX(-50%) translateY(0) !important;
-        }
-        
-        .command-token:hover .token-tooltip.tooltip-below {
-            transform: translateX(-50%) translateY(0) !important;
         }
 
         .token-tooltip::before {
@@ -2172,20 +2149,6 @@
             border: 1px solid #ffb74d;
         }
         
-        /* Subtle animation to indicate hoverable tokens */
-        @keyframes tokenPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        
-        .command-token {
-            animation: tokenPulse 2s ease-in-out infinite;
-        }
-        
-        .command-token:hover {
-            animation: none;
-        }
         
         /* Better tooltip typography */
         .token-tooltip {
@@ -10243,6 +10206,14 @@
 
         // Display parsed command
         function displayParsedCommand(tokens) {
+            // Clean up existing tooltips
+            const existingTokens = commandBreakdown.querySelectorAll('.command-token');
+            existingTokens.forEach(token => {
+                if (token.tooltipElement && token.tooltipElement.parentNode) {
+                    token.tooltipElement.parentNode.removeChild(token.tooltipElement);
+                }
+            });
+            
             commandBreakdown.innerHTML = '';
             
             if (tokens.length === 0) {
@@ -10264,27 +10235,94 @@
                     const tooltip = document.createElement('div');
                     tooltip.className = 'token-tooltip';
                     tooltip.textContent = token.description;
-                    tokenEl.appendChild(tooltip);
+                    tooltip.style.position = 'fixed';
+                    tooltip.style.display = 'none';
+                    document.body.appendChild(tooltip); // Append to body to avoid clipping
                     
-                    // Add smart positioning on hover
+                    // Position tooltip on hover
+                    let tooltipTimeout;
+                    
                     tokenEl.addEventListener('mouseenter', function() {
-                        // Get positions
-                        const modalContent = document.querySelector('.command-explainer-content');
-                        const modalRect = modalContent.getBoundingClientRect();
-                        const tokenRect = tokenEl.getBoundingClientRect();
-                        const tooltipHeight = 80; // Estimated tooltip height
+                        // Clear any existing timeout
+                        clearTimeout(tooltipTimeout);
                         
-                        // Check if tooltip would go above the modal
-                        const spaceAbove = tokenRect.top - modalRect.top;
-                        const spaceBelow = modalRect.bottom - tokenRect.bottom;
-                        
-                        // If not enough space above, position below
-                        if (spaceAbove < tooltipHeight + 20) {
-                            tooltip.classList.add('tooltip-below');
-                        } else {
-                            tooltip.classList.remove('tooltip-below');
-                        }
+                        // Show tooltip with delay
+                        tooltipTimeout = setTimeout(() => {
+                            tooltip.style.display = 'block';
+                            const tokenRect = tokenEl.getBoundingClientRect();
+                            const viewportHeight = window.innerHeight;
+                            const viewportWidth = window.innerWidth;
+                            
+                            // Force layout to get accurate dimensions
+                            tooltip.style.opacity = '0';
+                            tooltip.style.visibility = 'visible';
+                            
+                            // Get tooltip dimensions after display
+                            const tooltipRect = tooltip.getBoundingClientRect();
+                            const tooltipHeight = tooltipRect.height || 60; // fallback height
+                            const tooltipWidth = tooltipRect.width || 200; // fallback width
+                            
+                            // Calculate position
+                            let left = tokenRect.left + (tokenRect.width / 2);
+                            let top = tokenRect.top;
+                            
+                            // Determine vertical position with safe margins
+                            const safeMargin = 30; // Minimum distance from viewport edge
+                            const spaceAbove = tokenRect.top - safeMargin;
+                            const spaceBelow = viewportHeight - tokenRect.bottom - safeMargin;
+                            
+                            let positionBelow = false;
+                            
+                            // Check if we have enough space above
+                            if (spaceAbove >= tooltipHeight + 15) {
+                                // Position above
+                                top = tokenRect.top - tooltipHeight - 10;
+                            } else if (spaceBelow >= tooltipHeight + 15) {
+                                // Position below
+                                positionBelow = true;
+                                top = tokenRect.bottom + 10;
+                            } else {
+                                // Not enough space either way, position in the middle of available space
+                                if (spaceAbove > spaceBelow) {
+                                    top = Math.max(safeMargin, tokenRect.top - tooltipHeight - 10);
+                                } else {
+                                    positionBelow = true;
+                                    top = Math.min(viewportHeight - tooltipHeight - safeMargin, tokenRect.bottom + 10);
+                                }
+                            }
+                            
+                            // Ensure horizontal position keeps tooltip in viewport
+                            const halfWidth = tooltipWidth / 2;
+                            left = Math.max(halfWidth + 15, left); // Left boundary
+                            left = Math.min(viewportWidth - halfWidth - 15, left); // Right boundary
+                            
+                            // Apply positioning
+                            tooltip.style.left = left + 'px';
+                            tooltip.style.top = top + 'px';
+                            tooltip.style.transform = 'translateX(-50%)';
+                            
+                            // Update arrow direction
+                            if (positionBelow) {
+                                tooltip.classList.add('tooltip-below');
+                            } else {
+                                tooltip.classList.remove('tooltip-below');
+                            }
+                            
+                            // Show tooltip
+                            tooltip.style.opacity = '1';
+                            tooltip.style.visibility = 'visible';
+                        }, 100);
                     });
+                    
+                    tokenEl.addEventListener('mouseleave', function() {
+                        clearTimeout(tooltipTimeout);
+                        tooltip.style.display = 'none';
+                        tooltip.style.opacity = '0';
+                        tooltip.style.visibility = 'hidden';
+                    });
+                    
+                    // Store reference for cleanup
+                    tokenEl.tooltipElement = tooltip;
                 }
                 
                 commandBreakdown.appendChild(tokenEl);
@@ -10560,6 +10598,14 @@
 
         // Close command explainer
         function closeCommandExplainer() {
+            // Clean up tooltips
+            const existingTokens = commandBreakdown.querySelectorAll('.command-token');
+            existingTokens.forEach(token => {
+                if (token.tooltipElement && token.tooltipElement.parentNode) {
+                    token.tooltipElement.parentNode.removeChild(token.tooltipElement);
+                }
+            });
+            
             commandExplainerModal.style.display = 'none';
             overlay.style.display = 'none';
         }
