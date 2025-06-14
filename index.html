@@ -2001,7 +2001,7 @@
         }
         
         /* Arrow pointing down (tooltip above) */
-        .token-tooltip:not(.tooltip-below)::before {
+        .token-tooltip:not(.tooltip-below):not(.tooltip-left):not(.tooltip-right)::before {
             top: 100%;
             border-top-color: #16213e;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
@@ -2012,6 +2012,33 @@
             bottom: 100%;
             border-bottom-color: #1a1a2e;
             filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.2));
+        }
+        
+        /* Arrow pointing left (tooltip on right) */
+        .token-tooltip.tooltip-right::before {
+            right: 100%;
+            top: 50%;
+            left: auto;
+            transform: translateY(-50%);
+            border-right-color: #1a1a2e;
+        }
+        
+        /* Arrow pointing right (tooltip on left) */
+        .token-tooltip.tooltip-left::before {
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-left-color: #16213e;
+        }
+        
+        /* Centered tooltip (last resort) */
+        .token-tooltip.tooltip-centered {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+        }
+        
+        .token-tooltip.tooltip-centered::before {
+            display: none; /* Hide arrow for centered tooltips */
         }
 
         .command-explanations {
@@ -10257,37 +10284,62 @@
                             tooltip.style.opacity = '0';
                             tooltip.style.visibility = 'visible';
                             
+                            // Force a reflow to ensure dimensions are calculated
+                            void tooltip.offsetHeight;
+                            
                             // Get tooltip dimensions after display
                             const tooltipRect = tooltip.getBoundingClientRect();
-                            const tooltipHeight = tooltipRect.height || 60; // fallback height
-                            const tooltipWidth = tooltipRect.width || 200; // fallback width
+                            const tooltipHeight = Math.max(tooltipRect.height, 40); // Min height with padding
+                            const tooltipWidth = Math.max(tooltipRect.width, 150); // Min width
                             
                             // Calculate position
                             let left = tokenRect.left + (tokenRect.width / 2);
                             let top = tokenRect.top;
                             
-                            // Determine vertical position with safe margins
-                            const safeMargin = 30; // Minimum distance from viewport edge
-                            const spaceAbove = tokenRect.top - safeMargin;
-                            const spaceBelow = viewportHeight - tokenRect.bottom - safeMargin;
+                            // Calculate safe positioning
+                            const minDistanceFromEdge = 10; // Minimum pixels from viewport edge
+                            const preferredGap = 10; // Gap between token and tooltip
+                            
+                            // Calculate available space
+                            const spaceAbove = tokenRect.top - minDistanceFromEdge;
+                            const spaceBelow = viewportHeight - tokenRect.bottom - minDistanceFromEdge;
+                            const spaceLeft = tokenRect.left - minDistanceFromEdge;
+                            const spaceRight = viewportWidth - tokenRect.right - minDistanceFromEdge;
                             
                             let positionBelow = false;
+                            let positionSide = false;
                             
-                            // Check if we have enough space above
-                            if (spaceAbove >= tooltipHeight + 15) {
-                                // Position above
-                                top = tokenRect.top - tooltipHeight - 10;
-                            } else if (spaceBelow >= tooltipHeight + 15) {
+                            // First, try positioning above or below
+                            // Calculate the actual position if placed above
+                            const topIfAbove = tokenRect.top - tooltipHeight - preferredGap;
+                            
+                            if (topIfAbove >= minDistanceFromEdge) {
+                                // Position above - we have enough space
+                                top = topIfAbove;
+                            } else if (spaceBelow >= tooltipHeight + preferredGap) {
                                 // Position below
                                 positionBelow = true;
-                                top = tokenRect.bottom + 10;
+                                top = tokenRect.bottom + preferredGap;
                             } else {
-                                // Not enough space either way, position in the middle of available space
-                                if (spaceAbove > spaceBelow) {
-                                    top = Math.max(safeMargin, tokenRect.top - tooltipHeight - 10);
+                                // Not enough space vertically, try positioning to the side
+                                positionSide = true;
+                                
+                                // Center tooltip vertically with token
+                                top = tokenRect.top + (tokenRect.height / 2) - (tooltipHeight / 2);
+                                // Ensure it stays within viewport
+                                top = Math.max(minDistanceFromEdge, Math.min(viewportHeight - tooltipHeight - minDistanceFromEdge, top));
+                                
+                                // Position to the right if space, otherwise left
+                                if (spaceRight >= tooltipWidth + preferredGap) {
+                                    left = tokenRect.right + preferredGap + (tooltipWidth / 2);
+                                } else if (spaceLeft >= tooltipWidth + preferredGap) {
+                                    left = tokenRect.left - preferredGap - (tooltipWidth / 2);
                                 } else {
-                                    positionBelow = true;
-                                    top = Math.min(viewportHeight - tooltipHeight - safeMargin, tokenRect.bottom + 10);
+                                    // Last resort: center in viewport
+                                    positionSide = false;
+                                    left = viewportWidth / 2;
+                                    top = viewportHeight / 2 - tooltipHeight / 2;
+                                    tooltip.classList.add('tooltip-centered');
                                 }
                             }
                             
@@ -10299,13 +10351,24 @@
                             // Apply positioning
                             tooltip.style.left = left + 'px';
                             tooltip.style.top = top + 'px';
-                            tooltip.style.transform = 'translateX(-50%)';
                             
-                            // Update arrow direction
-                            if (positionBelow) {
-                                tooltip.classList.add('tooltip-below');
+                            // Update classes and transform based on position
+                            tooltip.classList.remove('tooltip-below', 'tooltip-left', 'tooltip-right', 'tooltip-centered');
+                            
+                            if (positionSide) {
+                                // Side positioning
+                                tooltip.style.transform = 'translateX(-50%)';
+                                if (left > tokenRect.left + tokenRect.width) {
+                                    tooltip.classList.add('tooltip-right');
+                                } else {
+                                    tooltip.classList.add('tooltip-left');
+                                }
                             } else {
-                                tooltip.classList.remove('tooltip-below');
+                                // Top/bottom positioning
+                                tooltip.style.transform = 'translateX(-50%)';
+                                if (positionBelow) {
+                                    tooltip.classList.add('tooltip-below');
+                                }
                             }
                             
                             // Show tooltip
