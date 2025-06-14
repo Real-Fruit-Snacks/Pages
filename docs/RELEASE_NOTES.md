@@ -1,85 +1,109 @@
-# Linux Man Pages v4.0.4
+# Release Notes
 
-Self-contained Linux manual pages viewer with official documentation for offline deployment.
+## 🎉 v7.6.0 - Complete Offline Package (GitLab Ready)
 
-## 🧹 v4.0.4 Changes - Repository Cleanup
+This release provides a fully self-contained offline package optimized for GitLab Pages deployment.
 
-- **Removed ~80MB of unnecessary files**:
-  - Test scripts and temporary files
-  - Old release archives
-  - Source HTML man pages directory
-  - Backup directories and files
-- **Improved .gitignore** to prevent future clutter
-- **Repository now contains only essential files** for deployment
-- **No functional changes** to the application
+### ✨ New Features
 
-## 🔧 v4.0.3 Changes
+- **Enhanced Command Explainer Tooltips**
+  - Fixed hover tooltips for commands, flags, and arguments
+  - Improved visibility with proper z-index and overflow handling
+  - Better theme integration across all 26 themes
+  - Smooth animations for better UX
 
-- **Fixed TLDR deduplication** - The embedded TLDR from man pages is now properly removed
-- **Cleaner interface** - Only the well-formatted TLDR section at the bottom is displayed
-- **Less clutter** - TLDR no longer appears in the section navigation sidebar or main content
-- **Improved regex** - Fixed the order of content processing to ensure TLDR removal works correctly
+- **Professional Documentation**
+  - Revamped README with modern, eye-catching design
+  - Added CLAUDE.md for AI-assisted development
+  - Comprehensive architecture documentation
 
-## 🔧 v4.0.2 Changes (Failed Fix)
+### 🔧 Technical Improvements
 
-- **Attempted to remove duplicate TLDR section** - Fix did not work due to processing order issue
+- **Tooltip System Fixes**
+  - Added visibility property for proper transitions
+  - Increased z-index to 10000
+  - Fixed container overflow issues
+  - Enhanced theme-specific overrides
 
-## 🔧 v4.0.1 Changes
+- **Content Growth**
+  - 10,296 man pages (from 9,371)
+  - 100+ TLDR summaries
+  - 2,844 commands in options database
 
-- **Fixed HTML formatting** - Man pages now display with proper formatting (bold, italic, code blocks)
-- **TLDR sections** - Now properly formatted with descriptions and examples
-- **Improved readability** - Commands, options, and placeholders are visually distinct
-- **Dark mode support** - All new formatting elements work in both light and dark themes
+### 📦 Deployment
 
-## 📦 What's Included
+- Pre-configured `.gitlab-ci.yml`
+- No build process required
+- Complete offline functionality
+- All assets included (55MB total)
 
-This release contains everything needed to deploy the Linux Man Pages application:
+---
 
-- **Complete web application** - Single-page application with all functionality
-- **6,800 Linux commands** - Comprehensive collection from LinuxCommandLibrary database
-- **No external dependencies** - Works completely offline
-- **GitHub/GitLab Pages ready** - Automatic deployment via CI/CD
+## 📚 v7.5.3 - Enhanced Content & UI
 
-## 🚀 Quick Deployment
+### Features Added
+- 100+ new TLDR pages for popular commands
+- Updated command options database (2,844 commands)
+- Auto-expanding sections in Command Explainer
+- Restored options extraction script
 
-1. Download the latest release
-2. Extract to your repository  
-3. Push to GitHub/GitLab - automatic deployment via CI/CD
-4. Access at `https://[username].[github|gitlab].io/[repo-name]/`
+---
 
-## ✨ Features
+## 🚀 v7.5.2 - Complete Offline Package
 
-- Real-time command search
-- Dark mode support
-- Bookmarks & history tracking
-- TLDR summaries (cached after first fetch)
-- Section filtering (1-8)
-- Responsive design
-- Keyboard navigation
+### Updates
+- Restored GitHub Pages deployment workflow
+- Repository cleanup
+- Improved documentation
+- Dual deployment support (GitHub + GitLab)
 
-## 📋 Package Contents
+---
 
-- `index.html` - Complete application
-- `data/` - All man page data
-- `.gitlab-ci.yml` - GitLab Pages config
-- `README.md` - Documentation
-- Build scripts (optional)
+## 🔧 v7.5.1 - Stability Update
 
-## 📏 Package Size
+### Bug Fixes
+- Fixed search controller race condition
+- Enhanced null safety
+- Improved concurrent search handling
 
-- **Compressed**: ~1.2MB (tar.gz)
-- **Extracted**: ~3.9MB
-- **Data files**: Split into manageable chunks under 80MB each
+---
 
-## 🔒 Checksums
+## ✅ v7.5.0 - Production Ready
 
-*Checksums will be generated for official releases*
+### Major Improvements
+- 100% test coverage
+- Fixed theme transitions
+- GitLab CI/CD configuration
+- Enhanced error handling
 
-## 📝 Note
+---
 
-- Contains 6,800 Linux man pages from LinuxCommandLibrary
-- Includes standard Linux commands plus modern development tools
-- Docker, Kubernetes (kubectl), npm, Python, Git, and more
-- Comprehensive coverage for system administrators and developers
-- All commands properly formatted with sections and descriptions
-- TLDR summaries fetch from GitHub on first use, then cache locally
+## Previous Releases
+
+### v7.4.0 - Theme-Adaptive UI
+- Theme-adaptive keyboard shortcuts modal
+- Fixed side panel auto-open bug
+- Complete theme integration
+
+### v7.3.0 - Enhanced Theme Experience  
+- Ayu Mirage as default theme
+- Improved dropdown styling
+- Better focus indicators
+
+### v7.2.0 - Ultra-Performance Edition
+- 10x search performance
+- 3-5x faster DOM updates
+- 50-80% memory reduction
+- Virtual scrolling
+- Progressive loading
+
+### v7.1.0 - UI Improvements
+- Simplified keyboard shortcuts modal
+- Cleaner UX design
+- Performance optimizations
+
+### v7.0.0 - Major Theme Update
+- 5 new themes added
+- Revamped theme modal
+- ESC key support
+- Enhanced modal system
